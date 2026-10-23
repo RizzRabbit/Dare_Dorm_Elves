@@ -3,7 +3,7 @@
 'use strict';
 const E = window.DDE, $ = s => document.querySelector(s);
 const NAMES = {H1:'ROXY',H2:'JADE',H3:'VI',H4:'COCO',L1:'DARE',L2:'LIPS',L3:'GOOD VIBES',L4:'RED CUP',L5:'LEAF',W:'WILD'};
-const LINE_COLORS = ['#C8435F','#4E6A8C','#D99A3E','#7E9C6B','#9A6FB0','#B8683A','#5E8F95','#8A5A44']; // painted UI palette
+const LINE_COLORS = ['#C8435F','#4E6A8C','#B79BE0','#7E9C6B','#9A6FB0','#8B7FA8','#5E8F95','#6E6880']; // painted UI palette
 const BETS = [0.2,0.5,1,2,5,10,20,50,100];
 const S = {balance:1000, betIdx:2, ante:false, turbo:false, busy:false, auto:0, sym:[], vals:new Map(), full:new Map(), groups:[], lastBook:null, inBonus:false, speed:1};
 const qs = new URLSearchParams(location.search);

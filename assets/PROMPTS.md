@@ -103,7 +103,7 @@ Five sexy elf girls in casual college party clothes squeezed together taking a g
 ## Logo and UI (no characters)
 **Logo (2400x1200, transparent)**
 ```
-Slot game logo wordmark reading ELFHAUS in sharp beveled serif capital letters, ELF in light silver-steel and HAUS in warm rose gold, thick dark outline and crisp bevel, a simple emblem behind of an elf ear and a sparkle on a round rose-gold crest with soft painted rays, in the style of the Waylanders Forge slot logo, matte painted finish, isolated on a transparent background
+Slot game logo wordmark reading ELFHAUS in sharp beveled serif capital letters, ELF in light silver-steel and HAUS in soft amethyst lavender, thick dark grey-purple outline and crisp bevel, a simple emblem behind of an elf ear and a sparkle on a round slate-grey and muted purple crest with soft painted rays, no gold, no brown, in the style of the Waylanders Forge slot logo, matte painted finish, isolated on a transparent background
 ```
 (Generators often misspell words. If the letters come out wrong, generate the emblem only and set the word in the font Cinzel Bold.)
 **Bonus buy icon (512x512, transparent)**
@@ -112,5 +112,5 @@ Simple round dark button icon with a white line-art emblem of an elf ear with a 
 ```
 **Reel frame (2720x2200, transparent centre)**
 ```
-Rectangular slot reel frame made of warm painted wood with rose-gold corner fittings and string lights draped along the top edge, empty transparent centre, matte painted finish, isolated on a transparent background
+Rectangular slot reel frame of painted slate-grey and charcoal with muted amethyst purple corner fittings and thin lavender trim, string lights draped along the top edge, no wood, no brown or tan, no gold, empty transparent centre, matte painted finish, isolated on a transparent background
 ```
