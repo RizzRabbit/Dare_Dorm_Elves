@@ -48,3 +48,4 @@ Captured from `prototype/` with headless Chrome (`./shoot.sh`). Screens: `refere
 
 ## 4. Event → visual timing (normal speed; turbo × 0.35)
 reveal 650 ms · stackComplete 900 · mergeGroups 900 (only when a group appears) · winInfo 1100 · wildGrow 650 · respinStart 700 + 250 fade · respinReveal 500 · respinEnd 450 · freeSpinTrigger 2600 · updateFreeSpin 250 · freeSpinRetrigger 900 · freeSpinEnd 1600 · big win ~1350 count-up + 1500 hold.
+- `upgrade` (E13): Dare free spin completes R3 → banner "DARE → DOUBLE DARE +2", tier bar switches, stack + single locked (SPEC §6 D10).

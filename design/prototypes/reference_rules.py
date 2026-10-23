@@ -100,3 +100,25 @@ def play(board, steps=(), full=None, sticky=None, verbose=True, max_steps=3):
             if s == 'W': sv[c] = 1
     if verbose: print(f"  TOTAL {total}lb = {total/20}x")
     return total, full, sv
+
+# ---- Bonus spin state (SPEC §6, LOCKED 2026-10-23) ----
+SPIN_CAP = 18
+START_FS = {'dare': 8, 'double_dare': 10, 'triple_dare': 12, 'hidden': 14}
+
+def bonus_after_spin(tier, budget, new_stacks, full, sv):
+    """Apply one free spin's outcome. new_stacks = number of stacks newly completed during that spin.
+    Dare: wilds clear after every spin; the first stack UPGRADES the bonus to Double Dare once (+2 for that stack).
+    Double/Triple/Hidden: all wilds (singles and full reels) stay locked with values; never upgrade.
+    Every new stack is +2 spins, budget capped at 18. Returns (tier, budget, carry_full, carry_sv, upgrade, retrigger)
+    where upgrade = {'from','to','spinsAdded'} or None and retrigger = (stacks, spinsAdded) for the other new stacks."""
+    upgrade, retrig = None, (0, 0)
+    if tier == 'dare' and new_stacks:
+        nb = min(budget + 2, SPIN_CAP)
+        upgrade = {'from': 'dare', 'to': 'double_dare', 'spinsAdded': nb - budget}
+        tier, budget, new_stacks = 'double_dare', nb, new_stacks - 1
+    if new_stacks:
+        nb = min(budget + 2 * new_stacks, SPIN_CAP)
+        retrig, budget = (new_stacks, nb - budget), nb
+    if tier == 'dare':
+        return tier, budget, {}, {}, upgrade, retrig
+    return tier, budget, dict(full), dict(sv), upgrade, retrig

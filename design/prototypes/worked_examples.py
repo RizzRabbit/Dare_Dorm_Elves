@@ -1,7 +1,8 @@
 """Computes every worked example in design/SPEC.md §12 with reference_rules.py.
 Run: python3 worked_examples.py   (prints each step; the final line of each block is the spin win)
 Phase A unit tests must reproduce every TOTAL below exactly (see BUILD_PROMPT.md A7)."""
-from reference_rules import play
+from reference_rules import play, bonus_after_spin
+import json
 
 def ex(name, *a, **k):
     print(f"\n=== {name}")
@@ -74,5 +75,27 @@ L5 W W W L2
 H1 W W W L3
 L3 W W W H1
 L2 W W W L4""", full={1:8,2:7,3:9}, max_steps=0)
+print("\n=== E13 Dare free spin 3 of 8 (same board/steps as E8): respins complete R3 -> bonus UPGRADES to Double Dare +2")
+t13, f13, s13 = play("""
+L2 H4 W  L3 L1
+H4 H4 W  L1 L5
+H2 H2 W  H2 L4
+L3 L5 L3 L4 H1""", steps=[{(0,1):'L5',(0,2):'H3',(1,0):'L1',(1,1):'H1',(1,2):'W',(3,2):'L4'},
+ {(0,1):'L4',(0,2):'L1',(0,3):'H2',(2,3):'W'}, 'AUTO'])
+R['E13'] = t13
+st13 = bonus_after_spin('dare', 8, len(f13), f13, s13)
+print("  bonus state after spin:", st13)
+BONUS = {'E13': {'tier': st13[0], 'budget': st13[1], 'locked_full': {str(k): v for k, v in st13[2].items()},
+                 'locked_singles': {f"{k[0]},{k[1]}": v for k, v in st13[3].items()}, 'upgrade': st13[4]}}
+def seq(tier, budget, stacks_per_spin):
+    out = []
+    for n in stacks_per_spin:
+        tier, budget, _, _, up, rt = bonus_after_spin(tier, budget, n, {}, {})
+        out.append([tier, budget, bool(up), rt[1]])
+    return out
+BONUS['E11'] = {'dare_fs3_1_fs6_2': seq('dare', 8, [0, 0, 1, 0, 0, 2]), 'dare_2_in_one': seq('dare', 8, [2]),
+  'double_1': seq('double_dare', 10, [1]), 'hidden_2_then_1': seq('hidden', 14, [2, 1]),
+  'dare_no_stack_clears': list(bonus_after_spin('dare', 8, 0, {}, {(1, 0): 3})[2:4]) == [{}, {}]}
+print("BONUS:", json.dumps(BONUS))
 print("\nSUMMARY (x bet):", {k: v/20 for k, v in R.items()})
 print("E12 round: 36000 + %.2f = %.2f >= 50000 -> pay exactly 50000x, emit wincap, end round" % (R['E12']/20, 36000 + R['E12']/20))

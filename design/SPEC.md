@@ -18,7 +18,8 @@ The executable reference for §3–§4 is `design/prototypes/reference_rules.py`
 | D5 | **Ante costs 1.25x** for about **2x** natural trigger rates. |
 | D6 | **The optimizer sets all buy prices** at target RTP. |
 | D7 | **Hidden is a freegame type**, reachable from base, Ante and Mystery only. **7 bet modes** (also settles C-a). |
-| D8 | A new stack in a bonus gives **+2 spins only**. No tier upgrades, no retrigger into another tier. |
+| D8 | A new stack in a bonus gives **+2 spins** (cap 18). **The only tier upgrade is Dare → Double Dare on a stack** (once). Double, Triple and Hidden never upgrade. (User, 2026-10-23; partly overrides the earlier "no upgrades".) |
+| D10 | **Bonus stickiness [LOCKED, user 2026-10-23; replaces the A3 "sticky in every tier" assumption]:** **Double Dare, Triple Dare, Hidden:** all wilds (singles and full-reel stacks) stay locked for the rest of the bonus, keeping their values and growth. **Dare:** wilds are **not** sticky; they clear after each free spin's respin sequence. If a full 4-high stack completes during a Dare free spin, the bonus **immediately upgrades to Double Dare and adds +2 spins**; from then on Double Dare rules apply (wilds lock; that stack stays locked with its value). The upgrade happens **once**; any later stack gives **+2 only** [LOCKED, user-confirmed]. Reason: the tiers differ only by starting stacks and spins, and a new stack adds both anyway. |
 | D9 | EGW stack placement is **weighted**: patterns with **4+ adjacent stacks ≤ 1 in 10,000** buys; mostly non-adjacent pairs and triples. |
 | R1 | A new wild starts at **x1**. |
 | R2 | At most **3 respins** per spin; **stop early when nothing new connects**. |
@@ -29,7 +30,7 @@ The executable reference for §3–§4 is `design/prototypes/reference_rules.py`
 | R6 | Wild growth is **+1 per respin step in which the wild connects, everywhere** (base, Ante, bonuses, EGW, Mystery). The math tail is controlled by **stack and wild odds**, **not by restricting pays**; the build must report if the limits can't hold. **Primary tuning lever (user, 2026-10-23, LOCKED): weigh the wilds and stacks down HEAVILY, rarity order REEL 2 (rarest) < REEL 3 < REEL 1 < reels 4–5 (least restricted)**; the optimizer then fits each mode to 96.65–96.69%. Mechanics unchanged. |
 | A1 | **3 or more adjacent full-reel wilds all multiply together.** |
 | A2 | Mixed line: **multiply within each adjacent group, then add the groups and the other wilds.** |
-| A3 | Bonus tiers differ **only** by starting stacks/wilds, spin count and stack odds. No other per-tier levers. |
+| A3 | Bonus tiers differ **only** by starting stacks/wilds, spin count, stack odds **and stickiness (D10: Dare not sticky + one-time upgrade; Double/Triple/Hidden locked)**. No other per-tier levers. |
 | A4 | A full-reel wild grows **+1 per connection** (as one wild). |
 | A5 | A stack that **lands complete at once is x4** (four x1 wilds). A stack **built over respins is the sum of its grown values**. **Bought bonuses play a real trigger spin with respins**: no forced x4, no forced reels 1/3/5. Adjacency on buy triggers is controlled by reel/stack odds. |
 | A6 | Adjacent merged stacks render as **one wide wild scene that adds elves**: 2-wide = 2 elves together, 3-wide = 3, 4-wide = 4, 5-wide = 5 (full-board party). Each width is sexier and more crowded, college dorm style, within the content ceiling, with the **combined badge** (e.g. "x6 × x5 = x30"). |
@@ -114,22 +115,22 @@ Pays are in **line-bet units (lb)**; total bet = 20 lb, so `x bet = lb / 20`. Re
 | 4 | ≥ 4 single wilds, no full-reel wild | **Dare**, 8 FS |
 
 - The trigger spin **pays its own wins** (all steps), then the bonus plays inside the same book.
-- **Carry-in [LOCKED by A5]:** every wild on the trigger's final board carries in at its **end-of-sequence value**: full-reel wilds stay locked, single wilds stay sticky. (Instant stack = x4 before growth; respin-built = grown sum.)
+- **Carry-in [LOCKED by A5]:** every wild on the trigger's final board carries in at its **end-of-sequence value**: full-reel wilds stay locked, single wilds stay sticky. **In Dare the carried-in wilds are on free spin 1 only and clear after its respin sequence (D10).** (Instant stack = x4 before growth; respin-built = grown sum.)
 - **Ante (D5):** cost **1.25x**, same paytable and rules; reel strips weighted so natural trigger rates are about **2x** base for all four tiers (tune). Mode name `ante`.
 - Base hit rate target ~20–28% (C11).
 
 ## 6. Bonus tiers [LOCKED except odds]
 | Tier | Start spins | Start stacks / wilds | Stack-completion odds (tune) |
 |---|---|---|---|
-| Dare | 8 | ≥ 4 sticky single wilds (from trigger) | lowest |
+| Dare | 8 | ≥ 4 single wilds from the trigger (free spin 1 only; **not sticky**, D10) | lowest |
 | Double Dare | 10 | 1 locked full-reel wild (+ ≤ 1 sticky single) | low |
 | Triple Dare | 12 | 1 locked full-reel wild + ≥ 2 sticky singles | medium |
 | Hidden | 14 | ≥ 2 locked full-reel wilds (+ any sticky singles) | medium |
 
-- **A3:** these are the only differences. Every other rule is identical across tiers.
-- **Stickiness [ASSUMED – user to confirm]:** in **every** tier, all wilds (carried-in and newly landed) stay for the rest of the round with their values; full-reel wilds lock. Dare's sticky wilds were locked by the user; A3 (no per-tier levers) extends that to all tiers. This matches `toy_sim4.py`.
+- **A3:** these (plus D10 stickiness) are the only differences. Every other rule is identical across tiers.
+- **Stickiness [LOCKED, D10, user 2026-10-23]:** **Double Dare / Triple Dare / Hidden:** all wilds (carried-in and newly landed, singles and full-reel stacks) stay locked for the rest of the round with their values and keep growing. **Dare:** wilds clear after every free spin's respin sequence (nothing carries between Dare spins). **Dare → Double Dare upgrade:** the first stack completed in any step of a Dare free spin upgrades the bonus to Double Dare at the end of that spin's sequence, **+2 spins** (`bonusUpgrade` event); all wilds on that spin's final board (the stack at its grown value plus any singles) lock, and the remaining spins use Double Dare rules and strips. The upgrade happens **once**; further stacks (same spin or later) give **+2 only**. Double, Triple, Hidden never upgrade. Reason: the tiers differ only by starting stacks and spins, and a new stack adds both anyway.
 - **Spins:** each **newly completed** stack (in any step of any free spin) adds **+2 spins** (D8). A locked stack never re-awards. The round plays at most **18 free spins** (cap counts spins played, not respins). Once at 18, further stacks still lock and multiply but add no spins.
-- No upgrades between tiers, no other retriggers (D8).
+- The only tier change is Dare → Double Dare on a stack (D8/D10); no other upgrades or retriggers.
 - Each free spin: load locked and sticky wilds → land the other cells → full respin sequence (§4) with growth → add the spin's wins → +2 per new stack (capped) → wincap check.
 - **Bought bonuses (A5):** the book starts with a **real trigger spin** on dedicated buy-trigger reel strips, with respins and growth, paying its wins. The math redraws (rejection) until the final board's tier **equals the bought tier**. Its stacks may be instant (x4) or respin-built (grown sums), on **any** reels. No forced x4, no forced reels 1/3/5. Adjacency at the start is controlled by the buy-trigger strip odds (tune). Then the bonus plays from that board.
 
@@ -304,7 +305,16 @@ L4 H3 W  H3 L2
 ```
 Step 0: L1/L13 3×H3, L6/L10/L18 3×L4 = 39 lb × 13 = 25.35x. Respins pay at x14, x15, x16. **Spin total 72.3x**; R3 ends at x17. No new stack → spin count unchanged.
 
-**E11 – bonus spin count.** Dare starts at 8. Free spin 3 completes a stack (+2 → 10). Free spin 6 completes two stacks in one sequence (+4 → 14). Hidden starting at 14 + 2 new stacks = 18; a third new stack locks and multiplies but adds nothing (cap 18).
+**E11 – bonus spin count.** Dare starts at 8. Free spin 3 completes a stack → **upgrade to Double Dare, +2 → 10** (D10). Two stacks in one Dare spin → upgrade +2 and +2 → 12. Free spin 6 completes two stacks in one sequence (+4 → 14). Hidden starting at 14 + 2 new stacks = 18; a third new stack locks and multiplies but adds nothing (cap 18).
+
+**E13 – Dare free spin 3 of 8: a stack upgrades the bonus to Double Dare (D10).** Same board and respins as E8, now played as a Dare free spin (no carried wilds; these landed fresh).
+```
+L2 H4 W  L3 L1
+H4 H4 W  L1 L5
+H2 H2 W  H2 L4
+L3 L5 L3 L4 H1
+```
+Steps as E8: respin 1 lands W at R2r2, respin 2 lands W at R3r3 and completes R3 as a full-reel wild. **Spin total 92.4x.** One new stack in Dare → `bonusUpgrade {from: dare, to: double_dare, spinsAdded: 2}`, spins **8 → 10**, now **Double Dare**. Locked from here on: R3 full-reel **x11** and R2r2 single **x4**. A later stack gives +2 only (no second upgrade).
 
 **E12 – 50,000x round end (Hidden).** Round total before this free spin: 36,000x. R2 x8 × R3 x7 × R4 x9 = **x504**.
 ```
@@ -323,6 +333,6 @@ Step 0: every line 4-of-a-kind of its R1 symbol × 504 = 335,160 lb = 16,758x. 3
 | §3 growth once per spin sequence in bonuses/EGW | **+1 per step everywhere** | R6 |
 | §4/§8: **no respins** on the Mystery reveal; 4th-cell slow spin decides | Mystery **respins are the reveal** | R4-Mystery |
 | §6 bought stacks **x4 on reels {1,3,5}** | Bought bonuses play a **real trigger spin**; no forced x4/reels | A5 |
-| §6 per-tier levers (Dare sticky only, reels 2/4 at 1/10 except Hidden) | Tiers differ only by start stacks/wilds, spins, stack odds; all wilds sticky [ASSUMED] | A3 |
+| §6 per-tier levers (Dare sticky only, reels 2/4 at 1/10 except Hidden) | Tiers differ by start stacks/wilds, spins, stack odds and stickiness: Double/Triple/Hidden all wilds locked; **Dare not sticky, first stack upgrades once to Double Dare +2** | A3, D10 (LOCKED) |
 | §2 H1 bottle / H2 lips / H3 lingerie / H4 crown | Premiums = 4 elves; objects are lows; cannabis leaf stays L5 | D2 |
 | §12 E7 62.4x, E9 89.2x | 350.1x / 374.5x (respins now pay) | R5/R6 |

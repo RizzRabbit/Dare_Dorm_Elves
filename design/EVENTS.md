@@ -63,6 +63,9 @@ Before each free spin's `reveal`. `amount` (1-based spin number), `total`, `cap`
 ### freeSpinRetrigger
 A free spin completed new stacks. `newStacks`: reels, `addedFs` (2 × new stacks, after cap), `totalFs`, `capped` (bool).
 
+### bonusUpgrade
+Dare only, at most once per round (SPEC §6, D10). After a Dare free spin's `setTotalWin` when that spin completed a stack: `from`: `"dare"`, `to`: `"double_dare"`, `spinsAdded` (2, after the 18 cap), `totalFs` (new budget), `stackReel` (reel of the upgrading stack), `locked` (`{fullReels, singles}` that stay locked from now on, same shape as `carried`). Any other new stacks in the same spin follow as `freeSpinRetrigger`. Later `updateFreeSpin` events carry `tier: "double_dare"`.
+
 ### freeSpinEnd
 `amount` (free-spins win), `winLevel` (endFeature scale).
 
@@ -88,7 +91,7 @@ Last event of every book. `amount` = `payoutMultiplier`.
 **Base / Ante spin:** `reveal` → [`stackComplete`?/`mergeGroups`?] → `winInfo` → `updateStepWin` → `wildGrow` → (`respinStart` → `respinReveal` → [`stackComplete`/`mergeGroups`] → `winInfo`? → `updateStepWin` → `wildGrow`)×≤3 → `respinEnd` → `setWin`? → `setTotalWin` → (`freeSpinTrigger` → free spins) → `finalWin`.
 A losing spin: `reveal` → `setTotalWin` → `finalWin`.
 
-**Free spin:** `updateFreeSpin` → `reveal` (with `locked`) → `mergeGroups`? → same step loop → `respinEnd` → `setWin`? → `setTotalWin` → `freeSpinRetrigger`? … → `freeSpinEnd` → `finalWin`.
+**Free spin:** `updateFreeSpin` → `reveal` (with `locked`) → `mergeGroups`? → same step loop → `respinEnd` → `setWin`? → `setTotalWin` → `bonusUpgrade`? (Dare only, once) → `freeSpinRetrigger`? … → `freeSpinEnd` → `finalWin`.
 
 **Bought bonus:** `buyTriggerStart` → base-spin sequence (real trigger spin) → `freeSpinTrigger{source:"buy"}` → free spins → `finalWin`.
 

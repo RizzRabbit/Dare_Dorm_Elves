@@ -6,7 +6,7 @@
 - D5: Ante 1.25x for about 2x natural triggers (recommended)
 - D6: optimizer sets all buy prices at target RTP (recommended)
 - D7: Hidden is a freegame inside base, Ante and Mystery; 7 bet modes (recommended; also settles C-a)
-- D8: new stacks in a bonus give +2 spins only, no tier upgrades (recommended)
+- D8 (updated 2026-10-23, LOCKED): new stacks give +2 spins; the only upgrade is Dare → Double Dare on a stack, once. D10: Double/Triple/Hidden wilds locked; Dare wilds clear each spin (SPEC §6)
 - D9: EGW weighted placement: 4+ adjacent stacks at most 1 in 10,000 buys, mostly non-adjacent pairs/triples (recommended)
 - R1: LOCKED x1 start. R2: respins hard 3, stop early when nothing new connects (recommended)
 - R3: USER RULE (replaces both options): on a connection, the non-wild symbols IN the winning run(s) respin (are replaced); wilds lock in place; symbols not in any connection stay put. If a stayed symbol becomes part of the next respin's connection, it respins then. R2 still applies: max 3 respins, stop early when nothing new connects.

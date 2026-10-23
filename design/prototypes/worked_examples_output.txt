@@ -113,5 +113,19 @@
   TOTAL 335160lb = 16758.0x
   end state: full-reel wilds {R2: x9, R3: x8, R4: x10}; single wilds {}
 
-SUMMARY (x bet): {'E1': 1.25, 'E2': 1.5, 'E2b': 2.75, 'E3': 179.1, 'E4': 350.1, 'E5': 2440.15, 'E6': 1262.0, 'E7': 3.4, 'E8': 92.4, 'E9': 374.5, 'E10': 72.3, 'E12': 16758.0}
+=== E13 Dare free spin 3 of 8 (same board/steps as E8): respins complete R3 -> bonus UPGRADES to Double Dare +2
+  step0: pays 105lb (5.25x): L2 3xH4 10lb x1 = 10lb; L3 4xH2 75lb x1 = 75lb; L7 3xH4 10lb x1 = 10lb; L15 3xH4 10lb x1 = 10lb
+  step0: grow -> full {} singles {'R3r0': 2, 'R3r1': 2, 'R3r2': 2}
+  step1: pays 82lb (4.1x): L3 3xH3 15lb x3 = 45lb; L6 3xL3 4lb x3 = 12lb; L10 3xL3 4lb x1 = 4lb; L11 3xL5 3lb x3 = 9lb; L18 3xL3 4lb x3 = 12lb
+  step1: grow -> full {} singles {'R3r0': 2, 'R3r1': 3, 'R3r2': 3, 'R2r2': 2}
+  step2: R3 full-reel wild = x9
+  step2: pays 946lb (47.3x): L3 3xL1 5lb x11 = 55lb; L6 3xH2 20lb x11 = 220lb; L10 3xH2 20lb x11 = 220lb; L11 4xL4 8lb x11 = 88lb; L16 3xL1 5lb x11 = 55lb; L18 3xH2 20lb x11 = 220lb; L19 4xL4 8lb x11 = 88lb
+  step2: grow -> full {'R3': 10} singles {'R2r2': 3}
+  step3: pays 715lb (35.75x): L3 3xH4 10lb x13 = 130lb; L6 3xL1 5lb x13 = 65lb; L10 3xL1 5lb x13 = 65lb; L11 4xL3 10lb x13 = 130lb; L16 3xH4 10lb x13 = 130lb; L18 3xL1 5lb x13 = 65lb; L19 4xL3 10lb x13 = 130lb
+  step3: grow -> full {'R3': 11} singles {'R2r2': 4}
+  TOTAL 1848lb = 92.4x
+  bonus state after spin: ('double_dare', 10, {2: 11}, {(1, 2): 4}, {'from': 'dare', 'to': 'double_dare', 'spinsAdded': 2}, (0, 0))
+BONUS: {"E13": {"tier": "double_dare", "budget": 10, "locked_full": {"2": 11}, "locked_singles": {"1,2": 4}, "upgrade": {"from": "dare", "to": "double_dare", "spinsAdded": 2}}, "E11": {"dare_fs3_1_fs6_2": [["dare", 8, false, 0], ["dare", 8, false, 0], ["double_dare", 10, true, 0], ["double_dare", 10, false, 0], ["double_dare", 10, false, 0], ["double_dare", 14, false, 4]], "dare_2_in_one": [["double_dare", 12, true, 2]], "double_1": [["double_dare", 12, false, 2]], "hidden_2_then_1": [["hidden", 18, false, 4], ["hidden", 18, false, 0]], "dare_no_stack_clears": true}}
+
+SUMMARY (x bet): {'E1': 1.25, 'E2': 1.5, 'E2b': 2.75, 'E3': 179.1, 'E4': 350.1, 'E5': 2440.15, 'E6': 1262.0, 'E7': 3.4, 'E8': 92.4, 'E9': 374.5, 'E10': 72.3, 'E12': 16758.0, 'E13': 92.4}
 E12 round: 36000 + 16758.00 = 52758.00 >= 50000 -> pay exactly 50000x, emit wincap, end round

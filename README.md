@@ -29,5 +29,4 @@ Clone: `git clone https://github.com/RizzRabbit/dare_dorm_elves.git` (the local 
 | `assets/concepts/*.png` | Concept images (logo, background, single wild, premium elf, superseded full-reel concept used as pose reference) |
 
 ## Open items for the user
-- All bonus wilds sticky in every tier (A3 reading; SPEC §6).
 - Mystery tease default: the 3 reveal wilds sit as a 3-high partial stack on one reel; the build may scatter them if needed and must report it (SPEC §8).

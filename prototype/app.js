@@ -190,6 +190,10 @@ const H = {
   },
   async freeSpinRetrigger(ev){ banner(ev.addedFs ? `+${ev.addedFs} SPINS! (${ev.newStacks.length} new stack${ev.newStacks.length>1?'s':''})` : 'NEW STACK – spin cap 18 reached', 1500);
     $('#fsCount').textContent = $('#fsCount').textContent.replace(/\/ \d+/, '/ '+ev.totalFs); await wait(900); },
+  async bonusUpgrade(ev){ $('#stepToast').classList.add('hidden'); // SPEC §6 LOCKED: Dare's first stack upgrades once to Double Dare (+2); wilds lock from now on
+    banner(`${E.TIER_LABEL[ev.from].toUpperCase()} → ${E.TIER_LABEL[ev.to].toUpperCase()} +${ev.spinsAdded}`, 2200);
+    $('#fsTier').textContent = E.TIER_LABEL[ev.to].toUpperCase();
+    $('#fsCount').textContent = $('#fsCount').textContent.replace(/\/ \d+/, '/ '+ev.totalFs); await wait(1400); },
   async freeSpinEnd(ev){
     banner(`BONUS COMPLETE · ${fmt(ev.amount/100*bet())}`, 2200); await wait(1600);
     document.body.classList.remove('inBonus'); $('#fsBar').classList.add('hidden'); S.inBonus=false;
@@ -234,7 +238,7 @@ async function round(mode){
 
 // ---------- UI ----------
 function buildBuy(){
-  const desc = {dare:'Real trigger spin → 8 free spins with ≥4 sticky wilds.', double_dare:'Trigger spin → 10 free spins with 1 locked full-reel wild.',
+  const desc = {dare:'Real trigger spin → 8 free spins; wilds clear each spin; first stack upgrades to Double Dare +2.', double_dare:'Trigger spin → 10 free spins with 1 locked full-reel wild.',
     triple_dare:'Trigger spin → 12 free spins: full-reel wild + ≥2 sticky wilds.', mystery:'One paid spin with respins; the respins are the reveal. No bonus 50% · Double 37% · Triple 10% · Hidden 3%. Decided before the reveal.',
     egw:'One supercharged spin: 2–5 full-reel wilds (x4) placed first. No bonus.'};
   $('#buyCards').innerHTML = ['dare','double_dare','triple_dare','mystery','egw'].map(m =>
@@ -305,6 +309,7 @@ async function frame(name){
     case 'mystery': await at('E8', ()=>false, ev => ev.type==='stackComplete'); break;
     case 'buy': buildBuy(); $('#buyMenu').classList.remove('hidden'); break;
     case 'bigwin': await at('E4', ()=>false, ev => ev.type==='setWin'); break;
+    case 'upgrade': await at('E13', ()=>false, ev => ev.type==='bonusUpgrade'); break;
     case 'wincap': await at('E12', ()=>false, ev => ev.type==='wincap'); break;
     case 'dev': { $('#dev').classList.remove('hidden'); const bk=E.exampleBook('E5');
       $('#devResult').innerHTML = `E5: ${E.EX.E5.title}\nexpected ${E.EX.E5.expected}x · actual ${bk.spinX}x  <span class="ok">MATCH</span>`;

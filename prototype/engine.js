@@ -194,6 +194,10 @@ W L3 W L5 W`, full:{0:4,2:4,4:4}, steps:['AUTO','AUTO','AUTO']},
 L1 L2 W  L5 L4
 H2 L4 W  L3 L3
 L4 H3 W  H3 L2`, full:{2:13}, steps:['AUTO','AUTO','AUTO']},
+ E13:{title:'Dare FS 3/8: respins complete R3 → UPGRADE to Double Dare +2', expected:92.4, upgradeFrom:'dare', freegame:{tier:'dare', spin:3, total:8}, board:`L2 H4 W  L3 L1
+H4 H4 W  L1 L5
+H2 H2 W  H2 L4
+L3 L5 L3 L4 H1`, steps:[{'0,1':'L5','0,2':'H3','1,0':'L1','1,1':'H1','1,2':'W','3,2':'L4'},{'0,1':'L4','0,2':'L1','0,3':'H2','2,3':'W'},'AUTO']},
  E12:{title:'50,000x wincap in Hidden (x8 × x7 × x9 = x504)', expected:16758, expectedRound:50000, priorX:36000, freegame:{tier:'hidden', spin:9, total:14}, board:`L5 W W W L2
 H1 W W W L3
 L3 W W W H1
@@ -204,6 +208,14 @@ function runExample(id){ const e=EX[id]; return play(e.board, exOpts(e)); }
 
 // spin-count rule (SPEC §6 / E11)
 function addSpins(budget, newStacks){ return Math.min(budget + 2*newStacks, SPIN_CAP); }
+// SPEC §6 (LOCKED 2026-10-23): Dare wilds clear after each spin; Dare's first stack upgrades once to Double Dare (+2).
+// Double/Triple/Hidden: all wilds stay locked with values, never upgrade. Every new stack +2, cap 18. Mirrors reference_rules.bonus_after_spin.
+function bonusAfterSpin(tier, budget, newStacks, full, sv){
+  let upgrade=null, retrig={stacks:0, added:0};
+  if (tier==='dare' && newStacks>0){ const nb=Math.min(budget+2,SPIN_CAP); upgrade={from:'dare', to:'double_dare', spinsAdded:nb-budget}; tier='double_dare'; budget=nb; newStacks--; }
+  if (newStacks>0){ const nb=addSpins(budget,newStacks); retrig={stacks:newStacks, added:nb-budget}; budget=nb; }
+  return {tier, budget, full: tier==='dare'?new Map():new Map(full||[]), sv: tier==='dare'?new Map():new Map(sv||[]), upgrade, retrig};
+}
 
 function tierOf(full, sv){ const nf=full.size, ns=sv.size;
   if (nf>=2) return 'hidden'; if (nf===1) return ns>=2 ? 'triple_dare' : 'double_dare'; return ns>=4 ? 'dare' : null; }
@@ -231,6 +243,10 @@ function exampleBook(id){
   if (e.mystery) emit({type:'mysteryResult', outcome:e.mystery});
   const t = (!e.egw && !fs) ? tierOf(res.full,res.sv) : null;
   if (t && !res.capped) emit({type:'freeSpinTrigger', tier:t, totalFs:START_FS[t], cap:SPIN_CAP, carried:lockedOf(res.full,res.sv), source:e.mystery?'mystery':'natural'});
+  if (fs && !res.capped){ const nNew=[...res.full.keys()].filter(r=>!fullIn.has(r));
+    const st=bonusAfterSpin(fs.tier, fs.total, nNew.length, res.full, res.sv);
+    if (st.upgrade) emit(Object.assign({type:'bonusUpgrade'}, st.upgrade, {totalFs:st.budget, stackReel:nNew[0], locked:lockedOf(st.full, st.sv)}));
+    if (st.retrig.stacks) emit({type:'freeSpinRetrigger', newStacks:nNew.slice(st.upgrade?1:0), addedFs:st.retrig.added, totalFs:st.budget, capped:st.budget>=SPIN_CAP}); }
   if (res.capped && fs) emit({type:'freeSpinEnd', amount:Math.round((prior+x)*100), winLevel:10});
   emit({type:'finalWin', amount:Math.round((prior+x)*100)});
   // dedupe consecutive identical mergeGroups
@@ -265,21 +281,24 @@ function spinBlock(emit, b, w, gameType, priorX, extra){
 }
 function bonus(emit, tier, full, sv, source, priorX){
   emit({type:'freeSpinTrigger', tier, totalFs:START_FS[tier], cap:SPIN_CAP, carried:lockedOf(full,sv), source});
+  // carry-in (A5): the trigger board's wilds are on free spin 1 in every tier; Dare clears them after that spin
   let budget=START_FS[tier], played=0, tot=0, sticky=new Map(sv), capped=false; full=new Map(full);
   while (played<budget){
     played++;
     emit({type:'updateFreeSpin', amount:played, total:budget, cap:SPIN_CAP, tier});
     const b=landBoard(P.qb[tier], P.wb[tier], full, sticky);
     const res=spinBlock(emit, b, P.wb[tier], 'freegame', priorX+tot, {stickyIn:sticky});
-    tot+=res.x; full=b.full; sticky=new Map(b.sv);
+    tot+=res.x;
     if (res.x>0) emit({type:'setWin', amount:Math.round(res.x*100), winLevel:winLevel(res.x)});
     if (res.capped){ capped=true; emit({type:'wincap', amount:CAP_X*100}); emit({type:'setTotalWin', amount:Math.round((priorX+tot)*100)}); break; }
     emit({type:'setTotalWin', amount:Math.round((priorX+tot)*100)});
-    if (res.newStacks.length){ const nb=addSpins(budget,res.newStacks.length);
-      emit({type:'freeSpinRetrigger', newStacks:res.newStacks, addedFs:nb-budget, totalFs:nb, capped:nb>=SPIN_CAP}); budget=nb; }
+    const st=bonusAfterSpin(tier, budget, res.newStacks.length, b.full, b.sv);
+    if (st.upgrade) emit(Object.assign({type:'bonusUpgrade'}, st.upgrade, {totalFs:st.budget, stackReel:res.newStacks[0], locked:lockedOf(st.full, st.sv)}));
+    if (st.retrig.stacks) emit({type:'freeSpinRetrigger', newStacks:res.newStacks.slice(st.upgrade?1:0), addedFs:st.retrig.added, totalFs:st.budget, capped:st.budget>=SPIN_CAP});
+    tier=st.tier; budget=st.budget; full=st.full; sticky=st.sv;
   }
   emit({type:'freeSpinEnd', amount:Math.round(tot*100), winLevel:winLevel(tot)});
-  return {x:tot, capped, played};
+  return {x:tot, capped, played, tier};
 }
 function finish(events, totalX, extra){ const out=events; out.push({type:'finalWin', amount:Math.round(totalX*100)}); out.forEach((e,i)=>e.index=i);
   return Object.assign({events:out, payoutMultiplier:Math.round(totalX*100)}, extra); }
@@ -354,6 +373,6 @@ function autoplay(mode, n){
 }
 
 const API = {ROWS, REELS, CAP_X, SPIN_CAP, LINES, PAY, SYMS, START_FS, MYSTERY_ODDS, MODES, TIER_LABEL, P, EX,
-  seed, parse, evaluate, lineMult, play, runExample, exampleBook, addSpins, tierOf, winLevel, book, autoplay, mergeGroupsOf};
+  seed, parse, evaluate, lineMult, play, runExample, exampleBook, addSpins, bonusAfterSpin, tierOf, winLevel, book, autoplay, mergeGroupsOf};
 if (typeof module!=='undefined' && module.exports) module.exports = API; else root.DDE = API;
 })(typeof globalThis!=='undefined'?globalThis:this);
