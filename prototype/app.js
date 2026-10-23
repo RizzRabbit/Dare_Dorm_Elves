@@ -32,6 +32,7 @@ const pos = (r,row) => ({x: r*(S.cell+S.gap), y: row*(S.cell+S.gap)});
 function symHTML(name, v){
   if (name==='W') return `<div class="sym W"><img src="assets/wild_single.png" alt=""><span class="plate">WILD</span></div><div class="badge">x${v||1}</div><div class="lock">LOCKED</div>`;
   if (name==='H1') return `<div class="sym H H1"><img src="assets/premium_H1_elf.png" alt=""><span class="nameTag">H1 ROXY</span></div>`;
+  if (name==='H2') return `<div class="sym H H2"><img src="assets/premium_H2_elf.png" alt=""><span class="nameTag">H2 JADE</span></div>`;
   const t = name[0];
   return `<div class="sym ${t} ${name}"><span class="id">${name}</span><span class="nm">${NAMES[name]}</span>${t==='H'?'<span class="id">elf placeholder</span>':''}</div>`;
 }
