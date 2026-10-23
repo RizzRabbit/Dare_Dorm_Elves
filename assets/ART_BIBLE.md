@@ -91,3 +91,9 @@ House-party pop/EDM loop (base), bigger drop in free spins, respin whooshes, gig
 | `premium_H1_elf.png` | **v3: anime/matte**, Roxy (hoodie, crop tank, cutoffs, red cup) in an ornate pink gem tile. Baked "ROXY" sleeve text is concept-only. |
 | `DO_NOT_USE_wild_fullreel_swimwear.png` | **DO NOT USE** (breaks the swimwear rule: one-piece swimsuit; also old glossy style). Production WF = one sexy elf in the covering pose (prompt above) in the v3 style. |
 Concepts are direction only; production art must be redrawn at final sizes and pass CONTENT_RULES §4.
+
+## UI style (locked 2026-10-23)
+- **No glow anywhere on wilds** (cells, locked wilds, full-reel/merged overlays, badges). Wilds get only a subtle idle breathe (img scale 1.00→1.03, ~2.8s ease-in-out loop); LOCKED = small flat denim tag. Multiplier badge = painted rose pill, +1 grow pop kept.
+- **Painted matte chrome like Lilith's Curse**: soft top-light→darker-bottom shading, inset edge darkening, faint paper/canvas grain (SVG feTurbulence data-URI), slightly uneven hand-cut corners, ink (#3B2A2A) 2px outlines. No neon, no specular gloss, no rainbow gradients. Palette from the dorm background: cream/paper, wood, soft pink, denim, one accent (rose #C8435F).
+- **Gapless grid**: 5×4 cells are individual painted tiles (each respins on its own) butted edge-to-edge with a thin shared ink seam, square corners, zero gutters (`--gap:0`). Full-reel/merged overlays align exactly to the gapless columns.
+- Reel window = painted wooden frame around a cream board. Fonts bundled locally (OFL): Lilita One (display/buttons), Caveat Brush (logo script), Nunito (UI/numbers, tabular). Logo is typeset HTML (no dark box); final logo art should follow the same matte painted look.

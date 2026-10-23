@@ -3,7 +3,7 @@
 'use strict';
 const E = window.DDE, $ = s => document.querySelector(s);
 const NAMES = {H1:'ROXY',H2:'JADE',H3:'VI',H4:'COCO',L1:'DARE',L2:'LIPS',L3:'GOOD VIBES',L4:'RED CUP',L5:'LEAF',W:'WILD'};
-const LINE_COLORS = ['#FF2E9A','#00E5D4','#FFC94A','#7B2CFF','#FF7FC4','#59FF8A','#FFB45C','#FFFFFF'];
+const LINE_COLORS = ['#C8435F','#4E6A8C','#D99A3E','#7E9C6B','#9A6FB0','#B8683A','#5E8F95','#8A5A44']; // painted UI palette
 const BETS = [0.2,0.5,1,2,5,10,20,50,100];
 const S = {balance:1000, betIdx:2, ante:false, turbo:false, busy:false, auto:0, sym:[], vals:new Map(), full:new Map(), groups:[], lastBook:null, inBonus:false, speed:1};
 const qs = new URLSearchParams(location.search);
@@ -19,11 +19,11 @@ function layout(){
   document.body.classList.toggle('portrait', portrait);
   let cell;
   if (portrait){ cell = Math.min((W-14-12-24)/5, (H-380)/4.2); }
-  else { cell = Math.min((H-330)/4, (W-560)/5); }
+  else { cell = Math.min((H-410)/4, (W-560)/5); }
   cell = Math.max(48, Math.floor(cell));
   document.documentElement.style.setProperty('--cell', cell+'px');
-  document.documentElement.style.setProperty('--gap', Math.round(cell*0.04)+'px');
-  S.cell = cell; S.gap = Math.round(cell*0.04);
+  document.documentElement.style.setProperty('--gap', '0px'); // gapless grid (Lilith's Curse look)
+  S.cell = cell; S.gap = 0;
   renderAll();
 }
 const pos = (r,row) => ({x: r*(S.cell+S.gap), y: row*(S.cell+S.gap)});

@@ -49,3 +49,9 @@ Captured from `prototype/` with headless Chrome (`./shoot.sh`). Screens: `refere
 ## 4. Event → visual timing (normal speed; turbo × 0.35)
 reveal 650 ms · stackComplete 900 · mergeGroups 900 (only when a group appears) · winInfo 1100 · wildGrow 650 · respinStart 700 + 250 fade · respinReveal 500 · respinEnd 450 · freeSpinTrigger 2600 · updateFreeSpin 250 · freeSpinRetrigger 900 · freeSpinEnd 1600 · big win ~1350 count-up + 1500 hold.
 - `upgrade` (E13): Dare free spin completes R3 → banner "DARE → DOUBLE DARE +2", tier bar switches, stack + single locked (SPEC §6 D10).
+
+## UI style (locked 2026-10-23)
+- **No glow anywhere on wilds** (cells, locked wilds, full-reel/merged overlays, badges). Wilds get only a subtle idle breathe (img scale 1.00→1.03, ~2.8s ease-in-out loop); LOCKED = small flat denim tag. Multiplier badge = painted rose pill, +1 grow pop kept.
+- **Painted matte chrome like Lilith's Curse**: soft top-light→darker-bottom shading, inset edge darkening, faint paper/canvas grain (SVG feTurbulence data-URI), slightly uneven hand-cut corners, ink (#3B2A2A) 2px outlines. No neon, no specular gloss, no rainbow gradients. Palette from the dorm background: cream/paper, wood, soft pink, denim, one accent (rose #C8435F).
+- **Gapless grid**: 5×4 cells are individual painted tiles (each respins on its own) butted edge-to-edge with a thin shared ink seam, square corners, zero gutters (`--gap:0`). Full-reel/merged overlays align exactly to the gapless columns.
+- Reel window = painted wooden frame around a cream board. Fonts bundled locally (OFL): Lilita One (display/buttons), Caveat Brush (logo script), Nunito (UI/numbers, tabular). Logo is typeset HTML (no dark box); final logo art should follow the same matte painted look.
