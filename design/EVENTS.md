@@ -21,10 +21,10 @@ A reel became a full-reel wild in this step.
 
 ### mergeGroups
 Emitted whenever the set of adjacent full-reel groups changes (after a `stackComplete` or a `wildGrow` that touches a group), and once after each free-spin `reveal` if groups exist.
-- `step`, `groups`: `[{reels: [0,1], values: [6,5], product: 30}]` (only groups of ≥ 2 adjacent reels). The frontend swaps in the 2/3/4/5-wide merged art and the combined badge "x6 × x5 = x30".
+- `step`, `groups`: `[{reels: [0,1], values: [6,5], product: 30}]` (only groups of ≥ 2 adjacent reels). The frontend swaps in the 2/3/4/5-wide merged scene (2/3/4/5 elves) and the combined badge "x6 × x5 = x30".
 
 ### winInfo
-The line wins **paid in this step** (only runs with ≥ 1 cell that landed this step, SPEC §4.3).
+The line wins **paid in this step**: every winning line on this step's board, including all-wild lines that pay again (SPEC §4.3).
 - `step`, `totalWin` (this step), `wins[]`:
   - `lineIndex` (1–20), `symbol`, `count` (3–5), `win`
   - `positions`: the run's cells `[{reel,row}]`

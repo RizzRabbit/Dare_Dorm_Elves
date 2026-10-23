@@ -28,9 +28,10 @@ def line_mult(run, sym, sv, full):
             i += 1
     return max(1, m)
 
-def evaluate(sym, sv, full, fresh):
-    """Pays a line only if its winning run contains >=1 cell that landed this step (no double pay).
-    Returns (lb, connected wild keys, cells to respin, detail)."""
+def evaluate(sym, sv, full):
+    """Pays every winning line on THIS step's board (R5, user-locked): no 'newly landed cell' filter.
+    Non-wild cells of connected runs are replaced each respin, so repeat pays come from newly formed
+    lines; an all-wild line pays again at every step at its grown value. Returns (lb, connected wild keys, cells to respin, detail)."""
     lb, conw, resp, det = 0, set(), set(), []
     for i, ln in enumerate(LINES):
         cells = [sym[r][ln[r]] for r in range(REELS)]
@@ -47,7 +48,6 @@ def evaluate(sym, sv, full, fresh):
         pw = PAY['W'][wn-3] if wn >= 3 else 0
         k, s_ = (n, base) if ps >= pw else (wn, 'W')
         run = [(r, ln[r]) for r in range(k)]
-        if not any(c in fresh for c in run): continue          # stale win, already paid
         m = line_mult(run, sym, sv, full); p = max(ps, pw)
         lb += p * m; det.append(f"L{i+1} {k}x{s_} {p}lb x{m} = {p*m}lb")
         wc = [c for c in run if sym[c[0]][c[1]] == 'W']
@@ -66,14 +66,13 @@ def play(board, steps=(), full=None, sticky=None, verbose=True, max_steps=3):
             if sym[r][row] == 'W': sv[(r, row)] = (sticky or {}).get((r, row), 1)
     for r in full:
         for row in range(ROWS): sym[r][row] = 'W'; sv.pop((r, row), None)
-    fresh = {(r, row) for r in range(REELS) for row in range(ROWS)}
     total, step = 0, 0
     while True:
         for r in range(REELS):                                   # stack completion: sum the 4 values
             if r not in full and all(sym[r][row] == 'W' for row in range(ROWS)):
                 full[r] = sum(sv.pop((r, row)) for row in range(ROWS))
                 if verbose: print(f"  step{step}: R{r+1} full-reel wild = x{full[r]}")
-        lb, conw, resp, det = evaluate(sym, sv, full, fresh)
+        lb, conw, resp, det = evaluate(sym, sv, full)
         total += lb
         if verbose:
             print(f"  step{step}: pays {lb}lb ({lb/20}x): " + "; ".join(det))
@@ -93,6 +92,5 @@ def play(board, steps=(), full=None, sticky=None, verbose=True, max_steps=3):
         for c, s in rep.items():
             sym[c[0]][c[1]] = s
             if s == 'W': sv[c] = 1
-        fresh = set(rep)
     if verbose: print(f"  TOTAL {total}lb = {total/20}x")
     return total, full, sv

@@ -25,17 +25,18 @@ The executable reference for §3–§4 is `design/prototypes/reference_rules.py`
 | R3 | On a connection, the **non-wild symbols inside the connected winning run(s) are replaced** (respun). **Wilds lock in place.** Symbols not in any connection **stay put**; if a stayed symbol joins a later connection, it is replaced then. |
 | R4 | Respins run **everywhere**: base, Ante, every bonus spin, EGW **and the Mystery spin**. Respins never use up a free spin. |
 | R4-Mystery | On the Mystery spin, the respins **are** the reveal: **no more wilds land = no bonus; more wilds land = the bonus triggers**. Tier odds stay **50/37/10/3**. |
-| R5 | **Every win pays at the respin step where it lands** (settled by R3). |
-| R6 | Wild growth is **+1 per respin step in which the wild connects, everywhere** (base, Ante, bonuses, EGW, Mystery). The math controls the tail with reel and stack odds and must report if the limits can't hold. |
+| R5 | **Every step pays every winning line on that step's board** (2026-10-23 correction). There is **no** "must include a newly landed cell" filter. Every non-wild symbol of a connected winning run is replaced on the respin and only the wilds stay, so a repeat pay always comes from a newly formed line, and an **all-wild line pays again at every respin step** at its grown value. |
+| R6 | Wild growth is **+1 per respin step in which the wild connects, everywhere** (base, Ante, bonuses, EGW, Mystery). The math tail is controlled by **stack and wild odds**, **not by restricting pays**; the build must report if the limits can't hold. |
 | A1 | **3 or more adjacent full-reel wilds all multiply together.** |
 | A2 | Mixed line: **multiply within each adjacent group, then add the groups and the other wilds.** |
 | A3 | Bonus tiers differ **only** by starting stacks/wilds, spin count and stack odds. No other per-tier levers. |
 | A4 | A full-reel wild grows **+1 per connection** (as one wild). |
 | A5 | A stack that **lands complete at once is x4** (four x1 wilds). A stack **built over respins is the sum of its grown values**. **Bought bonuses play a real trigger spin with respins**: no forced x4, no forced reels 1/3/5. Adjacency on buy triggers is controlled by reel/stack odds. |
-| A6 | Adjacent merged stacks render as **one wide wild with new art per width (2/3/4/5 wide), each a progressively sexier elf**, with a **combined badge** (e.g. "x6 × x5 = x30"). |
+| A6 | Adjacent merged stacks render as **one wide wild scene that adds elves**: 2-wide = 2 elves together, 3-wide = 3, 4-wide = 4, 5-wide = 5 (full-board party). Each width is sexier and more crowded, college dorm style, within the content ceiling, with the **combined badge** (e.g. "x6 × x5 = x30"). |
 | C-a/C-b | 7 bet modes; 96.65–96.69% target. |
 | C-c | Keep the name **"Elves Gone Wild"** (user's call; trademark risk noted in CONTENT_RULES.md). |
-| Art | **"Sexy college elves, not strippers"** (2026-10-23): casual flirty college wear, natural makeup, early-20s clearly adult, dorm props; merged wilds escalate hoodie → crop top + shorts → sleepshirt → towel → covering pose. See ART_BIBLE.md. |
+| Art | **"Sexy college elves, not strippers"** (2026-10-23): casual flirty college wear, natural makeup, early-20s clearly adult, dorm props; full-reel stack = **one sexy elf, as revealing as the ceiling allows** (covering pose OK); merged wilds **add elves** (2/3/4/5). See ART_BIBLE.md. |
+| Symbols | **Cannabis leaf stays as L5 and alcohol stays** (bottle, red cup); no swap (user, 2026-10-23). Background concept approved as is. |
 | C-d | Art level follows the **Rack City Baddies (Donut Games, Stake Engine)** precedent; see `design/CONTENT_RULES.md`. |
 | Disclaimer | Rules end with "… TM and © 2026 Engine." (same pattern as Vault Breakers). |
 
@@ -68,15 +69,15 @@ Pays are in **line-bet units (lb)**; total bet = 20 lb, so `x bet = lb / 20`. Re
 | Low 2 | L2 | **Lips** (glossy pink kiss) | 5 | 15 | 60 |
 | Low 3 | L3 | **"GOOD VIBES" neon sign** | 4 | 10 | 40 |
 | Low 4 | L4 | **Red party cup** | 3 | 8 | 30 |
-| Low 5 | L5 | **Cannabis leaf** (lowest; flagged, safe swap = **gaming controller**, art only, math unchanged) | 3 | 8 | 30 |
+| Low 5 | L5 | **Cannabis leaf** (lowest; kept by user decision) | 3 | 8 | 30 |
 
-- **D2 proposal [ASSUMED – user to confirm]:** keep 5 lows = bottle, lips, GOOD VIBES neon, red cup, leaf (leaf lowest). Dropped to keep the reels readable: lingerie (now worn by the elves), crown (moved onto elf H4), phone-with-heart, pizza. Swap any of them back in 1:1 with zero math change.
+- **D2 lows:** bottle, lips, GOOD VIBES neon, red cup, cannabis leaf (leaf lowest; leaf and alcohol kept by the user). Dropped to keep the reels readable: lingerie (now worn by the elves), crown (moved onto elf H4), phone-with-heart, pizza. Any of them can be swapped back in 1:1 with zero math change if the user asks.
 - The wild substitutes for all symbols. A line pays the **larger** of the pure-wild run and the first-non-wild-symbol run (math-sdk `LinesWins` convention).
 - Max board before multipliers: 20 × 500 lb / 20 = **500x**.
 - SDK units: enter `config.paytable` in the unit the math-sdk lines sample (`games/0_0_lines`) uses. If it pays in total-bet units, divide these lb values by 20. Verify against the sample before coding (BUILD_PROMPT A2).
 
 ## 3. Wilds, connections, multipliers [LOCKED]
-- **Connection (D3):** a wild connects in a step when it sits **inside the winning run** of a line that **pays in that step** (§4.3).
+- **Connection (D3):** a wild connects in a step when it sits **inside the winning run** of a line that **pays in that step** (§4.3). An all-wild run connects (and pays) at every step.
 - **Value (R1/R6):** a new wild = **x1**. After each step's evaluation, every wild that connected in that step gains **+1** (once per step, however many lines it is on).
 - **Full-reel wild (A4/A5):** when all 4 cells of a reel are wild, the reel becomes one full-reel wild worth the **sum** of the 4 cell values at that moment. A stack that lands complete in one go = 1+1+1+1 = **x4**. A stack built over respins keeps its grown values (e.g. 4+4+3+1 = x12, E3). From then on it grows +1 per step it connects, as one wild.
 - **Line multiplier (A1/A2):** split the winning run into groups:
@@ -87,20 +88,22 @@ Pays are in **line-bet units (lb)**; total bet = 20 lb, so `x bet = lb / 20`. Re
 - **Line win** = pay (lb) × line multiplier. **Step win** = sum of line wins paid in that step.
 - **No global multiplier** exists anywhere.
 - Wild values **reset after every base/Ante/EGW/Mystery spin** unless they carry into a bonus that spin triggered.
-- **Merged display (A6):** adjacent full-reel wilds render as one wide elf wild (2/3/4/5 wide art, escalating hoodie → crop top + shorts → sleepshirt → towel) with a combined badge "x6 × x5 = x30".
+- **Merged display (A6):** adjacent full-reel wilds render as one wide elf wild (2/3/4/5 wide scenes with 2/3/4/5 elves, sexier and more crowded as they grow) with a combined badge "x6 × x5 = x30".
 
 ## 4. Respins [LOCKED]
 1. **Step 0** = the spin itself. Land the cells, complete stacks (§3), evaluate (4.3), pay, grow.
 2. If at least one paid line in this step **contains a wild** (a "connected run"), a respin follows. Otherwise the sequence ends.
-3. **Pay rule (R5) and no-double-pay:** in every step, a line pays if its winning run contains **at least one cell that landed in this step** (step 0: every cell). A run made only of cells unchanged since the previous step was already paid and **does not pay again**. This is how "each win pays at the step it lands" is implemented.
+3. **Pay rule (R5) [LOCKED]:** in every step, **every winning line on that step's board pays** (best win per line, §2/§3). There is no "newly landed cell" filter. Because every non-wild cell of a connected run is replaced before the next step and only wilds stay, a repeat pay always comes from a newly formed line. **An all-wild line (wilds only) pays again at every respin step** at its grown value.
 4. **Replace (R3):** before the next step, every **non-wild cell inside a connected run paid in this step** is replaced with a fresh draw from the current reel set. **All wilds stay locked** (single and full-reel). Non-wild cells **not** in a connected run **stay put** (including cells of wins without a wild; those pay once and are not replaced).
-5. In the new step, land the replacement cells (a replacement can be a wild, which starts x1), complete stacks, evaluate with 4.3, pay, grow.
+5. In the new step, land the replacement cells (a replacement can be a wild, which starts x1), complete stacks, evaluate the whole board (4.3), pay, grow.
 6. **Stop (R2):** after the step where no paid line contains a wild, or after **respin 3** (step 3), whichever comes first.
 7. **Where (R4):** base, Ante, every free spin, EGW and the Mystery spin. Respins never use a free spin.
 8. Wilds landed on respins **count toward triggers** (checked on the final board) and toward new stacks (+2 spins in bonuses).
 9. **Win cap check** after every step (§9).
 
-> Note for the math build: `design/prototypes/toy_sim4.py` (the last toy) re-pays unchanged lines every step, which overstates RTP. Use rule 4.3 (as in `reference_rules.py`).
+> Note for the math build: `reference_rules.py` is the executable form of 4.3 (every winning line on each step's board pays).
+>
+> **Open question for the user (not changed):** R3 replaces only cells of *connected* runs (runs containing a wild). A win **without** a wild (e.g. 3×H1 on another line) keeps its cells, so under 4.3 it pays again at each respin step while other lines keep the sequence going. None of the §12 examples hit this case. The build follows 4.3 + R3 literally and reports how often it happens in Phase A. If the user meant "every winning line's non-wild cells are replaced", R3 changes, not 4.3.
 
 ## 5. Base game and Ante
 - Trigger check on the **final board** of the spin's sequence, precedence **D4**:
@@ -152,7 +155,7 @@ Pays are in **line-bet units (lb)**; total bet = 20 lb, so `x bet = lb / 20`. Re
 
 ## 8. Mystery Spin (buy) [LOCKED]
 1. The outcome bucket is drawn with weights fixed at exactly **50 / 37 / 10 / 3** (no bonus / Double Dare / Triple Dare / Hidden). The optimizer may reshape weights **within** a bucket only (C20). CI check: bucket weight drift ≤ 0.001%.
-2. **Reveal spin:** lands **exactly 3 wilds** with **at least one connected win**, so respins always run. [DEFAULT] the 3 wilds sit as a 3-high partial stack on one reel (the tease art); if stack completion through respins proves too rare to generate, the build may scatter them and must report it.
+2. **Reveal spin:** lands **exactly 3 wilds** with **at least one connected win**, so respins always run. [DEFAULT – open item for the user] the 3 wilds sit as a 3-high partial stack on one reel (the tease art); if stack completion through respins proves too rare to generate, the build may scatter them and must report it.
 3. **The respins are the reveal (R4-Mystery):**
    - **No bonus:** no wild lands on any respin. The final board has exactly 3 wilds and no stack, so a Dare is never implied. All steps pay. The round ends.
    - **Double Dare / Triple Dare / Hidden:** wilds land on respins and the final board meets that tier's condition (§5 table). Stacks follow A5 (sum of grown values). Then the bonus plays (§6) in the same book.
@@ -162,7 +165,7 @@ Pays are in **line-bet units (lb)**; total bet = 20 lb, so `x bet = lb / 20`. Re
 6. Price: optimizer (D6). Toy ~245x (pre-R6).
 
 ## 9. Order of resolution (one spin)
-1. Load locked/sticky wilds (bonus) or placed stacks (EGW). 2. Land cells. 3. Complete stacks (sum values). 4. Evaluate lines (§3 groups) with the §4.3 pay rule. 5. Add the step win to the round total. 6. **If the round total ≥ 50,000x: set it to exactly 50,000x, emit `wincap`, end the round** (no more steps, spins or bonus). 7. Grow connected wilds +1. 8. Respin decision (§4.2/4.6); if yes, replace cells and go to 2. 9. Bonus spins: +2 per newly completed stack, capped at 18. 10. Base/Ante/Mystery: check the trigger (§5 / §8) and play the bonus in the same book. EGW: never.
+1. Load locked/sticky wilds (bonus) or placed stacks (EGW). 2. Land cells. 3. Complete stacks (sum values). 4. Evaluate every line on the current board (§3 groups, §4.3). 5. Add the step win to the round total. 6. **If the round total ≥ 50,000x: set it to exactly 50,000x, emit `wincap`, end the round** (no more steps, spins or bonus). 7. Grow connected wilds +1. 8. Respin decision (§4.2/4.6); if yes, replace cells and go to 2. 9. Bonus spins: +2 per newly completed stack, capped at 18. 10. Base/Ante/Mystery: check the trigger (§5 / §8) and play the bonus in the same book. EGW: never.
 
 ## 10. Bet modes (math-sdk) [LOCKED list, prices tune]
 | Mode (`index.json` name) | Player label | Cost | Toy range (pre-R6) | Notes |
@@ -180,8 +183,8 @@ Pays are in **line-bet units (lb)**; total bet = 20 lb, so `x bet = lb / 20`. Re
 - **Limits in every mode (2-Star, C6–C13):** RTP 96.65–96.69%; `max_win = 50000`; a `wincap` Distribution with `force_wincap: True` so 50,000x books **exist in every mode** (C13); P(win ≥ 5,000x) ≤ **1%** (raw, per round); mode cost ≤ **1,000x**; CVaR(0.1%) ≤ **20,000**; base std ≥ 0.6; hit rate no rarer than 1 in 50; max win realistically reachable (more often than ~1 in 10M); ≤ 20 modes; ≤ 10M events per mode.
 
 ## 11. Tail control and the R6 risk note
-- **R6 risk:** growth **every step everywhere** plus pay-at-every-step fattens the tail. Two non-adjacent instant stacks (R1+R3) guarantee a pay on every respin, because any replaced R2 symbol completes a 3-of-a-kind: E4 is 350x on one base spin (it was 62x under the old pay-once rule); E9 (EGW R1/R3/R5) is 374x. Adjacent groups multiply grown values, so 3 adjacent at x5 each = x125.
-- **The math controls it with odds, not rule changes:** (1) instant-stack and single-wild densities per reel, especially **reels 2 and 4** (every adjacent pair includes one of them); (2) buy-trigger strip odds; (3) EGW pattern weights (D9); (4) bonus stack odds per tier (A3); (5) the 18-spin cap; (6) the paytable scale. **The build agent must not change a locked rule to make the numbers work. If the limits in §10 cannot all hold, stop and report the best achievable figures per mode.**
+- **R6 risk:** growth **every step everywhere** plus pay-at-every-step (including all-wild lines re-paying at grown values) fattens the tail. Two non-adjacent instant stacks (R1+R3) guarantee a pay on every respin, because any replaced R2 symbol completes a 3-of-a-kind: E4 is 350x on one base spin (it was 62x under the old pay-once rule); E9 (EGW R1/R3/R5) is 374x. Adjacent groups multiply grown values, so 3 adjacent at x5 each = x125.
+- **The math controls it with stack and wild odds, never by restricting pays or changing rules:** (1) instant-stack and single-wild densities per reel, especially **reels 2 and 4** (every adjacent pair includes one of them); (2) buy-trigger strip odds; (3) EGW pattern weights (D9); (4) bonus stack odds per tier (A3); (5) the 18-spin cap; (6) the paytable scale. **The build agent must not change a locked rule to make the numbers work. If the limits in §10 cannot all hold, stop and report the best achievable figures per mode.**
 - 50,000x is reached mainly through adjacent groups (4 adjacent ≈ always; 3 adjacent with growth). Toy figures from v1 (`toy_sim3.py`) predate R3/R5/R6 and are indicative only.
 
 ## 12. Worked examples (all recomputed by `prototypes/worked_examples.py`)
@@ -307,11 +310,10 @@ Step 0: every line 4-of-a-kind of its R1 symbol × 504 = 335,160 lb = 16,758x. 3
 | v1 text | Now | Source |
 |---|---|---|
 | §4 R3: winners are **held**, the rest respins | Winners' non-wild cells are **replaced**; the rest **stays** | R3 |
-| §4 R5: pay **once** at the end on the final board (E2 paid 35x once) | **Every step pays** with no double pay (§4.3); E2 rebuilt | R5/R3 |
+| §4 R5: pay **once** at the end on the final board (E2 paid 35x once) | **Every step pays every winning line on that step's board** (§4.3); E2 rebuilt | R5/R3 |
 | §3 growth once per spin sequence in bonuses/EGW | **+1 per step everywhere** | R6 |
 | §4/§8: **no respins** on the Mystery reveal; 4th-cell slow spin decides | Mystery **respins are the reveal** | R4-Mystery |
 | §6 bought stacks **x4 on reels {1,3,5}** | Bought bonuses play a **real trigger spin**; no forced x4/reels | A5 |
 | §6 per-tier levers (Dare sticky only, reels 2/4 at 1/10 except Hidden) | Tiers differ only by start stacks/wilds, spins, stack odds; all wilds sticky [ASSUMED] | A3 |
-| §2 H1 bottle / H2 lips / H3 lingerie / H4 crown | Premiums = 4 elves; objects are lows | D2 |
+| §2 H1 bottle / H2 lips / H3 lingerie / H4 crown | Premiums = 4 elves; objects are lows; cannabis leaf stays L5 | D2 |
 | §12 E7 62.4x, E9 89.2x | 350.1x / 374.5x (respins now pay) | R5/R6 |
-| Toy sim pays unchanged lines each step | §4.3 no-double-pay rule | R5 |

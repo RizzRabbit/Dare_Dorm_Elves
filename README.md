@@ -24,10 +24,9 @@ This repo is the **design + asset + build-instructions package**. No game code y
 | `design/prototypes/worked_examples.py` (+ `_output.txt`) | Computes every SPEC §12 example |
 | `design/prototypes/toy_sim*.py, tune4.py, egw_check.py …` | Toy Monte Carlo sims (indicative only, not the math model) |
 | `assets/ART_BIBLE.md` | Style guide, full asset list, sizes, animation states, image prompts |
-| `assets/concepts/*.png` | Concept images (logo, background, single wild, premium elf, full-reel swimwear fallback) |
+| `assets/concepts/*.png` | Concept images (logo, background, single wild, premium elf, superseded full-reel concept used as pose reference) |
 
 ## Open items for the user
-- Full-reel stack art = covering-pose elf (assumed; swimwear fallback ready).
-- Low-symbol list (proposed: bottle, lips, GOOD VIBES, red cup, leaf).
-- Cannabis leaf: recommend swapping to a gaming controller (zero math change).
-- All bonus wilds sticky in every tier (A3 reading).
+- All bonus wilds sticky in every tier (A3 reading; SPEC §6).
+- Mystery tease default: the 3 reveal wilds sit as a 3-high partial stack on one reel; the build may scatter them if needed and must report it (SPEC §8).
+- Wins without a wild keep their cells under R3, so they pay again at each respin step under the every-step pay rule (SPEC §4 note). Confirm this is intended.

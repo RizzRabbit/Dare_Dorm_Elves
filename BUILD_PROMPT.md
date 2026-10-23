@@ -120,7 +120,7 @@ cp -r games/0_0_lines games/dare_dorm_elves
 | E9 | 374.50 | R1 x8, R3 x8, R5 x5; no bonus |
 | E10 | 72.30 | R3 x17 |
 | E12 | step 16758.00 → round 50000 | wincap event, round ends |
-- `test_rules.py`: wild in run only (D3); stale run not re-paid; non-connected win not replaced; max 3 respins; Dare never from Mystery; EGW never triggers; spin cap 18 (incl. +2 at 17 → 18, not 19); A1/A2 group math; precedence table.
+- `test_rules.py`: wild in run only (D3); every winning line on each step's board pays (no newly-landed filter) and an all-wild line pays again at every respin step at its grown value; non-connected win not replaced; max 3 respins; Dare never from Mystery; EGW never triggers; spin cap 18 (incl. +2 at 17 → 18, not 19); A1/A2 group math; precedence table.
 - `test_events.py`: a book's events follow EVENTS.md sequences; `finalWin.amount == payoutMultiplier`; coordinates in range.
 **A acceptance:** `pytest -q` all green; `python games/dare_dorm_elves/run_local.py 2000 200 1 0` produces books for all 7 modes without errors.
 
@@ -168,7 +168,7 @@ Implement in `apps/dare-dorm-elves/src/`:
 1. `game/config.ts`: gameID, `maxWin: 50000`, 5×4, 20 paylines, paytable, 7 bet modes with costs/RTP **generated from `math/.../publish_files/index.json` + stats** (script `scripts/sync-config.mjs`), free-spin table (8/10/12/14, +2, cap 18), Mystery odds.
 2. `game/typesBookEvent.ts` + `bookEventHandlerMap.ts`: one handler per EVENTS.md event; unknown events throw in dev.
 3. Board: 5×4 reels, padded reveal, anticipation; **respin animation** (flash connected cells → pop replaced cells → drop new cells; wilds show lock ring); per-step win count-up that never decreases.
-4. Wilds: single wild sprite + multiplier badge; `wildGrow` tick; `stackComplete` fuse animation to the full-reel elf (WF) with sum count-up; `mergeGroups` → swap to **merged wide art WM2–WM5** with the **combined badge "x6 × x5 = x30"** and a group outline; non-adjacent stacks keep separate badges.
+4. Wilds: single wild sprite + multiplier badge; `wildGrow` tick; `stackComplete` fuse animation to the full-reel elf (WF) with sum count-up; `mergeGroups` → swap to **merged wide scenes WM2–WM5 (2/3/4/5 elves)** with the **combined badge "x6 × x5 = x30"** and a group outline; non-adjacent stacks keep separate badges.
 5. Free spins: intros per tier (Dare/Double/Triple/Hidden), counter "SPINS n/total", "+2" pop, cap 18 messaging, outro with total.
 6. **Buy menu** ("Get Bonus" in social mode): 5 cards (Dare, Double Dare, Triple Dare, Mystery Spin, Elves Gone Wild) with live cost × bet, RTP and max win per mode; **confirm dialog for any mode > 2× bet**; Mystery card + dialog show "50% no bonus / 37% Double Dare / 10% Triple Dare / 3% Hidden – decided before the reveal".
 7. **Ante** toggle (1.25×, no confirm), shown in the bet panel; disabled during a round.
@@ -205,7 +205,7 @@ Implement in `apps/dare-dorm-elves/src/`:
 2. Wild connects only **inside the winning run** (D3).
 3. Wild starts **x1**; **+1 per respin step it connects, everywhere** (R1/R6). Full-reel wild = **sum of its 4 values**; instant stack = **x4**; grows +1 as one wild (A4/A5).
 4. **Adjacent full-reel wilds multiply (3+ all multiply), non-adjacent add; mixed = multiply within groups then add** (A1/A2). No global multiplier.
-5. Respins: **replace non-wild symbols of connected runs, wilds lock, others stay; max 3; stop when nothing new connects; every step pays** (R2/R3/R5); everywhere incl. Mystery and EGW (R4); respins don't use free spins.
+5. Respins: **replace non-wild symbols of connected runs, wilds lock, others stay; max 3; stop when nothing new connects; every step pays every winning line on that step's board, no "newly landed cell" filter; an all-wild line pays again at every respin step** (R2/R3/R5); tail is controlled by stack/wild odds, never by restricting pays (R6); everywhere incl. Mystery and EGW (R4); respins don't use free spins.
 6. Triggers & precedence **Hidden > Triple > Double > Dare**; trigger spin pays (D4).
 7. Bonuses **8/10/12/14** spins, **+2 per newly completed stack, cap 18**, no tier upgrades (D8); tiers differ only by start stacks/wilds, spins and stack odds (A3).
 8. Bought bonuses play a **real trigger spin**: no forced x4, no forced reels (A5).
@@ -214,8 +214,8 @@ Implement in `apps/dare-dorm-elves/src/`:
 11. **Ante 1.25x** ≈ 2× triggers (D5). **7 bet modes**; Hidden not buyable (D7). Prices set by the optimizer (D6).
 12. RTP **96.65–96.69%** every mode; **max win 50,000x** (round ends at the cap); 2-Star limits (cost ≤ 1000x, P(≥5k) ≤ 1%).
 13. Theme/art ceiling per CONTENT_RULES.md; **all characters clearly adult**; name "Elves Gone Wild" stays.
-14. Paytable **ratios** (scale may tune); symbol roles (4 elves premium, objects low).
-15. **Art direction: "These are sexy college elves. Not strippers."** Casual flirty college wear (crop tops, cutoffs, varsity jerseys/hoodies off the shoulder, Greek-letter tees, tied flannel, pajama sets, bikini under an open hoodie, knee socks, scrunchies, messy buns), natural playful makeup, early-20s clearly adult women (never childlike), dorm props (string lights, posters, red cups, bunk bed). Sexy through fit and pose, **no club/stripper glam** (no sequins, latex, stripper heels, pole/club staging). Merged wilds escalate in college wear: 2-wide hoodie → 3-wide crop top + shorts → 4-wide sleepshirt → 5-wide towel after a shower → covering pose (full-reel/finale). See assets/ART_BIBLE.md.
+14. Paytable **ratios** (scale may tune); symbol roles (4 elves premium, objects low). **Lows stay: DARE bottle, lips, GOOD VIBES, red cup, cannabis leaf (L5)**; no controller swap; alcohol stays.
+15. **Art direction: "These are sexy college elves. Not strippers."** Casual flirty college wear (crop tops, cutoffs, varsity jerseys/hoodies off the shoulder, Greek-letter tees, tied flannel, pajama sets, bikini under an open hoodie, knee socks, scrunchies, messy buns), natural playful makeup, early-20s clearly adult women (never childlike), dorm props (string lights, posters, red cups, bunk bed). Sexy through fit and pose, **no club/stripper glam** (no sequins, latex, stripper heels, pole/club staging). **Full-reel stacked wild = ONE sexy elf, as revealing as the ceiling allows** (covering pose OK; never visible nipples or genitals). **Merged wilds add elves:** 2-wide = 2 elves, 3-wide = 3, 4-wide = 4, 5-wide = 5 (full-board party scene), sexier and more crowded as they grow, college dorm style, combined badge kept. See assets/ART_BIBLE.md.
 
 ## 9. Definition of done
 | # | Item | Evidence |
