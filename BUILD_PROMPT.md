@@ -197,6 +197,16 @@ Implement in `apps/elfhaus/src/`:
 - [ ] After approval no math/mode/mechanic changes are allowed (C23): freeze everything first.
 
 ---
+## 6b. Build & test (CI)
+**Layout and owners:** `math/games/elfhaus/` (Stake math-sdk game) is owned by Slot Mechanics Integration Expert. The frontend app is owned by Frontend Slot Dev. BUILD_PROMPT.md §5 puts it at `frontend/apps/elfhaus/` (web-sdk monorepo); the CI also accepts `apps/elfhaus/`. Final art goes in `assets/final/` (still arriving). Until each folder lands, its check skips.
+
+**Checks**, the same ones CI runs. The workflow is in `scripts/ci/github-ci.yml` and runs on every push to main and on every PR. **Not active yet:** to turn it on, a maintainer whose token has the `workflow` scope copies it to `.github/workflows/ci.yml`. Each one exits 0 with a notice while its folder is missing:
+- `scripts/ci/math_smoke.sh`: once math/ lands, installs `math/requirements.txt` and the SDK (`pip install -e .`), runs `pytest games/elfhaus/tests -q` if that folder exists, then `games/elfhaus/run_local.py 200 20 1 0` (tiny sim, no optimizer, so Rust isn't needed). Use Python 3.12 (or your activated `math/env`). Env: `MATH_SMOKE_BASE`, `MATH_SMOKE_BONUS`, `SKIP_INSTALL=1`. Adjust it if the runner's arguments differ.
+- `scripts/ci/frontend_build.sh`: once the app lands, finds the pnpm workspace (or another lockfile), runs `pnpm install --frozen-lockfile`, then `pnpm --filter <app package name> run build`. Use Node 22.16.0 and pnpm 10.5.0.
+
+**Git:** run `git pull --rebase` before every push. Keep commits small, stay inside your own paths, push normally (never force), and don't commit books, LUTs or `node_modules` (see .gitignore).
+
+---
 ## 7. Repo hygiene
 - `.gitignore`: `math/env/`, `math/games/*/library/books*`, `library/lookup_tables`, `library/optimization_files`, `*.jsonl.zst` (keep `publish_files/index.json` and `stats_summary.json`), `frontend/node_modules`, `build/`.
 - Upload artifacts via the Stake dashboard, not git.

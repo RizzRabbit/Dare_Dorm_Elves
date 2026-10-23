@@ -1,0 +1,41 @@
+# TEMPLATE: copy to .github/workflows/ci.yml to enable (needs a token with `workflow` scope to push).
+name: ci
+# Same checks as scripts/ci/*.sh (run them locally too). Each job skips cleanly
+# until its directory exists (math/games/elfhaus, frontend/apps/elfhaus or apps/elfhaus).
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  math-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - id: detect
+        run: |
+          if [ -d math/games/elfhaus ]; then echo "present=true" >> "$GITHUB_OUTPUT"; else echo "present=false" >> "$GITHUB_OUTPUT"; fi
+      - if: steps.detect.outputs.present == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      # Rust/Cargo is only needed by the math-sdk optimizer; the smoke runs no optimizer.
+      - run: scripts/ci/math_smoke.sh
+
+  frontend-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - id: detect
+        run: |
+          if [ -f frontend/apps/elfhaus/package.json ] || [ -f apps/elfhaus/package.json ]; then echo "present=true" >> "$GITHUB_OUTPUT"; else echo "present=false" >> "$GITHUB_OUTPUT"; fi
+      - if: steps.detect.outputs.present == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+      - if: steps.detect.outputs.present == 'true'
+        run: npm install -g pnpm@10.5.0   # BUILD_PROMPT.md §2
+      - run: scripts/ci/frontend_build.sh
