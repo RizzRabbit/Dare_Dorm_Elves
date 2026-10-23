@@ -34,6 +34,7 @@ function symHTML(name, v){
   if (name==='H1') return `<div class="sym H H1"><img src="assets/premium_H1_elf.png" alt=""><span class="nameTag">H1 ROXY</span></div>`;
   if (name==='H2') return `<div class="sym H H2"><img src="assets/premium_H2_elf.png" alt=""><span class="nameTag">H2 JADE</span></div>`;
   if (name==='H3') return `<div class="sym H H3"><img src="assets/premium_H3_elf.png" alt=""><span class="nameTag">H3 VI</span></div>`;
+  if (name==='H4') return `<div class="sym H H4"><img src="assets/premium_H4_elf.png" alt=""><span class="nameTag">H4 COCO</span></div>`;
   const t = name[0];
   return `<div class="sym ${t} ${name}"><span class="id">${name}</span><span class="nm">${NAMES[name]}</span>${t==='H'?'<span class="id">elf placeholder</span>':''}</div>`;
 }
