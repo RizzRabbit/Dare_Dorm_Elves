@@ -1,0 +1,22 @@
+{
+	"type": "module",
+	"name": "config-svelte",
+	"version": "0.0.0",
+	"main": "./index.js",
+	"license": "MIT",
+	"scripts": {
+		"format": "prettier --write --ignore-path=../../.prettierignore .",
+		"lint": "eslint *.js*"
+	},
+	"devDependencies": {
+		"eslint": "9.21.0",
+		"eslint-config-custom": "workspace:*",
+		"sass-embedded": "1.85.1"
+	},
+	"dependencies": {
+		"svelte": "5.20.5",
+		"vite": "6.2.0",
+		"@sveltejs/adapter-static": "latest",
+		"@sveltejs/vite-plugin-svelte": "5.0.3"
+	}
+}

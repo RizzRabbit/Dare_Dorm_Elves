@@ -1,0 +1,17 @@
+{
+	"name": "utils-fetcher",
+	"version": "0.0.0",
+	"main": "./index.ts",
+	"types": "./index.ts",
+	"type": "module",
+	"license": "MIT",
+	"scripts": {
+		"format": "prettier --write --ignore-path=../../.prettierignore .",
+		"lint": "eslint *.ts*"
+	},
+	"devDependencies": {
+		"eslint": "9.21.0",
+		"eslint-config-custom": "workspace:*",
+		"config-ts": "workspace:*"
+	}
+}

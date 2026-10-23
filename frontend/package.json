@@ -1,0 +1,14 @@
+{
+  "name": "elfhaus-frontend",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "dev": "pnpm --filter elfhaus dev",
+    "build": "pnpm --filter elfhaus build",
+    "fixtures": "node apps/elfhaus/test-fixtures/gen.cjs"
+  },
+  "engines": { "node": ">=20" },
+  "packageManager": "pnpm@10.5.0",
+  "pnpm": { "onlyBuiltDependencies": ["esbuild", "svelte-preprocess"] }
+}
