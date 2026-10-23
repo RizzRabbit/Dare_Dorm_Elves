@@ -27,3 +27,4 @@
 - C-c: USER: keep "Elves Gone Wild"; trademark check done 2026-10-22: GIRLS GONE WILD is live US Reg. 4010741 (entertainment services, GGW Group s.r.o., renewed Jan 2022). GGW owners successfully opposed "BOWLS GONE WILD" (TTAB 91180003, sustained 2008, by default). Risk flagged to the user; not legal advice.
 - C-c: Elves Gone Wild name (Girls Gone Wild IP), rename or IP check
 - C-d: content risk: covering-pose wild, how adult the elves look, cannabis leaf, alcohol
+- D10 details (user-confirmed 2026-10-23): Dare trigger wilds appear on free spin 1 only, then clear; on the Dare->Double Dare upgrade spin, every wild on the final board locks (singles and the stack).
