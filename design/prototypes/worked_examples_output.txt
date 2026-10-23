@@ -1,0 +1,108 @@
+
+=== E1 base line win, no wild (no respin)
+  step0: pays 25lb (1.25x): L1 3xH1 25lb x1 = 25lb
+  TOTAL 25lb = 1.25x
+  end state: full-reel wilds {}; single wilds {}
+
+=== E2 base respin: connected symbols are replaced, wild locks and grows, each step pays
+  step0: pays 20lb (1.0x): L1 3xH2 20lb x1 = 20lb
+  step0: grow -> full {} singles {'R3r0': 2}
+  step1: pays 10lb (0.5x): L1 3xL2 5lb x2 = 10lb
+  step1: grow -> full {} singles {'R3r0': 3}
+  step2: pays 0lb (0.0x): 
+  TOTAL 30lb = 1.5x
+  end state: full-reel wilds {}; single wilds {R3r0: x3}
+
+=== E3 base respins build a stack (sum of grown values) -> Triple Dare trigger
+  step0: pays 312lb (15.6x): L1 3xH2 20lb x1 = 20lb; L2 3xL4 3lb x2 = 6lb; L9 3xH2 20lb x2 = 40lb; L12 5xL2 60lb x1 = 60lb; L13 3xH2 20lb x1 = 20lb; L15 3xL4 3lb x2 = 6lb; L17 3xH2 20lb x2 = 40lb; L20 5xL2 60lb x2 = 120lb
+  step0: grow -> full {} singles {'R2r1': 2, 'R3r0': 2, 'R3r1': 2}
+  step1: pays 299lb (14.95x): L2 3xH4 10lb x4 = 40lb; L5 3xL3 4lb x3 = 12lb; L9 3xL3 4lb x4 = 16lb; L12 3xH1 25lb x3 = 75lb; L15 3xH4 10lb x4 = 40lb; L17 3xL3 4lb x4 = 16lb; L20 3xH1 25lb x4 = 100lb
+  step1: grow -> full {} singles {'R2r1': 3, 'R3r0': 3, 'R3r1': 3, 'R3r2': 2}
+  step2: pays 777lb (38.85x): L2 3xL1 5lb x6 = 30lb; L3 3xL3 4lb x3 = 12lb; L5 3xL4 3lb x5 = 15lb; L9 3xL4 3lb x6 = 18lb; L12 4xH3 50lb x6 = 300lb; L15 3xL1 5lb x6 = 30lb; L16 3xL3 4lb x1 = 4lb; L17 3xL4 3lb x6 = 18lb; L20 4xH3 50lb x7 = 350lb
+  step2: grow -> full {} singles {'R2r1': 4, 'R3r0': 4, 'R3r1': 4, 'R3r2': 3, 'R1r2': 2}
+  step3: R3 full-reel wild = x12
+  step3: pays 2194lb (109.7x): L2 3xL5 3lb x16 = 48lb; L3 3xH1 25lb x14 = 350lb; L5 3xL2 5lb x16 = 80lb; L7 3xL5 3lb x12 = 36lb; L8 3xL5 3lb x14 = 42lb; L9 3xL2 5lb x16 = 80lb; L12 5xL4 30lb x18 = 540lb; L15 3xL5 3lb x16 = 48lb; L16 3xH1 25lb x14 = 350lb; L17 3xL2 5lb x16 = 80lb; L20 5xL4 30lb x18 = 540lb
+  step3: grow -> full {'R3': 13} singles {'R2r1': 5, 'R1r2': 3}
+  TOTAL 3582lb = 179.1x
+  end state: full-reel wilds {R3: x13}; single wilds {R2r1: x5, R1r2: x3}
+
+=== E4 instant stacks (x4 each) on R1+R3, non-adjacent add -> Hidden by precedence
+  step0: R1 full-reel wild = x4
+  step0: R3 full-reel wild = x4
+  step0: pays 1248lb (62.4x): L1 3xL2 5lb x8 = 40lb; L2 3xH3 15lb x8 = 120lb; L3 3xL4 3lb x8 = 24lb; L4 3xL1 5lb x8 = 40lb; L5 3xH3 15lb x8 = 120lb; L6 3xL4 3lb x8 = 24lb; L7 3xL2 5lb x8 = 40lb; L8 3xL1 5lb x8 = 40lb; L9 3xH3 15lb x8 = 120lb; L10 3xL4 3lb x8 = 24lb; L11 3xL4 3lb x8 = 24lb; L12 3xH3 15lb x8 = 120lb; L13 3xL2 5lb x8 = 40lb; L14 3xL1 5lb x8 = 40lb; L15 3xH3 15lb x8 = 120lb; L16 3xL4 3lb x8 = 24lb; L17 3xH3 15lb x8 = 120lb; L18 3xL4 3lb x8 = 24lb; L19 3xL4 3lb x8 = 24lb; L20 3xH3 15lb x8 = 120lb
+  step0: grow -> full {'R1': 5, 'R3': 5} singles {}
+  step1: pays 630lb (31.5x): L1 3xL3 4lb x10 = 40lb; L2 3xL5 3lb x10 = 30lb; L3 3xL4 3lb x10 = 30lb; L4 3xL5 3lb x10 = 30lb; L5 3xL5 3lb x10 = 30lb; L6 3xL4 3lb x10 = 30lb; L7 3xL3 4lb x10 = 40lb; L8 3xL5 3lb x10 = 30lb; L9 3xL5 3lb x10 = 30lb; L10 3xL4 3lb x10 = 30lb; L11 3xL4 3lb x10 = 30lb; L12 3xL5 3lb x10 = 30lb; L13 3xL3 4lb x10 = 40lb; L14 3xL5 3lb x10 = 30lb; L15 3xL5 3lb x10 = 30lb; L16 3xL4 3lb x10 = 30lb; L17 3xL5 3lb x10 = 30lb; L18 3xL4 3lb x10 = 30lb; L19 3xL4 3lb x10 = 30lb; L20 3xL5 3lb x10 = 30lb
+  step1: grow -> full {'R1': 6, 'R3': 6} singles {}
+  step2: pays 3360lb (168.0x): L1 3xH4 10lb x12 = 120lb; L2 4xL1 20lb x12 = 240lb; L3 3xL2 5lb x12 = 60lb; L4 3xH1 25lb x12 = 300lb; L5 4xL1 20lb x12 = 240lb; L6 3xL2 5lb x12 = 60lb; L7 3xH4 10lb x12 = 120lb; L8 3xH1 25lb x12 = 300lb; L9 4xL1 20lb x12 = 240lb; L10 3xL2 5lb x12 = 60lb; L11 3xL2 5lb x12 = 60lb; L12 4xL1 20lb x12 = 240lb; L13 3xH4 10lb x12 = 120lb; L14 3xH1 25lb x12 = 300lb; L15 4xL1 20lb x12 = 240lb; L16 3xL2 5lb x12 = 60lb; L17 4xL1 20lb x12 = 240lb; L18 3xL2 5lb x12 = 60lb; L19 3xL2 5lb x12 = 60lb; L20 4xL1 20lb x12 = 240lb
+  step2: grow -> full {'R1': 7, 'R3': 7} singles {}
+  step3: pays 1764lb (88.2x): L1 3xL3 4lb x14 = 56lb; L2 3xH4 10lb x14 = 140lb; L3 3xL1 5lb x14 = 70lb; L4 3xL5 3lb x14 = 42lb; L5 3xH4 10lb x14 = 140lb; L6 3xL1 5lb x14 = 70lb; L7 3xL3 4lb x14 = 56lb; L8 3xL5 3lb x14 = 42lb; L9 3xH4 10lb x14 = 140lb; L10 3xL1 5lb x14 = 70lb; L11 3xL1 5lb x14 = 70lb; L12 3xH4 10lb x14 = 140lb; L13 3xL3 4lb x14 = 56lb; L14 3xL5 3lb x14 = 42lb; L15 3xH4 10lb x14 = 140lb; L16 3xL1 5lb x14 = 70lb; L17 3xH4 10lb x14 = 140lb; L18 3xL1 5lb x14 = 70lb; L19 3xL1 5lb x14 = 70lb; L20 3xH4 10lb x14 = 140lb
+  step3: grow -> full {'R1': 8, 'R3': 8} singles {}
+  TOTAL 7002lb = 350.1x
+  end state: full-reel wilds {R1: x8, R3: x8}; single wilds {}
+
+=== E5 mixed groups, first evaluation only: R1 x6 * R2 x5 adjacent (x30) + R4 x7 isolated = x37
+  step0: pays 48803lb (2440.15x): L1 4xH2 75lb x37 = 2775lb; L2 4xL1 20lb x37 = 740lb; L3 5xL4 30lb x37 = 1110lb; L4 4xH3 50lb x37 = 1850lb; L5 4xL4 8lb x37 = 296lb; L6 5xL1 80lb x37 = 2960lb; L7 5xH2 300lb x37 = 11100lb; L8 4xH3 50lb x37 = 1850lb; L9 4xH2 75lb x37 = 2775lb; L10 4xH3 50lb x37 = 1850lb; L11 4xL1 20lb x37 = 740lb; L12 5xL4 30lb x37 = 1110lb; L13 4xL1 20lb x37 = 740lb; L14 4xL4 8lb x37 = 296lb; L15 5xH2 300lb x37 = 11100lb; L16 4xH3 50lb x37 = 1850lb; L17 4xL1 20lb x37 = 740lb; L18 4xL4 8lb x37 = 296lb; L19 4xH3 50lb x37 = 1850lb; L20 4xH2 75lb x37 = 2775lb
+  step0: grow -> full {'R1': 7, 'R2': 6, 'R4': 8} singles {}
+  TOTAL 48803lb = 2440.15x
+  end state: full-reel wilds {R1: x7, R2: x6, R4: x8}; single wilds {}
+
+=== E6 three adjacent full reels all multiply: R1 x2 * R2 x3 * R3 x4 = x24 (+ single on R4 x2 = x26 where in run)
+  step0: pays 25240lb (1262.0x): L1 4xW 100lb x26 = 2600lb; L2 3xW 25lb x24 = 600lb; L3 5xL4 30lb x24 = 720lb; L4 4xH3 50lb x24 = 1200lb; L5 3xW 25lb x24 = 600lb; L6 3xW 25lb x24 = 600lb; L7 5xH2 300lb x26 = 7800lb; L8 4xH3 50lb x24 = 1200lb; L9 3xW 25lb x24 = 600lb; L10 3xW 25lb x24 = 600lb; L11 3xW 25lb x24 = 600lb; L12 3xW 25lb x24 = 600lb; L13 4xW 100lb x26 = 2600lb; L14 4xH3 50lb x24 = 1200lb; L15 3xW 25lb x24 = 600lb; L16 5xL4 30lb x24 = 720lb; L17 3xW 25lb x24 = 600lb; L18 3xW 25lb x24 = 600lb; L19 3xW 25lb x24 = 600lb; L20 3xW 25lb x24 = 600lb
+  step0: grow -> full {'R1': 3, 'R2': 4, 'R3': 5} singles {'R4r0': 3}
+  TOTAL 25240lb = 1262.0x
+  end state: full-reel wilds {R1: x3, R2: x4, R3: x5}; single wilds {R4r0: x3}
+
+=== E7 Mystery spin, bucket NO BONUS: 3 wilds connect, respins land no new wild -> round ends
+  step0: pays 38lb (1.9x): L2 3xH4 10lb x1 = 10lb; L6 3xL3 4lb x1 = 4lb; L7 3xH4 10lb x1 = 10lb; L15 3xH4 10lb x1 = 10lb; L18 3xL3 4lb x1 = 4lb
+  step0: grow -> full {} singles {'R3r0': 2, 'R3r1': 2, 'R3r2': 2}
+  step1: pays 30lb (1.5x): L5 3xL2 5lb x2 = 10lb; L9 3xL2 5lb x2 = 10lb; L17 3xL2 5lb x2 = 10lb
+  step1: grow -> full {} singles {'R3r0': 3, 'R3r1': 3, 'R3r2': 3}
+  step2: pays 0lb (0.0x): 
+  TOTAL 68lb = 3.4x
+  end state: full-reel wilds {}; single wilds {R3r0: x3, R3r1: x3, R3r2: x3}
+
+=== E8 Mystery spin, bucket DOUBLE DARE: respins land wilds and complete R3 -> Double Dare
+  step0: pays 105lb (5.25x): L2 3xH4 10lb x1 = 10lb; L3 4xH2 75lb x1 = 75lb; L7 3xH4 10lb x1 = 10lb; L15 3xH4 10lb x1 = 10lb
+  step0: grow -> full {} singles {'R3r0': 2, 'R3r1': 2, 'R3r2': 2}
+  step1: pays 82lb (4.1x): L3 3xH3 15lb x3 = 45lb; L6 3xL3 4lb x3 = 12lb; L10 3xL3 4lb x1 = 4lb; L11 3xL5 3lb x3 = 9lb; L18 3xL3 4lb x3 = 12lb
+  step1: grow -> full {} singles {'R3r0': 2, 'R3r1': 3, 'R3r2': 3, 'R2r2': 2}
+  step2: R3 full-reel wild = x9
+  step2: pays 946lb (47.3x): L3 3xL1 5lb x11 = 55lb; L6 3xH2 20lb x11 = 220lb; L10 3xH2 20lb x11 = 220lb; L11 4xL4 8lb x11 = 88lb; L16 3xL1 5lb x11 = 55lb; L18 3xH2 20lb x11 = 220lb; L19 4xL4 8lb x11 = 88lb
+  step2: grow -> full {'R3': 10} singles {'R2r2': 3}
+  step3: pays 715lb (35.75x): L3 3xH4 10lb x13 = 130lb; L6 3xL1 5lb x13 = 65lb; L10 3xL1 5lb x13 = 65lb; L11 4xL3 10lb x13 = 130lb; L16 3xH4 10lb x13 = 130lb; L18 3xL1 5lb x13 = 65lb; L19 4xL3 10lb x13 = 130lb
+  step3: grow -> full {'R3': 11} singles {'R2r2': 4}
+  TOTAL 1848lb = 92.4x
+  end state: full-reel wilds {R3: x11}; single wilds {R2r2: x4}
+
+=== E9 EGW spin, weighted pattern R1/R3/R5 (instant x4 each)
+  step0: pays 1784lb (89.2x): L1 3xL2 5lb x8 = 40lb; L2 3xH1 25lb x8 = 200lb; L3 3xL4 3lb x8 = 24lb; L4 3xL3 4lb x8 = 32lb; L5 3xH1 25lb x8 = 200lb; L6 3xL4 3lb x8 = 24lb; L7 3xL2 5lb x8 = 40lb; L8 3xL3 4lb x8 = 32lb; L9 3xH1 25lb x8 = 200lb; L10 3xL4 3lb x8 = 24lb; L11 3xL4 3lb x8 = 24lb; L12 3xH1 25lb x8 = 200lb; L13 3xL2 5lb x8 = 40lb; L14 3xL3 4lb x8 = 32lb; L15 3xH1 25lb x8 = 200lb; L16 3xL4 3lb x8 = 24lb; L17 3xH1 25lb x8 = 200lb; L18 3xL4 3lb x8 = 24lb; L19 3xL4 3lb x8 = 24lb; L20 3xH1 25lb x8 = 200lb
+  step0: grow -> full {'R1': 5, 'R3': 5, 'R5': 4} singles {}
+  step1: pays 2430lb (121.5x): L1 3xL3 4lb x10 = 40lb; L2 3xH4 10lb x10 = 100lb; L3 3xL1 5lb x10 = 50lb; L4 5xL5 30lb x14 = 420lb; L5 3xH4 10lb x10 = 100lb; L6 3xL1 5lb x10 = 50lb; L7 3xL3 4lb x10 = 40lb; L8 5xL5 30lb x14 = 420lb; L9 3xH4 10lb x10 = 100lb; L10 3xL1 5lb x10 = 50lb; L11 3xL1 5lb x10 = 50lb; L12 3xH4 10lb x10 = 100lb; L13 3xL3 4lb x10 = 40lb; L14 5xL5 30lb x14 = 420lb; L15 3xH4 10lb x10 = 100lb; L16 3xL1 5lb x10 = 50lb; L17 3xH4 10lb x10 = 100lb; L18 3xL1 5lb x10 = 50lb; L19 3xL1 5lb x10 = 50lb; L20 3xH4 10lb x10 = 100lb
+  step1: grow -> full {'R1': 6, 'R3': 6, 'R5': 5} singles {}
+  step2: pays 1512lb (75.6x): L1 3xL3 4lb x12 = 48lb; L2 3xH4 10lb x12 = 120lb; L3 3xL1 5lb x12 = 60lb; L4 3xL5 3lb x12 = 36lb; L5 3xH4 10lb x12 = 120lb; L6 3xL1 5lb x12 = 60lb; L7 3xL3 4lb x12 = 48lb; L8 3xL5 3lb x12 = 36lb; L9 3xH4 10lb x12 = 120lb; L10 3xL1 5lb x12 = 60lb; L11 3xL1 5lb x12 = 60lb; L12 3xH4 10lb x12 = 120lb; L13 3xL3 4lb x12 = 48lb; L14 3xL5 3lb x12 = 36lb; L15 3xH4 10lb x12 = 120lb; L16 3xL1 5lb x12 = 60lb; L17 3xH4 10lb x12 = 120lb; L18 3xL1 5lb x12 = 60lb; L19 3xL1 5lb x12 = 60lb; L20 3xH4 10lb x12 = 120lb
+  step2: grow -> full {'R1': 7, 'R3': 7, 'R5': 5} singles {}
+  step3: pays 1764lb (88.2x): L1 3xL3 4lb x14 = 56lb; L2 3xH4 10lb x14 = 140lb; L3 3xL1 5lb x14 = 70lb; L4 3xL5 3lb x14 = 42lb; L5 3xH4 10lb x14 = 140lb; L6 3xL1 5lb x14 = 70lb; L7 3xL3 4lb x14 = 56lb; L8 3xL5 3lb x14 = 42lb; L9 3xH4 10lb x14 = 140lb; L10 3xL1 5lb x14 = 70lb; L11 3xL1 5lb x14 = 70lb; L12 3xH4 10lb x14 = 140lb; L13 3xL3 4lb x14 = 56lb; L14 3xL5 3lb x14 = 42lb; L15 3xH4 10lb x14 = 140lb; L16 3xL1 5lb x14 = 70lb; L17 3xH4 10lb x14 = 140lb; L18 3xL1 5lb x14 = 70lb; L19 3xL1 5lb x14 = 70lb; L20 3xH4 10lb x14 = 140lb
+  step3: grow -> full {'R1': 8, 'R3': 8, 'R5': 5} singles {}
+  TOTAL 7490lb = 374.5x
+  end state: full-reel wilds {R1: x8, R3: x8, R5: x5}; single wilds {}
+
+=== E10 Double Dare free spin: R3 carried in locked at x13, it grows every step it connects
+  step0: pays 507lb (25.35x): L1 3xH3 15lb x13 = 195lb; L6 3xL4 3lb x13 = 39lb; L10 3xL4 3lb x13 = 39lb; L13 3xH3 15lb x13 = 195lb; L18 3xL4 3lb x13 = 39lb
+  step0: grow -> full {'R3': 14} singles {}
+  step1: pays 350lb (17.5x): L6 3xL1 5lb x14 = 70lb; L10 3xL1 5lb x14 = 70lb; L11 3xL1 5lb x14 = 70lb; L18 3xL1 5lb x14 = 70lb; L19 3xL1 5lb x14 = 70lb
+  step1: grow -> full {'R3': 15} singles {}
+  step2: pays 285lb (14.25x): L6 3xL1 5lb x15 = 75lb; L7 3xL3 4lb x15 = 60lb; L10 3xL1 5lb x15 = 75lb; L18 3xL1 5lb x15 = 75lb
+  step2: grow -> full {'R3': 16} singles {}
+  step3: pays 304lb (15.2x): L6 3xL1 5lb x16 = 80lb; L7 3xL3 4lb x16 = 64lb; L10 3xL1 5lb x16 = 80lb; L18 3xL1 5lb x16 = 80lb
+  step3: grow -> full {'R3': 17} singles {}
+  TOTAL 1446lb = 72.3x
+  end state: full-reel wilds {R3: x17}; single wilds {}
+
+=== E12 wincap: Hidden free spin with R2 x8 * R3 x7 * R4 x9 = x504; round total before it 36,000x
+  step0: pays 335160lb (16758.0x): L1 4xL5 8lb x504 = 4032lb; L2 4xH1 100lb x504 = 50400lb; L3 4xL3 10lb x504 = 5040lb; L4 4xL2 15lb x504 = 7560lb; L5 4xL5 8lb x504 = 4032lb; L6 4xL2 15lb x504 = 7560lb; L7 4xH1 100lb x504 = 50400lb; L8 4xL3 10lb x504 = 5040lb; L9 4xL5 8lb x504 = 4032lb; L10 4xL2 15lb x504 = 7560lb; L11 4xH1 100lb x504 = 50400lb; L12 4xL3 10lb x504 = 5040lb; L13 4xL5 8lb x504 = 4032lb; L14 4xL2 15lb x504 = 7560lb; L15 4xH1 100lb x504 = 50400lb; L16 4xL3 10lb x504 = 5040lb; L17 4xL5 8lb x504 = 4032lb; L18 4xL2 15lb x504 = 7560lb; L19 4xH1 100lb x504 = 50400lb; L20 4xL3 10lb x504 = 5040lb
+  step0: grow -> full {'R2': 9, 'R3': 8, 'R4': 10} singles {}
+  TOTAL 335160lb = 16758.0x
+  end state: full-reel wilds {R2: x9, R3: x8, R4: x10}; single wilds {}
+
+SUMMARY (x bet): {'E1': 1.25, 'E2': 1.5, 'E3': 179.1, 'E4': 350.1, 'E5': 2440.15, 'E6': 1262.0, 'E7': 3.4, 'E8': 92.4, 'E9': 374.5, 'E10': 72.3, 'E12': 16758.0}
+E12 round: 36000 + 16758.00 = 52758.00 >= 50000 -> pay exactly 50000x, emit wincap, end round

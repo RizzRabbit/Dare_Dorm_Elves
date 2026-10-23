@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+math/env/
+.venv/
+node_modules/
+build/
+dist/
+.svelte-kit/
+math/games/*/library/books/
+math/games/*/library/temp*/
+*.log
+.DS_Store
