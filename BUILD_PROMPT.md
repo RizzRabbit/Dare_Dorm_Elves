@@ -127,7 +127,7 @@ cp -r games/0_0_lines games/dare_dorm_elves
 
 ---
 ## 4. Phase B – simulation + optimization (all 7 modes)
-1. **Rough tune** reel strips/weights with small sims (e.g. 50k base, 10k per buy) using `lut_stats.py` until each mode's raw (pre-optimizer) RTP is in ~90–100% and its tail looks controllable. Levers, in order (SPEC §11): reel-2/4 wild & stack density, buy-trigger strip odds, EGW pattern weights, bonus stack odds per tier, paytable scale. **Never change a §8 rule.**
+1. **Rough tune** reel strips/weights with small sims (e.g. 50k base, 10k per buy) using `lut_stats.py` until each mode's raw (pre-optimizer) RTP is in ~90–100% and its tail looks controllable. Levers, in order (SPEC §11): **(PRIMARY, user-locked) weigh wild & stack density down HEAVILY with rarity order REEL 2 (rarest) < REEL 3 < REEL 1 < reels 4–5 (least restricted), in every mode's strips incl. bonus and buy-trigger strips**; start from the prototype toy v2 weights in `prototype/engine.js`; then buy-trigger strip odds, EGW pattern weights, bonus stack odds per tier, paytable scale. **Never change a §8 rule.**
 2. **Set prices (D6):** for each buy, `cost ≈ mean_win / 0.9667`, rounded to a clean number (Triple must be ≤ 1000). Record in `game_config.py`.
 3. **Full run:** base 1,000,000; ante 1,000,000; dare/double_dare/triple_dare/mystery/egw 200,000 each (raise to ≤ 1M if a tail metric is noisy). Then the optimizer (`run_optimization: True`) per mode with `game_optimization.py` conditions: `wincap` (force), `0` where allowed, `basegame`, `freegame` per tier, Mystery 4 buckets.
    ```bash

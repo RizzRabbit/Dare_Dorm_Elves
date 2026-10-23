@@ -38,7 +38,7 @@ for (const mode of Object.keys(E.MODES)) for (let i = 0; i < (mode === 'base' ||
   if (!ok) { bad++; if (bad < 3) console.log('bad book', mode, JSON.stringify(evs.slice(-4))); }
 }
 log(bad === 0, `event schema invariants on ${n} random books (${bad} bad)`);
-console.log('\nAUTOPLAY SANITY (toy strips from toy_sim4.py P0, toy prices; NOT tuning):');
+console.log('\nAUTOPLAY SANITY (toy v2 weights: reel 2 < 3 < 1 < 4-5; toy prices; NOT tuning):');
 E.seed(2026);
 for (const [m, k] of [['base', 50000], ['ante', 50000], ['dare', 500], ['double_dare', 500], ['triple_dare', 500], ['mystery', 500], ['egw', 2000]]) {
   const a = E.autoplay(m, k);

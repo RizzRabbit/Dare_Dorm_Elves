@@ -17,17 +17,18 @@ const START_FS = {dare:8, double_dare:10, triple_dare:12, hidden:14};
 const MYSTERY_ODDS = {none:50, double_dare:37, triple_dare:10, hidden:3};
 // PROTOTYPE – untuned toy parameters (from design/prototypes/toy_sim4.py P0) and toy buy prices (SPEC §10 toy ranges).
 const P = {
-  q:[0.0015,0.0004,0.0015,0.0004,0.0015], w:0.035,
-  qa:[0.003,0.0008,0.003,0.0008,0.003], wa:0.042,
-  qb:{dare:[0.004,0.0005,0.004,0.0005,0.004],double_dare:[0.004,0.0005,0.004,0.0005,0.004],
-      triple_dare:[0.005,0.0006,0.005,0.0006,0.005],hidden:[0.005,0.0006,0.005,0.0006,0.005]},
-  wb:{dare:0.010,double_dare:0.008,triple_dare:0.008,hidden:0.008},
-  qt:[0.05,0.004,0.05,0.004,0.05], wt:{dare:0.10,double_dare:0.03,triple_dare:0.06,hidden:0.03},
+  // Toy weights v2 (user tuning rule 2026-10-23): wilds/stacks weighed down HEAVILY; rarity order REEL 2 < REEL 3 < REEL 1 < reels 4–5.
+  q:[0.00015,0.00004,0.00008,0.0006,0.0006], w:[0.005,0.002,0.003,0.022,0.026],
+  qa:[0.0003,0.00008,0.00016,0.0012,0.0012], wa:[0.007,0.003,0.004,0.027,0.032],
+  qb:{dare:null,double_dare:null,triple_dare:null,hidden:null}, wb:{dare:null,double_dare:null,triple_dare:null,hidden:null},
+  qt:[0.03,0.004,0.01,0.05,0.05], wt:{dare:0.10,double_dare:0.03,triple_dare:0.06,hidden:0.03},
   egw:[[[1,3],30],[[1,4],15],[[2,4],15],[[1,5],10],[[2,5],10],[[1,3,5],12],[[1,2],4],[[4,5],4],[[1,2,4],1.5],[[2,3],1],[[3,4],1],
        [[2,3,4],0.12],[[1,2,3],0.08],[[1,2,4,5],0.04],[[2,3,4,5],0.005],[[1,2,3,4],0.003],[[1,2,3,4,5],0.002]],
   wegw:0.004,
+  // (bonus odds identical across tiers per A3 in this toy)
   wMystery:{double_dare:0.30, triple_dare:0.30, hidden:0.45}, // respin wild density on the Mystery reveal (toy)
 };
+for (const t of ['dare','double_dare','triple_dare','hidden']){ P.qb[t]=[0.0003,0.00008,0.00015,0.002,0.002]; P.wb[t]=[0.0015,0.0005,0.001,0.006,0.008]; }
 const MODES = {
   base:{label:'Spin', cost:1}, ante:{label:'Ante', cost:1.25},
   dare:{label:'Dare', cost:40}, double_dare:{label:'Double Dare', cost:210}, triple_dare:{label:'Triple Dare', cost:1000},
