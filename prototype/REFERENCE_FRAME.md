@@ -1,4 +1,4 @@
-# Dare Dorm – Elves: REFERENCE FRAME (layout spec for the web-sdk build)
+# Elfhaus: REFERENCE FRAME (layout spec for the web-sdk build)
 Captured from `prototype/` with headless Chrome (`./shoot.sh`). Screens: `reference_frames/{desktop|mobile}_{state}.png`, desktop **1920×1080**, mobile **390×844** (portrait; DPR 1). The real build should match the **layout, hierarchy and states**; art is placeholder. Palette from ART_BIBLE §1: pink `#FF2E9A`, purple `#7B2CFF`, teal `#00E5D4`, navy `#0B0620`, amber `#FFB45C`, gold `#FFC94A`, off-white `#FFF3FA`.
 
 ## 1. Sizing rule

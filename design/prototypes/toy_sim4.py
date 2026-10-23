@@ -1,4 +1,4 @@
-# Toy Monte Carlo v4 for Dare Dorm - Elves, matching DECISIONS.md (2026-10-22, LOCKED).
+# Toy Monte Carlo v4 for Elfhaus, matching DECISIONS.md (2026-10-22, LOCKED).
 # NOT the math model: every number is a placeholder "toy sim, to tune in math-SDK".
 # Rules: 20 lines, 5x4. Wild x1, +1 per respin step it connects in (R6). Full reel = sum of its 4 cells
 # (instant stack = 4 x x1 = x4, A5). Line mult: adjacent full reels multiply, other wilds add (A1/A2).

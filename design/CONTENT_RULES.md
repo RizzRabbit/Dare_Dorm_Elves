@@ -1,4 +1,4 @@
-# Dare Dorm – Elves: content and art rules
+# Elfhaus: content and art rules
 Checked 2026-10-23 CDT. Not legal advice. Final approval is always the Stake Engine reviewer's call.
 
 ## 1. What Stake Engine publishes (verbatim)

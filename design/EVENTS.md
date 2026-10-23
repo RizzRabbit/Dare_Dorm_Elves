@@ -1,5 +1,5 @@
-# Dare Dorm – Elves: book event schema
-The contract between the math (`math/games/dare_dorm_elves/game_events.py`) and the frontend (`frontend/apps/dare-dorm-elves/src/game/typesBookEvent.ts` + `bookEventHandlerMap.ts`). Modeled on Vault Breakers' `math/EVENTS.md`. **Implement exactly these names and fields**; if the math needs a change, update this file first and keep both sides in sync.
+# Elfhaus: book event schema
+The contract between the math (`math/games/elfhaus/game_events.py`) and the frontend (`frontend/apps/elfhaus/src/game/typesBookEvent.ts` + `bookEventHandlerMap.ts`). Modeled on Vault Breakers' `math/EVENTS.md`. **Implement exactly these names and fields**; if the math needs a change, update this file first and keep both sides in sync.
 
 ## Conventions
 - Every event: `{"index": n, "type": "<name>", ...}`, `index` 0-based within the book.

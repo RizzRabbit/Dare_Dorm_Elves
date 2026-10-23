@@ -1,4 +1,4 @@
-/* Dare Dorm – Elves prototype renderer. It ONLY replays EVENTS.md book events produced by engine.js. */
+/* Elfhaus prototype renderer. It ONLY replays EVENTS.md book events produced by engine.js. */
 (function(){
 'use strict';
 const E = window.DDE, $ = s => document.querySelector(s);

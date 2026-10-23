@@ -1,10 +1,10 @@
-# BUILD_PROMPT – build Dare Dorm – Elves for Stake Engine
+# BUILD_PROMPT – build Elfhaus for Stake Engine
 This file is for a **local coding agent** (Cursor, Claude Code, Codex, …) running on the user's computer with this repo checked out. Paste §1 into the agent as the task; it then works through §3–§7 in order and ticks the checklists.
 
 ---
 ## 1. The prompt (copy-paste this)
 ```
-You are building "Dare Dorm – Elves", a Stake Engine slot by Rizzin Games, from the repo in the current folder.
+You are building "Elfhaus", a Stake Engine slot by Rizzin Games, from the repo in the current folder.
 
 Read first, in this order: AGENTS.md, BUILD_PROMPT.md (all of it), design/SPEC.md, design/EVENTS.md,
 design/CONTENT_RULES.md, assets/ART_BIBLE.md. design/SPEC.md is the single source of truth for mechanics.
@@ -17,7 +17,7 @@ Hard rules:
    is the reference). Write those as unit tests before writing the simulator.
 3. Work phase by phase (A → B → C → D). Finish each phase's acceptance checks before starting the next.
    Commit after each passing phase with a message "phase X: ...". Do not push secrets or large book files
-   to git (books/LUTs go in math/games/dare_dorm_elves/library/, which is git-ignored except index.json + stats).
+   to git (books/LUTs go in math/games/elfhaus/library/, which is git-ignored except index.json + stats).
 4. The frontend never decides outcomes: it only plays books.
 5. Be economical: run small sims (10k–50k) while developing; run the full sims only once in Phase B.
 6. At the end, print the Definition-of-done table (BUILD_PROMPT.md §9) with real numbers.
@@ -79,7 +79,7 @@ Patterns worth copying (generic): a `wincap` Distribution with `force_wincap: Tr
 Target layout (create it):
 ```
 math/                                  # clone of engineio/math-sdk at a pinned commit (record it in math/SDK_VERSION)
-  games/dare_dorm_elves/
+  games/elfhaus/
     game_config.py  gamestate.py  game_override.py  game_executables.py  game_calculations.py
     game_events.py  game_optimization.py  run.py  run_local.py  audit_books.py  lut_stats.py
     reels/ BR0.csv (base) BR1.csv (ante) BT_dare.csv BT_double.csv BT_triple.csv (buy-trigger spins)
@@ -92,9 +92,9 @@ math/                                  # clone of engineio/math-sdk at a pinned 
 git clone https://github.com/engineio/math-sdk.git math && cd math && git rev-parse HEAD > SDK_VERSION
 make setup && source env/bin/activate
 python games/0_0_lines/run.py          # sanity: the sample builds
-cp -r games/0_0_lines games/dare_dorm_elves
+cp -r games/0_0_lines games/elfhaus
 ```
-**A1 Config** (`game_config.py`): `game_id="dare_dorm_elves"`, `working_name="Dare Dorm - Elves"`, `wincap=50000.0`, `rtp=0.9667`, `num_reels=5`, `num_rows=[4]*5`, `include_padding=True`, 20 `paylines` exactly as SPEC §2 (dict 1..20 → row list), symbols `W,H1..H4,L1..L5` with `special_symbols={"wild":["W"], "multiplier":["W"]}`, paytable from SPEC §2 in the unit `0_0_lines` uses (check: if the sample pays total-bet units, divide lb by 20). 7 `BetMode`s: `base`(1.0), `ante`(1.25), `dare`, `double_dare`, `triple_dare`, `mystery`, `egw` (costs: placeholder from SPEC §10 toy range, final set in Phase B). Every mode `max_win=50000`, `rtp=0.9667`, and a `Distribution(criteria="wincap", force_wincap=True, ...)`.
+**A1 Config** (`game_config.py`): `game_id="elfhaus"`, `working_name="Elfhaus"`, `wincap=50000.0`, `rtp=0.9667`, `num_reels=5`, `num_rows=[4]*5`, `include_padding=True`, 20 `paylines` exactly as SPEC §2 (dict 1..20 → row list), symbols `W,H1..H4,L1..L5` with `special_symbols={"wild":["W"], "multiplier":["W"]}`, paytable from SPEC §2 in the unit `0_0_lines` uses (check: if the sample pays total-bet units, divide lb by 20). 7 `BetMode`s: `base`(1.0), `ante`(1.25), `dare`, `double_dare`, `triple_dare`, `mystery`, `egw` (costs: placeholder from SPEC §10 toy range, final set in Phase B). Every mode `max_win=50000`, `rtp=0.9667`, and a `Distribution(criteria="wincap", force_wincap=True, ...)`.
 **A2 Line evaluation** (`game_calculations.py`): don't rely on the SDK's default line multiplier logic. Implement SPEC §3 exactly: run detection (best of pure-wild run vs symbol run), groups (adjacent full-reel wilds multiply, others add), line multiplier = sum of groups (min 1), and the **§4.3 no-double-pay rule** (pay a line only if its run has ≥1 cell landed this step). Port `design/prototypes/reference_rules.py::evaluate/line_mult` and keep the same semantics.
 **A3 Wild state:** per-cell values `sv[(reel,row)]`, full reels `full[reel]`. Stack completion sums the 4 values (instant = 4). Growth +1 per connected wild per step (full reel as one wild).
 **A4 Respin loop** (`game_executables.py`): steps 0..3 per SPEC §4: replace only non-wild cells of connected paid runs (draw fresh symbols from the current reel strip at random stops for those cells; document the method), wilds lock, others stay; stop on no connection or after step 3; wincap check every step. Emit the EVENTS.md events (`winInfo`, `updateStepWin`, `wildGrow`, `stackComplete`, `mergeGroups`, `respinStart`, `respinReveal`, `respinEnd`).
@@ -104,7 +104,7 @@ cp -r games/0_0_lines games/dare_dorm_elves
 - `dare`/`double_dare`/`triple_dare`: `buyTriggerStart`, then a real trigger spin on BT_* strips; redraw until the final-board tier == bought tier (A5: no forced x4/no forced reels).
 - `mystery`: `mysteryStart`; bucket by **fixed** weights 50/37/10/3 (implement as 4 Distributions with quotas and lock their summed LUT weights in Phase B); reveal exactly 3 wilds with ≥1 connection; respins = reveal; no-bonus = no wild lands on respins; bonus buckets = rejection-sample until the final board matches the tier; `mysteryResult`; then the bonus.
 - `egw`: `egwStart`; draw a pattern from the D9 weighted table (SPEC §7), place x4 full reels, one spin with respins, **never** a bonus.
-**A7 Unit tests** (`tests/`, run with `pytest games/dare_dorm_elves/tests -q`):
+**A7 Unit tests** (`tests/`, run with `pytest games/elfhaus/tests -q`):
 - `test_examples.py`: one test per SPEC §12 example, feeding the exact boards and replacement cells (copy from `design/prototypes/worked_examples.py`) into your evaluator/respin engine and asserting the totals and end states:
 
 | Ex | Total (x bet) | End state to assert |
@@ -123,7 +123,7 @@ cp -r games/0_0_lines games/dare_dorm_elves
 | E12 | step 16758.00 → round 50000 | wincap event, round ends |
 - `test_rules.py`: wild in run only (D3); every winning line on each step's board pays (no newly-landed filter) and an all-wild line pays again at every respin step at its grown value; a win without a wild does not trigger a respin, but its non-wild cells ARE replaced when a wild line triggers one (E2b = 2.75x); max 3 respins; Dare never from Mystery; EGW never triggers; spin cap 18 (incl. +2 at 17 → 18, not 19); A1/A2 group math; precedence table.
 - `test_events.py`: a book's events follow EVENTS.md sequences; `finalWin.amount == payoutMultiplier`; coordinates in range.
-**A acceptance:** `pytest -q` all green; `python games/dare_dorm_elves/run_local.py 2000 200 1 0` produces books for all 7 modes without errors.
+**A acceptance:** `pytest -q` all green; `python games/elfhaus/run_local.py 2000 200 1 0` produces books for all 7 modes without errors.
 
 ---
 ## 4. Phase B – simulation + optimization (all 7 modes)
@@ -133,9 +133,9 @@ cp -r games/0_0_lines games/dare_dorm_elves
 3. **Full run:** base 1,000,000; ante 1,000,000; dare/double_dare/triple_dare/mystery/egw 200,000 each (raise to ≤ 1M if a tail metric is noisy). Then the optimizer (`run_optimization: True`) per mode with `game_optimization.py` conditions: `wincap` (force), `0` where allowed, `basegame`, `freegame` per tier, Mystery 4 buckets.
    ```bash
    cd math && source env/bin/activate
-   python games/dare_dorm_elves/run.py               # sims + optimization + analysis + format checks
-   python games/dare_dorm_elves/audit_books.py        # books vs LUT payout + hash check
-   python games/dare_dorm_elves/lut_stats.py          # prints the acceptance table below
+   python games/elfhaus/run.py               # sims + optimization + analysis + format checks
+   python games/elfhaus/audit_books.py        # books vs LUT payout + hash check
+   python games/elfhaus/lut_stats.py          # prints the acceptance table below
    ```
 4. **Acceptance – every mode must pass (print this table):**
 
@@ -162,11 +162,11 @@ cp -r games/0_0_lines games/dare_dorm_elves
 ```bash
 git clone https://github.com/engineio/web-sdk.git /tmp/web-sdk
 mkdir frontend && cp -r /tmp/web-sdk/{packages,package.json,pnpm-workspace.yaml,turbo.json,pnpm-lock.yaml} frontend/
-mkdir -p frontend/apps && cp -r /tmp/web-sdk/apps/lines frontend/apps/dare-dorm-elves
-cd frontend && pnpm install && pnpm --filter dare-dorm-elves dev     # rename the package to "dare-dorm-elves"
+mkdir -p frontend/apps && cp -r /tmp/web-sdk/apps/lines frontend/apps/elfhaus
+cd frontend && pnpm install && pnpm --filter elfhaus dev     # rename the package to "elfhaus"
 ```
 (Vault Breakers did the same from `apps/cluster` and vendored the packages so the folder builds alone.)
-Implement in `apps/dare-dorm-elves/src/`:
+Implement in `apps/elfhaus/src/`:
 1. `game/config.ts`: gameID, `maxWin: 50000`, 5×4, 20 paylines, paytable, 7 bet modes with costs/RTP **generated from `math/.../publish_files/index.json` + stats** (script `scripts/sync-config.mjs`), free-spin table (8/10/12/14, +2, cap 18), Mystery odds.
 2. `game/typesBookEvent.ts` + `bookEventHandlerMap.ts`: one handler per EVENTS.md event; unknown events throw in dev.
 3. Board: 5×4 reels, padded reveal, anticipation; **respin animation** (flash winning cells → pop replaced cells (all winning lines' non-wild cells) → drop new cells; wilds show lock ring); per-step win count-up that never decreases.
@@ -184,12 +184,12 @@ Implement in `apps/dare-dorm-elves/src/`:
 14. **RGS:** keep the SDK's `authenticate` / `play` / `end-round` / replay flow; bet levels from `authenticate`; resume an active round on reload.
 15. **Mock + replay testing:** `src/mock/mockRgs.ts` + `src/mock/books/*.json` (Phase B samples); `?mock=true&book=<name>` forces a book (e.g. `mystery_none`, `egw_adjacent`, `base_wincap`); `?replay=true&...` plays a replay. Add Playwright smoke tests: load, spin each mode once via mock, wincap book reaches MAX WIN, mobile viewport screenshot.
 16. Art: placeholders from `assets/concepts/` until production art (ART_BIBLE) is delivered; keep asset keys stable (`H1..H4, L1..L5, W, WF, WM2..WM5, badge_*`).
-**C acceptance:** `pnpm build` succeeds (static site in `apps/dare-dorm-elves/build`), lint clean, every sample book plays end-to-end in the mock with the win meter equal to `finalWin`, social-mode scan finds no restricted words (`grep -riE "\b(bet|buy|pay|pays|paid|wager|cash|money)\b"` on the sweeps strings and rendered UI text), mobile/popout screenshots OK.
+**C acceptance:** `pnpm build` succeeds (static site in `apps/elfhaus/build`), lint clean, every sample book plays end-to-end in the mock with the win meter equal to `finalWin`, social-mode scan finds no restricted words (`grep -riE "\b(bet|buy|pay|pays|paid|wager|cash|money)\b"` on the sweeps strings and rendered UI text), mobile/popout screenshots OK.
 
 ---
 ## 6. Phase D – Stake Engine upload checklist
-- [ ] Math: upload the folder `math/games/dare_dorm_elves/library/publish_files/` (index.json + 7 × books `.jsonl.zst` + 7 × `lookUpTable_<mode>_0.csv`). Mode names identical in math, frontend and replay.
-- [ ] Frontend: upload `frontend/apps/dare-dorm-elves/build/` (static; served at `https://{team}.cdn.stakeengine.org/{gameID}/{version}/index.html`; never hard-code `rgs_url`).
+- [ ] Math: upload the folder `math/games/elfhaus/library/publish_files/` (index.json + 7 × books `.jsonl.zst` + 7 × `lookUpTable_<mode>_0.csv`). Mode names identical in math, frontend and replay.
+- [ ] Frontend: upload `frontend/apps/elfhaus/build/` (static; served at `https://{team}.cdn.stakeengine.org/{gameID}/{version}/index.html`; never hard-code `rgs_url`).
 - [ ] COMPLIANCE.md items: C1 stateless; C2 7 modes; C4 RTP 96.65–96.69; C5 base 1.0 & std ≥ 0.6; C6 50,000x; C7 realism; C8 cost ≤ 1000x; C9 P(≥5k) ≤ 1%; C10 CVaR ≤ 20k; C11 hit rate; C12 books/LUT match; C13 max win real per mode; C14 costs described; C15 multiplier values listed; C16 feature access/retriggers described; C17 meter only counts up; C18 confirm > 2×; C20 Mystery odds match LUT; C21 Mystery wording; C24–C27 art per CONTENT_RULES; C29 EGW name risk accepted by user; C31 unique assets & popout; C32 RTP/max win per mode in rules; C33 disclaimer; C34 social wording; C35 social currencies/sub-cent.
 - [ ] Test in the Studio play modal: every mode, social mode toggle, replay links, mobile.
 - [ ] Submission blurb (theme + mechanics), description tag, "All characters are adults."

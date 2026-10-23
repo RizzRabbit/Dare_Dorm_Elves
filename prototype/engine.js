@@ -1,4 +1,4 @@
-/* Dare Dorm – Elves: PROTOTYPE engine (untuned math).
+/* Elfhaus: PROTOTYPE engine (untuned math).
  * Port of design/prototypes/reference_rules.py (SPEC §3–§4) + toy book generators (SPEC §5–§9) that emit
  * EVENTS.md-shaped book events. Math produces books; the renderer (app.js) only replays them.
  * Board convention: sym[reel][row], reel 0-4, row 0-3 (top→bottom). Pays in line-bet units (lb); 20 lb = 1x bet.

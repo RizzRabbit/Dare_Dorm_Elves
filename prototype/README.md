@@ -1,4 +1,4 @@
-# Dare Dorm – Elves: functional frontend prototype
+# Elfhaus: functional frontend prototype
 **PROTOTYPE – untuned math.** Plain HTML/JS/CSS, no build, no dependencies.
 
 ## Run

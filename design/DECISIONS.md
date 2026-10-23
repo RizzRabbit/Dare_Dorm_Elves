@@ -30,3 +30,4 @@
 - D10 details (user-confirmed 2026-10-23): Dare trigger wilds appear on free spin 1 only, then clear; on the Dare->Double Dare upgrade spin, every wild on the final board locks (singles and the stack).
 - Per-mode reel sets (user 2026-10-23): each bet mode has its own books and reel sets (trigger, respin, and per-tier freegame strips), which may differ vastly; tune each independently.
 - Natural vs bought bonuses (user 2026-10-23): naturally triggered bonuses live inside the base/ante book and use their own freegame strips, tuned separately from the buy modes; mechanics identical.
+- Game title (user 2026-10-23): **Elfhaus** (short, plays off the college sorority house). "Dare Dorm" dropped because it is an existing adult series title. Repo URL stays RizzRabbit/Dare_Dorm_Elves; game_id/app folder = elfhaus. Bonus names (Dare / Double Dare / Triple Dare / Hidden / Elves Gone Wild) unchanged.

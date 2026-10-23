@@ -1,4 +1,4 @@
-# Dare Dorm – Elves: final mechanics SPEC (v2)
+# Elfhaus: final mechanics SPEC (v2)
 Studio: **Rizzin Games**. Platform: **Stake Engine** (math-sdk + web-sdk).
 Status: **FINAL for build.** Written 2026-10-23 CDT. It merges Slot Expert's v1 spec (`design/source/SPEC_v1_slot_expert.md`) with every user answer in `design/DECISIONS.md`. **Where they differ, DECISIONS.md wins.** The old §13 "Decisions for the user" is gone; the answers are in the **Locked decisions log (§0)**.
 

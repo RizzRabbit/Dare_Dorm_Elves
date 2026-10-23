@@ -1,4 +1,4 @@
-"""Reference implementation of the LOCKED Dare Dorm - Elves spin rules (design/SPEC.md §3-§4).
+"""Reference implementation of the LOCKED Elfhaus spin rules (design/SPEC.md §3-§4).
 Small, slow, deterministic. Used to compute every worked example in SPEC.md §12.
 The math-sdk game (Phase A) must reproduce these numbers exactly (see tests in BUILD_PROMPT.md).
 Board: sym[reel][row], reel 0-4 (R1-R5), row 0-3 (top to bottom). Pays in line bets (lb); 20 lb = 1x bet."""

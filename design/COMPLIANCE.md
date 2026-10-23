@@ -1,4 +1,4 @@
-# Dare Dorm – Elves: Stake Engine compliance check (P1.2)
+# Elfhaus: Stake Engine compliance check (P1.2)
 Owner: Slot Expert. Docs fetched 2026-10-22, about 21:15–21:40 CDT. This covers the plan as locked through the 21:33 CDT decisions, and SPEC.md.
 
 **Sources** (quotes are copied verbatim from these pages as fetched):
@@ -52,7 +52,7 @@ Verdicts: **OK** / **AT RISK** / **LIKELY REJECT**. "UNVERIFIED" means no fetche
 | C27 | Dorm and party theme with alcohol (Dare bottle, red cup) | AT RISK (UNVERIFIED: no alcohol rule found) | [AG] "…likely to appeal to underage persons are not permitted." | **User decision (2026-10-23): alcohol stays.** "Dorm" plus drinking can read as underage drinking, so every character is a clearly adult early-20s woman, school names are fictional only, and the bottle and cup carry no brands. |
 | C28 | Lingerie symbol (an object, not worn) | OK | [AG] reviewer discretion, as in C24 | Show it as a product-style object only. |
 | C29 | Mode name "Elves Gone Wild" | AT RISK (UNVERIFIED trademark) | [AG] "Team names, game titles, and assets must comply with intellectual property/copyright law. Infringement is grounds for rejection." | It echoes the "Girls Gone Wild" brand (an adult-video franchise), which brings both IP and "explicit" risk. Get an IP check, or rename (e.g. "Wild Elf Night"). This name is part of the user's plan: **flag for user**. |
-| C30 | Title "Dare Dorm – Elves" | OK (banned-word list UNVERIFIED) | [AG] the IP line in C29. [VB] [213] "no Megaways/XWays/Enhanced/Boosted/RTP/Gates of/Bonanza/Olympus/Rush/Kraken…" | No banned terms appear, and it's original. Do a uniqueness search before submitting. |
+| C30 | Title "Elfhaus" | OK (banned-word list UNVERIFIED) | [AG] the IP line in C29. [VB] [213] "no Megaways/XWays/Enhanced/Boosted/RTP/Gates of/Bonanza/Olympus/Rush/Kraken…" | No banned terms appear, and it's original. Do a uniqueness search before submitting. |
 | C31 | Unique assets; merged wide wild in popout and mobile views | OK | [FE] "Submitted games must use unique audio and visual assets." / "Games must support this small view without the active game board being visibly distorted." | Original art only. Test the wide-wild badge at 400×225. |
 
 ## C. Rules, disclaimer, social mode

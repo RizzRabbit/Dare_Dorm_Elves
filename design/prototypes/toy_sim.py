@@ -1,5 +1,5 @@
 # NOTE (21:33 model): only LINES, PAY, SYMS, WT here are current (imported by toy_sim3.py). The __main__ block below is the obsolete 21:25 additive-global-multiplier toy; ignore its output.
-# Toy Monte Carlo for Dare Dorm - Elves (ADDITIVE multiplier, 20 lines, 5x4).
+# Toy Monte Carlo for Elfhaus (ADDITIVE multiplier, 20 lines, 5x4).
 # NOT the math model. Every input is a placeholder "to tune in math-SDK sim".
 # Shows: how often additive-multiplier rounds reach the 50,000x round cap, and which levers matter.
 import random, sys

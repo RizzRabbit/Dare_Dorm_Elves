@@ -1,4 +1,4 @@
-# Dare Dorm – Elves — Phase 1 (Design Lock) brief
+# Elfhaus — Phase 1 (Design Lock) brief
 Owner: Coordinator. The user's plan is the authority. Proposed defaults below are NOT locked until the user signs off on SPEC.md.
 
 ## Locked by user plan (2026-10-22)

@@ -1,4 +1,4 @@
-# Dare Dorm – Elves
+# Elfhaus
 A 5×4, 20-line, high-volatility **Stake Engine** slot by **Rizzin Games**. Neon college dorm-party theme with sexy (clearly adult, early-20s) college elves, "not strippers". Per-wild multipliers (x1, +1 per connected respin step), full-reel stacks that **add** apart and **multiply** when adjacent, respins everywhere, four bonus tiers (Dare 8 / Double 10 / Triple 12 / Hidden 14 spins, cap 18), Mystery Spin (50/37/10/3), Elves Gone Wild single-spin buy, Ante 1.25x. RTP 96.65–96.69% in all 7 modes, max win 50,000x.
 
 This repo (`RizzRabbit/dare_dorm_elves`, private: https://github.com/RizzRabbit/dare_dorm_elves) is the **design + asset + build-instructions package**. No game code yet: a local coding agent builds it from here.

@@ -1,4 +1,4 @@
-# Dare Dorm – Elves: mechanics SPEC (P1.1)
+# Elfhaus: mechanics SPEC (P1.1)
 Owner: Slot Expert. Status: DRAFT for user sign-off. Written 2026-10-22, 21:4x CDT.
 
 This file is the single source of truth for every mechanic. It follows the user's locked plan in `PHASE1_BRIEF.md`, including the decision sections from 21:22, 21:25, 21:31 and 21:33 CDT. Where those sections conflict, the latest one wins: **21:33 overrides all earlier multiplier wording. There is no global multiplier.** Anything not locked is marked **[DEFAULT]** and listed in "Decisions for the user" (section 13).
