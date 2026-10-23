@@ -24,10 +24,12 @@ Waist-up portrait of a sexy elf girl with long wavy teal hair, oversized purple 
 ```
 Waist-up portrait of a sexy elf girl with a violet bob and bangs, red-and-black flannel shirt tied up above the waist over a black crop top, blowing a kiss, isolated on a transparent background, slot game symbol
 ```
-**H4 Coco**
+**H4 Coco** (v5, red hair)
 ```
-Waist-up portrait of a sexy elf girl with auburn curls in a messy bun, pastel pajama cami and shorts set, paper party crown, hugging a pillow and smirking, isolated on a transparent background, slot game symbol
+Waist-up portrait of a sexy elf girl with long voluminous copper-red wavy hair falling over one shoulder, light freckles across her nose and cheeks, green eyes, confident sultry smirk with one eyebrow raised, chin resting on the back of her hand, cropped off-shoulder emerald-green knit sweater showing her midriff and a black bra strap, small gold hoop earrings, background of a cozy dorm room at night with warm string lights softly blurred, slot game symbol
 ```
+Alt pose for H4: `...twirling a lock of her red hair around one finger and biting her lower lip, holding a red party cup in the other hand...` (swap in for the chin-on-hand part)
+
 **L1 Dare bottle**
 ```
 An unbranded pink glass spin-the-bottle lying on its side with a small sparkle, slot game icon, isolated on a transparent background
