@@ -28,3 +28,4 @@
 - C-c: Elves Gone Wild name (Girls Gone Wild IP), rename or IP check
 - C-d: content risk: covering-pose wild, how adult the elves look, cannabis leaf, alcohol
 - D10 details (user-confirmed 2026-10-23): Dare trigger wilds appear on free spin 1 only, then clear; on the Dare->Double Dare upgrade spin, every wild on the final board locks (singles and the stack).
+- Per-mode reel sets (user 2026-10-23): each bet mode has its own books and reel sets (trigger, respin, and per-tier freegame strips), which may differ vastly; tune each independently.
