@@ -10,7 +10,7 @@
 <div id="bg"></div>
 <div id="app">
   <header id="top">
-    <div id="logo" role="img" aria-label="Elfhaus"><span class="l1">ELF</span><span class="l2">haus</span></div>
+    <div id="logo" role="img" aria-label="Elfhaus"><svg class="crest" viewBox="0 0 200 200" aria-hidden="true"><polygon points="100,4 114,40 150,18 142,58 186,52 160,86 196,100 160,114 186,148 142,142 150,182 114,160 100,196 86,160 50,182 58,142 14,148 40,114 4,100 40,86 14,52 58,58 50,18 86,40" fill="#C9776A" stroke="#2A1D1D" stroke-width="4" stroke-linejoin="round"/><circle cx="100" cy="100" r="62" fill="#8E4A44" stroke="#2A1D1D" stroke-width="4"/><circle cx="100" cy="100" r="52" fill="none" stroke="#E2B07A" stroke-width="2" stroke-dasharray="3 5" opacity=".7"/></svg><span class="l1">ELF</span><span class="l2">HAUS</span></div>
     <div id="protoTag">PROTOTYPE – untuned math</div>
     <button id="devBtn" class="small">DEV</button>
   </header>
@@ -27,26 +27,24 @@
     </div>
   </div>
   <footer id="hud">
-    <div id="meters">
-      <div class="meter"><label>BALANCE</label><span id="balance">$1,000.00</span></div>
-      <div class="meter win"><label>WIN</label><span id="win">$0.00</span></div>
-      <div class="meter"><label>BET</label><span id="bet">$1.00</span></div>
+    <div id="ctrlTop">
+      <div class="side">
+        <button id="turboBtn" class="ico toggle" aria-label="Turbo" title="Turbo"><svg viewBox="0 0 24 24"><path d="M13 2 4.5 13.5H11L10 22l8.5-11.5H12L13 2Z"/></svg></button>
+        <button id="anteBtn" class="ico toggle" aria-label="Ante bet 1.25x (higher bonus chance)" title="Ante 1.25x"><svg viewBox="0 0 24 24"><path d="M6 13l6-6 6 6M6 19l6-6 6 6"/></svg></button>
+      </div>
+      <button id="buyBtn" class="ico emblem" aria-label="Bonus buy" title="Bonus buy"><svg viewBox="0 0 40 40"><path class="g" d="M9 31C9 19 18 9 31 6c-2 11-8 20-18 26Z"/><path class="g" d="M13.5 26.5C17 20 22 15 27.5 11"/><path class="gf" d="M30 22l1.3 3.2 3.2 1.3-3.2 1.3L30 31l-1.3-3.2-3.2-1.3 3.2-1.3Z"/></svg></button>
     </div>
-    <div id="buttons">
-      <div class="grp left">
-        <button id="menuBtn">MENU</button>
-        <button id="buyBtn">BUY<br>BONUS</button>
-        <button id="anteBtn" class="toggle">ANTE<br><small>1.25x</small></button>
-      </div>
-      <div class="grp mid">
-        <button id="autoBtn">AUTO<br>SPIN</button>
-        <button id="spinBtn" aria-label="Spin">SPIN</button>
-        <button id="turboBtn" class="toggle">TURBO</button>
-      </div>
-      <div class="grp right">
-        <button id="betDown">−</button>
-        <button id="betUp">+</button>
-      </div>
+    <div id="bar">
+      <button id="menuBtn" class="ico flat" aria-label="Menu" title="Menu"><svg viewBox="0 0 24 24"><path d="M4 6.5h16M4 12h16M4 17.5h16"/></svg></button>
+      <button id="betDown" class="ico flat" aria-label="Decrease bet"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
+      <button id="spinBtn" aria-label="Spin"><svg viewBox="0 0 48 48"><path d="M38 24a14 14 0 1 1-4.1-9.9"/><path class="fill" d="M41 8.5 40 21l-11.5-4.7Z"/></svg></button>
+      <button id="betUp" class="ico flat" aria-label="Increase bet"><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></svg></button>
+      <button id="autoBtn" class="ico flat" aria-label="Autoplay" title="Autoplay"><svg viewBox="0 0 24 24"><path d="M19 9.5A7.5 7.5 0 0 0 5.6 8M5 14.5A7.5 7.5 0 0 0 18.4 16"/><path class="fill" d="M4.2 4.6 5 9.4l4.6-1.6ZM19.8 19.4 19 14.6l-4.6 1.6Z"/><text x="12" y="15.3" text-anchor="middle">A</text></svg></button>
+    </div>
+    <div id="strip">
+      <div class="m"><label>BALANCE</label><span id="balance">$1,000.00</span></div>
+      <div class="m c"><label>PLAY</label><span id="bet">$1.00</span></div>
+      <div class="m r"><label>WIN</label><span id="win">$0.00</span></div>
     </div>
   </footer>
 </div>

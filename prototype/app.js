@@ -19,7 +19,7 @@ function layout(){
   document.body.classList.toggle('portrait', portrait);
   let cell;
   if (portrait){ cell = Math.min((W-14-12-24)/5, (H-380)/4.2); }
-  else { cell = Math.min((H-410)/4, (W-560)/5); }
+  else { cell = Math.min((H-440)/4, (W-560)/5); }
   cell = Math.max(48, Math.floor(cell));
   document.documentElement.style.setProperty('--cell', cell+'px');
   document.documentElement.style.setProperty('--gap', '0px'); // gapless grid (Lilith's Curse look)
@@ -233,10 +233,11 @@ async function round(mode){
   setBusy(true); S.balance -= cost; setBalance(); setWinMeter(0);
   const bk = E.book(mode);
   try { await playBook(bk); } finally { setBusy(false); }
-  if (S.auto>0){ S.auto--; $('#autoBtn').innerHTML = S.auto?`STOP<br>${S.auto}`:'AUTO<br>SPIN'; if (S.auto) setTimeout(()=>round(S.ante?'ante':'base'), 300); }
+  if (S.auto>0){ S.auto--; setAuto(); if (S.auto) setTimeout(()=>round(S.ante?'ante':'base'), 300); }
 }
 
 // ---------- UI ----------
+function setAuto(){ const b=$('#autoBtn'); b.dataset.n = S.auto||''; b.classList.toggle('on', S.auto>0); }
 function buildBuy(){
   const desc = {dare:'Real trigger spin → 8 free spins; wilds clear each spin; first stack upgrades to Double Dare +2.', double_dare:'Trigger spin → 10 free spins with 1 locked full-reel wild.',
     triple_dare:'Trigger spin → 12 free spins: full-reel wild + ≥2 sticky wilds.', mystery:'One paid spin with respins; the respins are the reveal. No bonus 50% · Double 37% · Triple 10% · Hidden 3%. Decided before the reveal.',
@@ -280,7 +281,7 @@ function wire(){
   $('#betDown').onclick = () => { S.betIdx=Math.max(0,S.betIdx-1); setBalance(); buildBuy(); };
   $('#anteBtn').onclick = () => { S.ante=!S.ante; $('#anteBtn').classList.toggle('on',S.ante); setBalance(); };
   $('#turboBtn').onclick = () => { S.turbo=!S.turbo; $('#turboBtn').classList.toggle('on',S.turbo); };
-  $('#autoBtn').onclick = () => { if (S.auto){ S.auto=0; $('#autoBtn').innerHTML='AUTO<br>SPIN'; return; } S.auto=10; $('#autoBtn').innerHTML='STOP<br>10'; round(S.ante?'ante':'base'); };
+  $('#autoBtn').onclick = () => { if (S.auto){ S.auto=0; setAuto(); return; } S.auto=10; setAuto(); round(S.ante?'ante':'base'); };
   $('#buyBtn').onclick = () => { buildBuy(); $('#buyMenu').classList.remove('hidden'); };
   $('#buyClose').onclick = $('#buyNo').onclick = () => { $('#buyMenu').classList.add('hidden'); $('#buyConfirm').classList.add('hidden'); };
   $('#menuBtn').onclick = () => $('#menu').classList.remove('hidden');
