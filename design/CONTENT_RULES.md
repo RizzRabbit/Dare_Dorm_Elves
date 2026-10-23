@@ -19,7 +19,7 @@ Source: https://stake-engine.com/docs/approval-guidelines/jurisdiction-requireme
 ## 3. Verdicts for this game
 | Item | Verdict | Why / guard rails |
 |---|---|---|
-| Suggestive adult elves in flirty college wear (crop tops, cutoffs, off-shoulder hoodies, sleepshirts, towels, bikini under a hoodie), incl. group scenes of 2–5 elves on merged wilds | **OK by precedent** (the precedent is more revealing) | Rack City Baddies. Sexy through fit and pose, not club glam; never pornographic. |
+| Suggestive adult elves in flirty college wear (crop tops, cutoffs, off-shoulder hoodies, sleepshirts, towels, thong bikini under a hoodie; no other swimwear, user rule), incl. group scenes of 2–5 elves on merged wilds | **OK by precedent** (the precedent is more revealing) | Rack City Baddies. Sexy through fit and pose, not club glam; never pornographic. |
 | Rear nudity (bare buttocks, thong from behind) | **OK by precedent** | Same as the precedent's full-reel symbol. |
 | Alcohol (DARE bottle, red cup) | **Kept – user decision (2026-10-23)**; OK by precedent | Whiskey is shown in the precedent. Unbranded bottles and cups only. |
 | **Full-reel stacked wild: one elf, as revealing as the ceiling allows; frontal covering pose** (arm/hair covering the chest) | **Locked by the user; likely OK if nipples and genitals are never visible** in any frame | Implied nudity is one step past the precedent (which is rear-view). Hard rule: opaque covering at every animation frame, incl. the 5-wide merged scene and win loops. No sexual acts, no touching of genitals/breasts beyond a covering hand, no explicit fluids. |

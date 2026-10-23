@@ -58,7 +58,7 @@ function renderOverlays(anim){
     const d = document.createElement('div'); d.className='ov merge';
     d.style.left = pos(g.reels[0],0).x+'px'; d.style.width = w(g.reels.length)+'px';
     const n = g.reels.length;
-    d.innerHTML = g.reels.map((r,i)=>`<img src="assets/wild_fullreel_swimwear.png" style="left:${i*(S.cell+S.gap)}px;width:${S.cell}px">`).join('') +
+    d.innerHTML = g.reels.map((r,i)=>`<div class="wfph" style="left:${i*(S.cell+S.gap)}px;width:${S.cell}px"><span>ELF ${i+1}</span></div>`).join('') +
       `<div class="mlabel">${n} ELVES – merged ${n}-wide scene (placeholder art)</div>` +
       `<div class="badge">${g.values.map(v=>'x'+v).join(' × ')} = x${g.product}</div><div class="plate">WILD × ${n}</div>`;
     if (!anim) d.style.animation='none';
@@ -68,7 +68,7 @@ function renderOverlays(anim){
     if (inGroup.has(r)) return;
     const d = document.createElement('div'); d.className='ov full'; d.id='ov'+r;
     d.style.left = pos(r,0).x+'px'; d.style.width = S.cell+'px';
-    d.innerHTML = `<img src="assets/wild_fullreel_swimwear.png" style="left:0;width:100%"><div class="tag">FULL-REEL WILD (placeholder)</div><div class="badge">x${v}</div><div class="plate">WILD</div>`;
+    d.innerHTML = `<div class="wfph" style="left:0;width:100%"><span>ONE ELF<br><small>covering pose<br>(WF art TBD)</small></span></div><div class="tag">FULL-REEL WILD (placeholder)</div><div class="badge">x${v}</div><div class="plate">WILD</div>`;
     if (!(anim===r)) d.style.animation='none';
     o.appendChild(d);
   });

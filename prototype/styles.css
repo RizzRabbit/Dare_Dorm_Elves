@@ -50,7 +50,9 @@ button.small{padding:4px 10px;font-size:13px}
 @keyframes floatUp{from{transform:translateY(0);opacity:1}to{transform:translateY(-40px);opacity:0}}
 @keyframes fuse{0%{transform:scaleY(.2);opacity:0;filter:brightness(3)}60%{filter:brightness(2)}100%{transform:none;opacity:1}}
 .ov{position:absolute;top:0;height:100%;border-radius:12px;overflow:hidden;border:4px solid var(--gold);box-shadow:0 0 30px var(--gold);animation:fuse .6s ease-out;z-index:2;background:#1a0833}
-.ov img{position:absolute;top:0;height:100%;object-fit:cover}
+.wfph{position:absolute;top:0;height:100%;display:flex;align-items:center;justify-content:center;text-align:center;border-right:2px dashed #ffffff55;
+ background:linear-gradient(160deg,#FFB3D6 0%,#C9A8FF 45%,#9FF3E8 100%);color:#3a0f4a;font-weight:900;font-size:calc(var(--cell)*.16);text-shadow:0 1px 0 #fff8}
+.wfph small{font-size:.6em;font-weight:700} .wfph:last-of-type{border-right:none}
 .ov .plate{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:linear-gradient(var(--gold),#c07a10);color:#3a1600;font-weight:900;font-size:calc(var(--cell)*.16);padding:3px 18px;border-radius:8px;white-space:nowrap}
 .ov .badge{left:50%;right:auto;top:auto;bottom:calc(var(--cell)*.35);transform:translateX(-50%);font-size:calc(var(--cell)*.2);white-space:nowrap;padding:4px 14px}
 .ov.merge{border-color:#fff;box-shadow:0 0 40px var(--pink),0 0 80px var(--teal)}

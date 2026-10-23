@@ -10,3 +10,4 @@ math/games/*/library/books/
 math/games/*/library/temp*/
 *.log
 .DS_Store
+assets/reference/
