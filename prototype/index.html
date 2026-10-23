@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Dare Dorm – Elves (prototype)</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="bg"></div>
+<div id="app">
+  <header id="top">
+    <img id="logo" src="assets/logo.png" alt="Dare Dorm – Elves">
+    <div id="protoTag">PROTOTYPE – untuned math</div>
+    <button id="devBtn" class="small">DEV</button>
+  </header>
+  <div id="stage">
+    <div id="fsBar" class="hidden"><span id="fsTier">DARE</span><span id="fsCount">FREE SPIN 1 / 8</span><span id="fsCap">max 18</span></div>
+    <div id="banner" class="hidden"></div>
+    <div id="frame">
+      <div id="board">
+        <div id="cells"></div>
+        <div id="overlays"></div>
+        <svg id="lines"></svg>
+        <div id="stepToast" class="hidden"></div>
+      </div>
+    </div>
+  </div>
+  <footer id="hud">
+    <div id="meters">
+      <div class="meter"><label>BALANCE</label><span id="balance">$1,000.00</span></div>
+      <div class="meter win"><label>WIN</label><span id="win">$0.00</span></div>
+      <div class="meter"><label>BET</label><span id="bet">$1.00</span></div>
+    </div>
+    <div id="buttons">
+      <div class="grp left">
+        <button id="menuBtn">MENU</button>
+        <button id="buyBtn">BUY<br>BONUS</button>
+        <button id="anteBtn" class="toggle">ANTE<br><small>1.25x</small></button>
+      </div>
+      <div class="grp mid">
+        <button id="autoBtn">AUTO<br>SPIN</button>
+        <button id="spinBtn" aria-label="Spin">SPIN</button>
+        <button id="turboBtn" class="toggle">TURBO</button>
+      </div>
+      <div class="grp right">
+        <button id="betDown">−</button>
+        <button id="betUp">+</button>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<div id="intro" class="overlay hidden"><div class="card"><div class="tierName"></div><div class="spins"></div><div class="carried"></div><div class="note">+2 spins per new stack · max 18 spins · all wilds sticky</div><button class="cont">PRESS TO CONTINUE</button></div></div>
+<div id="bigwin" class="overlay hidden"><div class="bw"><div class="bwTier">BIG WIN</div><div class="bwAmt">$0.00</div><div class="bwX"></div></div></div>
+<div id="buyMenu" class="overlay hidden"><div class="modal">
+  <h2>BUY BONUS <small>PROTOTYPE – untuned toy prices</small></h2>
+  <div id="buyCards"></div>
+  <div id="buyConfirm" class="hidden"><p id="buyConfirmText"></p><button id="buyYes">CONFIRM</button><button id="buyNo" class="ghost">CANCEL</button></div>
+  <button id="buyClose" class="ghost">CLOSE</button>
+</div></div>
+<div id="menu" class="overlay hidden"><div class="modal rules">
+  <h2>GAME RULES</h2><div id="rulesBody"></div><button id="menuClose" class="ghost">CLOSE</button>
+</div></div>
+<div id="dev" class="hidden">
+  <div class="devHead">DEV PANEL <button id="devClose" class="small">×</button></div>
+  <div class="devSec">Force scenario (SPEC §12) — expected vs actual</div>
+  <div id="devScen"></div>
+  <div id="devResult"></div>
+  <div class="devSec">Autoplay sanity (untuned toy strips)</div>
+  <div class="devRow"><select id="apMode"></select><input id="apN" type="number" value="5000" min="10" max="200000"><button id="apGo">RUN</button></div>
+  <pre id="apOut"></pre>
+  <div class="devSec">Last book</div>
+  <div class="devRow"><button id="dumpBook">LOG BOOK TO CONSOLE</button><label><input type="checkbox" id="slowMo"> slow-mo</label></div>
+</div>
+<script src="engine.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

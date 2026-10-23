@@ -1,0 +1,19 @@
+# Dare Dorm – Elves: functional frontend prototype
+**PROTOTYPE – untuned math.** Plain HTML/JS/CSS, no build, no dependencies.
+
+## Run
+```bash
+cd prototype && python3 -m http.server 8765     # then open http://localhost:8765
+node tests/run_tests.js                         # JS engine vs SPEC §12 vs reference_rules.py
+./shoot.sh                                      # re-capture reference_frames/ (headless Chrome)
+```
+Space = spin. **DEV** (top right) = scenario replays E1–E12 (+E2b, E11) with expected-vs-actual, autoplay sanity, book dump.
+`?frame=base|respin|fullreel|merged|intro|bonus|mystery|buy|bigwin|wincap|dev` freezes a reference state.
+
+## Files
+- `engine.js`: exact port of `design/prototypes/reference_rules.py` + toy book generators (base, ante, 3 buys, Mystery, EGW, free spins) that emit `design/EVENTS.md` events. Works in browser and Node.
+- `app.js`: renderer. It **only replays book events** (same split as Stake: math → books → frontend).
+- `tests/run_tests.js`, `shoot.sh`, `reference_frames/`, `REFERENCE_FRAME.md` (layout spec for the real web-sdk build).
+
+## Placeholders
+Art: only background, logo, single wild (`wild_single`), H1 Roxy and the full-reel wild (swimwear concept, also tiled for merged scenes with an "N ELVES" label) are real concepts; H2–H4 and L1–L5 are styled text tiles. No sound, no Spine. Toy reel parameters are `toy_sim4.py` P0; toy buy prices Dare 40x, Double 210x, Triple 1000x, Mystery 245x, EGW 200x. No RGS: a local $1,000 demo balance.
