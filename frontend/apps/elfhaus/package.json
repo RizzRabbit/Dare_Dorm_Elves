@@ -1,0 +1,26 @@
+{
+	"name": "elfhaus",
+	"version": "1.0.0",
+	"private": true,
+	"license": "MIT",
+	"type": "module",
+	"scripts": {
+		"sync": "node scripts/sync-art.mjs && node scripts/sync-config.mjs",
+		"dev": "pnpm sync && vite dev --host --port 3001",
+		"build": "pnpm sync && node scripts-build.mjs",
+		"preview": "vite preview"
+	},
+	"devDependencies": {
+		"config-ts": "workspace:*",
+		"config-svelte": "workspace:*",
+		"@sveltejs/adapter-static": "3.0.8",
+		"@sveltejs/vite-plugin-svelte": "5.0.3"
+	},
+	"dependencies": {
+		"svelte": "5.20.5",
+		"vite": "6.2.0",
+		"@sveltejs/kit": "2.17.3",
+		"rgs-requests": "workspace:*",
+		"constants-shared": "workspace:*"
+	}
+}
