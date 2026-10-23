@@ -22,10 +22,10 @@ The executable reference for §3–§4 is `design/prototypes/reference_rules.py`
 | D9 | EGW stack placement is **weighted**: patterns with **4+ adjacent stacks ≤ 1 in 10,000** buys; mostly non-adjacent pairs and triples. |
 | R1 | A new wild starts at **x1**. |
 | R2 | At most **3 respins** per spin; **stop early when nothing new connects**. |
-| R3 | On a connection, the **non-wild symbols inside the connected winning run(s) are replaced** (respun). **Wilds lock in place.** Symbols not in any connection **stay put**; if a stayed symbol joins a later connection, it is replaced then. |
+| R3 | When a respin occurs, the **non-wild symbols of EVERY winning line are replaced** (respun), **whether or not that line contains a wild** (user, 2026-10-23). **Wilds lock in place.** Non-winning symbols **stay put**; if a stayed symbol joins a later win, it is replaced then. Respins are still **triggered only by a wild connection** (R2). |
 | R4 | Respins run **everywhere**: base, Ante, every bonus spin, EGW **and the Mystery spin**. Respins never use up a free spin. |
 | R4-Mystery | On the Mystery spin, the respins **are** the reveal: **no more wilds land = no bonus; more wilds land = the bonus triggers**. Tier odds stay **50/37/10/3**. |
-| R5 | **Every step pays every winning line on that step's board** (2026-10-23 correction). There is **no** "must include a newly landed cell" filter. Every non-wild symbol of a connected winning run is replaced on the respin and only the wilds stay, so a repeat pay always comes from a newly formed line, and an **all-wild line pays again at every respin step** at its grown value. |
+| R5 | **Every step pays every winning line on that step's board** (2026-10-23 correction). There is **no** "must include a newly landed cell" filter. Every non-wild symbol of every winning line is replaced on the respin and only the wilds stay (R3), so a repeat pay always comes from a newly formed line, and an **all-wild line pays again at every respin step** at its grown value. |
 | R6 | Wild growth is **+1 per respin step in which the wild connects, everywhere** (base, Ante, bonuses, EGW, Mystery). The math tail is controlled by **stack and wild odds**, **not by restricting pays**; the build must report if the limits can't hold. |
 | A1 | **3 or more adjacent full-reel wilds all multiply together.** |
 | A2 | Mixed line: **multiply within each adjacent group, then add the groups and the other wilds.** |
@@ -44,7 +44,7 @@ The executable reference for §3–§4 is `design/prototypes/reference_rules.py`
 - 5×4 grid, 20 lines, left to right from reel 1, 3+ of a kind on consecutive reels. Best win per line only.
 - One special symbol: the **Elf Wild (W)**. No scatter. Bonuses trigger from wild counts and full-reel stacks.
 - Every wild carries its own multiplier: starts x1, **+1 every respin step it connects**. Four wilds filling a reel merge into a **full-reel wild** worth the **sum** of the four. Adjacent full-reel wilds **multiply**; non-adjacent ones **add**.
-- **Respins**: after any win that runs through a wild, the non-wild symbols of those runs are replaced, wilds stay locked; up to 3 respins; every step pays.
+- **Respins**: triggered by any win that runs through a wild; the non-wild symbols of **every** winning line are replaced, wilds stay locked, non-winning symbols stay; up to 3 respins; every step pays.
 - Bonuses: **Dare 8 / Double Dare 10 / Triple Dare 12 / Hidden 14** free spins, +2 per newly completed stack, max **18** spins played.
 - Buys: Dare, Double Dare, Triple Dare, **Mystery Spin** (50/37/10/3), **Elves Gone Wild** (one supercharged paid spin). Plus **Ante** (1.25x).
 
@@ -92,18 +92,16 @@ Pays are in **line-bet units (lb)**; total bet = 20 lb, so `x bet = lb / 20`. Re
 
 ## 4. Respins [LOCKED]
 1. **Step 0** = the spin itself. Land the cells, complete stacks (§3), evaluate (4.3), pay, grow.
-2. If at least one paid line in this step **contains a wild** (a "connected run"), a respin follows. Otherwise the sequence ends.
-3. **Pay rule (R5) [LOCKED]:** in every step, **every winning line on that step's board pays** (best win per line, §2/§3). There is no "newly landed cell" filter. Because every non-wild cell of a connected run is replaced before the next step and only wilds stay, a repeat pay always comes from a newly formed line. **An all-wild line (wilds only) pays again at every respin step** at its grown value.
-4. **Replace (R3):** before the next step, every **non-wild cell inside a connected run paid in this step** is replaced with a fresh draw from the current reel set. **All wilds stay locked** (single and full-reel). Non-wild cells **not** in a connected run **stay put** (including cells of wins without a wild; those pay once and are not replaced).
+2. **Trigger:** if at least one paid line in this step **contains a wild** (a "connected run"), a respin follows. Otherwise the sequence ends (wins without a wild never trigger a respin on their own).
+3. **Pay rule (R5) [LOCKED]:** in every step, **every winning line on that step's board pays** (best win per line, §2/§3). There is no "newly landed cell" filter. Because every non-wild cell of every winning line is replaced before the next step and only wilds stay (4.4), a repeat pay always comes from a newly formed line. **An all-wild line (wilds only) pays again at every respin step** at its grown value.
+4. **Replace (R3) [LOCKED]:** when a respin follows, every **non-wild cell of every winning line paid in this step** is replaced with a fresh draw from the current reel set, **whether or not that line contains a wild** (E2b). **All wilds stay locked** (single and full-reel). Non-winning cells **stay put**. If no respin follows, nothing is replaced and the sequence ends.
 5. In the new step, land the replacement cells (a replacement can be a wild, which starts x1), complete stacks, evaluate the whole board (4.3), pay, grow.
 6. **Stop (R2):** after the step where no paid line contains a wild, or after **respin 3** (step 3), whichever comes first.
 7. **Where (R4):** base, Ante, every free spin, EGW and the Mystery spin. Respins never use a free spin.
 8. Wilds landed on respins **count toward triggers** (checked on the final board) and toward new stacks (+2 spins in bonuses).
 9. **Win cap check** after every step (§9).
 
-> Note for the math build: `reference_rules.py` is the executable form of 4.3 (every winning line on each step's board pays).
->
-> **Open question for the user (not changed):** R3 replaces only cells of *connected* runs (runs containing a wild). A win **without** a wild (e.g. 3×H1 on another line) keeps its cells, so under 4.3 it pays again at each respin step while other lines keep the sequence going. None of the §12 examples hit this case. The build follows 4.3 + R3 literally and reports how often it happens in Phase A. If the user meant "every winning line's non-wild cells are replaced", R3 changes, not 4.3.
+> Note for the math build: `reference_rules.py` is the executable form of 4.2–4.4 (wild-triggered respins; every winning line pays each step; every winning line's non-wild cells are replaced).
 
 ## 5. Base game and Ante
 - Trigger check on the **final board** of the spin's sequence, precedence **D4**:
@@ -211,6 +209,17 @@ H3 L5 L2 L1 H4
 - Respin 2: they land H4, L1 → nothing connects → stop.
 - **Total 1.5x** (1.0 + 0.5, each paid at its own step).
 
+**E2b – a win without a wild is also replaced (R3).**
+```
+H2 H2 W  L1 L3
+L4 H3 L5 H3 L5
+L1 L3 H4 L4 L2
+H1 H1 H1 L1 H4
+```
+- Step 0: L1 `H2 H2 W` = 20 lb × x1 and L4 `H1 H1 H1` (no wild) = 25 lb → 2.25x. The wild line triggers the respin; R3r0 → x2. **Both** lines' non-wild cells (R1r0, R2r0 **and** R1r3, R2r3, R3r3) are replaced.
+- Respin 1: L1 lands `L2 L2 W` = 5 lb × x2 = 0.5x; the bottom row lands H4 L5 L3 (no win). Wild → x3.
+- Respin 2: nothing connects → stop. **Total 2.75x.** The 3×H1 paid once because its cells were replaced.
+
 **E3 – respins build a stack from grown wilds → Triple Dare.**
 ```
 H2 H2 W  L1 L3
@@ -309,7 +318,7 @@ Step 0: every line 4-of-a-kind of its R1 symbol × 504 = 335,160 lb = 16,758x. 3
 ## 13. What changed from v1 (contradictions resolved)
 | v1 text | Now | Source |
 |---|---|---|
-| §4 R3: winners are **held**, the rest respins | Winners' non-wild cells are **replaced**; the rest **stays** | R3 |
+| §4 R3: winners are **held**, the rest respins | Non-wild cells of **every winning line** (wild or not) are **replaced**; non-winning cells **stay**; only wild connections trigger respins | R3 |
 | §4 R5: pay **once** at the end on the final board (E2 paid 35x once) | **Every step pays every winning line on that step's board** (§4.3); E2 rebuilt | R5/R3 |
 | §3 growth once per spin sequence in bonuses/EGW | **+1 per step everywhere** | R6 |
 | §4/§8: **no respins** on the Mystery reveal; 4th-cell slow spin decides | Mystery **respins are the reveal** | R4-Mystery |

@@ -68,7 +68,7 @@ Single wild: badge bottom-right. Full-reel and merged wilds: one badge bottom ce
 | Spins counter | 300×120 | yes | tick, +2 pop | "SPINS 7/12" neon display |
 
 ## 5. Animation notes
-- **Respin:** connected non-wild cells flash, pop out and are replaced; wilds get a gold lock ring. Step win counts up per step and never drops.
+- **Respin:** the non-wild cells of every winning line flash, pop out and are replaced; wilds get a gold lock ring. Step win counts up per step and never drops.
 - **Grow:** +1 badge tick with a pink pop on every connected wild after each step.
 - **Stack:** 4 wilds slide together → flash → WF reveal; badge counts the sum (e.g. 4+4+3+1 → x12).
 - **Merge:** adjacent WF reels fuse into WM2–WM5, a wider scene with one more elf per reel (2/3/4/5 elves); badge morphs to "x6 × x5 = x30".

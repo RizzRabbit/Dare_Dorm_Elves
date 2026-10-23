@@ -111,6 +111,7 @@ cp -r games/0_0_lines games/dare_dorm_elves
 |---|---|---|
 | E1 | 1.25 | no respin |
 | E2 | 1.50 | R3r0 = x3, 2 respins played |
+| E2b | 2.75 | the 3×H1 win without a wild is replaced on the respin (R3), paid once |
 | E3 | 179.10 | R3 full x13 (built as 4+4+3+1=12), singles R2r1 x5, R1r2 x3; tier = triple_dare |
 | E4 | 350.10 | R1 x8, R3 x8; tier = hidden |
 | E5 (step 0 only) | 2440.15 | line mult 37 |
@@ -120,7 +121,7 @@ cp -r games/0_0_lines games/dare_dorm_elves
 | E9 | 374.50 | R1 x8, R3 x8, R5 x5; no bonus |
 | E10 | 72.30 | R3 x17 |
 | E12 | step 16758.00 → round 50000 | wincap event, round ends |
-- `test_rules.py`: wild in run only (D3); every winning line on each step's board pays (no newly-landed filter) and an all-wild line pays again at every respin step at its grown value; non-connected win not replaced; max 3 respins; Dare never from Mystery; EGW never triggers; spin cap 18 (incl. +2 at 17 → 18, not 19); A1/A2 group math; precedence table.
+- `test_rules.py`: wild in run only (D3); every winning line on each step's board pays (no newly-landed filter) and an all-wild line pays again at every respin step at its grown value; a win without a wild does not trigger a respin, but its non-wild cells ARE replaced when a wild line triggers one (E2b = 2.75x); max 3 respins; Dare never from Mystery; EGW never triggers; spin cap 18 (incl. +2 at 17 → 18, not 19); A1/A2 group math; precedence table.
 - `test_events.py`: a book's events follow EVENTS.md sequences; `finalWin.amount == payoutMultiplier`; coordinates in range.
 **A acceptance:** `pytest -q` all green; `python games/dare_dorm_elves/run_local.py 2000 200 1 0` produces books for all 7 modes without errors.
 
@@ -167,7 +168,7 @@ cd frontend && pnpm install && pnpm --filter dare-dorm-elves dev     # rename th
 Implement in `apps/dare-dorm-elves/src/`:
 1. `game/config.ts`: gameID, `maxWin: 50000`, 5×4, 20 paylines, paytable, 7 bet modes with costs/RTP **generated from `math/.../publish_files/index.json` + stats** (script `scripts/sync-config.mjs`), free-spin table (8/10/12/14, +2, cap 18), Mystery odds.
 2. `game/typesBookEvent.ts` + `bookEventHandlerMap.ts`: one handler per EVENTS.md event; unknown events throw in dev.
-3. Board: 5×4 reels, padded reveal, anticipation; **respin animation** (flash connected cells → pop replaced cells → drop new cells; wilds show lock ring); per-step win count-up that never decreases.
+3. Board: 5×4 reels, padded reveal, anticipation; **respin animation** (flash winning cells → pop replaced cells (all winning lines' non-wild cells) → drop new cells; wilds show lock ring); per-step win count-up that never decreases.
 4. Wilds: single wild sprite + multiplier badge; `wildGrow` tick; `stackComplete` fuse animation to the full-reel elf (WF) with sum count-up; `mergeGroups` → swap to **merged wide scenes WM2–WM5 (2/3/4/5 elves)** with the **combined badge "x6 × x5 = x30"** and a group outline; non-adjacent stacks keep separate badges.
 5. Free spins: intros per tier (Dare/Double/Triple/Hidden), counter "SPINS n/total", "+2" pop, cap 18 messaging, outro with total.
 6. **Buy menu** ("Get Bonus" in social mode): 5 cards (Dare, Double Dare, Triple Dare, Mystery Spin, Elves Gone Wild) with live cost × bet, RTP and max win per mode; **confirm dialog for any mode > 2× bet**; Mystery card + dialog show "50% no bonus / 37% Double Dare / 10% Triple Dare / 3% Hidden – decided before the reveal".
@@ -205,7 +206,7 @@ Implement in `apps/dare-dorm-elves/src/`:
 2. Wild connects only **inside the winning run** (D3).
 3. Wild starts **x1**; **+1 per respin step it connects, everywhere** (R1/R6). Full-reel wild = **sum of its 4 values**; instant stack = **x4**; grows +1 as one wild (A4/A5).
 4. **Adjacent full-reel wilds multiply (3+ all multiply), non-adjacent add; mixed = multiply within groups then add** (A1/A2). No global multiplier.
-5. Respins: **replace non-wild symbols of connected runs, wilds lock, others stay; max 3; stop when nothing new connects; every step pays every winning line on that step's board, no "newly landed cell" filter; an all-wild line pays again at every respin step** (R2/R3/R5); tail is controlled by stack/wild odds, never by restricting pays (R6); everywhere incl. Mystery and EGW (R4); respins don't use free spins.
+5. Respins: **triggered only by a wild connection; replace the non-wild symbols of EVERY winning line (wild or not), wilds lock, non-winning symbols stay; max 3; stop when nothing new connects; every step pays every winning line on that step's board, no "newly landed cell" filter; an all-wild line pays again at every respin step** (R2/R3/R5); tail is controlled by stack/wild odds, never by restricting pays (R6); everywhere incl. Mystery and EGW (R4); respins don't use free spins.
 6. Triggers & precedence **Hidden > Triple > Double > Dare**; trigger spin pays (D4).
 7. Bonuses **8/10/12/14** spins, **+2 per newly completed stack, cap 18**, no tier upgrades (D8); tiers differ only by start stacks/wilds, spins and stack odds (A3).
 8. Bought bonuses play a **real trigger spin**: no forced x4, no forced reels (A5).

@@ -37,7 +37,7 @@ Running win of the current spin (all steps so far), after each `winInfo`. `amoun
 After each step's pay. `step`, `changes`: `[{kind: "single", reel, row, from, to} | {kind: "full", reel, from, to}]` (+1 each).
 
 ### respinStart
-A respin follows. `step` (1–3, the step about to play), `replace`: cells to be replaced `[{reel,row}]`, `locked`: all wilds `{fullReels, singles}`, `remaining`: respins left after this one.
+A respin follows. `step` (1–3, the step about to play), `replace`: cells to be replaced `[{reel,row}]` (the non-wild cells of **every** winning line this step, wild or not, SPEC §4.4), `locked`: all wilds `{fullReels, singles}`, `remaining`: respins left after this one.
 
 ### respinReveal
 The replacement cells land. `step`, `newSymbols`: `[{reel, row, name, wild?, multiplier?}]`.

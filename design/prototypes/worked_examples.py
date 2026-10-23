@@ -21,6 +21,11 @@ H2 H2 W  L1 L3
 L4 H3 L5 H3 L5
 L1 L3 H4 L4 L2
 H3 L5 L2 L1 H4""", steps=[{(0,0):'L2',(1,0):'L2'}, {(0,0):'H4',(1,0):'L1'}])
+R['E2b'] = ex("E2b R3 (locked): a win WITHOUT a wild is also replaced when a respin follows (respin triggered by the wild line)", """
+H2 H2 W  L1 L3
+L4 H3 L5 H3 L5
+L1 L3 H4 L4 L2
+H1 H1 H1 L1 H4""", steps=[{(0,0):'L2',(1,0):'L2',(0,3):'H4',(1,3):'L5',(2,3):'L3'}, {(0,0):'H4',(1,0):'L1'}])
 R['E3'] = ex("E3 base respins build a stack (sum of grown values) -> Triple Dare trigger", """
 H2 H2 W  L1 L3
 L4 W  W  L2 L5

@@ -29,4 +29,3 @@ This repo is the **design + asset + build-instructions package**. No game code y
 ## Open items for the user
 - All bonus wilds sticky in every tier (A3 reading; SPEC §6).
 - Mystery tease default: the 3 reveal wilds sit as a 3-high partial stack on one reel; the build may scatter them if needed and must report it (SPEC §8).
-- Wins without a wild keep their cells under R3, so they pay again at each respin step under the every-step pay rule (SPEC §4 note). Confirm this is intended.

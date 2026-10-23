@@ -30,8 +30,9 @@ def line_mult(run, sym, sv, full):
 
 def evaluate(sym, sv, full):
     """Pays every winning line on THIS step's board (R5, user-locked): no 'newly landed cell' filter.
-    Non-wild cells of connected runs are replaced each respin, so repeat pays come from newly formed
-    lines; an all-wild line pays again at every step at its grown value. Returns (lb, connected wild keys, cells to respin, detail)."""
+    R3 (locked): if a respin follows, the non-wild cells of EVERY winning line are replaced (wild or not);
+    wilds stay locked, non-winning cells stay put. So repeat pays come from newly formed lines; an all-wild
+    line pays again at every step at its grown value. A respin is triggered only by a wild connection. Returns (lb, connected wild keys, cells to respin, detail)."""
     lb, conw, resp, det = 0, set(), set(), []
     for i, ln in enumerate(LINES):
         cells = [sym[r][ln[r]] for r in range(REELS)]
@@ -50,10 +51,10 @@ def evaluate(sym, sv, full):
         run = [(r, ln[r]) for r in range(k)]
         m = line_mult(run, sym, sv, full); p = max(ps, pw)
         lb += p * m; det.append(f"L{i+1} {k}x{s_} {p}lb x{m} = {p*m}lb")
+        resp |= {c for c in run if sym[c[0]][c[1]] != 'W'}   # R3: non-wild cells of EVERY winning line
         wc = [c for c in run if sym[c[0]][c[1]] == 'W']
-        if wc:
+        if wc:                                                 # respins are triggered only by wild connections
             conw |= {('F', c[0]) if c[0] in full else c for c in wc}
-            resp |= {c for c in run if sym[c[0]][c[1]] != 'W'}
     return lb, conw, resp, det
 
 def play(board, steps=(), full=None, sticky=None, verbose=True, max_steps=3):
@@ -88,7 +89,12 @@ def play(board, steps=(), full=None, sticky=None, verbose=True, max_steps=3):
             rep = {c: ['L5', 'L3', 'H4', 'L1'][(c[0] + c[1]) % 4] for c in resp}
         if rep is None:
             print(f"  STOP: step{step} needs replacements for {sorted(resp)}"); return total, full, sv
-        assert set(rep) == resp, f"step{step}: replacements {sorted(rep)} != respin cells {sorted(resp)}"
+        extra = set(rep) - resp
+        assert not extra, f"step{step}: replacements for cells that are not respun: {sorted(extra)}"
+        missing = sorted(resp - set(rep))
+        if missing:   # illustration filler for winning cells the example did not specify
+            rep = dict(rep); rep.update({c: ['L5', 'L3', 'H4', 'L1'][(c[0] + c[1]) % 4] for c in missing})
+            if verbose: print(f"  step{step}: AUTO filler for {[f'R{c[0]+1}r{c[1]}' for c in missing]}")
         for c, s in rep.items():
             sym[c[0]][c[1]] = s
             if s == 'W': sv[c] = 1

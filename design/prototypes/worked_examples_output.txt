@@ -13,6 +13,15 @@
   TOTAL 30lb = 1.5x
   end state: full-reel wilds {}; single wilds {R3r0: x3}
 
+=== E2b R3 (locked): a win WITHOUT a wild is also replaced when a respin follows (respin triggered by the wild line)
+  step0: pays 45lb (2.25x): L1 3xH2 20lb x1 = 20lb; L4 3xH1 25lb x1 = 25lb
+  step0: grow -> full {} singles {'R3r0': 2}
+  step1: pays 10lb (0.5x): L1 3xL2 5lb x2 = 10lb
+  step1: grow -> full {} singles {'R3r0': 3}
+  step2: pays 0lb (0.0x): 
+  TOTAL 55lb = 2.75x
+  end state: full-reel wilds {}; single wilds {R3r0: x3}
+
 === E3 base respins build a stack (sum of grown values) -> Triple Dare trigger
   step0: pays 312lb (15.6x): L1 3xH2 20lb x1 = 20lb; L2 3xL4 3lb x2 = 6lb; L9 3xH2 20lb x2 = 40lb; L12 5xL2 60lb x1 = 60lb; L13 3xH2 20lb x1 = 20lb; L15 3xL4 3lb x2 = 6lb; L17 3xH2 20lb x2 = 40lb; L20 5xL2 60lb x2 = 120lb
   step0: grow -> full {} singles {'R2r1': 2, 'R3r0': 2, 'R3r1': 2}
@@ -104,5 +113,5 @@
   TOTAL 335160lb = 16758.0x
   end state: full-reel wilds {R2: x9, R3: x8, R4: x10}; single wilds {}
 
-SUMMARY (x bet): {'E1': 1.25, 'E2': 1.5, 'E3': 179.1, 'E4': 350.1, 'E5': 2440.15, 'E6': 1262.0, 'E7': 3.4, 'E8': 92.4, 'E9': 374.5, 'E10': 72.3, 'E12': 16758.0}
+SUMMARY (x bet): {'E1': 1.25, 'E2': 1.5, 'E2b': 2.75, 'E3': 179.1, 'E4': 350.1, 'E5': 2440.15, 'E6': 1262.0, 'E7': 3.4, 'E8': 92.4, 'E9': 374.5, 'E10': 72.3, 'E12': 16758.0}
 E12 round: 36000 + 16758.00 = 52758.00 >= 50000 -> pay exactly 50000x, emit wincap, end round
