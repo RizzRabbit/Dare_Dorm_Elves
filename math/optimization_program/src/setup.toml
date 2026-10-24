@@ -1,0 +1,16 @@
+num_show_pigs = 5000
+num_pigs_per_fence = 10000
+min_mean_to_median = 4
+max_mean_to_median = 8
+pmb_rtp = 1.0
+simulation_trials = 5000
+test_spins = [ 10, 20, 50,]
+test_spins_weights = [ 0.6, 0.2, 0.2,]
+score_type = "rtp"
+max_trial_dist = 15
+game_name = "0_0_scatter"
+path_to_games = "../games/"
+run_1000_batch = false
+bet_type = "bonus"
+threads_for_fence_construction = 20
+threads_for_show_construction = 20
