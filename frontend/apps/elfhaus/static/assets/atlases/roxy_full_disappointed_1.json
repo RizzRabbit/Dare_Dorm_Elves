@@ -1,0 +1,210 @@
+{
+ "frames": {
+  "roxy_full_disappointed_28": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 270,
+    "h": 480
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 270,
+    "h": 480
+   },
+   "sourceSize": {
+    "w": 270,
+    "h": 480
+   }
+  },
+  "roxy_full_disappointed_29": {
+   "frame": {
+    "x": 272,
+    "y": 0,
+    "w": 270,
+    "h": 480
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 270,
+    "h": 480
+   },
+   "sourceSize": {
+    "w": 270,
+    "h": 480
+   }
+  },
+  "roxy_full_disappointed_30": {
+   "frame": {
+    "x": 544,
+    "y": 0,
+    "w": 270,
+    "h": 480
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 270,
+    "h": 480
+   },
+   "sourceSize": {
+    "w": 270,
+    "h": 480
+   }
+  },
+  "roxy_full_disappointed_31": {
+   "frame": {
+    "x": 816,
+    "y": 0,
+    "w": 270,
+    "h": 480
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 270,
+    "h": 480
+   },
+   "sourceSize": {
+    "w": 270,
+    "h": 480
+   }
+  },
+  "roxy_full_disappointed_32": {
+   "frame": {
+    "x": 1088,
+    "y": 0,
+    "w": 270,
+    "h": 480
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 270,
+    "h": 480
+   },
+   "sourceSize": {
+    "w": 270,
+    "h": 480
+   }
+  },
+  "roxy_full_disappointed_33": {
+   "frame": {
+    "x": 1360,
+    "y": 0,
+    "w": 270,
+    "h": 480
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 270,
+    "h": 480
+   },
+   "sourceSize": {
+    "w": 270,
+    "h": 480
+   }
+  },
+  "roxy_full_disappointed_34": {
+   "frame": {
+    "x": 1632,
+    "y": 0,
+    "w": 270,
+    "h": 480
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 270,
+    "h": 480
+   },
+   "sourceSize": {
+    "w": 270,
+    "h": 480
+   }
+  },
+  "roxy_full_disappointed_35": {
+   "frame": {
+    "x": 0,
+    "y": 482,
+    "w": 270,
+    "h": 480
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 270,
+    "h": 480
+   },
+   "sourceSize": {
+    "w": 270,
+    "h": 480
+   }
+  },
+  "roxy_full_disappointed_36": {
+   "frame": {
+    "x": 272,
+    "y": 482,
+    "w": 270,
+    "h": 480
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 270,
+    "h": 480
+   },
+   "sourceSize": {
+    "w": 270,
+    "h": 480
+   }
+  }
+ },
+ "meta": {
+  "app": "elfhaus pack-atlases.py",
+  "image": "roxy_full_disappointed_1.webp",
+  "format": "RGBA8888",
+  "size": {
+   "w": 1902,
+   "h": 962
+  },
+  "scale": "1",
+  "related_multi_packs": [
+   "roxy_full_disappointed_0.json"
+  ]
+ },
+ "animations": {
+  "roxy_full_disappointed": [
+   "roxy_full_disappointed_28",
+   "roxy_full_disappointed_29",
+   "roxy_full_disappointed_30",
+   "roxy_full_disappointed_31",
+   "roxy_full_disappointed_32",
+   "roxy_full_disappointed_33",
+   "roxy_full_disappointed_34",
+   "roxy_full_disappointed_35",
+   "roxy_full_disappointed_36"
+  ]
+ }
+}

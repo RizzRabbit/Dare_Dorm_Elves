@@ -1,0 +1,38 @@
+{
+ "frames": {
+  "WM5": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 1280,
+    "h": 1024
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 1280,
+    "h": 1024
+   },
+   "sourceSize": {
+    "w": 1280,
+    "h": 1024
+   }
+  }
+ },
+ "meta": {
+  "app": "elfhaus pack-atlases.py",
+  "image": "symbols_2.webp",
+  "format": "RGBA8888",
+  "size": {
+   "w": 1280,
+   "h": 1024
+  },
+  "scale": "1",
+  "related_multi_packs": [
+   "symbols_0.json",
+   "symbols_1.json"
+  ]
+ }
+}

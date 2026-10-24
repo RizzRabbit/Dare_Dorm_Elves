@@ -1,0 +1,58 @@
+{
+ "frames": {
+  "WM3": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 768,
+    "h": 1024
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 768,
+    "h": 1024
+   },
+   "sourceSize": {
+    "w": 768,
+    "h": 1024
+   }
+  },
+  "WM4": {
+   "frame": {
+    "x": 770,
+    "y": 0,
+    "w": 1024,
+    "h": 1024
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 1024,
+    "h": 1024
+   },
+   "sourceSize": {
+    "w": 1024,
+    "h": 1024
+   }
+  }
+ },
+ "meta": {
+  "app": "elfhaus pack-atlases.py",
+  "image": "symbols_1.webp",
+  "format": "RGBA8888",
+  "size": {
+   "w": 1794,
+   "h": 1024
+  },
+  "scale": "1",
+  "related_multi_packs": [
+   "symbols_0.json",
+   "symbols_2.json"
+  ]
+ }
+}
