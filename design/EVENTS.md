@@ -73,7 +73,7 @@ Dare only, at most once per round (SPEC §6, D10). After a Dare free spin's `set
 First event of a Mystery book, before the reveal: `odds`: `{"none": 50, "double_dare": 37, "triple_dare": 10, "hidden": 3}`. **Never reveals the outcome.**
 
 ### mysteryResult
-After the Mystery spin's last `respinEnd`: `outcome` (`"none"` | tier). If not `"none"`, a `freeSpinTrigger` with `source: "mystery"` follows.
+After the Mystery spin's last `respinEnd`: `outcome` (`"none"` | tier). If not `"none"`, a `freeSpinTrigger` with `source: "mystery"` follows. With `source: "mystery"` the bonus starts fresh: `carried` is the tier's fresh start board (DD 1 stack x4, TD 1 stack x4 + 2 singles x1, Hidden 2 stacks x4), not the reveal board, so the frontend clears the reveal wilds and places these (SPEC §8.4).
 
 ### egwStart
 First event of an EGW book: `reels`: the placed pattern (e.g. `[0,2,4]`), `value`: 4.

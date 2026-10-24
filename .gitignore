@@ -11,3 +11,9 @@ math/games/*/library/temp*/
 *.log
 .DS_Store
 assets/reference/
+# Elfhaus math: generated (rebuild with make_reels.py / run_local.py)
+math/games/elfhaus/reels/*.csv
+math/games/elfhaus/library/publish_files/*.zst
+math/games/elfhaus/library/publish_files/*.csv
+math/games/elfhaus/library/temp_books/
+math/games/elfhaus/library/res_*.json

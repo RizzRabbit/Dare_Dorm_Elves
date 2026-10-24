@@ -16,6 +16,7 @@ MAX_RESPINS = 3
 START_FS = {"dare": 8, "double_dare": 10, "triple_dare": 12, "hidden": 14}
 TIERS = ("dare", "double_dare", "triple_dare", "hidden")
 MYSTERY_ODDS = {"none": 50, "double_dare": 37, "triple_dare": 10, "hidden": 3}
+MYSTERY_START_WEIGHTS = [0.03, 0.01, 0.02, 0.5, 10]   # reel weights for the fresh bonus start board, order 2<3<1<4<5
 LINES = [[0,0,0,0,0],[1,1,1,1,1],[2,2,2,2,2],[3,3,3,3,3],[0,1,2,1,0],[3,2,1,2,3],[1,0,0,0,1],[2,3,3,3,2],
          [0,1,0,1,0],[3,2,3,2,3],[1,2,1,2,1],[2,1,2,1,2],[0,0,1,0,0],[3,3,2,3,3],[1,1,0,1,1],[2,2,3,2,2],
          [0,1,1,1,0],[3,2,2,2,3],[1,2,3,2,1],[2,1,0,1,2]]
@@ -429,31 +430,55 @@ def round_buy(rnd, S, tier, max_tries=100000):
     raise RuntimeError("buy trigger rejection exhausted for " + tier)
 
 
-def round_mystery(rnd, S, bucket, reel_weights, max_tries=200000):
-    """SPEC §8. bucket drawn upstream with exact 50/37/10/3 weights. Reveal = exactly 3 wilds as a 3-high
-    partial stack on one reel, >=1 connected win; respins are the reveal; rejection per bucket."""
+def _pick(weights, k, exclude=()):
+    pool = [r for r in range(REELS) if r not in exclude]; out = []
+    for _ in range(k):
+        r = random.choices(pool, weights=[weights[x] for x in pool])[0]
+        out.append(r); pool.remove(r)
+    return out
+
+
+def mystery_start_board(tier, reel_weights):
+    """User rule 2026-10-24: the Mystery bonus starts fresh with the board that normally defines its tier,
+    at starting values: Double = 1 full stack, Triple = 1 stack + 2 singles, Hidden = 2 stacks (stack 4, single 1)."""
+    stacks = {"double_dare": 1, "triple_dare": 1, "hidden": 2}[tier]
+    full = {r: 4 for r in _pick(reel_weights, stacks)}
+    sv = {}
+    if tier == "triple_dare":
+        for r in _pick(reel_weights, 2, exclude=full):
+            sv[(r, random.randrange(ROWS))] = 1
+    return full, sv
+
+
+def _wild_cells(full, sv):
+    return 4 * len(full) + len(sv)
+
+
+def round_mystery(rnd, S, bucket, reel_weights, max_tries=400000):
+    """SPEC \u00a78 (Coordinator/user rules 2026-10-24). bucket drawn upstream at exact 50/37/10/3.
+    Tease = one normal spin on Mystery's own trigger reels with >=1 wild in a connected win (guarantees respins).
+    Respins are the reveal (standard rules): none = no new wilds land; otherwise new wilds land until the board
+    shows the drawn tier. The reveal only decides the tier: nothing carries; the bonus starts fresh."""
     for _ in range(max_tries):
         rnd.__init__(Emitter(rnd.emit.on))
         emit = rnd.emit
         emit("mysteryStart", odds=dict(MYSTERY_ODDS))
-        sym, pad, stops = S["spin"].land()       # Mystery reveal strips hold no wilds
-        r = random.choices(range(REELS), weights=reel_weights)[0]
-        top = random.randrange(2)                # rows 0-2 or 1-3
-        for row in range(top, top + 3):
-            sym[r][row] = W; pad[r][row + 1] = W
-        sv = {(r, row): 1 for row in range(top, top + 3)}
+        sym, pad, stops = S["spin"].land()
         full = {}
+        sv = wilds_from_board(sym, full)
+        if full or tier_of(full, sv):
+            continue                              # the tease itself must not already show a tier
         lb, conw, _, _ = evaluate(sym, sv, full)
         if not conw:
             continue
-        ant = [0] * REELS; ant[r] = 1
+        before = _wild_cells(full, sv)
         respin = S["respin_" + bucket]
-        win, _, ok = play_sequence(rnd, sym, sv, full, respin, "basegame", pad=pad, stops=stops, anticipation=ant)
+        win, _, ok = play_sequence(rnd, sym, sv, full, respin, "basegame", pad=pad, stops=stops)
         if not ok:
             continue
         t = tier_of(full, sv)
         if bucket == "none":
-            if full or len(sv) != 3:
+            if _wild_cells(full, sv) != before:
                 continue
         elif t != bucket:
             continue
@@ -466,7 +491,8 @@ def round_mystery(rnd, S, bucket, reel_weights, max_tries=200000):
         end_spin_events(rnd, win)
         emit("mysteryResult", outcome=bucket)
         if bucket != "none":
-            play_bonus(rnd, bucket, full, sv, S["fs"], "mystery")
+            f0, s0 = mystery_start_board(bucket, MYSTERY_START_WEIGHTS)
+            play_bonus(rnd, bucket, f0, s0, S["fs"], "mystery")
         return finish(rnd)
     raise RuntimeError("mystery rejection exhausted for " + bucket)
 

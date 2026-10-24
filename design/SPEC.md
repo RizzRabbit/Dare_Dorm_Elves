@@ -154,14 +154,15 @@ Pays are in **line-bet units (lb)**; total bet = 20 lb, so `x bet = lb / 20`. Re
 
 ## 8. Mystery Spin (buy) [LOCKED]
 1. The outcome bucket is drawn with weights fixed at exactly **50 / 37 / 10 / 3** (no bonus / Double Dare / Triple Dare / Hidden). The optimizer may reshape weights **within** a bucket only (C20). CI check: bucket weight drift ≤ 0.001%.
-2. **Reveal spin:** lands **exactly 3 wilds** with **at least one connected win**, so respins always run. [DEFAULT – open item for the user] the 3 wilds sit as a 3-high partial stack on one reel (the tease art); if stack completion through respins proves too rare to generate, the build may scatter them and must report it.
-3. **The respins are the reveal (R4-Mystery):**
-   - **No bonus:** no wild lands on any respin. The final board has exactly 3 wilds and no stack, so a Dare is never implied. All steps pay. The round ends.
-   - **Double Dare / Triple Dare / Hidden:** wilds land on respins and the final board meets that tier's condition (§5 table). Stacks follow A5 (sum of grown values). Then the bonus plays (§6) in the same book.
+2. **Tease spin (rev. 2026-10-24, user + Coordinator):** one normal-looking paid spin on Mystery's own trigger reels with **at least one wild in a connected win**, so respins always run. Wilds can land on any reel (by strip weight, rarity 2<3<1<4–5); the tease never already shows a tier (no instant full stack, fewer than 4 singles). The old "exactly 3 wilds as a 3-high stack" rule is dropped.
+3. **The respins are the reveal (R4-Mystery):** standard respin rules (connected cells respin, wilds lock and grow, max 3, stop early when nothing new connects). All tease and respin steps pay.
+   - **No bonus:** no new wild lands on any respin. The round ends.
+   - **Double Dare / Triple Dare / Hidden:** new wilds land on the respins until the final board meets that tier's condition (§5 table).
    - Dare is never a Mystery outcome.
-4. Generation: per bucket, rejection-sample reveal + respin sequences on Mystery strips until the final board matches the bucket.
-5. The rules and buy dialog state: "Each Mystery Spin is a paid spin with respins. Bonus odds: no bonus 50%, Double Dare 37%, Triple Dare 10%, Hidden 3%. The result is decided before the reveal."
-6. Price: optimizer (D6). Toy ~245x (pre-R6).
+4. **The reveal only decides the tier. Nothing carries into the bonus** (no locked wilds, no grown values). The bonus starts fresh on Mystery's own free-spin reels with the board that defines its tier at starting values: Double Dare = 1 full stack (x4), Triple Dare = 1 full stack (x4) + 2 single wilds (x1), Hidden = 2 full stacks (x4 each). Start reels are drawn with weights 0.03 / 0.01 / 0.02 / 0.5 / 10 (reels 1–5). Starting spins and all other bonus mechanics follow §6 (10 / 12 / 14 spins, +2 per new stack, cap 18, 50,000x cap).
+5. Generation: per bucket, rejection-sample tease + respin sequences on Mystery strips until the final board matches the bucket.
+6. The rules and buy dialog state: "Each Mystery Spin is a paid spin with respins. Bonus odds: no bonus 50%, Double Dare 37%, Triple Dare 10%, Hidden 3%. The result is decided before the reveal. A won bonus starts fresh."
+7. Price: **600x** (tuned 2026-10-24).
 
 ## 9. Order of resolution (one spin)
 1. Load locked/sticky wilds (bonus) or placed stacks (EGW). 2. Land cells. 3. Complete stacks (sum values). 4. Evaluate every line on the current board (§3 groups, §4.3). 5. Add the step win to the round total. 6. **If the round total ≥ 50,000x: set it to exactly 50,000x, emit `wincap`, end the round** (no more steps, spins or bonus). 7. Grow connected wilds +1. 8. Respin decision (§4.2/4.6); if yes, replace cells and go to 2. 9. Bonus spins: +2 per newly completed stack, capped at 18. 10. Base/Ante/Mystery: check the trigger (§5 / §8) and play the bonus in the same book. EGW: never.
@@ -174,7 +175,7 @@ Pays are in **line-bet units (lb)**; total bet = 20 lb, so `x bet = lb / 20`. Re
 | `dare` | Dare | optimizer | 25–50x | buy-trigger spin then Dare |
 | `double_dare` | Double Dare | optimizer | 180–240x | |
 | `triple_dare` | Triple Dare | optimizer | ~1,000x | **must be ≤ 1,000x** (2-Star) |
-| `mystery` | Mystery Spin | optimizer | ~245x | 50/37/10/3 |
+| `mystery` | Mystery Spin | 600x | ~245x | 50/37/10/3, fresh-start bonus |
 | `egw` | Elves Gone Wild | optimizer | 150–250x | one spin |
 
 - **Hidden is a freegame type, not a mode (D7).**

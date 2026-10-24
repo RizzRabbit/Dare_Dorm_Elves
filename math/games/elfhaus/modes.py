@@ -7,7 +7,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 MODES = ["base", "ante", "dare", "double_dare", "triple_dare", "mystery", "egw"]
 FS_TIERS = {"base": gc.TIERS, "ante": gc.TIERS, "dare": ("dare", "double_dare"), "double_dare": ("double_dare",),
             "triple_dare": ("triple_dare",), "mystery": ("double_dare", "triple_dare", "hidden"), "egw": ()}
-MYSTERY_REEL_WEIGHTS = [1, 1, 1, 1, 1]
+MYSTERY_REEL_WEIGHTS = [2, 1, 1.5, 4, 8]   # reveal reel, rarity order 2<3<1<4-5
 
 
 def strip_names(mode, variant=""):

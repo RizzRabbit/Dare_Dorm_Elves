@@ -19,6 +19,12 @@ def build_strip(name, p, seed):
     w, q = p["w"], p.get("q", [0] * 5)
     symw = p.get("sym", DEFAULT_SYM)
     dens = [x for x in list(w) + list(q) if x > 0]
+    # strips are capped at 60,000 stops; a density below 6/60,000 can't keep the rarity order after rounding,
+    # so a near-zero strip is lifted uniformly (ratios kept) until its rarest positive density is 6/60,000
+    if dens and min(dens) < 1e-4 and not p.get("L"):
+        k = 1e-4 / min(dens)
+        w = [x * k for x in w]; q = [x * k for x in q]
+        dens = [x * k for x in dens]
     L = p.get("L") or int(min(60000, max(1000, math.ceil(max(4 / d for d in dens)) if dens else 1000)))
     reels = []
     for r in range(5):
@@ -29,9 +35,15 @@ def build_strip(name, p, seed):
         # place blocks/singles as tokens between plain symbols, never touching each other
         tokens = ["Q"] * nq + ["S"] * nw
         rng.shuffle(tokens)
-        plain = rng.choices(SYMS, weights=symw, k=n_plain)
-        assert n_plain >= len(tokens), name
-        slots = sorted(rng.sample(range(n_plain), len(tokens)))
+        # optional per-reel symbol mix: "rot": k rotates the weight vector by k*r on reel r (fewer cross-reel
+        # matches = fewer connections; a strip-composition lever, paytable untouched)
+        k = p.get("rot", 0) * r % len(SYMS)
+        sw = symw[-k:] + symw[:-k] if k else symw
+        plain = rng.choices(SYMS, weights=sw, k=n_plain)
+        assert n_plain > 0, name
+        # dense respin strips (single-cell draws only) may need tokens next to each other
+        slots = sorted(rng.sample(range(n_plain), len(tokens)) if n_plain >= len(tokens)
+                       else rng.choices(range(n_plain), k=len(tokens)))
         out, ti, si = [], 0, 0
         for i, s in enumerate(plain):
             out.append(s)
@@ -57,8 +69,26 @@ def check_rarity(name, reels, p):
         assert f[1] < f[2] < f[0] < min(f[3], f[4]), f"{name}: realised W freq violates rarity: {f}"
 
 
+def wcap_strips(params):
+    """Hot strip set per mode for the wincap books (SDK force_wincap equivalent): every w/q of that mode's strips
+    times wcap_scale[mode], so the rarity order is kept."""
+    out = {}
+    for mode, f in params.get("wcap_scale", {}).items():
+        for nm, p in params["strips"].items():
+            if nm.startswith(mode + "_") and "_wcap_" not in nm:
+                if mode == "dare" and nm.startswith("double_"): continue
+                fe = min([f] + [0.25 / x for x in p["w"] if x] + [0.05 / x for x in p.get("q", []) if x])
+                if mode == "mystery" and "_fs_" not in nm:
+                    fe = 1.0   # Mystery tease/reveal strips stay as-is; only its fresh-start bonus reels run hot
+                q = dict(p); q["w"] = [x * fe for x in p["w"]]
+                if "q" in p: q["q"] = [x * fe for x in p["q"]]
+                out[mode + "_wcap_" + nm[len(mode) + 1:]] = q
+    return out
+
+
 def main():
     params = json.load(open(os.path.join(HERE, "reel_params.json")))
+    params["strips"].update(wcap_strips(params))
     os.makedirs(os.path.join(HERE, "reels"), exist_ok=True)
     for i, (name, p) in enumerate(sorted(params["strips"].items())):
         reels = build_strip(name, p, 1000 + i)

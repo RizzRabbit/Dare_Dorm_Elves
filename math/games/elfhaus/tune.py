@@ -12,6 +12,15 @@ def _init(mode, variant):
     n = modes.strip_names(mode, variant)
     for k, v in n.items(): need |= set(v.values()) if k == "fs" else {v}
     names = sorted(params)
+    # ELF_SCALE='{"prefix": factor, ...}' scales w and q of every strip whose name starts with prefix (tuning only)
+    for pre, f in json.loads(os.environ.get("ELF_SCALE", "{}")).items():
+        for nm in params:
+            if nm.startswith(pre):
+                params[nm] = dict(params[nm]); params[nm]["w"] = [x * f for x in params[nm]["w"]]
+                if "q" in params[nm]: params[nm]["q"] = [x * f for x in params[nm]["q"]]
+    for pre, v in json.loads(os.environ.get("ELF_SET", "{}")).items():   # ELF_SET='{"prefix": {"rot": 3}}'
+        for nm in params:
+            if nm.startswith(pre): params[nm] = dict(params[nm], **v)
     reels = {nm: make_reels.build_strip(nm, params[nm], 1000 + names.index(nm)) for nm in need}
     S = modes.build_sets(mode, variant, reels); MODE = mode
 
@@ -49,7 +58,7 @@ def summarize(mode, res, cost):
           f"base_share={sum(r[1] for r in res)/max(1,sum(r[0] for r in res)):.3f}")
     for t, c in sorted(tiers.items()):
         fsw = [r[0]/100 for r in res if r[2] == t]
-        print(f"   {t}: 1 in {N/c:.1f}  mean round {sum(fsw)/len(fsw):.1f}x  up={sum(1 for r in res if r[2]==t and r[3])}")
+        print(f"   {t}: 1 in {N/c:.1f}  mean round {sum(fsw)/len(fsw):.1f}x  med={sorted(fsw)[len(fsw)//2]:.0f}  >=5k={sum(1 for v in fsw if v>=5000)/len(fsw)*100:.1f}%  up={sum(1 for r in res if r[2]==t and r[3])}")
 
 if __name__ == "__main__":
     mode, n = sys.argv[1], int(sys.argv[2]); variant = sys.argv[3] if len(sys.argv) > 3 else ""
