@@ -46,7 +46,7 @@ The executable reference for §3–§4 is `design/prototypes/reference_rules.py`
 - One special symbol: the **Elf Wild (W)**. No scatter. Bonuses trigger from wild counts and full-reel stacks.
 - Every wild carries its own multiplier: starts x1, **+1 every respin step it connects**. Four wilds filling a reel merge into a **full-reel wild** worth the **sum** of the four. Adjacent full-reel wilds **multiply**; non-adjacent ones **add**.
 - **Respins**: triggered by any win that runs through a wild; the non-wild symbols of **every** winning line are replaced, wilds stay locked, non-winning symbols stay; up to 3 respins; every step pays.
-- Bonuses: **Dare 8 / Double Dare 10 / Triple Dare 12 / Hidden 14** free spins, +2 per newly completed stack, max **18** spins played.
+- Bonuses: **Dare 8 / Double Dare 10 / Triple Dare 10 / Hidden 10** free spins, +2 per newly completed stack, max **18** spins played.
 - Buys: Dare, Double Dare, Triple Dare, **Mystery Spin** (50/37/10/3), **Elves Gone Wild** (one supercharged paid spin). Plus **Ante** (1.25x).
 
 ## 2. Grid, lines, symbols, paytable
@@ -109,8 +109,8 @@ Pays are in **line-bet units (lb)**; total bet = 20 lb, so `x bet = lb / 20`. Re
 
 | Priority | Final-board condition | Award |
 |---|---|---|
-| 1 | ≥ 2 full-reel wilds | **Hidden**, 14 FS |
-| 2 | 1 full-reel wild + ≥ 2 other wilds | **Triple Dare**, 12 FS |
+| 1 | ≥ 2 full-reel wilds | **Hidden**, 10 FS |
+| 2 | 1 full-reel wild + ≥ 2 other wilds | **Triple Dare**, 10 FS |
 | 3 | 1 full-reel wild + ≤ 1 other wild | **Double Dare**, 10 FS |
 | 4 | ≥ 4 single wilds, no full-reel wild | **Dare**, 8 FS |
 
@@ -124,8 +124,8 @@ Pays are in **line-bet units (lb)**; total bet = 20 lb, so `x bet = lb / 20`. Re
 |---|---|---|---|
 | Dare | 8 | ≥ 4 single wilds from the trigger (free spin 1 only; **not sticky**, D10) | lowest |
 | Double Dare | 10 | 1 locked full-reel wild (+ ≤ 1 sticky single) | low |
-| Triple Dare | 12 | 1 locked full-reel wild + ≥ 2 sticky singles | medium |
-| Hidden | 14 | ≥ 2 locked full-reel wilds (+ any sticky singles) | medium |
+| Triple Dare | 10 | 1 locked full-reel wild + ≥ 2 sticky singles | medium |
+| Hidden | 10 | ≥ 2 locked full-reel wilds (+ any sticky singles) | medium |
 
 - **A3:** these (plus D10 stickiness) are the only differences. Every other rule is identical across tiers.
 - **Stickiness [LOCKED, D10, user 2026-10-23]:** **Double Dare / Triple Dare / Hidden:** all wilds (carried-in and newly landed, singles and full-reel stacks) stay locked for the rest of the round with their values and keep growing. **Dare:** wilds clear after every free spin's respin sequence (nothing carries between Dare spins). **Dare → Double Dare upgrade:** the first stack completed in any step of a Dare free spin upgrades the bonus to Double Dare at the end of that spin's sequence, **+2 spins** (`bonusUpgrade` event); all wilds on that spin's final board (the stack at its grown value plus any singles) lock, and the remaining spins use Double Dare rules and strips. The upgrade happens **once**; further stacks (same spin or later) give **+2 only**. Double, Triple, Hidden never upgrade. Reason: the tiers differ only by starting stacks and spins, and a new stack adds both anyway.
@@ -159,7 +159,7 @@ Pays are in **line-bet units (lb)**; total bet = 20 lb, so `x bet = lb / 20`. Re
    - **No bonus:** no new wild lands on any respin. The round ends.
    - **Double Dare / Triple Dare / Hidden:** new wilds land on the respins until the final board meets that tier's condition (§5 table).
    - Dare is never a Mystery outcome.
-4. **The reveal only decides the tier. Nothing carries into the bonus** (no locked wilds, no grown values). The bonus starts fresh on Mystery's own free-spin reels with the board that defines its tier at starting values: Double Dare = 1 full stack (x4), Triple Dare = 1 full stack (x4) + 2 single wilds (x1), Hidden = 2 full stacks (x4 each). Start reels are drawn with weights 0.03 / 0.01 / 0.02 / 0.5 / 10 (reels 1–5). Starting spins and all other bonus mechanics follow §6 (10 / 12 / 14 spins, +2 per new stack, cap 18, 50,000x cap).
+4. **The reveal only decides the tier. Nothing carries into the bonus** (no locked wilds, no grown values). The bonus starts fresh on Mystery's own free-spin reels with the board that defines its tier at starting values: Double Dare = 1 full stack (x4), Triple Dare = 1 full stack (x4) + 2 single wilds (x1), Hidden = 2 full stacks (x4 each). Start reels are drawn with weights 0.03 / 0.01 / 0.02 / 0.5 / 10 (reels 1–5). Starting spins and all other bonus mechanics follow §6 (10 spins for every Mystery tier, +2 per new stack, cap 18, 50,000x cap).
 5. Generation: per bucket, rejection-sample tease + respin sequences on Mystery strips until the final board matches the bucket.
 6. The rules and buy dialog state: "Each Mystery Spin is a paid spin with respins. Bonus odds: no bonus 50%, Double Dare 37%, Triple Dare 10%, Hidden 3%. The result is decided before the reveal. A won bonus starts fresh."
 7. Price: **600x** (tuned 2026-10-24).
@@ -234,7 +234,7 @@ H3 L5 L3 L1 H4
 - Respin 1: R3r2 lands W (x1); pays 14.95x; growth → R2r1 x3, R3r0 x3, R3r1 x3, R3r2 x2.
 - Respin 2: R1r2 lands W; pays 38.85x; growth → x4, x4, x4, x3, R1r2 x2.
 - Respin 3: R3r3 lands W → **R3 full-reel wild = 4 + 4 + 3 + 1 = x12** (not x4: built over respins, A5). Pays 109.7x (e.g. L12 5×L4 × (12 + 4 + 2) = x18). Growth → R3 x13, R2r1 x5, R1r2 x3.
-- **Spin total 179.1x.** Final board: 1 full-reel wild + 2 other wilds → **Triple Dare** (12 FS), R3 locked at **x13**, singles sticky at x5 and x3.
+- **Spin total 179.1x.** Final board: 1 full-reel wild + 2 other wilds → **Triple Dare** (10 FS), R3 locked at **x13**, singles sticky at x5 and x3.
 
 **E4 – instant stacks, non-adjacent add, Hidden by precedence.**
 ```
@@ -245,7 +245,7 @@ W L1 W L2 L4
 ```
 - R1 and R3 land complete → **x4 each** (instant). Every line pays 3-of-a-kind of its R2 symbol × (4 + 4) = x8 → 62.4x.
 - Every step replaces all of R2 (always connected), and each new R2 symbol pays again at the grown values (x10, x12, x14). **Total 350.1x**; stacks end at x8 each.
-- Final board meets Hidden and Triple → **Hidden** wins on precedence (14 FS).
+- Final board meets Hidden and Triple → **Hidden** wins on precedence (10 FS).
 
 **E5 – mixed groups (first evaluation only).** R1 x6 and R2 x5 adjacent (×) and R4 x7 isolated (+).
 ```
