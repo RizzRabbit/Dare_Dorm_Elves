@@ -71,23 +71,28 @@
     "assets/final/WM5.png"
   ],
   "background": [
+    "assets/final/bg_base_1920x1080.png",
     "assets/final/background_base.jpg",
     "assets/final/background_base.png"
   ],
   "background_portrait": [
+    "assets/final/bg_base_mobile_1080x1920.png",
     "assets/final/background_base_portrait.jpg",
     "assets/final/background_base_portrait.png"
   ],
   "background_fs": [
+    "assets/final/bg_freespins_1920x1080.png",
     "assets/final/background_fs.jpg",
     "assets/final/background_fs.png"
   ],
   "background_fs_portrait": [
+    "assets/final/bg_base_mobile_1080x1920.png",
     "assets/final/background_fs_portrait.jpg",
     "assets/final/background_fs_portrait.png"
   ],
   "logo": [
-    "assets/final/logo.png"
+    "assets/final/logo.png",
+    "assets/concepts/logo.png"
   ],
   "frame": [
     "assets/final/reel_frame.png"

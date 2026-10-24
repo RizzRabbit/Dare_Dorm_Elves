@@ -238,7 +238,7 @@ body.portrait #anteBtn{width:44px!important;height:44px!important}
 body.portrait #stepToast{font-size:17px;min-height:32px;margin-top:6px}
 body.portrait #buyCards{gap:8px} body.portrait .bcard{padding:8px} body.portrait .bcard p{font-size:11px} body.portrait .modal{padding:14px 12px}
 body.portrait .modal h2{font-size:22px;margin-bottom:10px}
-body.short #logo{display:none} body.short #ctrlTop{margin-bottom:2px} body.short #strip{margin-top:4px;padding:2px 10px} body.short #strip span{font-size:13px} body.short #strip label{font-size:9px}
+body.short #top{display:none;height:0} body.short #logo{display:none} body.short #ctrlTop{margin-bottom:2px} body.short #strip{margin-top:4px;padding:2px 10px} body.short #strip span{font-size:13px} body.short #strip label{font-size:9px}
 body.short #bar{height:44px} body.short #spinBtn{width:56px;height:56px} body.short #spinBtn svg{width:32px;height:32px} body.short #ctrlTop .ico{width:44px;height:44px}
 body.short #stepToast{font-size:13px;min-height:22px;margin-top:2px} body.short #hud{padding-bottom:4px}
 body:not(.portrait).short #hud{max-width:none}

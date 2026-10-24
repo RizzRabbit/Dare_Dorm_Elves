@@ -28,7 +28,7 @@ export const SYMBOL_NAMES: Record<string, string> = {
 	H1: 'Roxy', H2: 'Jade', H3: 'Vi', H4: 'Coco', L1: 'Bottle', L2: 'Lips', L3: 'Phone', L4: 'Red Cup', L5: 'Leaf', W: 'Wild',
 };
 
-export const START_FS = { dare: 8, double_dare: 10, triple_dare: 12, hidden: 14 } as const;
+export const START_FS = { dare: 8, double_dare: 10, triple_dare: 10, hidden: 10 } as const;
 export const MYSTERY_ODDS = { none: 50, double_dare: 37, triple_dare: 10, hidden: 3 } as const;
 export type Tier = keyof typeof START_FS;
 export const TIER_LABEL: Record<Tier, string> = { dare: 'Dare', double_dare: 'Double Dare', triple_dare: 'Triple Dare', hidden: 'Hidden' };
@@ -43,7 +43,7 @@ export const MODE_DESC: Record<ModeKey, string> = {
 	ante: 'Costs 1.25x the play amount; about twice the chance of triggering a bonus naturally. Same symbols, wins and rules.',
 	dare: 'One real trigger spin (with respins, it wins as normal), then 8 free spins. Dare wilds clear after each spin; the first completed full-reel wild upgrades the bonus once to Double Dare (+2 spins).',
 	double_dare: 'One real trigger spin, then 10 free spins starting with 1 locked full-reel wild. All wilds stay locked and keep growing.',
-	triple_dare: 'One real trigger spin, then 12 free spins starting with 1 locked full-reel wild and 2 or more sticky wilds.',
+	triple_dare: 'One real trigger spin, then 10 free spins starting with 1 locked full-reel wild and 2 or more sticky wilds.',
 	mystery: 'One spin with a 3-wild tease and respins; the respins are the reveal. Every Mystery Spin shows a 3-wild tease; the result was decided before the reveal and the odds are 50/37/10/3 (No bonus 50% · Double Dare 37% · Triple Dare 10% · Hidden 3%).',
 	egw: 'One supercharged spin: 2 to 5 full-reel wilds (x4 each) are placed before the reels land, then respins. It never awards free spins.',
 };

@@ -2,6 +2,7 @@
 // Carries the Vault Breakers 3afc6d6 release fixes: rgs_url gating + error modal, bet levels from authenticate,
 // balance checks, Space-to-spin, Intl/social currency, replay mode, social wording, jurisdiction flags.
 import { requestAuthenticate, requestBet, requestEndRound, requestReplay } from 'rgs-requests';
+import { mockAuthenticate, mockBet, mockEndRound, mockReplay } from '../mock/mockRgs';
 import { API_AMOUNT_MULTIPLIER } from 'constants-shared/bet';
 import {
 	ANTE_COST, BUY_MODES, CONFIRM_ABOVE_X, GAME_ID, LINES, MAX_WIN_X, MODES, MODE_DESC, MODE_LABEL, MYSTERY_ODDS, PAYTABLE,
@@ -22,6 +23,8 @@ const url = {
 	currency: q.get('currency') || '', social: q.get('social') === 'true', replay: q.get('replay') === 'true',
 	game: q.get('game') || GAME_ID, version: q.get('version') || VERSION, mode: q.get('mode') || 'base',
 	event: q.get('event') || '', amount: Number(q.get('amount')) || 0,
+	mock: q.get('mock') === 'true' || (!q.get('rgs_url') && !q.get('replay')),
+	book: q.get('book') || '',
 };
 let sessionReady = false;
 let replayState: BookEvent[] = [];
@@ -58,7 +61,7 @@ const setAuto = () => { const b = $('#autoBtn'); b.dataset.n = S.auto ? String(S
 // ---------- RGS round ----------
 async function finishRound(round: any) {
 	if (round?.active || (round?.payoutMultiplier ?? 0) > 0 || (round?.payout ?? 0) > 0) {
-		const end: any = await requestEndRound({ sessionID: url.sessionID, rgsUrl: url.rgsUrl });
+		const end: any = url.mock ? await mockEndRound({}) : await requestEndRound({ sessionID: url.sessionID, rgsUrl: url.rgsUrl });
 		if (end?.error) throw end;
 		if (end?.balance) S.balance = end.balance.amount / API_AMOUNT_MULTIPLIER;
 	}
@@ -70,7 +73,9 @@ async function round(mode: ModeKey) {
 	if (S.balance + 1e-9 < cost) { S.auto = 0; setAuto(); message('INSUFFICIENT BALANCE', t('noFunds')); return; }
 	setBusy(true); resetWinMeter(); endBonusUi();
 	try {
-		const data: any = await requestBet({ sessionID: url.sessionID, rgsUrl: url.rgsUrl, currency: S.currency, amount: bet(), mode });
+		const data: any = url.mock
+			? await mockBet({ currency: S.currency, amount: bet(), mode, forcedBook: url.book || undefined })
+			: await requestBet({ sessionID: url.sessionID, rgsUrl: url.rgsUrl, currency: S.currency, amount: bet(), mode });
 		if (data?.error) throw data;
 		if (data?.balance) S.balance = data.balance.amount / API_AMOUNT_MULTIPLIER;
 		setStrip();
@@ -85,6 +90,17 @@ async function round(mode: ModeKey) {
 
 // ---------- startup ----------
 async function authenticate() {
+	if (url.mock) {
+		const a = await mockAuthenticate({ language: url.lang, currency: url.currency || undefined });
+		if (a.balance) { S.currency = a.balance.currency; setCurrency(S.currency); S.balance = a.balance.amount / API_AMOUNT_MULTIPLIER; }
+		const c = a.config || {};
+		S.jur = { ...(c.jurisdiction || {}) };
+		const minBet = c.minBet ?? 0, maxBet = c.maxBet ?? Number.MAX_SAFE_INTEGER;
+		S.levels = (c.betLevels || []).filter((l: number) => l >= minBet && l <= maxBet).sort((x: number, y: number) => x - y).map((l: number) => l / API_AMOUNT_MULTIPLIER);
+		const pref = (c.defaultBetLevel ?? 0) / API_AMOUNT_MULTIPLIER;
+		S.betIdx = S.levels.reduce((bi, l, i) => (Math.abs(l - pref) < Math.abs(S.levels[bi] - pref) ? i : bi), 0);
+		return a.round;
+	}
 	if (!url.rgsUrl) throw { error: 'ERR_RGS_URL', message: 'Missing rgs_url: the game cannot connect to the game server.' };
 	const a: any = await requestAuthenticate({ sessionID: url.sessionID, rgsUrl: url.rgsUrl, language: url.lang });
 	if (a?.error) throw a;
@@ -115,6 +131,13 @@ async function loadReplay() {
 	S.replay = true; document.body.classList.add('replay');
 	S.currency = url.currency || 'USD'; setCurrency(S.currency);
 	S.replayBet = url.amount / API_AMOUNT_MULTIPLIER || 0;
+	if (url.mock || !url.rgsUrl) {
+		const d: any = await mockReplay({ mode: url.mode, event: url.event || url.book });
+		replayState = d.state; replayCost = Number(d.costMultiplier) || modeCost(url.mode as ModeKey) || 1;
+		$('#replayMode').textContent = MODE_LABEL[url.mode as ModeKey] || url.mode;
+		show('#replayBar', true); setStrip();
+		return;
+	}
 	if (!url.rgsUrl) throw { error: 'ERR_RGS_URL', message: 'Missing rgs_url: the replay cannot be loaded.' };
 	const d: any = await requestReplay({ rgsUrl: url.rgsUrl, game: url.game, version: url.version, mode: url.mode, event: url.event });
 	if (d?.error) throw d;
@@ -194,9 +217,9 @@ export function layout() {
 	const W = innerWidth, H = innerHeight, portrait = H > W * 1.1, short = H < 520;
 	document.body.classList.toggle('portrait', portrait);
 	document.body.classList.toggle('short', short && !portrait);
-	const used = ($('#top').offsetHeight || 0) + ($('#hud').offsetHeight || 0) + ($('#fsBar').offsetHeight || 24) + 44 /* toast row */ + 40 /* frame */;
+	const used = (short ? 0 : ($('#top').offsetHeight || 0)) + ($('#hud').offsetHeight || 0) + (short ? 0 : ($('#fsBar').offsetHeight || 24)) + (short ? 20 : 44) + (short ? 16 : 40);
 	let cell = portrait ? Math.min((W - 40) / 5, (H - used) / 4) : Math.min((H - used) / 4, (W - 120) / 5);
-	cell = Math.max(36, Math.floor(cell));
+	cell = Math.max(short ? 26 : 36, Math.floor(cell));
 	document.documentElement.style.setProperty('--cell', cell + 'px');
 	S.cell = cell; renderAll();
 }
@@ -230,6 +253,7 @@ function applyJurisdiction() {
 	if (S.jur.disabledAutoplay) $('#autoBtn').style.visibility = 'hidden';
 	if (S.jur.disabledTurbo) $('#turboBtn').style.visibility = 'hidden';
 	$('#buyBtn').setAttribute('aria-label', t('buyAria')); $('#buyBtn').title = t('buyAria');
+	$('#buyTitle').textContent = t('buyTitle');
 	$('#betDown').setAttribute('aria-label', t('betDown')); $('#betUp').setAttribute('aria-label', t('betUp'));
 	$('#betLabel').textContent = t('betLabel');
 }

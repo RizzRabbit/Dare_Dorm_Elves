@@ -11,3 +11,5 @@ math/games/*/library/temp*/
 *.log
 .DS_Store
 assets/reference/
+.tools/
+
