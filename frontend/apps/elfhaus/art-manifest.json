@@ -71,11 +71,13 @@
     "assets/final/WM5.png"
   ],
   "background": [
+    "assets/final/bg_base_noroxy_1920x1080.png",
     "assets/final/bg_base_1920x1080.png",
     "assets/final/background_base.jpg",
     "assets/final/background_base.png"
   ],
   "background_portrait": [
+    "assets/final/bg_base_mobile_noroxy_1080x1920.png",
     "assets/final/bg_base_mobile_1080x1920.png",
     "assets/final/background_base_portrait.jpg",
     "assets/final/background_base_portrait.png"
@@ -86,6 +88,7 @@
     "assets/final/background_fs.png"
   ],
   "background_fs_portrait": [
+    "assets/final/bg_base_mobile_noroxy_1080x1920.png",
     "assets/final/bg_base_mobile_1080x1920.png",
     "assets/final/background_fs_portrait.jpg",
     "assets/final/background_fs_portrait.png"

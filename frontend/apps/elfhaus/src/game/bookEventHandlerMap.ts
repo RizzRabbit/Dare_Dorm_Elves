@@ -2,6 +2,7 @@
 import { MAX_WIN_X, ROWS, REELS, TIER_LABEL, type Tier } from './config';
 import { money } from './format';
 import type { BookEvent, BookEventOf, BookEventType } from './typesBookEvent';
+import { roxy, roxyState } from './roxy';
 import { $, S, k, bet, wait, banner, toast, hideToast, bigWin, setWinMeter, clearLines, drawWins, renderCell, renderOverlays, cellEl } from './ui';
 
 const TL = (t: Tier) => TIER_LABEL[t].toUpperCase();
@@ -28,7 +29,7 @@ export const bookEventHandlerMap: Handlers = {
 			if (d && !locked) d.style.animationDelay = r * 0.07 + 's';
 		}
 		renderOverlays(false);
-		if (ev.anticipation.some((a) => a > 0)) banner('3 WILDS… THE RESPINS ARE THE REVEAL', 1600);
+		if (ev.anticipation.some((a) => a > 0)) { banner('3 WILDS… THE RESPINS ARE THE REVEAL', 1600); if (ev.gameType === 'basegame') roxy('anticipation'); }
 		await wait(650);
 	},
 	async stackComplete(ev) {
@@ -102,7 +103,7 @@ export const bookEventHandlerMap: Handlers = {
 	async setWin(ev) { const x = ev.amount / 100; if (x >= 10 && x < MAX_WIN_X) await bigWin(x); },
 	async setTotalWin(ev) { const x = Math.min(ev.amount / 100, MAX_WIN_X); setWinMeter(x); S.roundBase = x; },
 	async freeSpinTrigger(ev) {
-		hideToast();
+		hideToast(); roxy('excited');
 		const I = $('#intro');
 		(I.querySelector('.tierName') as HTMLElement).textContent = TL(ev.tier) + '!';
 		(I.querySelector('.spins') as HTMLElement).textContent = `${ev.totalFs} FREE SPINS`;
@@ -139,6 +140,7 @@ export const bookEventHandlerMap: Handlers = {
 		await wait(900);
 	},
 	async mysteryResult(ev) {
+		roxy(ev.outcome === 'none' ? 'disappointed' : 'excited');
 		banner(ev.outcome === 'none' ? 'MYSTERY RESULT: NO BONUS' : `MYSTERY RESULT: ${TL(ev.outcome)}!`, 1800);
 		await wait(1100);
 	},
@@ -153,9 +155,12 @@ export const bookEventHandlerMap: Handlers = {
 
 export async function playBookEvents(events: BookEvent[]) {
 	S.roundBase = 0;
+	if (roxyState() === 'anticipation') roxy('idle');
 	for (const ev of events) {
 		const h = (bookEventHandlerMap as any)[ev.type];
 		if (!h) { if (import.meta.env.DEV) throw new Error(`Unknown book event: ${ev.type}`); console.warn('skipped unknown book event', ev.type); continue; }
 		await h(ev);
 	}
+	// a tease that never turned into a bonus
+	if (roxyState() === 'anticipation') roxy('disappointed');
 }

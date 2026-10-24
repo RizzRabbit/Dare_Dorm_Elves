@@ -1,0 +1,316 @@
+{
+ "frames": {
+  "roxy_full_excited_23": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 289,
+    "h": 826
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 38,
+    "y": 17,
+    "w": 289,
+    "h": 826
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_excited_24": {
+   "frame": {
+    "x": 291,
+    "y": 0,
+    "w": 287,
+    "h": 826
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 40,
+    "y": 20,
+    "w": 287,
+    "h": 826
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_excited_25": {
+   "frame": {
+    "x": 580,
+    "y": 0,
+    "w": 284,
+    "h": 827
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 43,
+    "y": 21,
+    "w": 284,
+    "h": 827
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_excited_26": {
+   "frame": {
+    "x": 866,
+    "y": 0,
+    "w": 281,
+    "h": 828
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 46,
+    "y": 22,
+    "w": 281,
+    "h": 828
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_excited_27": {
+   "frame": {
+    "x": 1149,
+    "y": 0,
+    "w": 280,
+    "h": 828
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 47,
+    "y": 22,
+    "w": 280,
+    "h": 828
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_excited_28": {
+   "frame": {
+    "x": 1431,
+    "y": 0,
+    "w": 280,
+    "h": 829
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 47,
+    "y": 21,
+    "w": 280,
+    "h": 829
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_excited_29": {
+   "frame": {
+    "x": 1713,
+    "y": 0,
+    "w": 280,
+    "h": 829
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 47,
+    "y": 21,
+    "w": 280,
+    "h": 829
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_excited_30": {
+   "frame": {
+    "x": 0,
+    "y": 831,
+    "w": 279,
+    "h": 829
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 48,
+    "y": 21,
+    "w": 279,
+    "h": 829
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_excited_31": {
+   "frame": {
+    "x": 281,
+    "y": 831,
+    "w": 279,
+    "h": 829
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 48,
+    "y": 21,
+    "w": 279,
+    "h": 829
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_excited_32": {
+   "frame": {
+    "x": 562,
+    "y": 831,
+    "w": 279,
+    "h": 829
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 48,
+    "y": 21,
+    "w": 279,
+    "h": 829
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_excited_33": {
+   "frame": {
+    "x": 843,
+    "y": 831,
+    "w": 279,
+    "h": 829
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 48,
+    "y": 21,
+    "w": 279,
+    "h": 829
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_excited_34": {
+   "frame": {
+    "x": 1124,
+    "y": 831,
+    "w": 279,
+    "h": 829
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 48,
+    "y": 21,
+    "w": 279,
+    "h": 829
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_excited_35": {
+   "frame": {
+    "x": 1405,
+    "y": 831,
+    "w": 279,
+    "h": 829
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 48,
+    "y": 21,
+    "w": 279,
+    "h": 829
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_excited_36": {
+   "frame": {
+    "x": 1686,
+    "y": 831,
+    "w": 279,
+    "h": 829
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 48,
+    "y": 21,
+    "w": 279,
+    "h": 829
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  }
+ },
+ "meta": {
+  "app": "elfhaus pack-atlases.py",
+  "image": "roxy_full_excited_2.webp",
+  "format": "RGBA8888",
+  "size": {
+   "w": 1993,
+   "h": 1660
+  },
+  "scale": "1",
+  "related_multi_packs": [
+   "roxy_full_excited_0.json",
+   "roxy_full_excited_1.json"
+  ]
+ },
+ "animations": {
+  "roxy_full_excited": [
+   "roxy_full_excited_23",
+   "roxy_full_excited_24",
+   "roxy_full_excited_25",
+   "roxy_full_excited_26",
+   "roxy_full_excited_27",
+   "roxy_full_excited_28",
+   "roxy_full_excited_29",
+   "roxy_full_excited_30",
+   "roxy_full_excited_31",
+   "roxy_full_excited_32",
+   "roxy_full_excited_33",
+   "roxy_full_excited_34",
+   "roxy_full_excited_35",
+   "roxy_full_excited_36"
+  ]
+ }
+}

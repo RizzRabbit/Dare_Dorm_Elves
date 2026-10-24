@@ -7,6 +7,7 @@
 </script>
 
 <div id="bg"></div>
+<canvas id="roxy" aria-hidden="true"></canvas>
 <div id="app">
 	<header id="top">
 		{#if art.logo}

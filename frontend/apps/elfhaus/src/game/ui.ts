@@ -52,9 +52,12 @@ export function renderOverlays(anim: boolean | number = false) {
 		const n = g.reels.length, key = `WM${n}`;
 		const d = document.createElement('div'); d.className = 'ov merge';
 		d.style.left = pos(g.reels[0], 0).x + 'px'; d.style.width = n * S.cell + 'px';
-		d.innerHTML = (ART[key] ? `<div class="wfph" style="left:0;width:100%;animation:none">${img(key)}</div>`
-			: g.reels.map((_, i) => `<div class="wfph" style="left:${i * S.cell}px;width:${S.cell}px"><span>ELF ${i + 1}</span></div>`).join('') + `<div class="mlabel">${key} placeholder · ${n} elves</div>`) +
-			`<div class="${badgeCls(g.product)}">${g.values.map((v) => 'x' + v).join(' × ')} = x${g.product}</div><div class="plate">WILD</div>`;
+		// Final art (n reels x 4 rows, same aspect as the merged area) fills the overlay edge to edge; the
+		// dashed columns, labels and WILD plate are only for the no-art fallback.
+		if (ART[key]) d.classList.add('art');
+		d.innerHTML = (ART[key] ? `<div class="wart">${img(key)}</div>`
+			: g.reels.map((_, i) => `<div class="wfph" style="left:${i * S.cell}px;width:${S.cell}px"><span>ELF ${i + 1}</span></div>`).join('') + `<div class="mlabel">${key} placeholder · ${n} elves</div><div class="plate">WILD</div>`) +
+			`<div class="${badgeCls(g.product)}">${g.values.map((v) => 'x' + v).join(' × ')} = x${g.product}</div>`;
 		if (!anim) d.style.animation = 'none';
 		o.appendChild(d);
 	});
@@ -62,8 +65,9 @@ export function renderOverlays(anim: boolean | number = false) {
 		if (inGroup.has(r)) return;
 		const d = document.createElement('div'); d.className = 'ov full';
 		d.style.left = pos(r, 0).x + 'px'; d.style.width = S.cell + 'px';
-		d.innerHTML = (ART.WF ? `<div class="wfph" style="left:0;width:100%">${img('WF')}</div>` : `<div class="wfph" style="left:0;width:100%"><span>FULL-REEL<br>WILD</span></div><div class="tag">WF placeholder</div>`) +
-			`<div class="${badgeCls(v)}">x${v}</div><div class="plate">WILD</div>`;
+		if (ART.WF) d.classList.add('art');
+		d.innerHTML = (ART.WF ? `<div class="wart">${img('WF')}</div>` : `<div class="wfph" style="left:0;width:100%"><span>FULL-REEL<br>WILD</span></div><div class="tag">WF placeholder</div><div class="plate">WILD</div>`) +
+			`<div class="${badgeCls(v)}">x${v}</div>`;
 		if (anim !== r) d.style.animation = 'none';
 		o.appendChild(d);
 	});

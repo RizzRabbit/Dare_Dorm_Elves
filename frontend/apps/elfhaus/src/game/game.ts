@@ -12,6 +12,7 @@ import { money, mult, setCurrency, setLocale, isSocialCurrency } from './format'
 import { setSocial, isSocial, t } from './strings';
 import { $, S, ART, bet, buildCells, renderAll, resetWinMeter, setWinMeter, banner, wait } from './ui';
 import { playBookEvents, endBonusUi } from './bookEventHandlerMap';
+import { initRoxy, placeRoxy } from './roxy';
 import type { BookEvent } from './typesBookEvent';
 
 const DISCLAIMER =
@@ -222,6 +223,10 @@ export function layout() {
 	cell = Math.max(short ? 26 : 36, Math.floor(cell));
 	document.documentElement.style.setProperty('--cell', cell + 'px');
 	S.cell = cell; renderAll();
+	// Roxy stands in the room as an animated sprite, so the backgrounds are the Roxy-free paintings.
+	const bgArt = (portrait && ART.background_portrait) || ART.background;
+	if (bgArt) { $('#bg').classList.add('art'); $('#bg').style.backgroundImage = `url(${bgArt})`; }
+	placeRoxy(portrait, $('#frame').getBoundingClientRect());
 }
 
 // ---------- wiring ----------
@@ -262,7 +267,7 @@ const IDLE = [['H1', 'L2', 'L4', 'H3'], ['L1', 'H2', 'L5', 'L3'], ['H4', 'L3', '
 
 export async function initGame() {
 	setLocale(url.lang);
-	if (ART.background) $('#bg').classList.add('art'), ($('#bg').style.backgroundImage = `url(${ART.background})`);
+	initRoxy(layout);
 	buildCells(); S.sym = IDLE.map((c) => [...c]); S.vals = new Map([[2 * 4 + 2, 1]]);
 	wire(); layout(); setBusy(true);
 	try {

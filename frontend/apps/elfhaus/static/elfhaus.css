@@ -242,3 +242,15 @@ body.short #top{display:none;height:0} body.short #logo{display:none} body.short
 body.short #bar{height:44px} body.short #spinBtn{width:56px;height:56px} body.short #spinBtn svg{width:32px;height:32px} body.short #ctrlTop .ico{width:44px;height:44px}
 body.short #stepToast{font-size:13px;min-height:22px;margin-top:2px} body.short #hud{padding-bottom:4px}
 body:not(.portrait).short #hud{max-width:none}
+
+/* ---------- final wild art: WF = 1 reel x 4 rows, WMn = n reels x 4 rows, drawn edge to edge ---------- */
+.ov.art{background:#2A2433}
+.ov .wart{position:absolute;inset:0}
+.ov .wart img{display:block;width:100%;height:100%;object-fit:cover;pointer-events:none}
+.ov.art::after{content:"";position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 0 1px #2A24338c, inset 2px 0 0 #2A243355, inset -2px 0 0 #2A243355}
+.ov .badge{max-width:none;transform:none;translate:-50% 0;bottom:6px;font-size:max(11px,calc(var(--cell)*.12));padding:0 8px;z-index:3}
+
+/* ---------- full-body Roxy (animated sprite, roxy.ts) between the room and the game UI ---------- */
+#roxy{position:fixed;left:0;bottom:0;pointer-events:none;display:none;image-rendering:auto}
+body.hasRoxy #roxy{display:block}
+body.hasRoxy:not(.portrait) #logo{left:auto;right:34px}
