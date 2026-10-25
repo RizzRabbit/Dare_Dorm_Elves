@@ -89,10 +89,14 @@ export function setGem(el: Element | null, v: number, fx = true) {
 	mxBurst(g);
 	g.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.32)', offset: .35 }, { transform: 'scale(1)' }], { duration: 320, easing: 'cubic-bezier(.3,1.6,.5,1)' });
 }
-export function symHTML(name: string, v?: number) {
+/** reel (0-based) picks that reel's own elf as the single wild (W_R1..W_R5, the same elf that fills the reel when the
+ * wilds merge); without art for that reel it falls back to the generic W (+ its win pose). */
+export function symHTML(name: string, v?: number, reel?: number) {
 	if (name === 'W') {
 		const val = v || 1;
-		return `<div class="sym W${ART.W ? ' art' : ''}">${ART.W ? img('W') + winLayer('W') : `<span class="nm">WILD</span>${ph('W')}<span class="plate">WILD</span>`}</div>${gemHTML(val, '', nudgeCSS('W'))}<div class="lock"><i class="lkI" style="${lockIconCSS()}"></i><span class="lkT">LOCKED</span>${DOTS}</div>`;
+		const rk = reel !== undefined && ART['W_R' + (reel + 1)] ? 'W_R' + (reel + 1) : '';
+		const wArt = rk ? img(rk) : ART.W ? img('W') + winLayer('W') : '';
+		return `<div class="sym W${wArt ? ' art' : ''}${rk ? ' wReel' : ''}">${wArt ? wArt : `<span class="nm">WILD</span>${ph('W')}<span class="plate">WILD</span>`}</div>${gemHTML(val, '', nudgeCSS('W'))}<div class="lock"><i class="lkI" style="${lockIconCSS()}"></i><span class="lkT">LOCKED</span>${DOTS}</div>`;
 	}
 	const t = name[0];
 	if (ART[name]) return `<div class="sym ${t} ${name} art">${img(name)}${winLayer(name)}</div>`;
@@ -109,7 +113,7 @@ export const cellEl = (r: number, row: number) => document.getElementById(`c${r}
 export function renderCell(r: number, row: number, cls?: string | null, delayMs = 0) {
 	const d = cellEl(r, row), p = pos(r, row);
 	d.style.left = p.x + 'px'; d.style.top = p.y + 'px';
-	d.innerHTML = symHTML(S.sym[r]?.[row] ?? 'L5', S.vals.get(k(r, row)));
+	d.innerHTML = symHTML(S.sym[r]?.[row] ?? 'L5', S.vals.get(k(r, row)), r);
 	d.classList.toggle('wild', S.sym[r]?.[row] === 'W');
 	d.style.visibility = S.full.has(r) ? 'hidden' : 'visible';
 	d.classList.remove('sprWin', 'spinning', 'noBlur');

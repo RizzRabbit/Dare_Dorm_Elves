@@ -67,7 +67,7 @@ function setSlot(R: Reel, s: Slot, n: number) {
 	let html: string, wild = false;
 	if (R.stop?.sEnd !== undefined && fin >= 0 && fin < ROWS) { html = R.stop.finals[fin]; wild = html.includes('sym W'); }
 	else if (n >= 0 && n <= 3) { html = R.init[3 - n]; wild = html.includes('sym W'); }
-	else html = symHTML(filler(R.r, n));
+	else html = symHTML(filler(R.r, n), undefined, R.r);
 	if (s.dataset.h !== html) { s.dataset.h = html; s.replaceChildren(frag(html)); }
 	s.classList.toggle('wild', wild);
 }
@@ -118,7 +118,7 @@ function land(R: Reel) {
 }
 function startReel(R: Reel, rows: number[], now: number) {
 	R.p = P(); R.t0 = now; R.on = true; R.stop = undefined; R.blurA = -1;
-	R.init = Array.from({ length: ROWS }, (_, row) => symHTML(S.sym[R.r]?.[row] ?? 'L5', S.vals.get(k(R.r, row))));
+	R.init = Array.from({ length: ROWS }, (_, row) => symHTML(S.sym[R.r]?.[row] ?? 'L5', S.vals.get(k(R.r, row)), R.r));
 	R.slots.forEach((s) => (s.n = undefined));
 	R.el.style.cssText = `left:${R.r * S.cell}px;visibility:visible`;
 	R.blur.style.height = `${4 * S.cell + 6 * S.cell}px`;

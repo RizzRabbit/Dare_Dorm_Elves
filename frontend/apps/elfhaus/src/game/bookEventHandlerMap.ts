@@ -74,7 +74,7 @@ export const bookEventHandlerMap: Handlers = {
 			if (r > 0) at += T.gap;
 			const slow = ev.anticipation[r] > 0 ? T.antD : 0;
 			if (slow) at += T.ant;
-			const finals = Array.from({ length: ROWS }, (_, row) => symHTML(S.sym[r][row], S.vals.get(k(r, row))));
+			const finals = Array.from({ length: ROWS }, (_, row) => symHTML(S.sym[r][row], S.vals.get(k(r, row)), r));
 			stops.push(stopReel(r, at, finals, () => {
 				for (let row = 0; row < ROWS; row++) {
 					const locked = lockedSingles.has(k(r, row));
