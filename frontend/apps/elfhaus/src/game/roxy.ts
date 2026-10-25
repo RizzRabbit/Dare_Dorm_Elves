@@ -86,14 +86,27 @@ export function placeRoxy(portrait: boolean, frameRect: DOMRect) {
 	if (!cv || !roxySize.h) return;
 	const W = innerWidth, H = innerHeight, ar = roxySize.w / roxySize.h;
 	let h: number, left: number;
-	if (portrait) { h = Math.min(H * 0.9, (W * 1.05) / ar); left = W - h * ar * 0.9; }
-	else {
+	let top: number | null = null;
+	if (portrait) {
+		// Board sits low; Roxy's head and shoulders fill the space between the title and the board, face offset
+		// right of center so it is never behind the board or the title. Sheet fractions: hair top ~4%, face ~14%
+		// (x ~43% of the width), shoulders ~27% of the height.
+		const logo = document.getElementById('logo')?.getBoundingClientRect();
+		const y0 = logo && logo.height ? logo.bottom - 8 : 8;
+		const space = Math.max(80, frameRect.top - y0);
+		h = Math.min(H * 1.2, (W * 1.25) / ar, space / 0.27);
+		top = y0 - h * 0.04;
+		left = Math.min(W * 0.6 - h * ar * 0.43, W - h * ar * 0.62);
+	} else {
 		const gutter = frameRect.left - 8; // the sheet's left ~11% is empty, so it may hang off-screen a little
 		h = Math.min(H * 0.98, gutter / (ar * 0.89)); left = gutter - h * ar;
 	}
 	const show = portrait || h >= H * 0.45;
 	cv.style.visibility = show ? 'visible' : 'hidden';
 	cv.style.height = h + 'px'; cv.style.width = h * ar + 'px'; cv.style.left = left + 'px';
+	cv.style.top = top == null ? '' : top + 'px'; cv.style.bottom = top == null ? '' : 'auto';
+	// portrait: cut her off at the board's bottom edge so nothing of her shows between the board and the controls
+	cv.style.clipPath = top == null ? '' : `inset(0 0 ${Math.max(0, h - (frameRect.bottom - 6 - top))}px 0)`;
 }
 /** Starts Roxy: calls onReady as soon as the idle loop can show; resolves once every state's sheets are loaded
  *  (the loading screen waits on it). */

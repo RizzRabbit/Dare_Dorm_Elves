@@ -235,6 +235,7 @@ export function layout() {
 	const bgArt = (portrait && ART.background_portrait) || ART.background;
 	if (bgArt) { $('#bg').classList.add('art'); $('#bg').style.backgroundImage = `url(${bgArt})`; }
 	const fr = $('#frame').getBoundingClientRect();
+	document.documentElement.style.setProperty('--gutR', Math.max(0, W - fr.right) + 'px');
 	placeRoxy(portrait, fr);
 	placeRespin();
 }

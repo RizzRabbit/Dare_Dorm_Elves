@@ -407,38 +407,49 @@ body:not(.rcTop) #respinCtr .rcNum{font-size:58px} body:not(.rcTop) #respinCtr .
 body:not(.rcTop) #respinCtr .rcLbl{font-size:17px} body:not(.rcTop) #respinCtr .rcLeft{font-size:14px}
 body:not(.rcTop) #respinCtr .rcPips i{width:28px;height:8px}
 
-/* ---- layout v2: one control panel centered under the board, landscape; viewport-relative sizes ----
+/* ---- layout v2: one control panel centered under the board, in every orientation; viewport-relative sizes ----
    #ctrlTop/.side/#bar/#strip dissolve (display:contents) so every control and the balance/bet/win readouts sit in one
    symmetric 11-column grid: [menu turbo ante] · [− SPIN +] · [auto buy], readouts on a second row. The spin button is
-   the middle column, so it sits on the panel's (and the screen's) center line. */
-body:not(.portrait){--hb:clamp(34px,5.4vh,56px);--sp:clamp(54px,9vh,96px);--mt:clamp(26px,4.2vh,40px);--cg:clamp(6px,1vw,14px)}
+   the middle column, so it sits on the panel's (and the screen's) center line. #app-prefixed to outrank older rules. */
+body{--hb:clamp(34px,5.4vh,56px);--sp:clamp(54px,9vh,96px);--mt:clamp(26px,4.2vh,40px);--cg:clamp(6px,1vw,14px)}
+body.short:not(.portrait){--hb:32px;--sp:46px;--mt:22px}
+body.portrait{--hb:min(40px,8.4vw);--sp:min(66px,14.5vw);--mt:30px;--cg:min(5px,1vw)}
 body:not(.portrait) #top{padding-top:clamp(8px,1.6vh,16px);flex:0 0 auto}
 body:not(.portrait) #logo.art{height:clamp(40px,8.6vh,104px)}
-body:not(.portrait) #stage{flex:1 1 auto}
-body:not(.portrait) #hud{flex:0 0 auto;display:grid;align-items:center;justify-items:center;
+#app #stage{flex:1 1 auto}
+#app #hud{flex:0 0 auto;display:grid;align-items:center;justify-items:center;
   grid-template-columns:var(--hb) var(--hb) var(--hb) minmax(0,1fr) var(--hb) var(--sp) var(--hb) minmax(0,1fr) var(--hb) var(--hb) var(--hb);
   grid-template-rows:var(--sp) var(--mt);column-gap:var(--cg);row-gap:4px;
   width:clamp(560px,calc(var(--cell)*5 + 160px),980px);max-width:calc(100vw - 16px);margin:0 auto clamp(6px,1.4vh,14px);
   padding:clamp(4px,.8vh,8px) clamp(10px,1.4vw,20px) 2px;background:var(--glass);border:1px solid var(--hair);border-radius:12px;box-shadow:0 10px 24px -10px #000a}
-body:not(.portrait) #hud::before{content:"";grid-row:2;grid-column:1/-1;align-self:start;width:100%;border-top:1px solid var(--hair)}
-body:not(.portrait) #ctrlTop,body:not(.portrait) #ctrlTop .side,body:not(.portrait) #bar,body:not(.portrait) #strip{display:contents}
-body:not(.portrait) #menuBtn{grid-area:1/1} body:not(.portrait) #turboBtn{grid-area:1/2} body:not(.portrait) #anteBtn{grid-area:1/3}
-body:not(.portrait) #betDown{grid-area:1/5} body:not(.portrait) #spinBtn{grid-area:1/6} body:not(.portrait) #betUp{grid-area:1/7}
-body:not(.portrait) #autoBtn{grid-area:1/9} body:not(.portrait) #buyBtn{grid-area:1/10/2/12}
+body.portrait #app #hud{width:calc(100vw - 12px);max-width:none;padding:6px 6px 2px;margin-bottom:max(8px,env(safe-area-inset-bottom))}
+#app #hud::before{content:"";grid-row:2;grid-column:1/-1;align-self:start;width:100%;border-top:1px solid var(--hair)}
+#app #ctrlTop,#app #ctrlTop .side,#app #bar,#app #strip{display:contents}
+#app #menuBtn{grid-area:1/1} #app #turboBtn{grid-area:1/2} #app #anteBtn{grid-area:1/3}
+#app #betDown{grid-area:1/5} #app #spinBtn{grid-area:1/6} #app #betUp{grid-area:1/7}
+#app #autoBtn{grid-area:1/9} #app #buyBtn{grid-area:1/10/2/12}
 /* one button language: round, matte, same size and stroke; toggles show state with a lavender ring */
-body:not(.portrait) #menuBtn,body:not(.portrait) #turboBtn,body:not(.portrait) #anteBtn,body:not(.portrait) #autoBtn,body:not(.portrait) #betDown,body:not(.portrait) #betUp{
+#app #menuBtn,#app #turboBtn,#app #anteBtn,#app #autoBtn,#app #betDown,#app #betUp{
   width:var(--hb)!important;height:var(--hb)!important;justify-self:center;align-self:center;background:#1A1722cc;border:1.5px solid #6B6080;border-radius:50%}
-body:not(.portrait) #hud .ico svg,body:not(.portrait) #anteBtn svg{width:calc(var(--hb)*.5)!important;height:calc(var(--hb)*.5)!important}
-body:not(.portrait) #ctrlTop .ico.toggle.on,body:not(.portrait) #autoBtn.on{border-color:var(--gold)}
-body:not(.portrait) #spinBtn{width:var(--sp);height:var(--sp);align-self:center;justify-self:center;border-width:3px}
-body:not(.portrait) #spinBtn svg{width:calc(var(--sp)*.56);height:calc(var(--sp)*.56)}
-body:not(.portrait) #buyBtn.emblem{width:calc(var(--sp)*.86);height:calc(var(--sp)*.86);background:#1A1722e6;border:2px solid var(--gold);justify-self:center}
-body:not(.portrait) #buyBtn.emblem img{width:calc(var(--sp)*.6);height:calc(var(--sp)*.6)}
+#app #hud .ico svg,#app #anteBtn svg{width:calc(var(--hb)*.5)!important;height:calc(var(--hb)*.5)!important}
+#app #ctrlTop .ico.toggle.on,#app #autoBtn.on{border-color:var(--gold)}
+#app #spinBtn{width:var(--sp);height:var(--sp);align-self:center;justify-self:center;border-width:3px}
+#app #spinBtn svg{width:calc(var(--sp)*.56);height:calc(var(--sp)*.56)}
+#app #buyBtn.emblem{width:calc(var(--sp)*.86);height:calc(var(--sp)*.86);background:#1A1722e6;border:2px solid var(--gold);justify-self:center}
+#app #buyBtn.emblem img{width:calc(var(--sp)*.6);height:calc(var(--sp)*.6)}
 /* readouts: label + value on one line, each centered under its control group */
-body:not(.portrait) #strip .m{grid-row:2;display:flex;align-items:baseline;justify-content:center;gap:clamp(4px,.8vw,8px);white-space:nowrap;min-width:0;color:#fff;padding:0;margin:0}
-body:not(.portrait) #strip .m:nth-child(1){grid-column:1/5} body:not(.portrait) #strip .m:nth-child(2){grid-column:5/8} body:not(.portrait) #strip .m:nth-child(3){grid-column:8/12}
-body:not(.portrait) #strip label{display:inline;font-size:clamp(10px,1.5vh,13px);letter-spacing:.8px;color:#CFC9DA}
-body:not(.portrait) #strip span{font-size:clamp(14px,2.3vh,20px)}
+#app #strip .m{grid-row:2;display:flex;align-items:baseline;justify-content:center;gap:clamp(4px,.8vw,8px);white-space:nowrap;min-width:0;color:#fff;padding:0;margin:0}
+#app #strip .m:nth-child(1){grid-column:1/5} #app #strip .m:nth-child(2){grid-column:5/8} #app #strip .m:nth-child(3){grid-column:8/12}
+#app #strip label{display:inline;font-size:clamp(10px,1.5vh,13px);letter-spacing:.8px;color:#CFC9DA}
+#app #strip span{font-size:clamp(14px,2.3vh,20px)}
+body.portrait #app #strip .m{flex-direction:column;align-items:center;gap:0;line-height:1.05}
+body.portrait #app #strip label{font-size:10px} body.portrait #app #strip span{font-size:min(15px,4vw)}
 /* stage: tighter gaps above/below the board */
-body:not(.portrait) #fsBar{margin-bottom:6px}
-body:not(.portrait) #stepToast{margin-top:6px;min-height:32px}
+#app #fsBar{margin-bottom:6px}
+#app #stepToast{margin-top:6px;min-height:32px}
+/* portrait: the board sits low, a comfortable gap above the controls; Roxy's upper body fills the space above it */
+body.portrait #app #stage{grid-template-rows:minmax(0,1fr) auto auto}
+/* landscape phone: small title in the free space right of the board (roxy.ts / game.ts set --gutR) */
+body.short:not(.portrait) #top{display:flex;position:fixed;top:6px;right:0;left:auto;width:var(--gutR,200px);height:auto;padding:0;justify-content:center}
+body.short:not(.portrait) #logo.art{display:block;--lw:min(180px,calc(var(--gutR,200px) - 20px));width:var(--lw);height:calc(var(--lw) / 2.9);max-width:none}
+body.short:not(.portrait) #logo.art img{width:100%;height:100%}
