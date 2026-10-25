@@ -802,3 +802,6 @@ body.tb .modal.bm{width:min(860px,calc(94*var(--vw)/var(--tbm)))}
 .mx::before{content:"";position:absolute;left:-10%;top:-28%;width:62%;height:156%;z-index:-2;pointer-events:none;
   background:radial-gradient(closest-side,#2A0F24a6 30%,#2A0F2400)}
 .ov .mx.rGem{z-index:6}
+/* bonus-buy cards: Double / Triple Dare crops are top-weighted like EGW (heads + faces looking back, upper body, WILD tattoo); EGW (WF, 1 x 4 cells) shows her head too */
+.bcard[data-m="double_dare"] .bArt img{object-position:50% 16%} .bcard[data-m="triple_dare"] .bArt img{object-position:50% 6%}
+.bArt.tall img{object-position:50% 14%}
