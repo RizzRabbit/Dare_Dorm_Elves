@@ -225,8 +225,11 @@ export function layout() {
 	// Vertical budget: title + control panel + the fsBar/step-message rows that sit in the stage grid above and
 	// below the board (the grid is symmetric, so reserve the larger of the two on both sides).
 	const top = short ? 0 : ($('#top').offsetHeight || 0), hud = $('#hud').offsetHeight || 0;
-	const lane = short ? 16 : portrait ? 42 : Math.max(($('#fsBar').offsetHeight || 30) + 6, 38);
-	const used = top + hud + 2 * lane + (short ? 14 : portrait ? 30 : 12);
+	// fsBar is hidden (0 high) outside bonuses, so size its lane from the CSS font clamp (14-20px, 2.6vh) instead.
+	const fsH = Math.round(Math.min(20, Math.max(14, H * 0.026)) * 1.4 + 10) + 6;
+	// The landscape fsBar tucks 10px into the board's bezel; FRAME = bezel + padding around the 4 rows.
+	const lane = short ? 16 : portrait ? 42 : Math.max(fsH - 14, 26), FRAME = short || portrait ? 0 : 34;
+	const used = top + hud + 2 * lane + FRAME + (short ? 14 : portrait ? 30 : 12);
 	let cell = portrait ? Math.min((W - 40) / 5, (H - used) / 4) : Math.min((H - used) / 4, (W - 120) / 5);
 	cell = Math.max(short ? 26 : 36, Math.floor(cell));
 	document.documentElement.style.setProperty('--cell', cell + 'px');
@@ -236,6 +239,7 @@ export function layout() {
 	if (bgArt) { $('#bg').classList.add('art'); $('#bg').style.backgroundImage = `url(${bgArt})`; }
 	const fr = $('#frame').getBoundingClientRect();
 	document.documentElement.style.setProperty('--gutR', Math.max(0, W - fr.right) + 'px');
+	document.documentElement.style.setProperty('--frB', Math.round(fr.bottom) + 'px');
 	placeRoxy(portrait, fr);
 	placeRespin();
 }

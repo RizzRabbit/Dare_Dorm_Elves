@@ -446,6 +446,7 @@ body.portrait #app #strip .m{flex-direction:column;align-items:center;gap:0;line
 body.portrait #app #strip label{font-size:10px} body.portrait #app #strip span{font-size:min(15px,4vw)}
 /* stage: tighter gaps above/below the board */
 #app #fsBar{margin-bottom:6px}
+body:not(.portrait) #app #fsBar{font-size:clamp(14px,2.6vh,20px);line-height:1.4;padding:4px clamp(12px,1.6vw,22px)}
 #app #stepToast{margin-top:6px;min-height:32px}
 /* portrait: the board sits low, a comfortable gap above the controls; Roxy's upper body fills the space above it */
 body.portrait #app #stage{grid-template-rows:minmax(0,1fr) auto auto}
@@ -470,3 +471,10 @@ body.short:not(.portrait) #logo.art img{width:100%;height:100%}
 /* merged-wild product (x2 × x3 = x6): neutral matte plate at the bottom, replaces the old red tag */
 .ov .formula{position:absolute;left:50%;bottom:6px;translate:-50% 0;z-index:3;white-space:nowrap;font-family:"Nunito";font-weight:900;
   font-size:max(11px,calc(var(--cell)*.11));color:#fff;background:#2A2433e0;border:2px solid #1C1722;border-radius:5px;padding:0 8px}
+/* landscape: banners sit in the fsBar lane just above the board (never up in the title); during bonuses they overlap the board's top edge */
+body:not(.portrait) #app #banner{top:calc(50% - var(--cell)*2 - 6px);transform:translate(-50%,-100%);font-size:clamp(13px,2.4vh,20px);padding:4px clamp(12px,1.6vw,24px)}
+body:not(.portrait) #app #fsBar:not(.hidden) ~ #banner,body.rcOn.rcTop:not(.portrait) #app #banner{top:calc(50% - var(--cell)*2 + 8px);transform:translateX(-50%)}
+/* free-spin bar: landscape tucks into the bezel top; landscape phone puts it in the right gutter, level with the board bottom */
+body:not(.portrait):not(.short) #app #fsBar{margin-bottom:-10px;position:relative;z-index:4}
+body.short:not(.portrait) #app #fsBar{position:fixed;right:6px;left:auto;top:auto;bottom:calc(100% - var(--frB,300px));width:calc(var(--gutR,200px) - 12px);
+  flex-wrap:wrap;justify-content:center;gap:2px 10px;font-size:12px;padding:3px 8px;margin:0;z-index:6}
