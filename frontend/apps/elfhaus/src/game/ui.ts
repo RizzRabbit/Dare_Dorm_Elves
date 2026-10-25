@@ -1,4 +1,5 @@
 // DOM renderer (ported from prototype/app.js). It only displays what book events say.
+import { lettersHTML } from './mergefx';
 import ART_JSON from './art.generated.json';
 import { LINES, MAX_WIN_X, ROWS, REELS, SYMBOL_NAMES } from './config';
 import { money } from './format';
@@ -20,7 +21,7 @@ export const S = {
 export const k = (r: number, row: number) => r * ROWS + row;
 export const bet = () => (S.replay ? S.replayBet : S.levels[S.betIdx] ?? 0);
 export const wait = (ms: number) => new Promise<void>((res) => setTimeout(res, ms * (S.turbo ? 0.35 : 1)));
-const pos = (r: number, row: number) => ({ x: r * S.cell, y: row * S.cell });
+export const pos = (r: number, row: number) => ({ x: r * S.cell, y: row * S.cell });
 
 const ph = (_key: string) => ''; // no visible placeholder labels in release builds
 // frameless set: the lit (win) outline is a second layer over the idle art, crossfaded by .cell.win (opacity only)
@@ -119,7 +120,7 @@ export function renderOverlays(anim: boolean | number = false) {
 		if (ART[key]) d.classList.add('art');
 		d.innerHTML = (ART[key] ? `<div class="wart">${img(key)}</div>`
 			: g.reels.map((_, i) => `<div class="wfph" style="left:${i * S.cell}px;width:${S.cell}px"><span>ELF ${i + 1}</span></div>`).join('') + `<div class="plate">WILD</div>`) +
-			gemHTML(g.product, 'stack') + `<div class="ovrd">${DOTS}</div>`;
+			lettersHTML(n) + `<i class="ovWinO"></i>` + gemHTML(g.product, 'stack') + `<div class="ovrd">${DOTS}</div>`;
 		d.dataset.reels = g.reels.join(',');
 		if (!anim) d.style.animation = 'none';
 		o.appendChild(d);
@@ -130,7 +131,7 @@ export function renderOverlays(anim: boolean | number = false) {
 		d.style.left = pos(r, 0).x + 'px'; d.style.width = S.cell + 'px';
 		if (ART.WF) d.classList.add('art');
 		d.innerHTML = (ART.WF ? `<div class="wart">${img('WF')}</div>` : `<div class="wfph" style="left:0;width:100%"><span>FULL-REEL<br>WILD</span></div><div class="plate">WILD</div>`) +
-			gemHTML(v, 'stack') + `<div class="ovrd">${DOTS}</div>`;
+			`<i class="ovWinO"></i>` + gemHTML(v, 'stack') + `<div class="ovrd">${DOTS}</div>`;
 		d.dataset.reel = String(r);
 		if (anim !== r) d.style.animation = 'none';
 		o.appendChild(d);
@@ -147,6 +148,7 @@ export function clearLines() {
 	const c = $('#lines') as unknown as HTMLCanvasElement; c.getContext('2d')?.clearRect(0, 0, c.width, c.height);
 	document.querySelectorAll('.wlAmt').forEach((e) => e.remove());
 	document.querySelectorAll('.cell').forEach((c) => c.classList.remove('win', 'dim', 'replace', 'out'));
+	document.querySelectorAll('.ov.win').forEach((o) => o.classList.remove('win'));
 	clearSymWins();
 }
 export function toast(html: string) { const t = $('#stepToast'); t.innerHTML = html; t.classList.remove('hidden'); }

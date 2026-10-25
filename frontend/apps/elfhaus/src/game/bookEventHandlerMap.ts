@@ -10,7 +10,8 @@ import { cardFlip } from './cardflip';
 import { timing, isSpinning, startSpin, markStopped, sinceStart, sleep, spinMini, stopMini, stopReel } from './reels';
 import { $, S, k, bet, wait, banner, toast, hideToast, bigWin, setWinMeter, clearLines, renderCell, renderOverlays, cellEl, setGem, ovMx, symHTML } from './ui';
 import { playWins } from './winlines';
-import { wildLand, stackForm, wfExpand, mergeFx, growGroup } from './wildfx';
+import { wildLand, growGroup, wfExpand } from './wildfx';
+import { stackIn, mergeIn, clearOvWins } from './mergefx';
 import { featOpen, featPop, featClose } from './featfx';
 import { countTo, countMs, setAmount, skipCounts } from './countup';
 import { grab, combineInto } from './combine';
@@ -83,24 +84,26 @@ export const bookEventHandlerMap: Handlers = {
 	},
 	async stackComplete(ev) {
 		// the four wild values ADD into the stack's value (SPEC: sum of the 4 cell values)
-		if (!ev.instant) await stackForm(ev.reel);
 		const flying = grab([0, 1, 2, 3].map((row) => cellEl(ev.reel, row).querySelector<HTMLElement>('.mx')));
-		S.full.set(ev.reel, ev.value);
-		for (let row = 0; row < ROWS; row++) { S.vals.delete(k(ev.reel, row)); cellEl(ev.reel, row).style.visibility = 'hidden'; }
-		renderOverlays(ev.reel);
-		if (!ev.instant) wfExpand(document.querySelector<HTMLElement>(`.ov.full[data-reel="${ev.reel}"]`));
+		const render = () => {
+			S.full.set(ev.reel, ev.value);
+			for (let row = 0; row < ROWS; row++) { S.vals.delete(k(ev.reel, row)); cellEl(ev.reel, row).style.visibility = 'hidden'; }
+			renderOverlays(false);
+		};
+		if (ev.instant) render(); else await stackIn(ev.reel, render); // squash → flash → elastic pop
 		await combineInto(flying, ovMx(ev.reel));
 		await wait(250);
 	},
 	async mergeGroups(ev) {
 		// adjacent stacks MULTIPLY into one number per group (SPEC: product within a group)
+		// each fresh group: anticipation → lean → hit (shockwave, burst, shake) → letters ignite → badges arc into
+		// the combined "x7 × x6 = x42" count (mergefx.ts); tap / turbo snaps to the end state
 		const fresh = ev.groups.filter((g) => !S.groups.find((o) => o.reels.join() === g.reels.join()));
-		const flights = fresh.map((g) => ({ g, c: grab(g.reels.map((r) => ovMx(r))) }));
-		S.groups = ev.groups.map((g) => ({ reels: [...g.reels], values: [...g.values], product: g.product }));
-		renderOverlays(fresh.length > 0);
-		fresh.forEach((g) => mergeFx(g.reels));
-		await Promise.all(flights.map(({ g, c }) => combineInto(c, ovMx(g.reels[0]))));
-		if (fresh.length) await wait(250);
+		const apply = () => { S.groups = ev.groups.map((g) => ({ reels: [...g.reels], values: [...g.values], product: g.product })); renderOverlays(false); };
+		if (!fresh.length) { apply(); return; }
+		let applied = false; const once = () => { if (!applied) { applied = true; apply(); } };
+		await Promise.all(fresh.map((g) => mergeIn(g.reels, g.values, g.product, once)));
+		once();
 	},
 	async winInfo(ev) {
 		// one thin line at a time races along each payline; its amount ticks into WIN (winlines.ts)
@@ -134,7 +137,7 @@ export const bookEventHandlerMap: Handlers = {
 	// Respin: the cells being replaced go straight back to spinning (no marker text) and stop reel by reel.
 	async respinStart(ev) {
 		hideToast();
-		document.querySelectorAll('.cell').forEach((c) => c.classList.remove('win', 'dim')); clearSymWins();
+		document.querySelectorAll('.cell').forEach((c) => c.classList.remove('win', 'dim')); clearSymWins(); clearOvWins();
 		clearLines();
 		ev.locked.singles.forEach((s) => {
 			const c = cellEl(s.reel, s.row);

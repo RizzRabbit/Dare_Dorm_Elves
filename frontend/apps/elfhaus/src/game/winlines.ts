@@ -8,6 +8,7 @@
 import { LINES, REELS } from './config';
 import { S, $, bet, cellEl, setWinMeter } from './ui';
 import { symWin, clearSymWins, litOn, burst } from './fx';
+import { ovWin, clearOvWins } from './mergefx';
 import { play } from './sprite';
 import { money } from './format';
 import type { LineWin } from './typesBookEvent';
@@ -93,7 +94,7 @@ export async function playWins(wins: LineWin[], base: number) {
 	for (const w of wins) {
 		if (skipAll) break; skipLine = false;
 		clearSymWins(); document.querySelectorAll('.cell.win').forEach((c) => { c.classList.remove('win'); c.classList.add('dim'); });
-		w.positions.forEach((p) => { const c = cellEl(p.reel, p.row); c.classList.remove('dim'); const fresh = !c.classList.contains('win'); c.classList.add('win'); litOn(c); symWin(c); if (fresh && !turbo) burst(c, 'pop'); });
+		clearOvWins(); w.positions.forEach((p) => { ovWin(p.reel); const c = cellEl(p.reel, p.row); c.classList.remove('dim'); const fresh = !c.classList.contains('win'); c.classList.add('win'); litOn(c); symWin(c); if (fresh && !turbo) burst(c, 'pop'); });
 		const P = path(w.lineIndex); sum += w.win / 100;
 		setWinMeter(base + sum);
 		const L = label(w.positions, money(w.win / 100 * bet()));
@@ -105,7 +106,7 @@ export async function playWins(wins: LineWin[], base: number) {
 	skipLine = false;
 	// summary: every winning symbol highlighted, no line over the board
 	clearRace(); setWinMeter(base + wins.reduce((a, w) => a + w.win / 100, 0));
-	wins.forEach((w) => w.positions.forEach((p) => { const c = cellEl(p.reel, p.row); c.classList.remove('dim'); c.classList.add('win'); litOn(c); symWin(c); }));
+	wins.forEach((w) => w.positions.forEach((p) => { ovWin(p.reel); const c = cellEl(p.reel, p.row); c.classList.remove('dim'); c.classList.add('win'); litOn(c); symWin(c); }));
 	if (!skipAll) await hold(turbo ? 200 : 450);
 	active = false; skipAll = false;
 }

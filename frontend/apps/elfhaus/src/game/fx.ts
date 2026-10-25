@@ -49,16 +49,21 @@ export function landBump(cell: HTMLElement) {
 /** Win "lit" state: a glow behind the symbol (.lit, per-symbol via data-s so a lit sprite or an accent outline per
  * symbol can replace the temporary radial glow without touching the win logic). */
 export function litOn(cell: HTMLElement) {
+	// 3D pop toward the camera: tilt away from the board centre (cell id c<reel><row>), plus a soft shadow layer that
+	// drifts with it. Art-agnostic: it moves whatever .sym holds; transform/opacity only (styles in elfhaus.css).
+	const m = /^c(\d)(\d)$/.exec(cell.id);
+	if (m) { cell.style.setProperty('--tY', ((+m[1] - 2) * 3.5).toFixed(1) + 'deg'); cell.style.setProperty('--tX', ((1.5 - +m[2]) * 4.5).toFixed(1) + 'deg'); cell.style.setProperty('--shX', ((2 - +m[1]) * 4) + '%'); }
+	if (!cell.querySelector(':scope > .symSh')) { const sh = document.createElement('i'); sh.className = 'symSh'; cell.prepend(sh); }
 	if (cell.querySelector(':scope > .lit, .olWin')) return; // frameless art carries its own lit outline layer
 	const i = document.createElement('i'); i.className = 'lit'; i.dataset.s = symName(cell); cell.prepend(i);
 }
 /** Impact bursts (fx_burst, glow baked; frame-shape independent): land 1.5x cell (wild / scatter landing),
  * lock 1.9x (wild locks or merges), pop 0.9x (win-cell pop). Drawn above the symbol, centred on the host. */
-const BURST = { land: 1.5, lock: 1.9, pop: 0.9 } as const;
+const BURST = { land: 1.5, lock: 1.9, pop: 0.9, big: 3.2 } as const; // big = the lock anim, scaled up (4-5 wide merges)
 export function burst(host: HTMLElement, kind: keyof typeof BURST, delay = 0) {
 	if (!hasSheet('fx_burst')) return;
 	const k = BURST[kind];
-	play('fx_burst', kind, host, { cls: 'bfx', delay, prepend: false, style: `width:calc(var(--cell)*${k});height:calc(var(--cell)*${k});margin:calc(var(--cell)*${-k / 2}) 0 0 calc(var(--cell)*${-k / 2})` });
+	play('fx_burst', kind === 'big' ? 'lock' : kind, host, { cls: 'bfx', delay, prepend: false, style: `width:calc(var(--cell)*${k});height:calc(var(--cell)*${k});margin:calc(var(--cell)*${-k / 2}) 0 0 calc(var(--cell)*${-k / 2})` });
 }
 export function clearSymWins() {
 	document.querySelectorAll('canvas.fxWin').forEach((c) => c.remove());

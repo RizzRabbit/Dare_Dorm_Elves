@@ -752,3 +752,23 @@ canvas.wlGlint{position:absolute;inset:0;width:100%;height:100%;pointer-events:n
 .sym.art{overflow:visible} .sym.art img{object-fit:contain}
 .cell.win .sym.art{border-radius:0}
 #board,body.portrait #board{background:rgba(42,36,51,.6)}
+/* ---- stack / merge choreography (mergefx.ts); glows are static gradients, only opacity/transform animate ---- */
+#board.mAnt #cells .cell{opacity:.5}
+.ov .ovGlow{position:absolute;inset:0;z-index:4;pointer-events:none;opacity:0;
+  background:radial-gradient(ellipse 70% 55% at 50% 50%,#FF5FAE00 40%,#FF5FAE55 75%,#FF5FAE99 100%)}
+.mRing{position:absolute;top:50%;z-index:6;pointer-events:none;width:calc(var(--cell)*1.1);height:calc(var(--cell)*1.1);border-radius:50%;opacity:0;
+  background:radial-gradient(closest-side,#FF5FAE00 58%,#FF8CCBee 72%,#FFE3F2 78%,#E255A099 86%,#E255A000 100%)}
+.mRing.big{width:calc(var(--cell)*1.4);height:calc(var(--cell)*1.4)}
+.ov .mLets{position:absolute;left:0;right:0;bottom:16%;height:0;z-index:4;pointer-events:none}
+.ov .mLets b{position:absolute;top:0;transform:translate(-50%,0);font:900 calc(var(--cell)*.42) "Nunito";letter-spacing:.02em;color:#FFF4FA;
+  -webkit-text-stroke:4px #2A1830;paint-order:stroke fill;text-shadow:0 0 10px #FF5FAEcc,0 0 22px #E255A088}
+.ov .ovWinO{position:absolute;inset:2px;z-index:4;pointer-events:none;opacity:0;transition:opacity .2s;border-radius:8px;
+  border:3px solid #FFD2EA;box-shadow:inset 0 0 0 2px #FF5FAE,inset 0 0 18px #FF5FAEaa,0 0 0 2px #E255A0}
+.ov.win .ovWinO{opacity:1}
+.ov .rGrowSum.mSum{top:16%}
+/* win: 3D tilt toward the camera (6-8°) eased with the 1.08 pop, and a separate soft shadow that shifts with it */
+.cell{perspective:calc(var(--cell)*5)}
+.cell.win .sym{transform:scale(1.08) rotateX(var(--tX,6deg)) rotateY(var(--tY,0deg));transition:transform .26s cubic-bezier(.3,1.5,.5,1)}
+.cell .symSh{position:absolute;left:12%;right:12%;bottom:4%;height:22%;z-index:0;pointer-events:none;border-radius:50%;opacity:0;
+  background:radial-gradient(closest-side,#1A0F20aa,#1A0F2000);transform:none;transition:opacity .22s,transform .26s cubic-bezier(.3,1.5,.5,1)}
+.cell.win .symSh{opacity:.75;transform:translate(var(--shX,0%),calc(var(--cell)*.06)) scale(1.12,1.2)}

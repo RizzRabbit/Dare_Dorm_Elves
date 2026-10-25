@@ -1,6 +1,7 @@
 // Game controller: RGS flow (authenticate / play / end-round / replay / resume), controls, buy menu, rules, layout.
 // Carries the Vault Breakers 3afc6d6 release fixes: rgs_url gating + error modal, bet levels from authenticate,
 // balance checks, Space-to-spin, Intl/social currency, replay mode, social wording, jurisdiction flags.
+import { skipMerge } from './mergefx';
 import { requestAuthenticate, requestBet, requestEndRound, requestReplay } from 'rgs-requests';
 // The offline mock RGS (fixture books) exists only in dev (vite dev). In the
 // production build import.meta.env.DEV is the literal false (written inline at each use so the bundler can fold
@@ -423,7 +424,7 @@ export async function initGame() {
 	});
 	const ric = (window as any).requestIdleCallback as ((f: () => void, o?: object) => void) | undefined;
 	setTimeout(() => (ric ? ric(() => preloadBigWinElves(), { timeout: 5000 }) : preloadBigWinElves()), 2500);
-	document.addEventListener('pointerdown', (e) => { if (!(e.target as Element)?.closest?.('#bigwin,#outro')) { skipCounts(); tapLines(); if (!(e.target as Element)?.closest?.('#menu,#buyMenu,#autoMenu,#msg')) hurry(); } }, { capture: true, passive: true });
+	document.addEventListener('pointerdown', (e) => { if (!(e.target as Element)?.closest?.('#bigwin,#outro')) { skipCounts(); tapLines(); skipMerge(); if (!(e.target as Element)?.closest?.('#menu,#buyMenu,#autoMenu,#msg')) hurry(); } }, { capture: true, passive: true });
 	track(initRoxy(layout));
 	loadAllFx(track).then(() => renderAll());
 	track(document.fonts?.ready ?? Promise.resolve());
