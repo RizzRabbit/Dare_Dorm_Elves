@@ -60,6 +60,14 @@ Branch `final` is the integration branch. It holds **only** work the user has ap
 | Pink rings/circles on wilds and symbols | "remnants of the circle symbols"; removal is in aifix |
 | Four-point sparkles / lens-flare stars | AI tell (audit 1) |
 
+## Open findings (close-out pass 2026-10-25 ~6:00 PM, not changed; need a user call)
+| Finding | Detail |
+|---|---|
+| Coco hair drift | Symbol H4 hair is a cooler crimson red (hue ~10 deg, #AC322E avg) vs copper in her wild, stacks and max-win cast (hue 12-14 deg, #923322-#9E452E, visibly more orange). Fix would be a local hair hue shift on `symbol_H4` (same method as Vi's iris). |
+| Win-screen outfits differ from symbols | Roxy: symbol pink hoodie + white crop top; win screens pink bikini + hoodie. Vi: symbol red plaid shirt; win screens black strappy bra + plaid. Coco: green sweater on both, pink bra added on win screens. Cast v6 was approved as is. Jade and Delilah consistent; Jade's 27 is intentional. |
+| Old static WF / WM2-5 wild art | `assets/final/webp/wild_WF_fullreel.webp`, `wild_WM*` (dorm-room bunk-bed illustrations) are still the `.wart` fallback under the stacks sheets. Hidden whenever a stack canvas is present (`.ov:has(>canvas.stk_body)>.wart`), so only visible if a stacks sheet fails to load or before it draws. Not verified frame by frame. |
+| README repo URL | README.md still names the GitHub repo slug, which contains the retired working title. Only a GitHub rename fixes that; nothing is shipped. |
+
 ## Standing rules
 - Never nipples or genitals. Adults only.
 - The retired working title (see design/DECISIONS.md history) never appears in the game, its code, strings, filenames or metadata.
