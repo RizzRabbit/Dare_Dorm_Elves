@@ -19,7 +19,7 @@ export function grab(mxs: (HTMLElement | null)[]) {
 		const r = toStage(m.getBoundingClientRect()), c = m.cloneNode(true) as HTMLElement;
 		c.querySelectorAll('canvas').forEach((x) => x.remove());
 		c.classList.add('fly');
-		c.style.cssText = `position:fixed;left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;right:auto;bottom:auto;margin:0;translate:none`;
+		c.style.cssText = `position:absolute;left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;right:auto;bottom:auto;margin:0;translate:none`;
 		layer().appendChild(c);
 		return c;
 	});

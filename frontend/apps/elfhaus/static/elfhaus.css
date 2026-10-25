@@ -1055,3 +1055,10 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:45;bac
 #buyCards .bcard{transition:none}
 body:not(.portrait) #bigwin .bw{top:0;transition:translate calc(.35s*var(--at,1)) ease-out}
 body:not(.portrait) #bigwin.chars .bw{top:0;translate:0 calc(-17*var(--vh))}
+/* ---- WebKit / Stake iframe robustness (live v3 on iPhone Safari): every layer of the game lives inside #root, which
+   carries the one stage transform (stage.ts). Layers used position:fixed; under a transformed ancestor that is
+   supposed to behave like absolute, but iOS WebKit can pin fixed layers to the viewport instead (background /
+   Roxy / overlays drawn unscaled and out of step with the scaled UI layer). They are absolute now, so the background,
+   Roxy, board, HUD and overlays always share #root's single transform and can never come apart. ---- */
+#root #bg,#root #bgFade,#root #roxy,#root #roxySh,#root #app,#root .overlay,#root #replayBar,#root #maxwin,#root #loader,
+#root #flyLayer,#root #flyLayer .mx,body.short:not(.portrait) #root #top,body.short:not(.portrait) #root #app #fsBar{position:absolute}
