@@ -13,8 +13,10 @@ Budget: about 10 minutes (anim build ~1 min, imports seconds, test + build ~1 mi
 
 ## 1. Pipeline fixes (once): cherry-pick from `dryrun-final`
 ```
-cd $FE && git cherry-pick 2c88dba fd709ea 477db47 576e609 0f992c6
-# 2c88dba import-art stacks guard | fd709ea dev server PORT | 477db47 egw_wm5 QA book | 576e609 this runbook | 0f992c6 tsc fixes for 2c88dba/fd709ea (+ runbook)
+cd $FE && git cherry-pick 2c88dba fd709ea 477db47 576e609 0f992c6 9b509d6 322951a
+# 2c88dba import-art stacks guard | fd709ea dev server PORT | 477db47 egw_wm5 QA book | 576e609 this runbook | 0f992c6 tsc fixes for 2c88dba/fd709ea (+ runbook) | 9b509d6 runbook
+# 322951a glowing wild frame (wildframe.ts; ui.ts / bookEventHandlerMap.ts hooks; CSS block at the end of elfhaus.css). Applies on 0b51f91 alone
+#         or after motion.patch. QA: /workspace/elfhaus-shots/tool/wframe.mjs (PORT=<dev port>) -> /workspace/elfhaus-shots/wildframe/
 ```
 Never cherry-pick the `DRYRUN ART` / `DRYRUN PATCHES` commits.
 
