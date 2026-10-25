@@ -6,6 +6,7 @@
 // on #bgFade above #bg and faded out on opacity only. Call setBg(next) BEFORE toggling body.inBonus.
 import { ART } from './ui';
 import { ST } from './stage';
+import { setAlcoveFs, warmAlcove } from './alcove';
 
 const FADE_MS = 450;
 const ready = new Map<string, Promise<void>>();
@@ -22,6 +23,7 @@ const pick = (bonus: boolean, portrait: boolean) => {
 let cur = '', seq = 0; // cur = `${url}|${tinted}` currently shown
 /** Show the base or bonus background for the current orientation. Idempotent; fades only when the picture or tint changes. */
 export function setBg(bonus: boolean, fade = true) {
+	setAlcoveFs(bonus); // board frame: _fs crown / recess fade in on opacity (alcove.ts), same timing as the plate
 	const bg = document.getElementById('bg'); if (!bg) return;
 	const { url, fs } = pick(bonus, ST.portrait);
 	if (!url) { bg.classList.toggle('fs', false); return; }
@@ -52,6 +54,6 @@ export function setBg(bonus: boolean, fade = true) {
 }
 /** Warm the other state's picture (idle) so the first bonus swap is instant. */
 export function warmBg() {
-	const go = () => { for (const b of [true, false]) { const u = pick(b, ST.portrait).url; if (u) void preload(u); } };
+	const go = () => { for (const b of [true, false]) { const u = pick(b, ST.portrait).url; if (u) void preload(u); } warmAlcove(preload); };
 	'requestIdleCallback' in window ? (window as any).requestIdleCallback(go, { timeout: 3000 }) : setTimeout(go, 1500);
 }

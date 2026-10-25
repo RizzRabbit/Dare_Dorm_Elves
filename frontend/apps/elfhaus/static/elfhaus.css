@@ -806,3 +806,37 @@ body.tb .modal.bm{width:min(860px,calc(94*var(--vw)/var(--tbm)))}
 /* bonus-buy cards: Double / Triple Dare crops are top-weighted like EGW (heads + faces looking back, upper body, WILD tattoo); EGW (WF, 1 x 4 cells) shows her head too */
 .bcard[data-m="double_dare"] .bArt img{object-position:50% 16%} .bcard[data-m="triple_dare"] .bArt img{object-position:50% 6%}
 .bArt.tall img{object-position:50% 14%}
+
+/* ===== board frame B2 "Lounge Alcove" (src/game/alcove.ts; art: board_frame/r2). Self-contained block: keep it at the
+   end of the file and gated on body.alcove (set once the alcove art is present), so other patches to this file apply
+   around it. Layers sit in #app's stacking context: ambient < recess < ledge < #board (z 0) < crown/twinkle < #fsBar/#top.
+   Animation: opacity only. ===== */
+#alcove{display:contents}
+#alcoveAmbient,#alcoveRecess,#alcoveLedge,#alcoveCrown{position:absolute;left:0;top:0;pointer-events:none;display:none;contain:layout paint}
+body.alcove #alcoveAmbient,body.alcove #alcoveRecess,body.alcove #alcoveLedge,body.alcove #alcoveCrown{display:block}
+#alcoveAmbient{z-index:-3;contain:none;
+  background:radial-gradient(closest-side,#0c041059,#0c041000) 50% 50%/46% 40% no-repeat,
+    radial-gradient(closest-side,#0c041066,#0c041000) 30% 64%/14% 4% no-repeat,radial-gradient(closest-side,#0c041066,#0c041000) 70% 64%/14% 4% no-repeat,
+    radial-gradient(closest-side,#ff96cd33,#ff96cd00)}
+#alcoveRecess{z-index:-2}
+/* the 9-slice export is the unlit master; the B2 previews light it with the room (2x room_light, ~x.49 + plum tint), so
+   match them with a static filter (fitted to B2_landscape.jpg; not animated) */
+#alcoveLedge{z-index:-1;box-sizing:border-box;border-style:solid;border-color:transparent;border-image-slice:100 130 69 130 fill;border-image-repeat:stretch;
+  filter:brightness(.34) saturate(1.35)}
+#alcoveCrown{z-index:1}
+#alcoveRecess>i,#alcoveCrown>i{position:absolute;inset:0;background-size:100% 100%;background-repeat:no-repeat}
+#alcove .avFs{opacity:0;transition:opacity .45s ease-out}
+#alcove .fs>.avFs{opacity:1}
+#alcove .tw{opacity:.25;animation:tw 3.2s ease-in-out infinite;will-change:opacity}
+#alcove .tw1{animation-delay:-1.07s} #alcove .tw2{animation-delay:-2.13s}
+@keyframes tw{0%,100%{opacity:.25}50%{opacity:.7}}
+@media (prefers-reduced-motion:reduce){#alcove .tw{animation:none;opacity:.45}}
+/* the alcove replaces the old bezel, board backfill and HUD plate; their layout boxes (padding, border widths) stay */
+body.alcove #frame,body.alcove.portrait #frame,body.alcove #frame.art{background:none;border-color:transparent;border-image:none;box-shadow:none}
+body.alcove #frame::before{display:none}
+body.alcove #board,body.alcove.portrait #board{background:transparent;border-color:transparent;box-shadow:none}
+body.alcove #app #hud,body.alcove.portrait #app #hud{background:none;border-color:transparent;box-shadow:none}
+body.alcove #app #hud::before{border-top-color:transparent}
+/* the free-spins bar hangs on the crown like a sign: above the crown layer in both orientations (landscape already z 4) */
+body.alcove.portrait #app #fsBar{position:relative;z-index:4}
+/* ===== end board frame B2 ===== */

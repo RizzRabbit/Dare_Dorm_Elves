@@ -147,6 +147,51 @@
   "frame": [
     "assets/final/reel_frame.png"
   ],
+  "alcove_crown_landscape": [
+    "assets/final/webp/frame/b2_crown_landscape.webp"
+  ],
+  "alcove_crown_fs_landscape": [
+    "assets/final/webp/frame/b2_crown_fs_landscape.webp"
+  ],
+  "alcove_recess_landscape": [
+    "assets/final/webp/frame/b2_recess_landscape.webp"
+  ],
+  "alcove_recess_fs_landscape": [
+    "assets/final/webp/frame/b2_recess_fs_landscape.webp"
+  ],
+  "alcove_twinkle0_landscape": [
+    "assets/final/webp/frame/b2_twinkle0_landscape.webp"
+  ],
+  "alcove_twinkle1_landscape": [
+    "assets/final/webp/frame/b2_twinkle1_landscape.webp"
+  ],
+  "alcove_twinkle2_landscape": [
+    "assets/final/webp/frame/b2_twinkle2_landscape.webp"
+  ],
+  "alcove_crown_portrait": [
+    "assets/final/webp/frame/b2_crown_portrait.webp"
+  ],
+  "alcove_crown_fs_portrait": [
+    "assets/final/webp/frame/b2_crown_fs_portrait.webp"
+  ],
+  "alcove_recess_portrait": [
+    "assets/final/webp/frame/b2_recess_portrait.webp"
+  ],
+  "alcove_recess_fs_portrait": [
+    "assets/final/webp/frame/b2_recess_fs_portrait.webp"
+  ],
+  "alcove_twinkle0_portrait": [
+    "assets/final/webp/frame/b2_twinkle0_portrait.webp"
+  ],
+  "alcove_twinkle1_portrait": [
+    "assets/final/webp/frame/b2_twinkle1_portrait.webp"
+  ],
+  "alcove_twinkle2_portrait": [
+    "assets/final/webp/frame/b2_twinkle2_portrait.webp"
+  ],
+  "alcove_ledge": [
+    "assets/final/webp/frame/b2_ledge_9slice.webp"
+  ],
   "buy_icon": [
     "assets/final/ui/buy_icon_rizzin_256.png",
     "assets/final/buy_icon.png"

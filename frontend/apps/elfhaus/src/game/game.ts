@@ -25,6 +25,7 @@ import { playBookEvents, endBonusUi } from './bookEventHandlerMap';
 import { initRoxy, placeRoxy } from './roxy';
 import { initStacks, stackIdle } from './stacks';
 import { setBg, warmBg } from './bg';
+import { placeAlcove } from './alcove';
 import { initLoader, preloadArt, track, loaderReady, hideLoader } from './loader';
 import { preloadMaxWin } from './maxwin';
 import { fitStage, toStage } from './stage';
@@ -351,6 +352,7 @@ export function layout() {
 	document.documentElement.style.setProperty('--cell', cell + 'px');
 	S.cell = cell; renderAll();
 	// Roxy stands in the room as an animated sprite, so the backgrounds are the Roxy-free paintings.
+	placeAlcove(); // board frame B2 layers from #board / #hud (alcove.ts); before setBg so the _fs state applies on first paint
 	setBg(S.inBonus); warmBg(); // base or free-spins painting for this orientation (bg.ts: preloaded, crossfaded)
 	const fr = toStage($('#frame').getBoundingClientRect());
 	document.documentElement.style.setProperty('--gutR', Math.max(0, W - fr.right) + 'px');

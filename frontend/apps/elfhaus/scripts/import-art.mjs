@@ -14,12 +14,16 @@
 //                                              sources (assets/final/webp/wild_WF_fullreel.webp, wild_WM2_two_elves.webp, ...)
 //   node scripts/import-art.mjs roxy    <dir>   roxy_<tag>_<state>_<page>.{json,webp} (roxy_full_ / roxy_p3d_) -> static/assets/atlases/
 //                                              as roxy_full_* (old pages removed first, so a new page count drops in cleanly)
+//   node scripts/import-art.mjs frame   <dir>   board frame (B2 "Lounge Alcove") webps, e.g. /workspace/elfhaus-bg/board_frame/r2/assets:
+//                                              b2_{crown,crown_fs,recess,recess_fs,twinkle0..2}_{landscape,portrait}.webp and
+//                                              b2_ledge_9slice.webp -> their art-manifest.json sources (alcove_* keys,
+//                                              assets/final/webp/frame/). WebP only: a .png without a .webp twin is reported.
 // Add --dry to list what would be copied. Then: pnpm test && pnpm build.
 import { readdirSync, statSync, mkdirSync, copyFileSync, existsSync, rmSync, writeFileSync, readFileSync } from 'node:fs';
 import { join, resolve, relative, dirname, basename } from 'node:path';
 const app = resolve(import.meta.dirname, '..'), repo = resolve(app, '../../..');
 const [kind, src, ...flags] = process.argv.slice(2), dry = flags.includes('--dry');
-if (!kind || !src || !existsSync(src)) { console.error('usage: import-art.mjs symbols|splash|stacks|fx|wilds|roxy <dir> [--dry]'); process.exit(1); }
+if (!kind || !src || !existsSync(src)) { console.error('usage: import-art.mjs symbols|splash|stacks|fx|wilds|roxy|frame <dir> [--dry]'); process.exit(1); }
 const walk = (d) => readdirSync(d).flatMap((f) => { const p = join(d, f); return statSync(p).isDirectory() ? walk(p) : [p]; });
 let n = 0;
 const cp = (from, to) => { n++; console.log(`${dry ? '[dry] ' : ''}${relative(src, from)} -> ${relative(repo, to)}`); if (!dry) { mkdirSync(dirname(to), { recursive: true }); copyFileSync(from, to); } };
@@ -50,6 +54,11 @@ if (kind === 'symbols') {
 		const all = [...new Set([...prev, ...have])].filter((id) => existsSync(join(dest, id + '.json')) && existsSync(join(dest, id + '.webp'))).sort();
 		writeFileSync(join(dest, 'index.json'), JSON.stringify({ sheets: all }, null, 1) + '\n'); console.log('stacks index:', all.join(', ') || '(none)');
 	}
+} else if (kind === 'frame') {
+	const RE = /^b2_((?:crown|recess)(?:_fs)?_(?:landscape|portrait)|twinkle[0-2]_(?:landscape|portrait)|ledge)(?:_9slice)?\.(webp|png)$/, webp = new Set();
+	const files = walk(src).filter((f) => RE.test(basename(f)));
+	for (const f of files) { const m = basename(f).match(RE); if (m[2] === 'webp') { cp(f, manifestDest(`alcove_${m[1]}`)); webp.add(m[1]); } }
+	for (const f of files) { const m = basename(f).match(RE); if (m[2] === 'png' && !webp.has(m[1])) console.log(`skip (webp only, convert first): ${basename(f)}`); }
 } else if (kind === 'fx') {
 	const dest = join(app, 'static/assets/fx'), RE = /^(fx_wfexpand_R[1-5])(?:\.atlas)?\.(webp|json)$/, ids = new Set();
 	for (const f of walk(src)) {
