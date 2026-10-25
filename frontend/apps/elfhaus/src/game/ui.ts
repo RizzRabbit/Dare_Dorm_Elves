@@ -81,7 +81,7 @@ export function setGem(el: Element | null, v: number) {
 export function symHTML(name: string, v?: number) {
 	if (name === 'W') {
 		const val = v || 1;
-		return `<div class="sym W${ART.W ? ' art' : ''}">${ART.W ? img('W') + winLayer('W') : `<span class="nm">WILD</span>${ph('W')}`}<span class="plate">WILD</span></div>${gemHTML(val)}<div class="lock"><i class="lkI" style="${lockIconCSS()}"></i><span class="lkT">LOCKED</span>${DOTS}</div>`;
+		return `<div class="sym W${ART.W ? ' art' : ''}">${ART.W ? img('W') + winLayer('W') : `<span class="nm">WILD</span>${ph('W')}<span class="plate">WILD</span>`}</div>${gemHTML(val)}<div class="lock"><i class="lkI" style="${lockIconCSS()}"></i><span class="lkT">LOCKED</span>${DOTS}</div>`;
 	}
 	const t = name[0];
 	if (ART[name]) return `<div class="sym ${t} ${name} art">${img(name)}${winLayer(name)}</div>`;

@@ -5,6 +5,9 @@ Writes assets/final/cut/<name>.png (RGBA, full res, used by the sprite generator
 (the runtime art, first path in art-manifest.json). Radius is the outer edge of each round frame, as a fraction of
 the tile size, with a ~1.5px feather at display size so the edge stays crisp.
 Usage: python3 scripts/sprites/cut_symbols.py"""
+import sys
+if "--force" not in sys.argv: sys.exit("RETIRED: the frameless symbol set (elfhaus-frameless MANIFEST 2026-10-25) replaces this output; re-running would cut round frames back in. Pass --force to run anyway.")
+
 import os, sys
 from PIL import Image, ImageDraw, ImageFilter
 sys.path.insert(0, os.path.dirname(__file__))

@@ -6,11 +6,17 @@
     "assets/final/H1.png",
     "assets/concepts/H1_roxy_final_user.jpg"
   ],
+  "H1_win": [
+    "assets/final/webp/symbol_H1_win.webp"
+  ],
   "H2": [
     "assets/final/webp/symbol_H2.webp",
     "assets/final/symbol_H2.png",
     "assets/final/H2.png",
     "assets/concepts/H2_jade_final_user.jpg"
+  ],
+  "H2_win": [
+    "assets/final/webp/symbol_H2_win.webp"
   ],
   "H3": [
     "assets/final/webp/symbol_H3.webp",
@@ -18,42 +24,66 @@
     "assets/final/H3.png",
     "assets/concepts/H3_vi_final_user.jpg"
   ],
+  "H3_win": [
+    "assets/final/webp/symbol_H3_win.webp"
+  ],
   "H4": [
     "assets/final/webp/symbol_H4.webp",
     "assets/final/symbol_H4.png",
     "assets/final/H4.png",
     "assets/concepts/H4_coco_final_user.jpg"
   ],
+  "H4_win": [
+    "assets/final/webp/symbol_H4_win.webp"
+  ],
   "L1": [
     "assets/final/webp/symbol_L1_spin_bottle.webp",
     "assets/final/symbol_L1_spin_bottle.png",
     "assets/final/L1.png"
+  ],
+  "L1_win": [
+    "assets/final/webp/symbol_L1_spin_bottle_win.webp"
   ],
   "L2": [
     "assets/final/webp/symbol_L2_lips.webp",
     "assets/final/symbol_L2_lips.png",
     "assets/final/L2.png"
   ],
+  "L2_win": [
+    "assets/final/webp/symbol_L2_lips_win.webp"
+  ],
   "L3": [
     "assets/final/webp/symbol_L3_pink_phone.webp",
     "assets/final/symbol_L3_pink_phone.png",
     "assets/final/L3.png"
+  ],
+  "L3_win": [
+    "assets/final/webp/symbol_L3_pink_phone_win.webp"
   ],
   "L4": [
     "assets/final/webp/symbol_L4_red_cup.webp",
     "assets/final/symbol_L4_red_cup.png",
     "assets/final/L4.png"
   ],
+  "L4_win": [
+    "assets/final/webp/symbol_L4_red_cup_win.webp"
+  ],
   "L5": [
     "assets/final/webp/symbol_L5_leaf.webp",
     "assets/final/symbol_L5_leaf.png",
     "assets/final/L5.png"
+  ],
+  "L5_win": [
+    "assets/final/webp/symbol_L5_leaf_win.webp"
   ],
   "W": [
     "assets/final/webp/wild_W_single.webp",
     "assets/final/wild_W_single.png",
     "assets/final/symbol_W.png",
     "assets/final/W.png"
+  ],
+  "W_win": [
+    "assets/final/webp/wild_W_single_win.webp"
   ],
   "WF": [
     "assets/final/webp/wild_WF_fullreel.webp",
@@ -180,6 +210,9 @@
   "S": [
     "assets/final/webp/symbol_S_scatter.webp",
     "assets/final/symbol_S_scatter.png"
+  ],
+  "S_win": [
+    "assets/final/webp/symbol_S_scatter_win.webp"
   ],
   "sym_S": [
     "assets/final/fx/sym_S.webp"

@@ -7,6 +7,9 @@ animation is no longer packed: reels.ts scrolls the real art into place, so no r
                           and sway (mesh-warped hair/upper body), low symbols wobble
   idle  24f @24fps loop : wild only - gentle breathe with a slow shine pass and twinkles
 Usage: python3 scripts/sprites/gen_symbols.py [SYM ...]"""
+import sys
+if "--force" not in sys.argv: sys.exit("RETIRED: the frameless symbol set (elfhaus-frameless MANIFEST 2026-10-25) replaces this output; re-running would cut round frames back in. Pass --force to run anyway.")
+
 import math, os, sys
 from PIL import Image, ImageDraw, ImageFilter, ImageChops
 sys.path.insert(0, os.path.dirname(__file__))
