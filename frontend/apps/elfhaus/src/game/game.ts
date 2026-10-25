@@ -357,6 +357,10 @@ export function layout() {
 	const lane = short ? 16 : portrait ? 42 : Math.max(fsH - 14, 26), FRAME = short || portrait ? 0 : 34;
 	const used = top + hud + 2 * lane + FRAME + (short ? 14 : portrait ? 30 : 12);
 	let cell = portrait ? Math.min((W - 40) / 5, (H - used) / 4) : Math.min((H - used) / 4, (W - 120) / 5);
+	// Landscape: always leave Roxy her gutter left of the board (placeRoxy shows her only at >= 45% of the stage
+	// height; sheet aspect ~0.495, left ~11% empty). Near-square windows (1024x1080, 1280x1024, iPad landscape) used to
+	// give the board the whole width and hide her; now the board gives way a little and she stays in the room.
+	if (!portrait && document.body.classList.contains('hasRoxy')) cell = Math.min(cell, (W - 2 * Math.ceil(H * 0.46 * 0.495 * 0.89 + 24)) / 5);
 	cell = Math.max(1, Math.floor(cell)); // no px floor: it broke the board/Roxy/background proportion in small windows
 	document.documentElement.style.setProperty('--cell', cell + 'px');
 	S.cell = cell; renderAll();
