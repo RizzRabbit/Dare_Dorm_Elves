@@ -19,6 +19,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#B9B5C6;color:var(--in
 /* PLACEHOLDER background (painted grey-violet wash) until assets/final/background_* lands */
 #bg{position:fixed;inset:0;background:var(--paint),radial-gradient(ellipse at 50% 35%,#B7B1C8,#8C8599 55%,#5A5468);background-size:cover;background-position:center}
 #bg.art{background-repeat:no-repeat}
+#bgFade{position:fixed;inset:0;background-repeat:no-repeat;pointer-events:none;opacity:0;will-change:opacity}
 body.inBonus #bg:not(.fs){filter:saturate(1.1) hue-rotate(18deg) brightness(.92)}
 #app{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0)}
 .hidden{display:none!important}
@@ -366,7 +367,7 @@ body.short #strip{margin-top:3px;padding:2px 10px}
 #maxwin{position:fixed;inset:0;z-index:70;overflow:hidden;background:#1C1922;opacity:0;transition:opacity .45s ease;cursor:default}
 #maxwin.on{opacity:1} #maxwin.out{opacity:0}
 #maxwin .mwStage{position:absolute;inset:0}
-#maxwin .mwBg{position:absolute;inset:-40px;background-size:cover;background-position:center;filter:blur(22px) saturate(.55) brightness(.34)}
+#maxwin .mwBg{position:absolute;inset:-40px;background-size:cover;background-position:center;filter:blur(22px) saturate(.55) brightness(.45)}
 #maxwin .mwShade{position:absolute;inset:0;background:linear-gradient(180deg,#1C192200 45%,#1C1922b0 78%,#1C1922e6)}
 #maxwin .mwText{position:absolute;left:0;right:0;bottom:calc(5*var(--vh));display:flex;flex-direction:column;align-items:center;text-align:center;pointer-events:none}
 .mwTier{font-family:"Cinzel";font-weight:900;font-size:clamp(44px,calc(9*var(--vw)),128px);line-height:1;letter-spacing:4px;

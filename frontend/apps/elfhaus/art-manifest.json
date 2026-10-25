@@ -136,9 +136,8 @@
     "assets/final/background_fs.png"
   ],
   "background_fs_portrait": [
-    "assets/final/webp/bg_base_mobile_noroxy_1080x1920.webp",
-    "assets/final/bg_base_mobile_noroxy_1080x1920.png",
-    "assets/final/bg_base_mobile_1080x1920.png",
+    "assets/final/webp/bg_freespins_mobile_1080x1920.webp",
+    "assets/final/bg_freespins_mobile_1080x1920.png",
     "assets/final/background_fs_portrait.jpg",
     "assets/final/background_fs_portrait.png"
   ],

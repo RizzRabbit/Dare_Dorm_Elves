@@ -11,6 +11,7 @@ import { timing, isSpinning, startSpin, markStopped, sinceStart, sleep, spinMini
 import { $, S, k, bet, wait, banner, toast, hideToast, bigWin, setWinMeter, clearLines, renderCell, renderOverlays, cellEl, setGem, ovMx, symHTML } from './ui';
 import { playWins } from './winlines';
 import { wildLand, wfExpand, warmExpand } from './wildfx';
+import { setBg } from './bg';
 import { stackIn, mergeIn, growIn, clearOvWins } from './mergefx';
 import { stackPrefetch } from './stacks';
 /** stack_form sheets decode ahead for reels with 2+ wilds that are not full yet (stacks.ts loads sheets on demand). */
@@ -22,7 +23,7 @@ import { grab, combineInto } from './combine';
 const scattersOnBoard = (): Pos[] => S.sym.flatMap((col, reel) => col.map((n, row) => ({ reel, row, n }))).filter((c) => c.n === 'S').map(({ reel, row }) => ({ reel, row }));
 const TL = (t: Tier) => TIER_LABEL[t].toUpperCase();
 const setFsTotal = (n: number) => { const el = $('#fsCount'); el.textContent = el.textContent!.replace(/\/ \d+/, '/ ' + n); };
-const showFsBar = () => { S.inBonus = true; document.body.classList.add('inBonus'); $('#fsBar').classList.remove('hidden'); };
+const showFsBar = () => { setBg(true); S.inBonus = true; document.body.classList.add('inBonus'); $('#fsBar').classList.remove('hidden'); };
 /** Scatter highlight: the Dare Cards play their win loop, everything else dims. */
 async function showScatters(ps: Pos[], ms: number) {
 	if (!ps.length) return;
@@ -36,7 +37,7 @@ const unScatter = () => { document.querySelectorAll('.cell').forEach((c) => c.cl
 function lockCarried(l: Locked) {
 	l.singles.forEach((s) => { const c = cellEl(s.reel, s.row); if (!c.classList.contains('locked')) { c.classList.add('locked'); lockFx(c); } });
 }
-export const endBonusUi = () => { document.body.classList.remove('inBonus'); $('#fsBar').classList.add('hidden'); $('#intro').classList.add('hidden'); S.inBonus = false; };
+export const endBonusUi = () => { setBg(false); document.body.classList.remove('inBonus'); $('#fsBar').classList.add('hidden'); $('#intro').classList.add('hidden'); S.inBonus = false; };
 
 type Handlers = { [T in BookEventType]: (ev: BookEventOf<T>) => Promise<void> };
 export const bookEventHandlerMap: Handlers = {

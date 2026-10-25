@@ -24,6 +24,7 @@ import { $, S, ART, bet, buildCells, renderAll, renderOverlays, setOverlayHook, 
 import { playBookEvents, endBonusUi } from './bookEventHandlerMap';
 import { initRoxy, placeRoxy } from './roxy';
 import { initStacks, stackIdle } from './stacks';
+import { setBg, warmBg } from './bg';
 import { initLoader, preloadArt, track, loaderReady, hideLoader } from './loader';
 import { preloadMaxWin } from './maxwin';
 import { fitStage, toStage } from './stage';
@@ -350,8 +351,7 @@ export function layout() {
 	document.documentElement.style.setProperty('--cell', cell + 'px');
 	S.cell = cell; renderAll();
 	// Roxy stands in the room as an animated sprite, so the backgrounds are the Roxy-free paintings.
-	const bgArt = (portrait && ART.background_portrait) || ART.background;
-	if (bgArt) { $('#bg').classList.add('art'); $('#bg').style.backgroundImage = `url(${bgArt})`; }
+	setBg(S.inBonus); warmBg(); // base or free-spins painting for this orientation (bg.ts: preloaded, crossfaded)
 	const fr = toStage($('#frame').getBoundingClientRect());
 	document.documentElement.style.setProperty('--gutR', Math.max(0, W - fr.right) + 'px');
 	document.documentElement.style.setProperty('--frB', Math.round(fr.bottom) + 'px');
