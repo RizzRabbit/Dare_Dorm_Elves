@@ -222,7 +222,11 @@ export function layout() {
 	const W = innerWidth, H = innerHeight, portrait = H > W * 1.1, short = H < 520;
 	document.body.classList.toggle('portrait', portrait);
 	document.body.classList.toggle('short', short && !portrait);
-	const used = (short ? 0 : ($('#top').offsetHeight || 0)) + ($('#hud').offsetHeight || 0) + (short ? 0 : ($('#fsBar').offsetHeight || 24)) + (short ? 20 : 44) + (short ? 16 : 40);
+	// Vertical budget: title + control panel + the fsBar/step-message rows that sit in the stage grid above and
+	// below the board (the grid is symmetric, so reserve the larger of the two on both sides).
+	const top = short ? 0 : ($('#top').offsetHeight || 0), hud = $('#hud').offsetHeight || 0;
+	const lane = short ? 16 : portrait ? 42 : Math.max(($('#fsBar').offsetHeight || 30) + 6, 38);
+	const used = top + hud + 2 * lane + (short ? 14 : portrait ? 30 : 12);
 	let cell = portrait ? Math.min((W - 40) / 5, (H - used) / 4) : Math.min((H - used) / 4, (W - 120) / 5);
 	cell = Math.max(short ? 26 : 36, Math.floor(cell));
 	document.documentElement.style.setProperty('--cell', cell + 'px');
@@ -230,7 +234,8 @@ export function layout() {
 	// Roxy stands in the room as an animated sprite, so the backgrounds are the Roxy-free paintings.
 	const bgArt = (portrait && ART.background_portrait) || ART.background;
 	if (bgArt) { $('#bg').classList.add('art'); $('#bg').style.backgroundImage = `url(${bgArt})`; }
-	placeRoxy(portrait, $('#frame').getBoundingClientRect());
+	const fr = $('#frame').getBoundingClientRect();
+	placeRoxy(portrait, fr);
 	placeRespin();
 }
 
