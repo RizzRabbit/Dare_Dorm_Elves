@@ -14,6 +14,7 @@ import { wildLand, wfExpand, warmExpand } from './wildfx';
 import { setBg } from './bg';
 import { stackIn, mergeIn, growIn, clearOvWins } from './mergefx';
 import { stackPrefetch } from './stacks';
+import { frameIn } from './wildframe';
 /** stack_form sheets decode ahead for reels with 2+ wilds that are not full yet (stacks.ts loads sheets on demand). */
 const warmStacks = () => stackPrefetch(S.sym.flatMap((c, r) => (!S.full.has(r) && c.filter((x) => x === 'W').length >= 2 ? [r] : [])));
 import { featOpen, featPop, featClose } from './featfx';
@@ -93,6 +94,7 @@ export const bookEventHandlerMap: Handlers = {
 			S.full.set(ev.reel, ev.value);
 			for (let row = 0; row < ROWS; row++) { S.vals.delete(k(ev.reel, row)); cellEl(ev.reel, row).style.visibility = 'hidden'; }
 			renderOverlays(false);
+			frameIn(document.querySelector<HTMLElement>(`.ov.full[data-reel="${ev.reel}"]`)); // the stack lands: its frame draws in
 		};
 		if (ev.instant) render(); else await stackIn(ev.reel, render); // squash → flash → elastic pop
 		await combineInto(flying, ovMx(ev.reel));
@@ -103,7 +105,11 @@ export const bookEventHandlerMap: Handlers = {
 		// each fresh group: anticipation → lean → hit (shockwave, burst, shake) → letters ignite →
 		// the per-reel corner gems recombine into the group's one gem (mergefx.ts); tap / turbo snaps to the end state
 		const fresh = ev.groups.filter((g) => !S.groups.find((o) => o.reels.join() === g.reels.join()));
-		const apply = () => { S.groups = ev.groups.map((g) => ({ reels: [...g.reels], values: [...g.values], product: g.product })); renderOverlays(false); };
+		const apply = () => {
+			S.groups = ev.groups.map((g) => ({ reels: [...g.reels], values: [...g.values], product: g.product })); renderOverlays(false);
+			// at the hard cut (the group scales up under the fading bloom) each fresh group's frame draws in
+			fresh.forEach((g) => frameIn([...document.querySelectorAll<HTMLElement>('.ov.merge')].find((o) => o.dataset.reels === g.reels.join()), 60));
+		};
 		if (!fresh.length) { apply(); return; }
 		let applied = false; const once = () => { if (!applied) { applied = true; apply(); } };
 		await Promise.all(fresh.map((g) => mergeIn(g.reels, g.values, g.product, once)));
@@ -204,6 +210,7 @@ export const bookEventHandlerMap: Handlers = {
 			S.full.set(st.reel, st.value);
 			for (let row = 0; row < ROWS; row++) { S.vals.delete(k(st.reel, row)); cellEl(st.reel, row).style.visibility = 'hidden'; }
 			renderOverlays(st.reel);
+			frameIn(document.querySelector<HTMLElement>(`.ov.full[data-reel="${st.reel}"]`));
 			wfExpand(document.querySelector<HTMLElement>(`.ov.full[data-reel="${st.reel}"]`));
 			await combineInto(flying, ovMx(st.reel));
 			await wait(S.turbo ? 150 : 350);

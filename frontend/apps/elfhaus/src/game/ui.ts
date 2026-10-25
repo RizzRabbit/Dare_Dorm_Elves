@@ -1,5 +1,6 @@
 // DOM renderer (ported from prototype/app.js). It only displays what book events say.
 import { lettersHTML } from './mergefx';
+import { frameHTML } from './wildframe';
 import ART_JSON from './art.generated.json';
 import { LINES, MAX_WIN_X, ROWS, REELS, SYMBOL_NAMES } from './config';
 import { money } from './format';
@@ -128,7 +129,7 @@ export function renderOverlays(anim: boolean | number = false) {
 		if (ART[key]) d.classList.add('art');
 		d.innerHTML = (ART[key] ? `<div class="wart">${img(key)}</div>`
 			: g.reels.map((_, i) => `<div class="wfph" style="left:${i * S.cell}px;width:${S.cell}px"><span>ELF ${i + 1}</span></div>`).join('') + `<div class="plate">WILD</div>`) +
-			lettersHTML(n) + `<i class="ovWinO"></i>` + gemHTML(g.product, 'stack', nudgeCSS(key)) + `<div class="ovrd">${DOTS}</div>`;
+			lettersHTML(n) + `<i class="ovWinO"></i>` + frameHTML(g.reels) + gemHTML(g.product, 'stack', nudgeCSS(key)) + `<div class="ovrd">${DOTS}</div>`;
 		d.dataset.reels = g.reels.join(',');
 		if (!anim) d.style.animation = 'none';
 		o.appendChild(d);
@@ -139,7 +140,7 @@ export function renderOverlays(anim: boolean | number = false) {
 		d.style.left = pos(r, 0).x + 'px'; d.style.width = S.cell + 'px';
 		if (ART.WF) d.classList.add('art');
 		d.innerHTML = (ART.WF ? `<div class="wart">${img('WF')}</div>` : `<div class="wfph" style="left:0;width:100%"><span>FULL-REEL<br>WILD</span></div><div class="plate">WILD</div>`) +
-			`<i class="ovWinO"></i>` + gemHTML(v, 'stack', nudgeCSS('WF')) + `<div class="ovrd">${DOTS}</div>`;
+			`<i class="ovWinO"></i>` + frameHTML([r]) + gemHTML(v, 'stack', nudgeCSS('WF')) + `<div class="ovrd">${DOTS}</div>`;
 		d.dataset.reel = String(r);
 		if (anim !== r) d.style.animation = 'none';
 		o.appendChild(d);
