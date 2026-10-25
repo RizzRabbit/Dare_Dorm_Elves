@@ -2,7 +2,9 @@
 // Carries the Vault Breakers 3afc6d6 release fixes: rgs_url gating + error modal, bet levels from authenticate,
 // balance checks, Space-to-spin, Intl/social currency, replay mode, social wording, jurisdiction flags.
 import { requestAuthenticate, requestBet, requestEndRound, requestReplay } from 'rgs-requests';
-import { mockAuthenticate, mockBet, mockEndRound, mockReplay } from '../mock/mockRgs';
+// The offline mock RGS (fixture books) exists only in dev (vite dev). In the
+// production build import.meta.env.DEV is the literal false (written inline at each use so the bundler can fold
+// it), so every mock branch and its dynamic import are dropped from the bundle.
 import { API_AMOUNT_MULTIPLIER } from 'constants-shared/bet';
 import {
 	ANTE_COST, fmtX, BUY_MODES, CONFIRM_ABOVE_X, GAME_ID, LINES, MAX_WIN_X, MODES, MODE_DESC, MODE_LABEL, MYSTERY_ODDS, PAYTABLE,
@@ -27,7 +29,7 @@ const url = {
 	currency: q.get('currency') || '', social: q.get('social') === 'true', replay: q.get('replay') === 'true',
 	game: q.get('game') || GAME_ID, version: q.get('version') || VERSION, mode: q.get('mode') || 'base',
 	event: q.get('event') || '', amount: Number(q.get('amount')) || 0,
-	mock: q.get('mock') === 'true' || (!q.get('rgs_url') && !q.get('replay')),
+	mock: import.meta.env.DEV && (q.get('mock') === 'true' || (!q.get('rgs_url') && !q.get('replay'))),
 	book: q.get('book') || '',
 };
 let sessionReady = false;
@@ -66,7 +68,7 @@ const setAuto = () => { const b = $('#autoBtn'); b.dataset.n = S.auto ? String(S
 // ---------- RGS round ----------
 async function finishRound(round: any) {
 	if (round?.active || (round?.payoutMultiplier ?? 0) > 0 || (round?.payout ?? 0) > 0) {
-		const end: any = url.mock ? await mockEndRound({}) : await requestEndRound({ sessionID: url.sessionID, rgsUrl: url.rgsUrl });
+		const end: any = import.meta.env.DEV && url.mock ? await (await import('../mock/mockRgs')).mockEndRound({}) : await requestEndRound({ sessionID: url.sessionID, rgsUrl: url.rgsUrl });
 		if (end?.error) throw end;
 		if (end?.balance) S.balance = end.balance.amount / API_AMOUNT_MULTIPLIER;
 	}
@@ -78,8 +80,8 @@ async function round(mode: ModeKey) {
 	if (S.balance + 1e-9 < cost) { S.auto = 0; setAuto(); message('INSUFFICIENT BALANCE', t('noFunds')); return; }
 	setBusy(true); resetWinMeter(); endBonusUi();
 	try {
-		const data: any = url.mock
-			? await mockBet({ currency: S.currency, amount: bet(), mode, forcedBook: url.book || undefined })
+		const data: any = import.meta.env.DEV && url.mock
+			? await (await import('../mock/mockRgs')).mockBet({ currency: S.currency, amount: bet(), mode, forcedBook: url.book || undefined })
 			: await requestBet({ sessionID: url.sessionID, rgsUrl: url.rgsUrl, currency: S.currency, amount: bet(), mode });
 		if (data?.error) throw data;
 		if (data?.balance) S.balance = data.balance.amount / API_AMOUNT_MULTIPLIER;
@@ -95,8 +97,8 @@ async function round(mode: ModeKey) {
 
 // ---------- startup ----------
 async function authenticate() {
-	if (url.mock) {
-		const a = await mockAuthenticate({ language: url.lang, currency: url.currency || undefined });
+	if (import.meta.env.DEV && url.mock) {
+		const a = await (await import('../mock/mockRgs')).mockAuthenticate({ language: url.lang, currency: url.currency || undefined });
 		if (a.balance) { S.currency = a.balance.currency; setCurrency(S.currency); S.balance = a.balance.amount / API_AMOUNT_MULTIPLIER; }
 		const c = a.config || {};
 		S.jur = { ...(c.jurisdiction || {}) };
@@ -136,8 +138,8 @@ async function loadReplay() {
 	S.replay = true; document.body.classList.add('replay');
 	S.currency = url.currency || 'USD'; setCurrency(S.currency);
 	S.replayBet = url.amount / API_AMOUNT_MULTIPLIER || 0;
-	if (url.mock || !url.rgsUrl) {
-		const d: any = await mockReplay({ mode: url.mode, event: url.event || url.book });
+	if (import.meta.env.DEV && (url.mock || !url.rgsUrl)) {
+		const d: any = await (await import('../mock/mockRgs')).mockReplay({ mode: url.mode, event: url.event || url.book });
 		replayState = d.state; replayCost = Number(d.costMultiplier) || modeCost(url.mode as ModeKey) || 1;
 		$('#replayMode').textContent = MODE_LABEL[url.mode as ModeKey] || url.mode;
 		show('#replayBar', true); setStrip();
