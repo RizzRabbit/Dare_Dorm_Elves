@@ -45,8 +45,9 @@ const url = {
 	currency: q.get('currency') || '', social: q.get('social') === 'true', replay: q.get('replay') === 'true',
 	game: q.get('game') || GAME_ID, version: q.get('version') || VERSION, mode: q.get('mode') || 'base',
 	event: q.get('event') || '', amount: Number(q.get('amount')) || 0,
-	mock: import.meta.env.DEV && (q.get('mock') === 'true' || (!q.get('rgs_url') && !q.get('replay'))),
-	book: q.get('book') || '',
+	// dev-only (vite dev, offline fixture books): in the release build this spread is {} so not even the field names
+	// reach the bundle, and a missing rgs_url can only end in the ERR_RGS_URL error screen
+	...((import.meta.env.DEV ? { mock: q.get('mock') === 'true' || (!q.get('rgs_url') && !q.get('replay')), book: q.get('book') || '' } : {}) as { mock?: boolean; book?: string }),
 };
 let sessionReady = false;
 let replayState: BookEvent[] = [];
@@ -233,7 +234,7 @@ async function loadReplay() {
 	S.currency = url.currency || 'USD'; setCurrency(S.currency);
 	S.replayBet = url.amount / API_AMOUNT_MULTIPLIER || 0;
 	if (import.meta.env.DEV && (url.mock || !url.rgsUrl)) {
-		const d: any = await (await import('../mock/mockRgs')).mockReplay({ mode: url.mode, event: url.event || url.book });
+		const d: any = await (await import('../mock/mockRgs')).mockReplay({ mode: url.mode, event: url.event || url.book || '' });
 		replayState = d.state; replayCost = Number(d.costMultiplier) || modeCost(url.mode as ModeKey) || 1;
 		$('#replayMode').textContent = MODE_LABEL[url.mode as ModeKey] || url.mode;
 		show('#replayBar', true); setStrip();

@@ -46,6 +46,18 @@ for (const j of walk(OUT).filter((f) => f.endsWith('.json') && f.includes('/asse
 const missing = [...refs].filter((r) => !existsSync(join(OUT, r)));
 if (missing.length) fail(`${missing.length} referenced asset(s) missing from the package:\n  ` + missing.join('\n  '));
 console.log(`asset check: ${refs.size} referenced asset paths, all present`);
+// No offline mock in a release (reviewer rule; Vault Breakers failed on it): no mock module, no fixture book names, no
+// mock switches, no mock fallback field - in any shipped file (code or data), not just disabled by a flag.
+{
+	const books = existsSync('src/mock/books') ? readdirSync('src/mock/books').map((f) => f.replace(/\.json$/, '')) : [];
+	const banned = ['mockRgs', 'mockAuthenticate', 'mockBet', 'mockReplay', 'mockEndRound', '__VB_MOCK_RGS__', '__VB_TEST__', 'mock:', '/mock/', ...books];
+	const all = walk(OUT).filter((f) => /\.(html|js|css|json|txt|md)$/.test(f)).map((f) => [f, readFileSync(f, 'utf8')]);
+	const hits = [];
+	for (const [f, t] of all) for (const b of banned) if (new RegExp(`(^|[^A-Za-z0-9_])${b.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')}($|[^A-Za-z0-9_])`).test(t)) hits.push(`${relative(OUT, f)}: ${b}`);
+	if (walk(OUT).some((f) => /mock/i.test(relative(OUT, f)))) hits.push('a file or folder named *mock*');
+	if (hits.length) { console.error('FAIL mock RGS content in the release:\n  ' + hits.join('\n  ')); process.exit(1); }
+	console.log(`mock check: none of ${banned.length} mock markers / book names in ${all.length} shipped text files`);
+}
 
 const files = walk(OUT).map((f) => ({ f: relative(OUT, f), s: statSync(f).size })).sort((a, b) => b.s - a.s);
 const mb = (n) => (n / 1048576).toFixed(2) + ' MB';
