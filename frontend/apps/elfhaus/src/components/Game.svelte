@@ -45,10 +45,10 @@
 		<div id="bar">
 			<button id="menuBtn" class="ico flat" aria-label="Menu" title="Menu"><svg viewBox="0 0 24 24"><path d="M4 6.5h16M4 12h16M4 17.5h16" /></svg></button>
 			<button id="betDown" class="ico flat" aria-label="Decrease"><svg viewBox="0 0 24 24"><path d="M5 12h14" /></svg></button>
-			<button id="spinBtn" aria-label="Spin"><svg viewBox="0 0 48 48"><path d="M38 24a14 14 0 1 1-4.1-9.9" /><path class="fill" d="M41 8.5 40 21l-11.5-4.7Z" /></svg><span id="autoN" aria-hidden="true"></span></button>
+			<button id="spinBtn" aria-label="Spin"><svg viewBox="0 0 48 48"><path d="M37.5 24a13.5 13.5 0 1 1-4-9.6" /><path d="M34.5 7.5v7.5H27" /></svg><span id="autoN" aria-hidden="true"></span></button>
 			<button id="armTag" class="hidden" aria-label=""><span class="t"></span><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 3l6 6M9 3l-6 6" /></svg></button>
 			<button id="betUp" class="ico flat" aria-label="Increase"><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5v14" /></svg></button>
-			<button id="autoBtn" class="ico flat" aria-label="Autoplay" title="Autoplay"><svg viewBox="0 0 24 24"><path d="M19 9.5A7.5 7.5 0 0 0 5.6 8M5 14.5A7.5 7.5 0 0 0 18.4 16" /><path class="fill" d="M4.2 4.6 5 9.4l4.6-1.6ZM19.8 19.4 19 14.6l-4.6 1.6Z" /><text x="12" y="15.3" text-anchor="middle">A</text></svg></button>
+			<button id="autoBtn" class="ico flat" aria-label="Autoplay" title="Autoplay"><svg viewBox="0 0 24 24"><path d="M19 10A7.5 7.5 0 0 0 5.8 7.6M5 14a7.5 7.5 0 0 0 13.2 2.4" /><path d="M5.5 4v3.9h3.9M18.5 20v-3.9h-3.9" /><path d="M10.5 9.5v5l4-2.5Z" /></svg></button>
 		</div>
 		<div id="strip">
 			<div class="m"><label for="balance">BALANCE</label><span id="balance">—</span></div>

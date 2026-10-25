@@ -958,3 +958,14 @@ canvas.wfxRing{display:none}
 /* ===== aifix: no lavender flash on load (audit 21): page, placeholder #bg and loader all start on deep plum */
 html,body{background:#120C18}
 #bg:not(.art){background:#120C18}
+/* ===== aifix: one icon language (audit HUD icons + polish): every HUD / menu glyph is stroke-only, one rendered weight
+   (non-scaling 2.25px, round caps), one cream ink; no filled heads, no letters. Every frame (round buttons, bonus cards,
+   rows, modals) shares one 1.5px plum ink line. */
+#hud svg :is(path,rect,circle,polyline),#bmBet svg path,.mX svg path,#armTag svg path{vector-effect:non-scaling-stroke;stroke-width:2.25px}
+#hud svg{stroke:#F6ECF3} #hud svg .fill{fill:none;stroke:inherit}
+#app #spinBtn svg{stroke-width:2.25px}
+#autoBtn.on svg{stroke:var(--gold)}
+#app #hud .ico:not(.emblem),#app #anteBtn,.mX,#bmBet .ico,#buyCards .bcard,.row,.modal{border-width:1.5px;border-color:#6E4A7E}
+#buyCards .bcard:hover{border-color:#9A6FAE}
+#buyCards .bcard.armed{border-color:#F06AAE}
+#app #hud .ico.toggle.on,#app #hud #autoBtn.on{border-color:var(--gold)}
