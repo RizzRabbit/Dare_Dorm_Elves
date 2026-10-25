@@ -21,7 +21,7 @@
 		{/if}
 	</header>
 	<div id="stage">
-		<div id="fsBar" class="hidden"><span id="fsTier">DARE</span><span id="fsCount">FREE SPIN 0 / 8</span><span id="fsCap">max 18</span></div>
+		<div id="fsBar" class="hidden"><span id="fsTier">DARE</span><span id="fsCount">FREE SPIN 0 / 8</span></div>
 		<div id="banner" class="hidden"></div>
 		<div id="frame" class:art={!!art.frame} style={art.frame ? `border-image: url(${art.frame}) 30 fill / 30px stretch` : ''}>
 			<div id="board">
@@ -30,14 +30,12 @@
 				<svg id="lines"></svg>
 			</div>
 		</div>
-		<div id="respinCtr" class="hidden" role="status" aria-live="polite" aria-label="Respin 0 of 3" data-step="0"><i></i><i></i><i></i></div>
 		<div id="stepToast" class="hidden" aria-live="polite"></div>
 	</div>
 	<footer id="hud">
 		<div id="ctrlTop">
 			<div class="side">
 				<button id="turboBtn" class="ico toggle" aria-label="Turbo" title="Turbo"><svg viewBox="0 0 24 24"><path d="M13 2 4.5 13.5H11L10 22l8.5-11.5H12L13 2Z" /></svg></button>
-				<button id="anteBtn" class="ico toggle" aria-pressed="false" aria-label="Ante (higher bonus chance)" title="Ante"><svg viewBox="0 0 24 24"><path d="M6 13l6-6 6 6M6 19l6-6 6 6" /></svg></button>
 			</div>
 			<button id="buyBtn" class="ico emblem" aria-label="Get bonus" title="Get bonus">
 				{#if art.buy_icon}<img src={art.buy_icon} srcset={art.buy_icon_128 ? `${art.buy_icon_128} 128w, ${art.buy_icon} 256w` : undefined} sizes="42px" alt="" />{:else}<svg viewBox="0 0 40 40"><path class="g" d="M9 31C9 19 18 9 31 6c-2 11-8 20-18 26Z" /><path class="g" d="M13.5 26.5C17 20 22 15 27.5 11" /><path class="gf" d="M30 22l1.3 3.2 3.2 1.3-3.2 1.3L30 31l-1.3-3.2-3.2-1.3 3.2-1.3Z" /></svg>{/if}
@@ -46,7 +44,8 @@
 		<div id="bar">
 			<button id="menuBtn" class="ico flat" aria-label="Menu" title="Menu"><svg viewBox="0 0 24 24"><path d="M4 6.5h16M4 12h16M4 17.5h16" /></svg></button>
 			<button id="betDown" class="ico flat" aria-label="Decrease"><svg viewBox="0 0 24 24"><path d="M5 12h14" /></svg></button>
-			<button id="spinBtn" aria-label="Spin"><svg viewBox="0 0 48 48"><path d="M38 24a14 14 0 1 1-4.1-9.9" /><path class="fill" d="M41 8.5 40 21l-11.5-4.7Z" /></svg></button>
+			<button id="spinBtn" aria-label="Spin"><svg viewBox="0 0 48 48"><path d="M38 24a14 14 0 1 1-4.1-9.9" /><path class="fill" d="M41 8.5 40 21l-11.5-4.7Z" /></svg><span id="autoN" aria-hidden="true"></span></button>
+			<button id="armTag" class="hidden" aria-label=""><span class="t"></span><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 3l6 6M9 3l-6 6" /></svg></button>
 			<button id="betUp" class="ico flat" aria-label="Increase"><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5v14" /></svg></button>
 			<button id="autoBtn" class="ico flat" aria-label="Autoplay" title="Autoplay"><svg viewBox="0 0 24 24"><path d="M19 9.5A7.5 7.5 0 0 0 5.6 8M5 14.5A7.5 7.5 0 0 0 18.4 16" /><path class="fill" d="M4.2 4.6 5 9.4l4.6-1.6ZM19.8 19.4 19 14.6l-4.6 1.6Z" /><text x="12" y="15.3" text-anchor="middle">A</text></svg></button>
 		</div>
@@ -59,14 +58,28 @@
 </div>
 
 <div id="replayBar" class="hidden"><span>REPLAY · <b id="replayMode"></b></span><button id="replayPlay">PLAY</button></div>
-<div id="intro" class="overlay hidden"><div class="card"><div class="tierName"></div><div class="spins"></div><div class="carried"></div><div class="note">+2 spins per new full-reel wild · max 18 spins</div><button class="cont">PRESS TO CONTINUE</button><span class="ph">intro art placeholder</span></div></div>
+<div id="intro" class="overlay hidden"><div class="card"><div class="tierName"></div><div class="spins"></div><button class="cont">PRESS TO CONTINUE</button><span class="ph">intro art placeholder</span></div></div>
 <div id="maxwin" class="hidden" role="dialog" aria-label="Max win"><div class="mwStage"><div class="mwBg" style={art.background_fs ? `background-image:url(${art.background_fs})` : ''}></div><div class="mwShade"></div></div><canvas class="mwConf"></canvas><div class="mwText"><div class="mwTier">MAX WIN</div><div class="mwX">0x</div><div class="mwAmt"></div><div class="mwHint">CLICK TO CONTINUE</div></div></div>
 <div id="bigwin" class="overlay hidden"><div class="bw"><div class="bwTier">BIG WIN</div><div class="bwAmt"></div><div class="bwX"></div></div></div>
-<div id="buyMenu" class="overlay hidden" role="dialog" aria-modal="true"><div class="modal">
-	<h2 id="buyTitle">GET BONUS</h2>
+<div id="buyMenu" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="buyTitle"><div class="modal bm">
+	<div class="mHead"><h2 id="buyTitle">BONUS</h2><button id="buyClose" class="mX" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg></button></div>
+	<div id="anteRow" class="row"><span class="lbl">ANTE <small id="anteCost">3x</small></span><button id="anteSw" class="sw" role="switch" aria-checked="false" aria-label="Ante"><i></i></button></div>
 	<div id="buyCards"></div>
-	<div id="buyConfirm" class="hidden"><p id="buyConfirmText"></p><p id="buyConfirmNote" class="note"></p><button id="buyYes">CONFIRM</button><button id="buyNo" class="ghost">CANCEL</button></div>
-	<button id="buyClose" class="ghost">CLOSE</button>
+	<div id="bmBet" class="row"><button id="bmDown" class="ico flat" aria-label="Decrease"><svg viewBox="0 0 24 24"><path d="M5 12h14" /></svg></button><span class="v"><small>BET</small><b id="bmBetV">—</b></span><button id="bmUp" class="ico flat" aria-label="Increase"><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5v14" /></svg></button></div>
+	<div id="buyConfirm" class="hidden"><p id="buyConfirmText"></p><p id="buyConfirmNote" class="note"></p><button id="buyYes">ACTIVATE</button><button id="buyNo" class="ghost">CANCEL</button></div>
+</div></div>
+<div id="autoMenu" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="autoTitle"><div class="modal am">
+	<div class="mHead"><h2 id="autoTitle">AUTOPLAY</h2><button id="autoClose" class="mX" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg></button></div>
+	<div id="autoCounts" role="radiogroup" aria-label="Number of spins"></div>
+	<button id="advBtn" class="advBtn" aria-expanded="false">ADVANCED <svg viewBox="0 0 12 12"><path d="M3 4.5 6 7.5 9 4.5" /></svg></button>
+	<div id="adv" class="hidden">
+		<label class="row"><span class="lbl">Stop on loss</span><input id="stLoss" inputmode="decimal" placeholder="Off" autocomplete="off" /></label>
+		<label class="row"><span class="lbl">Stop on single win ≥</span><input id="stWin" inputmode="decimal" placeholder="Off" autocomplete="off" /></label>
+		<label class="row"><span class="lbl">Stop on balance +</span><input id="stUp" inputmode="decimal" placeholder="Off" autocomplete="off" /></label>
+		<div class="row"><span class="lbl">Stop on feature</span><button id="stFeat" class="sw" role="switch" aria-checked="false" aria-label="Stop on feature"><i></i></button></div>
+	</div>
+	<p id="autoErr" class="err" aria-live="polite"></p>
+	<button id="autoStart" class="go">START</button>
 </div></div>
 <div id="menu" class="overlay hidden" role="dialog" aria-modal="true"><div class="modal rules">
 	<h2 id="rulesTitle">GAME RULES</h2><div id="rulesBody"></div><button id="menuClose" class="ghost">CLOSE</button>

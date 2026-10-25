@@ -22,7 +22,7 @@ const symName = (cell: Element) => [...(symOf(cell)?.classList || [])].find((c) 
 export function symLand(cell: HTMLElement, delay = 0) {
 	const sym = symOf(cell), n = symName(cell); if (!sym || !hasSheet('sym_' + n)) return false;
 	sym.querySelectorAll('canvas.symFx').forEach((c) => c.remove());
-	play('sym_' + n, 'land', sym, { cls: 'fxFill symFx', delay, onEnd: () => { if (n === 'W') symIdle(cell); } });
+	play('sym_' + n, 'land', sym, { cls: 'fxFill symFx', delay, });
 	return true;
 }
 /** Wild idle loop (random phase so neighbouring wilds don't breathe in sync). */
@@ -55,18 +55,6 @@ export function mxGlint(mx: HTMLElement, k = Math.floor(Math.random() * GL.lengt
 	const [f, y] = GL[k];
 	play(FX, 'glint', mx, { cls: 'fxGlint', style: `left:${(l + (r - l) * f).toFixed(1)}%;top:${y}%` });
 }
-// Occasional, staggered twinkles: every ~0.9-1.8s one random visible multiplier gets one glint.
-let glT = 0;
-export function startGlints() {
-	clearTimeout(glT);
-	const next = () => {
-		const all = [...document.querySelectorAll<HTMLElement>('.mx')].filter((m) => m.offsetParent);
-		if (all.length) mxGlint(all[Math.floor(Math.random() * all.length)]);
-		glT = window.setTimeout(next, 900 + Math.random() * 900);
-	};
-	glT = window.setTimeout(next, 800);
-}
-
 /** LOCKED: padlock clamps in the tag icon slot and a sparkle burst runs round the cell border. */
 export function lockFx(cell: HTMLElement) {
 	const slot = cell.querySelector<HTMLElement>('.lock .lkI');
@@ -86,6 +74,8 @@ export const lockIconCSS = () => frameCSS(FX, 'lock', -1);
 export const rcCSS = (filled: boolean) => frameCSS(FX, 'rcfill', filled ? -1 : 0);
 export function rcFill(dot: HTMLElement, reverse = false) {
 	dot.querySelectorAll('canvas').forEach((c) => c.remove());
-	const a = play(FX, 'rcfill', dot, { cls: 'fxFill', reverse, fps: reverse ? 48 : undefined, onEnd: () => (dot.style.cssText = rcCSS(!reverse)) });
-	dot.style.cssText = a ? '' : rcCSS(!reverse); // the canvas covers the dot while it plays
+	const a = play(FX, 'rcfill', dot, { cls: 'fxFill', reverse, fps: reverse ? 48 : undefined, });
+	void a;
 }
+/** Relight flash over a respin circle (ring burst + star), drawn larger than the dot. */
+export function rcFlash(dot: HTMLElement) { play(FX, 'rcflash', dot, { cls: 'rcFlash', prepend: false }); }

@@ -3,7 +3,8 @@ import ART_JSON from './art.generated.json';
 import { LINES, MAX_WIN_X, ROWS, REELS, SYMBOL_NAMES } from './config';
 import { money } from './format';
 import type { Group, LineWin } from './typesBookEvent';
-import { mxBurst, lockIconCSS, symLand, symIdle, symWin, clearSymWins } from './fx';
+import { DOTS } from './respin';
+import { mxBurst, lockIconCSS, symLand, symWin, clearSymWins } from './fx';
 
 export const ART = ART_JSON as Record<string, string | null>;
 export const $ = <T extends HTMLElement = HTMLElement>(s: string) => document.querySelector(s) as T;
@@ -77,7 +78,7 @@ export function setGem(el: Element | null, v: number) {
 export function symHTML(name: string, v?: number) {
 	if (name === 'W') {
 		const val = v || 1;
-		return `<div class="sym W">${ART.W ? img('W') : `<span class="nm">WILD</span>${ph('W')}`}<span class="plate">WILD</span></div>${gemHTML(val)}<div class="lock"><i class="lkI" style="${lockIconCSS()}"></i>LOCKED</div>`;
+		return `<div class="sym W">${ART.W ? img('W') : `<span class="nm">WILD</span>${ph('W')}`}<span class="plate">WILD</span></div>${gemHTML(val)}<div class="lock"><i class="lkI" style="${lockIconCSS()}"></i><span class="lkT">LOCKED</span>${DOTS}</div>`;
 	}
 	const t = name[0];
 	if (ART[name]) return `<div class="sym ${t} ${name}">${img(name)}</div>`;
@@ -96,13 +97,12 @@ export function renderCell(r: number, row: number, cls?: string | null, delayMs 
 	d.style.left = p.x + 'px'; d.style.top = p.y + 'px';
 	d.innerHTML = symHTML(S.sym[r]?.[row] ?? 'L5', S.vals.get(k(r, row)));
 	d.style.visibility = S.full.has(r) ? 'hidden' : 'visible';
-	d.classList.remove('sprWin');
+	d.classList.remove('sprWin', 'spinning', 'noBlur');
 	if (cls === 'drop' && symLand(d, delayMs)) { d.classList.remove('drop'); return; }
 	if (cls) {
 		d.classList.remove(cls); void d.offsetWidth; d.classList.add(cls);
 		if (delayMs) (d.querySelector('.sym') as HTMLElement | null)?.style.setProperty('animation-delay', delayMs + 'ms');
 	}
-	symIdle(d);
 }
 export function renderOverlays(anim: boolean | number = false) {
 	const o = $('#overlays'); o.innerHTML = '';
@@ -116,8 +116,8 @@ export function renderOverlays(anim: boolean | number = false) {
 		if (ART[key]) d.classList.add('art');
 		d.innerHTML = (ART[key] ? `<div class="wart">${img(key)}</div>`
 			: g.reels.map((_, i) => `<div class="wfph" style="left:${i * S.cell}px;width:${S.cell}px"><span>ELF ${i + 1}</span></div>`).join('') + `<div class="mlabel">${key} placeholder · ${n} elves</div><div class="plate">WILD</div>`) +
-			g.values.map((v, i) => gemHTML(v, '', `right:calc(${(n - 1 - i) * S.cell}px + 4px)`)).join('') +
-			mxTotalHTML(`${g.values.map((v) => 'x' + v).join(' × ')} = x${g.product}`);
+			gemHTML(g.product, 'stack') + `<div class="ovrd">${DOTS}</div>`;
+		d.dataset.reels = g.reels.join(',');
 		if (!anim) d.style.animation = 'none';
 		o.appendChild(d);
 	});
@@ -127,11 +127,15 @@ export function renderOverlays(anim: boolean | number = false) {
 		d.style.left = pos(r, 0).x + 'px'; d.style.width = S.cell + 'px';
 		if (ART.WF) d.classList.add('art');
 		d.innerHTML = (ART.WF ? `<div class="wart">${img('WF')}</div>` : `<div class="wfph" style="left:0;width:100%"><span>FULL-REEL<br>WILD</span></div><div class="tag">WF placeholder</div><div class="plate">WILD</div>`) +
-			gemHTML(v);
+			gemHTML(v, 'stack') + `<div class="ovrd">${DOTS}</div>`;
+		d.dataset.reel = String(r);
 		if (anim !== r) d.style.animation = 'none';
 		o.appendChild(d);
 	});
 }
+/** The multiplier shown for reel r's stack (its own full-reel wild, or the merged group it belongs to). */
+export const ovMx = (r: number) => (document.querySelector<HTMLElement>(`.ov.full[data-reel="${r}"] .mx`) ||
+	[...document.querySelectorAll<HTMLElement>('.ov.merge')].find((o) => o.dataset.reels?.split(',').includes(String(r)))?.querySelector<HTMLElement>('.mx') || null);
 export function renderAll() {
 	for (let r = 0; r < REELS; r++) for (let row = 0; row < ROWS; row++) renderCell(r, row);
 	renderOverlays(false);

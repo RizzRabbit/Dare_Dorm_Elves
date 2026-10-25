@@ -1,69 +1,54 @@
-// Respin tracker: 3 small circles shown while a sticky-wild respin sequence runs (base game and feature spins).
-// Book semantics: each sequence allows at most 3 respins; respinStart carries `step` (1-based) and `remaining`.
-// Circles: empty ring = respin still available, filled = used. A new sequence (step 1 after a used one) empties
-// the circles with a quick visible reset before the first fill.
-// Placement: centred on the board's bottom bezel when it is deep enough, otherwise just below the frame.
-import { FX, rcFill, rcCSS } from './fx';
+// Respins remaining: 3 small dots on every locked wild (inside its LOCKED strip) and on each full-reel / merged
+// wild, shown only while a respin sequence runs. The count is per spin in the math (not per wild), so every wild
+// shows the same dots. Driven by respinStart.remaining from the book:
+//   sequence start -> all available dots lit (remaining + 1), then one dims for the respin starting now;
+//   each further respin dims one more; if the book ever reports more left than shown, they relight with a flash.
+// The current math caps each spin at 3 respins and never resets the count (respinStart.step + remaining = 3 in
+// every book), so the relight path does not fire with today's math.
+// State lives on <body> (class .respinning, data-rl = lit count) so freshly rendered cells/overlays pick it up.
+import { FX, rcFill, rcFlash } from './fx';
 import { hasSheet } from './sprite';
 const MAX = 3;
-let hideT = 0, fillT = 0;
-const el = () => document.getElementById('respinCtr') as HTMLElement | null;
+let dimT = 0, hideT = 0;
+const B = () => document.body;
+const lit = () => Number(B().dataset.rl ?? -1);
+const dotsAt = (i: number) => document.querySelectorAll<HTMLElement>(`.rd i:nth-child(${i + 1})`);
 
-export function placeRespin() {
-	const C = el(); if (!C || C.classList.contains('hidden')) return;
-	const fr = document.getElementById('frame')!.getBoundingClientRect();
-	const bd = document.getElementById('board')!.getBoundingClientRect();
-	const h = C.offsetHeight, w = C.offsetWidth;
-	const bezel = fr.bottom - bd.bottom;
-	const top = bezel >= h + 2 ? bd.bottom + (bezel - h) / 2 : fr.bottom + 4;
-	C.classList.toggle('below', bezel < h + 2);
-	document.body.classList.toggle('rcBelow', bezel < h + 2);
-	C.style.left = `${Math.round(bd.left + bd.width / 2 - w / 2)}px`;
-	C.style.top = `${Math.round(top)}px`;
+function setLit(n: number, anim: 'dim' | 'refill' | null) {
+	const prev = lit();
+	B().dataset.rl = String(n);
+	B().classList.add('respinning');
+	if (!anim || !hasSheet(FX)) return;
+	for (let i = 0; i < MAX; i++) {
+		const was = i < prev, on = i < n;
+		if (anim === 'dim' && was && !on) dotsAt(i).forEach((d) => rcFill(d, true));
+		if (anim === 'refill' && on && !was) dotsAt(i).forEach((d) => { rcFill(d); rcFlash(d); });
+	}
 }
 
-// Each circle shows a static frame of the rcfill sheet (empty / filled); a new fill plays the sheet forward,
-// a reset plays it backwards. Without the sheet the CSS fallback ring/fill (class .on) is used.
-function paint(C: HTMLElement, step: number, popIdx: number) {
-	const sp = hasSheet(FX); C.classList.toggle('sp', sp);
-	C.querySelectorAll<HTMLElement>('i').forEach((p, i) => {
-		p.classList.toggle('on', i < step);
-		if (!sp) return;
-		if (i === popIdx) rcFill(p); else { p.querySelectorAll('canvas').forEach((c) => c.remove()); p.style.cssText = rcCSS(i < step); }
-	});
-	C.dataset.step = String(step);
-	C.setAttribute('aria-label', `Respin ${step} of ${MAX}`);
+/** respinStart: `remaining` = respins left after the one starting now. */
+export function showRespin(_step: number, remaining: number) {
+	clearTimeout(dimT); clearTimeout(hideT);
+	const avail = Math.min(MAX, remaining + 1);
+	if (!B().classList.contains('respinning')) {
+		setLit(avail, null);
+		dimT = window.setTimeout(() => setLit(remaining, 'dim'), 380);
+	} else if (avail > lit()) {
+		setLit(avail, 'refill');
+		dimT = window.setTimeout(() => setLit(remaining, 'dim'), 520);
+	} else setLit(remaining, 'dim');
 }
-
-/** Show/update for respin `step` of 3 (`remaining` left after it). */
-export function showRespin(step: number, _remaining?: number) {
-	const C = el(); if (!C) return;
-	clearTimeout(hideT); clearTimeout(fillT);
-	const wasHidden = C.classList.contains('hidden');
-	const prev = wasHidden ? 0 : Number(C.dataset.step || 0);
-	C.classList.remove('hidden', 'fade', 'reset');
-	if (wasHidden) { paint(C, 0, -1); C.classList.add('fade'); }
-	placeRespin();
-	if (wasHidden) { void C.offsetWidth; C.classList.remove('fade'); }
-	if (!wasHidden && step <= prev) {
-		// a new sequence: visibly empty the circles, then fill the first
-		C.querySelectorAll<HTMLElement>('i.on').forEach((p) => { p.classList.remove('on'); if (hasSheet(FX)) rcFill(p, true); });
-		C.classList.add('reset');
-		fillT = window.setTimeout(() => { C.classList.remove('reset'); paint(C, step, step - 1); }, 300);
-	} else paint(C, step, step - 1);
-}
-
-/** Sequence over: hold the final state briefly, then fade out. */
-export function endRespin(delay = 900) {
-	const C = el(); if (!C || C.classList.contains('hidden')) return;
+/** Sequence over: hold the final state briefly, then hide. */
+export function endRespin(delay = 700) {
 	clearTimeout(hideT);
-	hideT = window.setTimeout(() => { C.classList.add('fade'); hideT = window.setTimeout(() => hideRespin(), 300); }, delay);
+	hideT = window.setTimeout(hideRespin, delay);
 }
 export function hideRespin() {
-	const C = el(); if (!C) return;
-	clearTimeout(hideT); clearTimeout(fillT);
-	C.classList.add('hidden'); C.classList.remove('fade', 'reset');
-	C.dataset.step = '0';
-	document.body.classList.remove('rcOn', 'rcBelow');
+	clearTimeout(dimT); clearTimeout(hideT);
+	B().classList.remove('respinning'); delete B().dataset.rl;
+	document.querySelectorAll('.rd canvas').forEach((c) => c.remove());
 }
+/** Kept for layout(); the dots live on the wilds now, nothing to place. */
+export function placeRespin() {}
 export const RESPIN_MAX = MAX;
+export const DOTS = '<span class="rd" aria-hidden="true"><i></i><i></i><i></i></span>';

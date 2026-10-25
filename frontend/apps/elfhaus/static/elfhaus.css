@@ -79,7 +79,7 @@ button.small{padding:3px 10px;font-size:12px}
   color:var(--ink);font-size:calc(var(--cell)*.1);padding:0 8px;border:2px solid var(--ink);border-radius:3px;letter-spacing:1px}
 .sym .nameTag{position:absolute;top:4px;left:5px;z-index:2;font-family:"Nunito";font-weight:900;font-size:calc(var(--cell)*.075);background:#2A2433cc;color:var(--cream);padding:0 5px;border-radius:4px}
 /* wild: same painted tile, NO glow. Subtle idle breathe only. */
-.sym.W img{animation:breathe 2.8s ease-in-out infinite;transform-origin:50% 60%}
+.sym.W img{transform-origin:50% 60%}
 .badge{position:absolute;right:3px;bottom:3px;z-index:3;min-width:calc(var(--cell)*.3);max-width:calc(var(--cell)*.42);padding:0 3px;text-align:center;font-family:"Nunito";font-weight:900;font-size:max(10px,calc(var(--cell)*.13));line-height:1.25;white-space:nowrap;
   color:var(--cream);background:var(--grain),linear-gradient(#D45A74,var(--rose) 60%,var(--rose2));border:2px solid var(--ink);border-radius:4px;box-shadow:0 1px 0 #2A243377}
 .cell.locked .plate{display:none}
@@ -88,8 +88,6 @@ button.small{padding:3px 10px;font-size:12px}
 .cell.win .sym{animation:winBob .7s ease-in-out 2;outline:3px solid var(--rose);outline-offset:-3px;background:#C8435F14}
 .cell.dim{filter:saturate(.35) brightness(.82);opacity:.55}
 .cell.out{opacity:0}
-.cell.replace .sym::after{content:"RESPIN";position:absolute;inset:0;z-index:4;display:flex;align-items:center;justify-content:center;
-  background:repeating-linear-gradient(135deg,#C8435F33 0 10px,#C8435F1a 10px 20px);color:var(--rose2);font-size:calc(var(--cell)*.13);letter-spacing:1px}
 .cell.drop .sym{animation:drop .32s cubic-bezier(.3,1.3,.5,1) both}
 .grow{animation:grow .5s ease-out}
 .plus{position:absolute;right:8px;top:-4px;z-index:5;font-family:"Cinzel";font-weight:800;color:var(--rose);font-size:calc(var(--cell)*.18);
@@ -105,8 +103,7 @@ button.small{padding:3px 10px;font-size:12px}
 .ov{position:absolute;top:0;height:100%;z-index:2;overflow:hidden;transform-origin:50% 0;animation:settle .5s ease-out;background:var(--paper);
   box-shadow:inset 2px 0 0 #2A243355, inset -2px 0 0 #2A243355}
 .wfph{position:absolute;top:0;height:100%;display:flex;align-items:center;justify-content:center;text-align:center;border-right:1px dashed #2A243340;
-  background:var(--paint),linear-gradient(#EEE6F8,var(--pink) 60%,#B49BD6);color:var(--ink);font-family:"Cinzel";font-weight:800;font-size:calc(var(--cell)*.14);
-  animation:breathe 3.2s ease-in-out infinite}
+  background:var(--paint),linear-gradient(#EEE6F8,var(--pink) 60%,#B49BD6);color:var(--ink);font-family:"Cinzel";font-weight:800;font-size:calc(var(--cell)*.14)}
 .wfph small{font-family:"Nunito";font-weight:800;font-size:.55em} .wfph:last-of-type{border-right:none}
 .ov .plate{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-family:"Cinzel";font-weight:800;background:var(--grain),linear-gradient(#E8E2F4,var(--plate));color:var(--ink);
   font-size:calc(var(--cell)*.15);padding:1px 16px;border:2px solid var(--ink);border-radius:3px;letter-spacing:1px;white-space:nowrap}
@@ -373,18 +370,6 @@ body.short #maxwin .mwText{bottom:3vh} body.short .mwTier{font-size:40px} body.s
 body.portrait #maxwin .mwVid{top:17vh;-webkit-mask-image:linear-gradient(#0000,#000 9%,#000 88%,#0000);mask-image:linear-gradient(#0000,#000 9%,#000 88%,#0000)}
 body.portrait #maxwin .mwText{bottom:16vh}
 
-/* ---- Respin tracker: 3 small circles (empty ring = remaining, pink fill = used). Matte, no glow. ---- */
-#respinCtr{--rd:14px;position:fixed;left:-999px;top:0;z-index:7;display:flex;gap:calc(var(--rd)*.55);
-  pointer-events:none;transition:opacity .25s ease}
-body.portrait #respinCtr{--rd:11px} body.short:not(.portrait) #respinCtr{--rd:12px}
-#respinCtr.hidden{display:none}
-#respinCtr.fade{opacity:0}
-#respinCtr i{position:relative;display:block;box-sizing:border-box;width:var(--rd);height:var(--rd);border-radius:50%}
-/* CSS fallback only when the fx sheet failed to load; normally each circle is a frame of the rcfill sprite sheet */
-#respinCtr:not(.sp) i{border:max(2px,calc(var(--rd)*.17)) solid #D9D2EA;background:#2A2236;box-shadow:0 0 0 1px #1A1420}
-#respinCtr:not(.sp) i.on{background:#E44792}
-#respinCtr.sp i.on{filter:drop-shadow(0 0 3px #F06AAE99)}
-body.portrait.rcBelow #stepToast,body.rcBelow #app #stepToast{margin-top:20px}
 
 /* ---- layout v2: one control panel centered under the board, in every orientation; viewport-relative sizes ----
    #ctrlTop/.side/#bar/#strip dissolve (display:contents) so every control and the balance/bet/win readouts sit in one
@@ -481,3 +466,109 @@ canvas.fxFill{position:absolute;inset:0;width:100%;height:100%}
 .sym:has(canvas.symFx) img{visibility:hidden}
 .cell.sprWin .sym{animation:none;outline:none;background:none}
 .sym:has(canvas.fxIdle) img{animation:none}
+
+/* ---- reel spin (reels.ts): the motion-blur strip sprite replaces the cell content while a reel turns ---- */
+.cell canvas.fxSpin{position:absolute;inset:0;width:100%;height:100%;z-index:5}
+.cell.spinning > :not(canvas.fxSpin){visibility:hidden}
+.cell.spinning::after{display:none}
+.cell.noBlur{opacity:.25}
+
+/* ---- respins remaining (respin.ts): 3 dots inside each LOCKED strip and at the foot of every stack; only while respinning.
+   Lit = respins still to come. A thin divider keeps the LOCKED word reading first. ---- */
+.rd{display:none;align-items:center;gap:max(2px,calc(var(--cell)*.022));flex:none}
+body.respinning .rd{display:inline-flex}
+.lock .rd{margin-left:max(3px,calc(var(--cell)*.03));padding-left:max(3px,calc(var(--cell)*.03));border-left:1px solid #C9B3EC55;height:1em}
+.rd i{position:relative;display:block;width:max(4px,calc(var(--cell)*.05));height:max(4px,calc(var(--cell)*.05));border-radius:50%;
+  background:#FF8CC4;box-shadow:0 0 0 1px #3A0F2C,0 0 4px #F06AAEcc}
+body[data-rl="2"] .rd i:nth-child(n+3),body[data-rl="1"] .rd i:nth-child(n+2),body[data-rl="0"] .rd i{background:#3A2A44;box-shadow:0 0 0 1px #C9B3EC66}
+.rd i canvas.fxFill{inset:-60%;width:220%;height:220%}
+.rd i canvas.rcFlash{position:absolute;left:50%;top:50%;width:420%;height:420%;translate:-50% -50%;z-index:2}
+.ovrd{position:absolute;left:50%;bottom:6px;translate:-50% 0;z-index:3;display:none;padding:3px 6px;border-radius:99px;
+  background:linear-gradient(#4A2458,#2E1638);border:1.5px solid #120A16;box-shadow:inset 0 0 0 1px #C9B3EC66}
+body.respinning .ovrd{display:flex}
+/* stacks show ONE combined multiplier, slightly larger than on a single wild */
+.ov .mx.stack{height:max(24px,calc(var(--cell)*.4))}
+#flyLayer{position:fixed;inset:0;pointer-events:none;z-index:30}
+#flyLayer .mx{position:fixed}
+
+/* ---- layout v3: Ante moved into the bonus menu. Symmetric 9-column panel: [menu turbo] · [− SPIN +] · [auto bonus];
+   the outer columns are the bonus emblem's width on both sides, so the spin button stays on the centre line. ---- */
+body{--bw:calc(var(--sp)*.86)}
+#app #hud{grid-template-columns:var(--bw) var(--hb) minmax(0,1fr) var(--hb) var(--sp) var(--hb) minmax(0,1fr) var(--hb) var(--bw)}
+#app #menuBtn{grid-area:1/1} #app #turboBtn{grid-area:1/2}
+#app #betDown{grid-area:1/4} #app #spinBtn{grid-area:1/5} #app #betUp{grid-area:1/6}
+#app #autoBtn{grid-area:1/8} #app #buyBtn{grid-area:1/9}
+#app #strip .m:nth-child(1){grid-column:1/4} #app #strip .m:nth-child(2){grid-column:4/7} #app #strip .m:nth-child(3){grid-column:7/10}
+#app #spinBtn{position:relative}
+/* armed mode: pink ring + soft glow on the spin button, a small tag (mode + ×) sitting on its top edge */
+#app #spinBtn.armed{border-color:#F06AAE;box-shadow:0 0 0 2px #3A0F2C,0 0 14px #F06AAE88}
+#armTag{grid-area:1/5;align-self:start;justify-self:center;z-index:3;translate:0 -55%;display:inline-flex;align-items:center;gap:4px;
+  padding:2px 6px 2px 8px;font-size:max(9px,calc(var(--sp)*.13));line-height:1.2;letter-spacing:.8px;border-radius:99px;
+  background:linear-gradient(#4A2458,#2E1638);border:1.5px solid #F06AAE;color:#FFE6F2;box-shadow:0 0 8px #F06AAE66}
+#armTag.hidden{display:none}
+#armTag svg{flex:none;width:.9em;height:.9em;stroke:#FFE6F2;stroke-width:2;fill:none}
+/* autoplay: spins left as a small number under the spin icon */
+#autoN{position:absolute;left:50%;bottom:9%;translate:-50% 0;font-size:max(10px,calc(var(--sp)*.15));font-weight:900;letter-spacing:.5px;color:#FFE6F2;
+  font-variant-numeric:tabular-nums;pointer-events:none}
+#app #spinBtn.auto svg{opacity:.55}
+
+/* ---- modal chrome shared by the bonus and autoplay panels: matte, compact, glow only on the active choice ---- */
+.mHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.mHead h2{margin:0!important}
+.mX{width:34px;height:34px;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;background:transparent;border:1.5px solid #6B6080}
+.mX svg{flex:none;min-width:16px;width:16px;height:16px;stroke:#E8E2F4;stroke-width:2.2;fill:none}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 12px;border:1px solid var(--hair);border-radius:8px;background:#ffffff08}
+.row .lbl{font-weight:800;letter-spacing:1px;font-size:14px;color:#ECE8F4}
+.row .lbl small{font-weight:800;color:#CFC9DA;opacity:.8;margin-left:6px}
+.sw{position:relative;width:46px;height:26px;padding:0;border-radius:99px;background:#2A2236;border:1.5px solid #6B6080;flex:none}
+.sw i{position:absolute;top:2px;left:2px;width:19px;height:19px;border-radius:50%;background:#C9C2D8;transition:left .15s ease}
+.sw.on{background:#C42A78;border-color:#F06AAE;box-shadow:0 0 8px #F06AAE66} .sw.on i{left:22px;background:#FFE6F2}
+.modal.bm{width:min(860px,94vw)} .modal.am{width:min(460px,94vw)}
+#anteRow.on{border-color:#F06AAE88}
+#buyCards{grid-template-columns:repeat(5,1fr);gap:10px;margin:12px 0}
+#buyCards.hidden{display:none}
+#buyCards .bcard{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 8px 10px;border-radius:10px;
+  background:#1A1722;border:1.5px solid #4A4058;text-align:center;transition:border-color .15s,box-shadow .15s}
+#buyCards .bcard:hover{border-color:#8A7CA0}
+#buyCards .bcard:focus-visible{outline:2px solid #C9B3EC;outline-offset:2px}
+#buyCards .bcard.armed{border-color:#F06AAE;box-shadow:0 0 0 1px #F06AAE,0 0 16px #F06AAE77;background:#26162C}
+#buyCards .bcard.off{opacity:.4;cursor:default}
+.bArt{display:block;width:100%;aspect-ratio:1;border-radius:7px;overflow:hidden;background:#2A2433}
+.bArt img{width:100%;height:100%;object-fit:cover;display:block}
+.bArt.tall img{object-position:50% 30%}
+.bName{font-family:"Cinzel";font-weight:800;font-size:13px;letter-spacing:.8px;color:#fff;margin-top:4px;line-height:1.15;min-height:2.3em;display:flex;align-items:center}
+.bPrice{font-weight:900;font-size:18px;color:#FFE6F2;font-variant-numeric:tabular-nums}
+.bX{font-size:11px;font-weight:800;color:#CFC9DA;opacity:.75}
+#bmBet{justify-content:center;gap:18px}
+#bmBet .ico{width:38px;height:38px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;background:#1A1722;border:1.5px solid #6B6080}
+#bmBet .ico svg{width:18px;height:18px;stroke:#E8E2F4;stroke-width:2.4;fill:none}
+#bmBet .v{display:flex;flex-direction:column;align-items:center;min-width:110px} #bmBet small{font-size:10px;letter-spacing:1px;color:#CFC9DA}
+#bmBet b{font-size:20px;font-variant-numeric:tabular-nums}
+body.portrait #buyCards{grid-template-columns:repeat(6,1fr);gap:7px}
+body.portrait #buyCards .bcard,body.portrait #buyCards .bcard:last-child{grid-column:span 2} body.portrait #buyCards .bcard:nth-child(4){grid-column:2/4}
+body.portrait .bName{font-size:11px} body.portrait .bPrice{font-size:15px}
+body.portrait #buyCards .bcard{padding:6px 5px 8px}
+body.short:not(.portrait) .modal.bm{padding:10px 16px} body.short:not(.portrait) .bArt{aspect-ratio:1.5}
+body.short:not(.portrait) #buyCards{margin:8px 0}
+/* autoplay panel */
+#autoCounts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.chip{padding:10px 0;border-radius:8px;background:#1A1722;border:1.5px solid #4A4058;font-size:16px;font-variant-numeric:tabular-nums}
+.chip.on{border-color:#F06AAE;background:#26162C;box-shadow:0 0 0 1px #F06AAE,0 0 12px #F06AAE66}
+.advBtn{display:flex;align-items:center;gap:6px;margin:0 auto 8px;background:transparent;border:none;font-size:12px;color:#CFC9DA;padding:4px 8px}
+.advBtn svg{width:12px;height:12px;stroke:#CFC9DA;stroke-width:1.8;fill:none;transition:rotate .15s} .advBtn.open svg{rotate:180deg}
+#adv{display:flex;flex-direction:column;gap:6px;margin-bottom:8px} #adv.hidden{display:none}
+#adv .lbl{font-size:13px;letter-spacing:.3px;text-transform:none}
+#adv input{width:120px;padding:7px 10px;border-radius:6px;border:1.5px solid #4A4058;background:#14121A;color:#fff;font:inherit;font-weight:800;text-align:right;font-variant-numeric:tabular-nums}
+#adv input:focus{outline:none;border-color:#C9B3EC} #adv input.bad{border-color:#E44792}
+.err{min-height:1.2em;margin:2px 0 6px!important;font-size:12px;color:#FF8CC4;text-align:center}
+.go{display:block;width:100%;padding:12px;border-radius:10px;background:#C42A78;border:1.5px solid #F06AAE;font-size:16px;letter-spacing:2px}
+.go:hover{background:#D23585} .go:disabled{background:#3A2A44;border-color:#4A4058}
+/* ---- info: payline mini-grids (game.ts buildRules, from LINES) ---- */
+.plGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px;margin:8px 0}
+.pl{margin:0;display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:7px;background:#ffffff08;border:1px solid var(--hair)}
+.pl figcaption{flex:none;min-width:1.6em;text-align:right;font-weight:900;font-size:13px;color:#CFC9DA;font-variant-numeric:tabular-nums}
+.pl svg{display:block;width:100%;max-width:90px;height:auto}
+.pl rect{fill:#2A2433;stroke:#4A4058;stroke-width:.6}
+.pl rect.on{fill:#C42A78;stroke:#F48FC0}
+.pl polyline{fill:none;stroke:#FFE6F2;stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round;opacity:.9;filter:drop-shadow(0 0 1.5px #F06AAE)}
+body.portrait .plGrid{grid-template-columns:repeat(3,1fr);gap:6px} body.portrait .pl{padding:5px 6px;gap:4px} body.portrait .pl figcaption{font-size:11px}

@@ -12,13 +12,15 @@ import {
 } from './config';
 import { money, mult, setCurrency, setLocale, isSocialCurrency } from './format';
 import { setSocial, isSocial, t } from './strings';
-import { $, S, ART, bet, buildCells, renderAll, resetWinMeter, setWinMeter, banner, wait } from './ui';
+import { $, S, ART, bet, buildCells, renderAll, renderOverlays, resetWinMeter, setWinMeter, banner, wait } from './ui';
 import { playBookEvents, endBonusUi } from './bookEventHandlerMap';
 import { initRoxy, placeRoxy } from './roxy';
 import { initLoader, preloadArt, track, loaderReady, hideLoader } from './loader';
 import { preloadMaxWin } from './maxwin';
 import { placeRespin } from './respin';
-import { loadAllFx, startGlints } from './fx';
+import { loadAllFx } from './fx';
+import { startSpin, markStopped } from './reels';
+import { hideRespin } from './respin';
 import type { BookEvent } from './typesBookEvent';
 
 const DISCLAIMER =
@@ -40,11 +42,26 @@ let replayCost = 1;
 // ---------- small helpers ----------
 const show = (sel: string, on: boolean) => $(sel).classList.toggle('hidden', !on);
 const modeCost = (m: ModeKey) => (m === 'ante' ? ANTE_COST : MODES[m]?.cost ?? 1);
-const spinMode = (): ModeKey => (S.ante ? 'ante' : 'base');
+// Activated mode (Stake-style): a bonus armed in the bonus menu, or Ante. It stays armed for every spin press
+// (and autoplay) until the player turns it off or picks another; buys and Ante are mutually exclusive.
+let armed: ModeKey | null = null;
+const spinMode = (): ModeKey => armed ?? (S.ante ? 'ante' : 'base');
+const SHORT: Partial<Record<ModeKey, string>> = { ante: 'ANTE', dare: 'DARE', double_dare: 'DOUBLE', triple_dare: 'TRIPLE', mystery: 'MYSTERY', egw: 'EGW' };
+function setArm(m: ModeKey | null, ante = false) {
+	armed = m; S.ante = !m && ante;
+	const mode = spinMode(), on = mode !== 'base';
+	$('#spinBtn').classList.toggle('armed', on);
+	const tag = $('#armTag'); tag.classList.toggle('hidden', !on);
+	($('#armTag .t') as HTMLElement).textContent = SHORT[mode] ?? '';
+	tag.setAttribute('aria-label', on ? `${MODE_LABEL[mode]} active, tap to turn off` : '');
+	$('#spinBtn').setAttribute('aria-label', on ? `Spin: ${MODE_LABEL[mode]} at ${money(bet() * modeCost(mode))}` : 'Spin');
+	setStrip();
+}
 function setStrip() {
 	$('#balance').textContent = S.replay ? '—' : money(S.balance);
 	$('#bet').textContent = money(bet() * (S.replay ? replayCost : modeCost(spinMode())));
-	$('#betLabel').textContent = t('betLabel') + (S.ante && !S.replay ? ` · ANTE ${fmtX(ANTE_COST)}` : '');
+	$('#betLabel').textContent = t('betLabel');
+	if (!$('#buyMenu').classList.contains('hidden')) paintBuy();
 }
 function message(title: string, body: string, opts: { reload?: boolean } = {}) {
 	$('#msgTitle').textContent = title; $('#msgBody').textContent = body;
@@ -61,10 +78,60 @@ function showError(error: any) {
 }
 function setBusy(b: boolean) {
 	S.busy = b; $('#spinBtn').classList.toggle('busy', b);
-	['#buyBtn', '#betUp', '#betDown', '#anteBtn'].forEach((s) => (($(s) as HTMLButtonElement).disabled = b || !sessionReady));
+	['#buyBtn', '#betUp', '#betDown', '#armTag', '#bmUp', '#bmDown'].forEach((s) => (($(s) as HTMLButtonElement).disabled = b || !sessionReady));
 	($('#menuBtn') as HTMLButtonElement).disabled = b;
 }
-const setAuto = () => { const b = $('#autoBtn'); b.dataset.n = S.auto ? String(S.auto) : ''; b.classList.toggle('on', S.auto > 0); };
+// ---------- autoplay (Stake-style panel) ----------
+// Counts only (no infinite: the RGS jurisdiction config has no flag that allows it). Optional stops, in currency:
+// net loss reached, a single round win at least X, balance up by X (net = balance now - balance at start, so the
+// cost of an armed bonus / Ante is included), and any feature trigger (natural or Mystery; with a bought bonus armed
+// the bought trigger itself doesn't count, or every buy would stop it). The spin button shows the spins left;
+// pressing spin (or the autoplay button, or Space) stops it.
+const AUTO_COUNTS = [10, 25, 50, 100, 250, 500, 1000];
+let autoPick = 10, featStop = false;
+const stops = { loss: 0, win: 0, up: 0, feat: false, start: 0 };
+let featHit = false;
+const setAuto = () => {
+	$('#autoBtn').classList.toggle('on', S.auto > 0); $('#spinBtn').classList.toggle('auto', S.auto > 0);
+	$('#autoN').textContent = S.auto > 0 ? String(S.auto) : '';
+	$('#spinBtn').setAttribute('aria-label', S.auto > 0 ? `Stop autoplay (${S.auto} left)` : 'Spin');
+};
+const stopAuto = () => { S.auto = 0; setAuto(); };
+const parseAmt = (v: string) => { const x = v.trim().replace(',', '.'); if (!x) return 0; return /^\d*\.?\d+$|^\d+\.$/.test(x) ? Number(x) : NaN; };
+function readStops() {
+	const f = { loss: parseAmt(($('#stLoss') as HTMLInputElement).value), win: parseAmt(($('#stWin') as HTMLInputElement).value), up: parseAmt(($('#stUp') as HTMLInputElement).value) };
+	let err = '';
+	(['loss', 'win', 'up'] as const).forEach((k) => {
+		const bad = !Number.isFinite(f[k]) || f[k] < 0 || f[k] > 1e9;
+		$({ loss: '#stLoss', win: '#stWin', up: '#stUp' }[k]).classList.toggle('bad', bad);
+		if (bad) err = 'Enter an amount, or leave it empty for off.';
+	});
+	if (!err && f.loss > 0 && f.loss < modeCost(spinMode()) * bet()) err = `Loss limit is below one spin (${money(modeCost(spinMode()) * bet())}).`;
+	$('#autoErr').textContent = err; ($('#autoStart') as HTMLButtonElement).disabled = !!err;
+	return err ? null : f;
+}
+function buildAuto() {
+	$('#autoCounts').innerHTML = AUTO_COUNTS.map((n) => `<button role="radio" aria-checked="${n === autoPick}" class="chip${n === autoPick ? ' on' : ''}" data-n="${n}">${n}</button>`).join('');
+	$('#autoCounts').querySelectorAll<HTMLElement>('.chip').forEach((c) => (c.onclick = () => { autoPick = Number(c.dataset.n); buildAuto(); }));
+	const sw = $('#stFeat'); sw.classList.toggle('on', featStop); sw.setAttribute('aria-checked', String(featStop));
+	['#stLoss', '#stWin', '#stUp'].forEach((id) => (($(id) as HTMLInputElement).placeholder = `Off · ${S.currency}`));
+	readStops();
+}
+function startAuto() {
+	const f = readStops(); if (!f || S.busy) return;
+	Object.assign(stops, f, { feat: featStop, start: S.balance });
+	show('#autoMenu', false);
+	S.auto = autoPick; setAuto(); round(spinMode());
+}
+/** After each autoplay round: the reason to stop, or '' to go on. */
+function autoStopReason(roundWin: number) {
+	const net = S.balance - stops.start;
+	if (stops.loss > 0 && -net >= stops.loss - 1e-9) return 'loss';
+	if (stops.win > 0 && roundWin >= stops.win - 1e-9) return 'win';
+	if (stops.up > 0 && net >= stops.up - 1e-9) return 'up';
+	if (stops.feat && featHit) return 'feature';
+	return '';
+}
 
 // ---------- RGS round ----------
 async function finishRound(round: any) {
@@ -80,6 +147,10 @@ async function round(mode: ModeKey) {
 	const cost = modeCost(mode) * bet();
 	if (S.balance + 1e-9 < cost) { S.auto = 0; setAuto(); message('INSUFFICIENT BALANCE', t('noFunds')); return; }
 	setBusy(true); resetWinMeter(); endBonusUi();
+	// base-game state never carries: clear last spin's stacks, then the reels start turning at the press
+	S.full.clear(); S.groups = []; S.vals.clear(); renderOverlays(false); hideRespin();
+	document.querySelectorAll('.cell').forEach((c) => c.classList.remove('locked'));
+	startSpin();
 	try {
 		const data: any = import.meta.env.DEV && url.mock
 			? await (await import('../mock/mockRgs')).mockBet({ currency: S.currency, amount: bet(), mode, forcedBook: url.book || undefined })
@@ -88,12 +159,15 @@ async function round(mode: ModeKey) {
 		if (data?.balance) S.balance = data.balance.amount / API_AMOUNT_MULTIPLIER;
 		setStrip();
 		const rd = data?.round;
-		await playBookEvents((rd?.state || []) as BookEvent[]);
+		const evs = (rd?.state || []) as BookEvent[];
+		featHit = evs.some((e: any) => e.type === 'freeSpinTrigger' && e.source !== 'buy') || evs.some((e: any) => e.type === 'mysteryResult' && e.outcome !== 'none');
+		await playBookEvents(evs);
 		await finishRound(rd);
+		if (S.auto > 0 && autoStopReason(S.meterX * bet())) stopAuto();
 	} catch (e) {
-		S.auto = 0; setAuto(); endBonusUi(); showError(e);
+		stopAuto(); endBonusUi(); markStopped(); renderAll(); showError(e);
 	} finally { setBusy(false); }
-	if (S.auto > 0) { S.auto--; setAuto(); if (S.auto) setTimeout(() => round(spinMode()), 300); }
+	if (S.auto > 0) { S.auto--; setAuto(); if (S.auto) setTimeout(() => { if (S.auto) round(spinMode()); }, 300); }
 }
 
 // ---------- startup ----------
@@ -129,7 +203,7 @@ async function resume(rd: any) {
 		const i = S.levels.findIndex((l) => Math.abs(l - amt) < 1e-9);
 		if (i >= 0) S.betIdx = i;
 	}
-	S.ante = rd.mode === 'ante'; $('#anteBtn').classList.toggle('on', S.ante);
+	setArm(null, rd.mode === 'ante');
 	setStrip(); banner('RESUMING YOUR LAST ROUND', 1600);
 	setBusy(true);
 	try { await wait(600); await playBookEvents(rd.state); await finishRound({ ...rd, active: true }); }
@@ -162,30 +236,46 @@ async function playReplay() {
 	finally { setBusy(false); b.disabled = false; b.textContent = 'PLAY AGAIN'; }
 }
 
-// ---------- buy menu (C18/C20/C21) ----------
+// ---------- bonus menu: Ante toggle, activate a bonus, bet -/+ with live prices ----------
+const CARD_ART: Partial<Record<ModeKey, string>> = { dare: 'W', double_dare: 'WM2', triple_dare: 'WM3', mystery: 'buy_icon', egw: 'WF' };
 function buildBuy() {
 	const off = !!S.jur.disabledBuyFeature;
 	$('#buyTitle').textContent = t('buyTitle');
-	$('#buyCards').innerHTML = BUY_MODES.map((m) => {
-		const c = modeCost(m), price = c * bet(), poor = price > S.balance + 1e-9;
-		const rtp = MODES[m]?.rtp;
-		const odds = m === 'mystery'
-			? `<ul class="mysteryOdds"><li>No bonus <b>${MYSTERY_ODDS.none}%</b></li><li>Double Dare <b>${MYSTERY_ODDS.double_dare}%</b></li><li>Triple Dare <b>${MYSTERY_ODDS.triple_dare}%</b></li><li>Hidden <b>${MYSTERY_ODDS.hidden}%</b></li></ul>` : '';
-		return `<div class="bcard${poor || off ? ' off' : ''}" data-m="${m}"><h3>${MODE_LABEL[m].toUpperCase()}</h3><p>${MODE_DESC[m]}</p>${odds}` +
-			`<div class="price">${money(price)}</div><div class="mult">${t('costLine', { x: mult(c) })}</div>` +
-			`<div class="rtp">RTP ${rtp != null ? (rtp * (rtp <= 1 ? 100 : 1)).toFixed(2) + '%' : 'pending final math'} · max ${MAX_WIN_X.toLocaleString('en-US')}x</div>` +
-			`<button data-m="${m}" ${poor || off ? 'disabled' : ''}>${t('buyBtn')}</button></div>`;
+	$('#anteCost').textContent = fmtX(ANTE_COST);
+	$('#buyCards').classList.toggle('hidden', off);
+	$('#buyCards').innerHTML = off ? '' : BUY_MODES.map((m) => {
+		const a = CARD_ART[m] && ART[CARD_ART[m]!];
+		return `<button class="bcard" data-m="${m}" aria-pressed="false"><span class="bArt${m === 'egw' ? ' tall' : ''}">${a ? `<img src="${a}" alt="" draggable="false">` : ''}</span>` +
+			`<span class="bName">${MODE_LABEL[m].toUpperCase()}</span><span class="bPrice"></span><span class="bX">${mult(modeCost(m))}</span></button>`;
 	}).join('');
-	$('#buyCards').querySelectorAll('button').forEach((b) => ((b as HTMLElement).onclick = () => {
-		const m = (b as HTMLElement).dataset.m as ModeKey;
-		const go = () => { show('#buyMenu', false); show('#buyConfirm', false); round(m); };
+	$('#buyCards').querySelectorAll<HTMLElement>('.bcard').forEach((b) => (b.onclick = () => {
+		const m = b.dataset.m as ModeKey;
+		if (b.classList.contains('off')) return;
+		if (armed === m) { setArm(null); return; } // tap the active card again to turn it off
+		const go = () => { show('#buyConfirm', false); setArm(m); show('#buyMenu', false); };
 		if (modeCost(m) <= CONFIRM_ABOVE_X) return go();
-		$('#buyConfirmText').textContent = t('confirm', { m: MODE_LABEL[m], p: money(modeCost(m) * bet()) });
-		$('#buyConfirmNote').textContent = m === 'mystery' ? 'Every Mystery Spin shows a 3-wild tease; the result was decided before the reveal and the odds are 50/37/10/3.' : '';
+		$('#buyConfirmText').textContent = `${MODE_LABEL[m]} · ${money(modeCost(m) * bet())} ${isSocial() ? 'per play' : 'per spin'}`;
+		$('#buyConfirmNote').textContent = m === 'mystery' ? `Every Mystery Spin shows a 3-wild tease; the result is decided before the reveal. Odds: No bonus ${MYSTERY_ODDS.none}% · Double Dare ${MYSTERY_ODDS.double_dare}% · Triple Dare ${MYSTERY_ODDS.triple_dare}% · Hidden ${MYSTERY_ODDS.hidden}%.` : '';
 		$('#buyYes').onclick = go;
 		show('#buyConfirm', true);
 	}));
+	paintBuy();
 }
+/** Live state: prices at the current bet, affordability, armed card, Ante switch. */
+function paintBuy() {
+	$('#bmBetV').textContent = money(bet()); $('#bmBet small').textContent = t('betLabel');
+	($('#bmDown') as HTMLButtonElement).disabled = S.busy || S.betIdx <= 0;
+	($('#bmUp') as HTMLButtonElement).disabled = S.busy || S.betIdx >= S.levels.length - 1;
+	const sw = $('#anteSw'); sw.setAttribute('aria-checked', String(S.ante)); sw.classList.toggle('on', S.ante);
+	$('#anteRow').classList.toggle('on', S.ante);
+	$('#buyCards').querySelectorAll<HTMLElement>('.bcard').forEach((b) => {
+		const m = b.dataset.m as ModeKey, price = modeCost(m) * bet();
+		(b.querySelector('.bPrice') as HTMLElement).textContent = money(price);
+		b.classList.toggle('off', price > S.balance + 1e-9);
+		b.classList.toggle('armed', armed === m); b.setAttribute('aria-pressed', String(armed === m));
+	});
+}
+function betStep(d: number) { if (S.busy) return; S.betIdx = Math.max(0, Math.min(S.levels.length - 1, S.betIdx + d)); setArm(armed, S.ante); }
 
 // ---------- rules (C14/C32/C33/C34) ----------
 function buildRules() {
@@ -195,17 +285,25 @@ function buildRules() {
 		`<tr><td>${MODE_LABEL[m]}</td><td>${mult(modeCost(m))}</td><td>${pct(MODES[m]?.rtp ?? null)}</td><td>${(MODES[m]?.maxWinX ?? MAX_WIN_X).toLocaleString('en-US')}x</td></tr>`).join('');
 	const pt = Object.entries(PAYTABLE).map(([s, p]) =>
 		`<tr><td>${ART[s] ? `<img class="ri" src="${ART[s]}" alt="">` : ''}${SYMBOL_NAMES[s]}</td>${p.map((v) => `<td>${mult(v / 20)}</td>`).join('')}</tr>`).join('');
-	const lines = LINES.map((ln, i) => `<span class="ln" title="Line ${i + 1}">${i + 1}: ${ln.map((r) => r + 1).join('-')}</span>`).join(' ');
+	// Paylines: one 5x4 mini-grid per line, drawn from LINES (the math config's line table), path cells filled + a line through them.
+	const C = 12, G = 2, W5 = 5 * C + 4 * G, H4 = 4 * C + 3 * G, ctr = (i: number) => i * (C + G) + C / 2;
+	const lines = LINES.map((ln, i) => {
+		const cells = Array.from({ length: 20 }, (_, j) => { const r = j % 5, row = Math.floor(j / 5), on = ln[r] === row;
+			return `<rect x="${r * (C + G)}" y="${row * (C + G)}" width="${C}" height="${C}" rx="2.5" class="${on ? 'on' : ''}"/>`; }).join('');
+		const path = ln.map((row, r) => `${ctr(r)},${ctr(row)}`).join(' ');
+		return `<figure class="pl" aria-label="Line ${i + 1}: rows ${ln.map((r) => r + 1).join('-')}"><figcaption>${i + 1}</figcaption>` +
+			`<svg viewBox="-1 -1 ${W5 + 2} ${H4 + 2}" aria-hidden="true">${cells}<polyline points="${path}"/></svg></figure>`;
+	}).join('');
 	const win = isSocial() ? 'wins' : 'pays';
 	$('#rulesTitle').textContent = 'GAME RULES';
 	$('#rulesBody').innerHTML = `
 <h3>How to play</h3>
 <p>5 reels × 4 rows with 20 fixed lines. Wins ${isSocial() ? 'are awarded' : 'pay'} left to right for 3, 4 or 5 matching symbols on a line, starting on the leftmost reel. Only the highest win per line counts. Line wins are multiplied by the ${isSocial() ? 'play amount' : 'bet'} per line (the total ${isSocial() ? 'play amount' : 'bet'} divided by 20).</p>
 <h3>Wilds and respins</h3>
-<p>Wilds substitute for every symbol. Each wild carries its own multiplier, starting at x1. A winning line through a wild triggers a respin: wilds lock, the other symbols of the winning lines respin, and everything else stays. Every locked wild that connects again gains +1. Up to 3 respins per spin; every step ${win} as it lands.</p>
-<p>Four wilds on one reel become a full-reel wild worth the sum of their multipliers. Adjacent full-reel wilds merge and multiply each other; non-adjacent ones add. A line's multiplier is the product of merged groups plus the sum of the other wilds it uses.</p>
+<p>Wilds substitute for every symbol. Each wild carries its own multiplier, starting at x1. A winning line through a wild triggers a respin: wilds lock, the other symbols of the winning lines respin, and everything else stays. Every locked wild that connects again gains +1. Up to 3 respins per spin; every step ${win} as it lands. While respins run, the three small dots on each locked wild and stack show the respins left in this spin. When a feature is close, the next reels hold a little longer before they stop.</p>
+<p>Four wilds on one reel become a full-reel wild worth the sum of their multipliers (they fly together into one number). A stack completed by wilds that all landed on the same spin is an instant stack. Adjacent full-reel wilds merge into one wide wild worth the product of their values, shown as one number; non-adjacent ones add. A line's multiplier is the product of merged groups plus the sum of the other wilds it uses.</p>
 <h3>Free spins</h3>
-<p>Dare ${START_FS.dare} · Double Dare ${START_FS.double_dare} · Triple Dare ${START_FS.triple_dare} · Hidden ${START_FS.hidden} free spins. Every new full-reel wild adds +2 spins, up to ${SPIN_CAP} spins in total. In Dare, wilds clear after each spin and the first completed full-reel wild upgrades the bonus once to Double Dare (+2 spins). In Double Dare, Triple Dare and Hidden all wilds stay locked.</p>
+<p>Dare ${START_FS.dare} · Double Dare ${START_FS.double_dare} · Triple Dare ${START_FS.triple_dare} · Hidden ${START_FS.hidden} free spins. Every new full-reel wild adds +2 spins, up to ${SPIN_CAP} spins in total. In Dare, wilds clear after each spin and the first completed full-reel wild upgrades the bonus once to Double Dare (+2 spins). In Double Dare, Triple Dare and Hidden all wilds stay locked, including any wilds carried in from the trigger spin.</p>
 <h3>Modes</h3>
 <p>${(['ante', ...BUY_MODES] as ModeKey[]).map((m) => `<b>${MODE_LABEL[m]}</b> (${mult(modeCost(m))}): ${MODE_DESC[m]}`).join('<br>')}</p>
 <table><tr><th>Mode</th><th>Cost</th><th>RTP</th><th>Max win</th></tr>${modeRows}</table>
@@ -213,9 +311,9 @@ function buildRules() {
 <h3>${isSocial() ? 'Win table' : 'Paytable'}</h3>
 <table><tr><th>Symbol</th><th>3</th><th>4</th><th>5</th></tr>${pt}</table>
 <p>Values shown in ${xb} for a full line.</p>
-<h3>Lines</h3><p class="lines">${lines}</p><p>Rows numbered 1 (top) to 4 (bottom).</p>
+<h3>Paylines</h3><div class="plGrid">${lines}</div><p>20 fixed lines, read left to right from the leftmost reel.</p>
 <h3>Controls</h3>
-<p>Spin with the round button${S.jur.disabledSpacebar ? '' : ' or the Space bar'}. − and + change the ${isSocial() ? 'play amount' : 'bet'}. Ante (${mult(ANTE_COST)}) raises the chance of a natural bonus; see Modes.${S.jur.disabledTurbo ? '' : ' Turbo speeds up animations.'}${S.jur.disabledAutoplay ? '' : ' Autoplay runs 10 spins and stops on any error or low balance; press it again to stop.'} Replays never change your balance.</p>
+<p>Spin with the round button${S.jur.disabledSpacebar ? '' : ' or the Space bar'}. − and + change the ${isSocial() ? 'play amount' : 'bet'}. The bonus button opens the bonus menu: switch Ante (${mult(ANTE_COST)}, raises the chance of a natural bonus) on or off, or tap a bonus to activate it; the menu shows each price at the current ${isSocial() ? 'play amount' : 'bet'} and has its own − and +. An active mode shows a small tag above the spin button and stays on for every spin (and autoplay) until you tap the tag, tap the bonus again, or pick another; each spin then costs that mode's price.${S.jur.disabledTurbo ? '' : ' Turbo speeds up animations.'}${S.jur.disabledAutoplay ? '' : ' Autoplay opens a panel: pick 10 to 1,000 spins and, under Advanced, optional stops on a net loss, a single win of at least an amount, a balance increase, or any feature trigger. Net loss and gain count every spin\'s full cost, including an active bonus or Ante. Autoplay also stops on any error or low balance; the spin button shows the spins left, and pressing it stops autoplay.'} Replays never change your balance.</p>
 <p>All characters are adults. Elfhaus is a Rizzin Games production.</p>
 <h3>Disclaimer</h3><p class="disc">${DISCLAIMER}</p>`;
 }
@@ -249,22 +347,32 @@ export function layout() {
 
 // ---------- wiring ----------
 function wire() {
-	$('#spinBtn').onclick = () => (S.replay ? playReplay() : round(spinMode()));
-	$('#betUp').onclick = () => { S.betIdx = Math.min(S.levels.length - 1, S.betIdx + 1); setStrip(); };
-	$('#betDown').onclick = () => { S.betIdx = Math.max(0, S.betIdx - 1); setStrip(); };
-	$('#anteBtn').onclick = () => { S.ante = !S.ante; $('#anteBtn').classList.toggle('on', S.ante); $('#anteBtn').setAttribute('aria-pressed', String(S.ante)); setStrip(); };
+	$('#spinBtn').onclick = () => { if (S.auto) return stopAuto(); S.replay ? playReplay() : round(spinMode()); };
+	$('#betUp').onclick = () => betStep(1);
+	$('#betDown').onclick = () => betStep(-1);
+	$('#bmUp').onclick = () => betStep(1);
+	$('#bmDown').onclick = () => betStep(-1);
+	$('#anteSw').onclick = () => { setArm(null, !S.ante); paintBuy(); };
+	$('#armTag').onclick = () => { if (!S.busy) setArm(null); };
 	$('#turboBtn').onclick = () => { S.turbo = !S.turbo; $('#turboBtn').classList.toggle('on', S.turbo); };
-	$('#autoBtn').onclick = () => { if (S.auto) { S.auto = 0; setAuto(); return; } if (S.busy) return; S.auto = 10; setAuto(); round(spinMode()); };
+	$('#autoBtn').onclick = () => { if (S.auto) return stopAuto(); if (S.busy) return; buildAuto(); show('#autoMenu', true); };
+	$('#autoClose').onclick = () => show('#autoMenu', false);
+	$('#autoStart').onclick = startAuto;
+	$('#advBtn').onclick = () => { const open = $('#adv').classList.toggle('hidden') === false; $('#advBtn').setAttribute('aria-expanded', String(open)); $('#advBtn').classList.toggle('open', open); };
+	$('#stFeat').onclick = () => { featStop = !featStop; buildAuto(); };
+	['#stLoss', '#stWin', '#stUp'].forEach((id) => ($(id).oninput = () => readStops()));
 	$('#buyBtn').onclick = () => { buildBuy(); show('#buyConfirm', false); show('#buyMenu', true); };
-	$('#buyClose').onclick = $('#buyNo').onclick = () => { show('#buyMenu', false); show('#buyConfirm', false); };
+	$('#buyClose').onclick = () => { show('#buyMenu', false); show('#buyConfirm', false); };
+	$('#buyNo').onclick = () => show('#buyConfirm', false);
 	$('#menuBtn').onclick = () => { buildRules(); show('#menu', true); };
 	$('#menuClose').onclick = () => show('#menu', false);
 	$('#replayPlay').onclick = () => playReplay();
 	addEventListener('keydown', (e) => {
 		if (e.code !== 'Space' || S.jur.disabledSpacebar) return;
-		const modal = ['#buyMenu', '#menu', '#msg'].some((s) => !$(s).classList.contains('hidden'));
+		const modal = ['#buyMenu', '#autoMenu', '#menu', '#msg'].some((s) => !$(s).classList.contains('hidden'));
 		if (modal) return;
 		e.preventDefault();
+		if (S.auto) { stopAuto(); return; }
 		if (e.repeat || S.busy) return;
 		if (!$('#intro').classList.contains('hidden')) { ($('#intro .cont') as HTMLElement).click(); return; }
 		S.replay ? playReplay() : round(spinMode());
@@ -272,15 +380,12 @@ function wire() {
 	addEventListener('resize', layout);
 }
 function applyJurisdiction() {
-	if (S.jur.disabledBuyFeature) $('#buyBtn').style.display = 'none';
 	if (S.jur.disabledAutoplay) $('#autoBtn').style.visibility = 'hidden';
 	if (S.jur.disabledTurbo) $('#turboBtn').style.visibility = 'hidden';
 	$('#buyBtn').setAttribute('aria-label', t('buyAria')); $('#buyBtn').title = t('buyAria');
 	$('#buyTitle').textContent = t('buyTitle');
 	$('#betDown').setAttribute('aria-label', t('betDown')); $('#betUp').setAttribute('aria-label', t('betUp'));
 	$('#betLabel').textContent = t('betLabel');
-	const ante = `Ante ${fmtX(ANTE_COST)}`;
-	$('#anteBtn').setAttribute('aria-label', `${ante} (higher bonus chance)`); $('#anteBtn').title = ante;
 }
 // Static idle board (no randomness, no win) shown until the first round.
 const IDLE = [['H1', 'L2', 'L4', 'H3'], ['L1', 'H2', 'L5', 'L3'], ['H4', 'L3', 'W', 'L1'], ['L5', 'H1', 'L2', 'H2'], ['L4', 'L1', 'H3', 'L5']];
@@ -289,7 +394,7 @@ export async function initGame() {
 	setLocale(url.lang);
 	initLoader(); preloadArt();
 	track(initRoxy(layout));
-	loadAllFx(track).then(() => { startGlints(); renderAll(); });
+	loadAllFx(track).then(() => renderAll());
 	track(document.fonts?.ready ?? Promise.resolve());
 	buildCells(); S.sym = IDLE.map((c) => [...c]); S.vals = new Map([[2 * 4 + 2, 1]]);
 	wire(); layout(); setBusy(true);

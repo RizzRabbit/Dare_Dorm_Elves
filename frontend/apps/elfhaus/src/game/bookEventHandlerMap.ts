@@ -6,55 +6,72 @@ import { roxy, roxyState } from './roxy';
 import { maxWinCelebration } from './maxwin';
 import { showRespin, endRespin, hideRespin } from './respin';
 import { mxBurst, lockFx, clearSymWins } from './fx';
-import { $, S, k, bet, wait, banner, toast, hideToast, bigWin, setWinMeter, clearLines, drawWins, renderCell, renderOverlays, cellEl, setGem } from './ui';
+import { timing, isSpinning, startSpin, markStart, markStopped, sinceStart, sleep, spinCell } from './reels';
+import { $, S, k, bet, wait, banner, toast, hideToast, bigWin, setWinMeter, clearLines, drawWins, renderCell, renderOverlays, cellEl, setGem, ovMx } from './ui';
+import { grab, combineInto } from './combine';
 
 const TL = (t: Tier) => TIER_LABEL[t].toUpperCase();
-const lockedText = (c: BookEventOf<'freeSpinTrigger'>['carried']) =>
-	[...c.fullReels.map((f) => `Reel ${f.reel + 1} full-reel wild x${f.value}`), ...c.singles.map((s) => `wild on reel ${s.reel + 1} x${s.value}`)].join(' · ');
 const setFsTotal = (n: number) => { const el = $('#fsCount'); el.textContent = el.textContent!.replace(/\/ \d+/, '/ ' + n); };
 const showFsBar = () => { S.inBonus = true; document.body.classList.add('inBonus'); $('#fsBar').classList.remove('hidden'); };
 export const endBonusUi = () => { document.body.classList.remove('inBonus'); $('#fsBar').classList.add('hidden'); $('#intro').classList.add('hidden'); S.inBonus = false; };
 
 type Handlers = { [T in BookEventType]: (ev: BookEventOf<T>) => Promise<void> };
 export const bookEventHandlerMap: Handlers = {
+	// Reels stop left to right (reels.ts timing); the spin press already started the blur in base play, free spins
+	// start it here. A reel flagged for anticipation holds a little longer before it stops (no text).
 	async reveal(ev) {
 		clearLines(); hideToast(); hideRespin();
-		S.sym = ev.board.map((col) => col.slice(1, 1 + ROWS).map((s) => s.name));
-		S.vals = new Map(); S.full = new Map(); S.groups = [];
-		ev.locked.fullReels.forEach((f) => S.full.set(f.reel, f.value));
-		ev.board.forEach((col, r) => col.slice(1, 1 + ROWS).forEach((s, row) => { if (s.wild && !S.full.has(r)) S.vals.set(k(r, row), s.multiplier || 1); }));
 		const lockedSingles = new Set(ev.locked.singles.map((s) => k(s.reel, s.row)));
-		for (let r = 0; r < REELS; r++) for (let row = 0; row < ROWS; row++) {
-			const locked = lockedSingles.has(k(r, row));
-			renderCell(r, row, locked ? null : 'drop', r * 70);
-			cellEl(r, row).classList.toggle('locked', locked);
-		}
+		const fullLocked = new Set(ev.locked.fullReels.map((f) => f.reel));
+		if (!isSpinning()) startSpin((r, row) => fullLocked.has(r) || lockedSingles.has(k(r, row)));
+		S.sym = ev.board.map((col) => col.slice(1, 1 + ROWS).map((s) => s.name));
+		S.vals = new Map(); S.full = new Map();
+		ev.locked.fullReels.forEach((f) => S.full.set(f.reel, f.value));
+		// merged groups whose stacks are all carried over stay merged (no re-merge animation every free spin)
+		S.groups = S.groups.filter((g) => g.reels.every((r) => S.full.has(r))).map((g) => {
+			const values = g.reels.map((r) => S.full.get(r)!); return { reels: g.reels, values, product: values.reduce((a, b) => a * b, 1) };
+		});
+		ev.board.forEach((col, r) => col.slice(1, 1 + ROWS).forEach((s, row) => { if (s.wild && !S.full.has(r)) S.vals.set(k(r, row), s.multiplier || 1); }));
 		renderOverlays(false);
-		if (ev.anticipation.some((a) => a > 0)) { banner('3 WILDS… THE RESPINS ARE THE REVEAL', 1600); if (ev.gameType === 'basegame') roxy('anticipation'); }
-		await wait(650);
+		const T = timing();
+		const ant = ev.anticipation.some((a) => a > 0);
+		if (ant && ev.gameType === 'basegame') roxy('anticipation');
+		const ref = performance.now(); let at = Math.max(0, T.first - sinceStart());
+		for (let r = 0; r < REELS; r++) {
+			if (r > 0) at += T.gap;
+			if (ev.anticipation[r] > 0) at += T.ant;
+			await sleep(at - (performance.now() - ref));
+			for (let row = 0; row < ROWS; row++) {
+				const locked = lockedSingles.has(k(r, row));
+				renderCell(r, row, locked || S.full.has(r) ? null : 'drop');
+				cellEl(r, row).classList.toggle('locked', locked);
+			}
+		}
+		markStopped();
+		await sleep(T.land);
 	},
 	async stackComplete(ev) {
+		// the four wild values ADD into the stack's value (SPEC: sum of the 4 cell values)
+		const flying = grab([0, 1, 2, 3].map((row) => cellEl(ev.reel, row).querySelector<HTMLElement>('.mx')));
 		S.full.set(ev.reel, ev.value);
 		for (let row = 0; row < ROWS; row++) { S.vals.delete(k(ev.reel, row)); cellEl(ev.reel, row).style.visibility = 'hidden'; }
 		renderOverlays(ev.reel);
-		banner(ev.instant ? `INSTANT STACK! REEL ${ev.reel + 1} = x${ev.value}` : `STACK BUILT! REEL ${ev.reel + 1} = ${ev.parts.join(' + ')} = x${ev.value}`, 1800);
-		await wait(900);
+		await combineInto(flying, ovMx(ev.reel));
+		await wait(250);
 	},
 	async mergeGroups(ev) {
-		const grew = ev.groups.some((g) => !S.groups.find((o) => o.reels.join() === g.reels.join()));
+		// adjacent stacks MULTIPLY into one number per group (SPEC: product within a group)
+		const fresh = ev.groups.filter((g) => !S.groups.find((o) => o.reels.join() === g.reels.join()));
+		const flights = fresh.map((g) => ({ g, c: grab(g.reels.map((r) => ovMx(r))) }));
 		S.groups = ev.groups.map((g) => ({ reels: [...g.reels], values: [...g.values], product: g.product }));
-		renderOverlays(grew);
-		if (grew && ev.groups.length) {
-			const g = ev.groups[ev.groups.length - 1];
-			banner(`MERGE! ${g.reels.length} ELVES · ${g.values.map((v) => 'x' + v).join(' × ')} = x${g.product}`, 1800);
-			await wait(900);
-		}
+		renderOverlays(fresh.length > 0);
+		await Promise.all(flights.map(({ g, c }) => combineInto(c, ovMx(g.reels[0]))));
+		if (fresh.length) await wait(250);
 	},
 	async winInfo(ev) {
 		drawWins(ev.wins);
-		const top = ev.wins.slice().sort((a, b) => b.win - a.win)[0];
 		const amt = Math.min(ev.totalWin / 100, MAX_WIN_X) * bet();
-		toast(`+${money(amt)}<small>${ev.wins.length} line${ev.wins.length > 1 ? 's' : ''}${top ? ` · best: line ${top.lineIndex}, ${top.count} × ${top.symbol}${top.meta?.lineMult > 1 ? ` ×${top.meta.lineMult}` : ''}` : ''}</small>`);
+		toast(`+${money(amt)}`);
 		await wait(1100);
 	},
 	async updateStepWin(ev) { setWinMeter(S.roundBase + ev.amount / 100); },
@@ -70,11 +87,12 @@ export const bookEventHandlerMap: Handlers = {
 			if (c.kind !== 'single') return;
 			const el = cellEl(c.reel, c.row);
 			setGem(el.querySelector('.mx'), c.to);
-			const p = document.createElement('div'); p.className = 'plus'; p.textContent = '+1'; el.appendChild(p);
 		});
-		if (ev.changes.some((c) => c.kind !== 'single')) document.querySelectorAll<HTMLElement>('.ov .mx:not(.total)').forEach((b) => mxBurst(b));
+		// burst only where a value changed: that full reel's multiplier, or a merged group's total
+		new Set(ev.changes.filter((c) => c.kind === 'full').map((c) => ovMx(c.reel))).forEach((mx) => mx && mxBurst(mx));
 		await wait(650);
 	},
+	// Respin: the cells being replaced go straight back to spinning (no marker text) and stop reel by reel.
 	async respinStart(ev) {
 		hideToast();
 		document.querySelectorAll('.cell').forEach((c) => c.classList.remove('win', 'dim')); clearSymWins();
@@ -83,26 +101,29 @@ export const bookEventHandlerMap: Handlers = {
 			const c = cellEl(s.reel, s.row);
 			if (!c.classList.contains('locked')) { c.classList.add('locked'); lockFx(c); }
 		});
-		ev.replace.forEach((p) => cellEl(p.reel, p.row).classList.add('replace'));
 		showRespin(ev.step, ev.remaining);
-		await wait(700);
-		ev.replace.forEach((p) => cellEl(p.reel, p.row).classList.add('out'));
-		await wait(250);
+		await wait(450);
+		markStart();
+		ev.replace.forEach((p) => spinCell(cellEl(p.reel, p.row), p.reel));
 	},
 	async respinReveal(ev) {
-		ev.newSymbols.forEach((s) => {
-			S.sym[s.reel][s.row] = s.name;
-			if (s.wild) S.vals.set(k(s.reel, s.row), s.multiplier || 1); else S.vals.delete(k(s.reel, s.row));
-			cellEl(s.reel, s.row).classList.remove('out', 'replace');
-			renderCell(s.reel, s.row, 'drop');
-		});
-		if (ev.newSymbols.some((s) => s.wild)) banner('NEW WILD LANDS!', 1000);
-		await wait(500);
+		const T = timing();
+		const reels = [...new Set(ev.newSymbols.map((s) => s.reel))].sort((a, b) => a - b);
+		const ref = performance.now(); let at = Math.max(0, T.resp - sinceStart());
+		for (const [i, r] of reels.entries()) {
+			if (i) at += T.gap;
+			await sleep(at - (performance.now() - ref));
+			ev.newSymbols.filter((s) => s.reel === r).forEach((s) => {
+				S.sym[s.reel][s.row] = s.name;
+				if (s.wild) S.vals.set(k(s.reel, s.row), s.multiplier || 1); else S.vals.delete(k(s.reel, s.row));
+				renderCell(s.reel, s.row, 'drop');
+			});
+		}
+		await sleep(T.land);
 	},
 	async respinEnd(ev) {
-		const why = { noConnection: 'no new connection', maxRespins: 'max 3 respins', wincap: 'max win reached' }[ev.reason] || ev.reason;
-		if (ev.step > 0) { banner(`RESPINS END · ${why}`, 1000); endRespin(); }
-		await wait(450);
+		if (ev.step > 0) endRespin();
+		await wait(350);
 	},
 	async setWin(ev) { const x = ev.amount / 100; if (x >= 10 && x < MAX_WIN_X) await bigWin(x); },
 	async setTotalWin(ev) { const x = Math.min(ev.amount / 100, MAX_WIN_X); setWinMeter(x); S.roundBase = x; },
@@ -111,8 +132,6 @@ export const bookEventHandlerMap: Handlers = {
 		const I = $('#intro');
 		(I.querySelector('.tierName') as HTMLElement).textContent = TL(ev.tier) + '!';
 		(I.querySelector('.spins') as HTMLElement).textContent = `${ev.totalFs} FREE SPINS`;
-		const carried = lockedText(ev.carried);
-		(I.querySelector('.carried') as HTMLElement).textContent = carried ? 'Carried in: ' + carried : '';
 		I.dataset.tier = ev.tier; I.classList.remove('hidden');
 		await Promise.race([wait(2600), new Promise<void>((res) => ((I.querySelector('.cont') as HTMLElement).onclick = () => res()))]);
 		I.classList.add('hidden');
@@ -126,34 +145,27 @@ export const bookEventHandlerMap: Handlers = {
 		await wait(250);
 	},
 	async freeSpinRetrigger(ev) {
-		banner(ev.addedFs ? `+${ev.addedFs} SPINS!` : 'NEW STACK · max 18 spins reached', 1500);
-		setFsTotal(ev.totalFs); await wait(900);
+		if (ev.addedFs) banner(`+${ev.addedFs} SPINS`, 1300);
+		setFsTotal(ev.totalFs); await wait(ev.addedFs ? 900 : 200);
 	},
 	async bonusUpgrade(ev) {
 		hideToast();
-		banner(`${TL(ev.from)} → ${TL(ev.to)} · +${ev.spinsAdded} SPINS`, 2200);
+		banner(`${TL(ev.to)} +${ev.spinsAdded} SPINS`, 1800);
 		$('#fsTier').textContent = TL(ev.to); setFsTotal(ev.totalFs); await wait(1400);
 	},
 	async freeSpinEnd(ev) {
-		banner(`BONUS COMPLETE · ${money(Math.min(ev.amount / 100, MAX_WIN_X) * bet())}`, 2200);
+		banner(`TOTAL WIN ${money(Math.min(ev.amount / 100, MAX_WIN_X) * bet())}`, 2200);
 		await wait(1600); endBonusUi();
 	},
-	async mysteryStart(ev) {
-		const o = ev.odds;
-		banner(`MYSTERY SPIN · No bonus ${o.none}% · Double Dare ${o.double_dare}% · Triple Dare ${o.triple_dare}% · Hidden ${o.hidden}%`, 2000);
-		await wait(900);
-	},
+	async mysteryStart() { await wait(200); },
 	async mysteryResult(ev) {
 		roxy(ev.outcome === 'none' ? 'disappointed' : 'excited');
-		banner(ev.outcome === 'none' ? 'MYSTERY RESULT: NO BONUS' : `MYSTERY RESULT: ${TL(ev.outcome)}!`, 1800);
-		await wait(1100);
+		if (ev.outcome !== 'none') banner(`${TL(ev.outcome)}!`, 1500);
+		await wait(ev.outcome === 'none' ? 500 : 1100);
 	},
-	async egwStart(ev) {
-		banner(`ELVES GONE WILD · full-reel wilds on reels ${ev.reels.map((r) => r + 1).join(', ')} (x${ev.value} each)`, 1800);
-		await wait(700);
-	},
-	async buyTriggerStart(ev) { banner(`${TL(ev.tier)} · TRIGGER SPIN`, 1600); await wait(700); },
-	async wincap() { setWinMeter(MAX_WIN_X); await maxWinCelebration(); },
+	async egwStart() { await wait(300); },
+	async buyTriggerStart() { await wait(200); },
+	async wincap() { hideRespin(); setWinMeter(MAX_WIN_X); await maxWinCelebration(); },
 	async finalWin(ev) { setWinMeter(Math.min(ev.amount / 100, MAX_WIN_X)); },
 };
 
