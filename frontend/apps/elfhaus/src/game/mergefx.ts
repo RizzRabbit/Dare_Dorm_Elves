@@ -1,6 +1,6 @@
 // Stack + merge choreography (display only; the math is already decided by the book).
-//   stackIn(reel)        : the 4 wild cells squash toward the reel centre, flash, and the full-height elf pops in
-//                          with an elastic overshoot.
+//   stackIn(reel)        : normal: the 4 single wilds ease together and crossfade into the full-reel elf (calm, no flash);
+//                          turbo: the 4 wild cells squash toward the reel centre, flash, and the elf pops in elastically.
 //   mergeIn(reels, vals) : anticipation (board dims, the adjacent stacks glow) → the stacks physically lean / slide
 //                          together on one stage (their letters and the inner borders go) → squash at contact under a
 //                          rising bloom → HARD cut to the merged group at the bloom's peak, which scales up from about the
@@ -22,7 +22,7 @@ import { burst } from './fx';
 import { mergeFx, stackForm, wfExpand, warmExpand } from './wildfx';
 import { grab } from './combine';
 import { toStage } from './stage';
-import { hasStack, stackOnce, stackLetters, stackWin, stackWinOff, stackPrepare, stackRelease } from './stacks';
+import { hasStack, stackOnce, stackLetters, stackWin, stackWinOff, stackPrepare, stackRelease, stackWarm } from './stacks';
 import { T } from './tempo';
 
 let skipping = false, running = 0;
@@ -61,8 +61,16 @@ function ring(x: number, big: boolean) {
 }
 const col = (x: number, w: number) => { const d = document.createElement('div'); d.className = 'wfxCol burstCol'; d.style.left = x + 'px'; d.style.width = w + 'px'; $('#board').appendChild(d); return d; };
 
-/** stackComplete: squash → flash → elastic pop of the full-reel elf. Call before the overlay is rendered. */
-export async function stackIn(reel: number, render: () => void) {
+/** stackComplete. Normal pace (spinfix, user: "the single stacked Wild reel should appear from the merging of the individually
+ * stacked wilds"): a vertical version of the reel merge, calm: short hold on the full reel → the 4 singles ease together
+ * toward the reel centre (gentle slide + a hair of vertical squeeze, ease-in-out, no hard squash) → at contact they
+ * crossfade into the full-reel elf (merge_idle art, scale 1.03 → 1, no elastic overshoot, no flash; stack_form is not
+ * used here because its first frames are a light-column flash) → the WILD letters fade up → the glowing frame draws in.
+ * Beats are written at the old pace and stretched x ANIM_TEMPO (A / sw): hold 0.3 s, lean 0.56 s, crossfade 0.6 s,
+ * letters 0.5 s, frame 0.6 s at normal speed. Turbo keeps the old flash-and-pop (below); tap snaps to the end state.
+ * `render(frameDelay)` swaps the cells for the overlay (and schedules its frame draw-in). */
+export async function stackIn(reel: number, render: (frameDelay?: number) => void) {
+	if (!S.turbo) return stackFromSingles(reel, render);
 	begin();
 	try {
 		const cells = cellsOf(reel), c = S.cell;
@@ -82,6 +90,45 @@ export async function stackIn(reel: number, render: () => void) {
 		if (ov) { ov.style.animation = 'none'; A(ov, [{ transform: 'scale(.9,.25)', opacity: 0 }, { transform: 'scale(1.06,1.08)', opacity: 1, offset: .45 }, { transform: 'scale(.98,.97)', offset: .72 }, { transform: 'none', opacity: 1 }], { duration: 480, easing: 'ease-out' }); wfExpand(ov); }
 		await sw(260);
 	} finally { end(); }
+}
+
+async function stackFromSingles(reel: number, render: (frameDelay?: number) => void) {
+	begin();
+	const cells = cellsOf(reel), c = S.cell;
+	try {
+		const probe = document.createElement('div'); probe.className = 'ov full'; probe.dataset.reel = String(reel);
+		const warm = stackWarm(probe); // idle + letters decode during the hold / lean (usually prefetched already)
+		// the singles' multiplier badges already have their fly clones (stackComplete grab): hide the originals so they
+		// don't double up while the cells move
+		cells.forEach((el) => el.querySelectorAll<HTMLElement>('.mx').forEach((m) => A(m, [{ opacity: 0 }, { opacity: 0 }], { duration: 1, fill: 'forwards' })));
+		await sw(150); // 1) the full reel reads as 4 landed wilds for a beat
+		// 2) the singles ease together toward the reel centre (rows 0/3 travel most), a little vertical squeeze at the end
+		cells.forEach((el, row) => {
+			const dy = (1.5 - row) * c * 0.2;
+			A(el, [{ transform: 'none' }, { transform: `translateY(${dy.toFixed(1)}px) scale(.985,.96)` }], { duration: 280, easing: 'cubic-bezier(.45,0,.55,1)', fill: 'forwards' });
+		});
+		await sw(280);
+		await Promise.race([warm, sw(300, true)]); // (rarely waits: they just rest together a moment longer)
+		// 3) contact: the overlay (merge_idle) fades up over the singles, which fade out under it
+		render(300); // frame draws in after the crossfade
+		const ov = ovOf(reel);
+		const lets = ov ? [...ov.querySelectorAll<HTMLElement>('canvas.stk_letters, .mLets')] : [];
+		cells.forEach((el, row) => {
+			el.style.visibility = ''; // render() hid them: keep them for the crossfade, hidden again in finally
+			const dy = (1.5 - row) * c * 0.2;
+			A(el, [{ transform: `translateY(${dy.toFixed(1)}px) scale(.985,.96)`, opacity: 1 }, { opacity: 1, offset: 0.45 }, { transform: `translateY(${(dy * 1.15).toFixed(1)}px) scale(.98,.95)`, opacity: 0 }], { duration: 300, easing: 'ease-in-out', fill: 'forwards' }); // stay under the rising elf, then go
+		});
+		if (ov) {
+			ov.style.animation = 'none';
+			A(ov, [{ transform: 'scale(1.03)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 300, easing: 'cubic-bezier(.3,.1,.3,1)' });
+			// 4) letters fade up softly after the body (the held last frame of letters_ignite, or the CSS letters)
+			lets.forEach((l) => A(l, [{ opacity: 0 }, { opacity: 1 }], { duration: 250, delay: 240, easing: 'ease-out', fill: 'backwards' }));
+		}
+		await sw(300);
+	} finally {
+		cells.forEach((el) => { el.getAnimations({ subtree: true }).forEach((a) => a.cancel()); if (S.full.has(reel)) el.style.visibility = 'hidden'; });
+		end();
+	}
 }
 
 /** mergeGroups (a fresh group): the full choreography. `apply` swaps the overlays to the merged one at the hit. */

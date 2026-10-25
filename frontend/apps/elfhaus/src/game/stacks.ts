@@ -98,7 +98,14 @@ export function stackRelease(ovs: HTMLElement[]) {
 }
 /** Wilds are on these reels (0-based) and they are not full yet: decode their stack_form sheets ahead of stackComplete. */
 export function stackPrefetch(reels: number[]) {
-	reels.forEach((r) => { const id = `stack_form_WF${suffix([r])}`; pin(listed.has(id) ? id : 'stack_form_WF'); });
+	// spinfix: at normal pace the stack forms from the singles and crossfades into merge_idle (stack_form has a light-column
+	// flash), so warm that reel's idle + letters instead; turbo keeps the stack_form one-shot.
+	const turbo = document.body.classList.contains('turbo');
+	reels.forEach((r) => (turbo ? ['stack_form'] : ['merge_idle', 'letters_ignite']).forEach((a) => { const id = `${a}_WF${suffix([r])}`; pin(listed.has(id) ? id : `${a}_WF`); }));
+}
+/** Decode this overlay's idle + letters sheets now (resolves when both are ready or absent). */
+export function stackWarm(ov: HTMLElement) {
+	return Promise.all([ensure(sheetId('merge_idle', ov)), ensure(sheetId('letters_ignite', ov))]).then(() => {});
 }
 /** merge_join ahead of the merge: every run of 2+ adjacent wild overlays (full reels or groups) that is not one group yet. */
 function prefetchJoins() {

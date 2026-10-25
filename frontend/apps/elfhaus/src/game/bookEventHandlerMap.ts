@@ -93,13 +93,15 @@ export const bookEventHandlerMap: Handlers = {
 	async stackComplete(ev) {
 		// the four wild values ADD into the stack's value (SPEC: sum of the 4 cell values)
 		const flying = grab([0, 1, 2, 3].map((row) => cellEl(ev.reel, row).querySelector<HTMLElement>('.mx')));
-		const render = () => {
+		const render = (frameDelay = 0) => {
 			S.full.set(ev.reel, ev.value);
 			for (let row = 0; row < ROWS; row++) { S.vals.delete(k(ev.reel, row)); cellEl(ev.reel, row).style.visibility = 'hidden'; }
 			renderOverlays(false);
-			frameIn(document.querySelector<HTMLElement>(`.ov.full[data-reel="${ev.reel}"]`)); // the stack lands: its frame draws in
+			frameIn(document.querySelector<HTMLElement>(`.ov.full[data-reel="${ev.reel}"]`), frameDelay); // the stack lands: its frame draws in
+			// normal pace: the sum gem waits for the flying badges (combineInto shows it), no "x4 x10" overlap during the crossfade
+			if (!S.turbo && flying.length) { const g = ovMx(ev.reel); if (g) g.style.visibility = 'hidden'; }
 		};
-		if (ev.instant) render(); else await stackIn(ev.reel, render); // squash → flash → elastic pop
+		if (ev.instant) render(); else await stackIn(ev.reel, render); // singles ease together → crossfade into the full-reel elf (turbo: squash → flash → pop)
 		await combineInto(flying, ovMx(ev.reel));
 		await wait(250);
 	},
