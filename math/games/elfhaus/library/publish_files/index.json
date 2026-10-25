@@ -32,7 +32,7 @@
         },
         {
             "name": "mystery",
-            "cost": 245.0,
+            "cost": 600.0,
             "events": "books_mystery.jsonl.zst",
             "weights": "lookUpTable_mystery_0.csv"
         },

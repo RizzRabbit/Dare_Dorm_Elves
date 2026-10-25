@@ -65,7 +65,7 @@ def _work(args):
     return out
 
 
-def simulate(mode, n, procs=8):
+def simulate(mode, n, procs=os.cpu_count() or 8):
     jobs = []
     if mode == "mystery":
         # book counts per bucket are a fixed split for coverage; the LUT normalises each bucket to MYSTERY_ODDS
@@ -85,7 +85,7 @@ def simulate(mode, n, procs=8):
 def write_publish(mode, res, files, weights):
     import zstandard
     os.makedirs(PUB, exist_ok=True)
-    cctx = zstandard.ZstdCompressor(level=19)
+    cctx = zstandard.ZstdCompressor(level=19, threads=-1)
     with open(os.path.join(PUB, f"books_{mode}.jsonl.zst"), "wb") as fo:
         with cctx.stream_writer(fo) as w:
             for fn in files:
