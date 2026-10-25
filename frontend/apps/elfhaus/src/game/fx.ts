@@ -58,8 +58,8 @@ export function litOn(cell: HTMLElement) {
 	const m = /^c(\d)(\d)$/.exec(cell.id);
 	if (m) { cell.style.setProperty('--tY', ((+m[1] - 2) * 3.5).toFixed(1) + 'deg'); cell.style.setProperty('--tX', ((1.5 - +m[2]) * 4.5).toFixed(1) + 'deg'); cell.style.setProperty('--shX', ((2 - +m[1]) * 4) + '%'); }
 	if (!cell.querySelector(':scope > .symSh')) { const sh = document.createElement('i'); sh.className = 'symSh'; cell.prepend(sh); }
-	if (cell.querySelector(':scope > .lit, .olWin')) return; // frameless art carries its own lit outline layer
-	const i = document.createElement('i'); i.className = 'lit'; i.dataset.s = symName(cell); cell.prepend(i);
+	// aifix: no round .lit glow disc any more (an old round-frame leftover); the win glow is the symbol's own outline
+	// sprite (.symGlow, <sym>_glow art, ui.ts), shown by .cell.win in CSS.
 }
 /** Impact bursts (fx_burst, glow baked; frame-shape independent): land 1.5x cell (wild / scatter landing),
  * lock 1.9x (wild locks or merges), pop 0.9x (win-cell pop). Drawn above the symbol, centred on the host. */
@@ -80,8 +80,8 @@ export function clearSymWins() {
 
 /** Multiplier increase: burst sheet behind the lettering, centred on the text. */
 export function mxBurst(mx: HTMLElement) {
-	const c = Number(mx.dataset.cx || 70);
-	play(FX, 'mxburst', mx, { cls: 'fxBurst', style: `left:${c}%`, prepend: true }); // the gem is a light source: its ring flash stays
+	// aifix (audit 18, circle leftovers): the mxburst thorn-ring flash is off; the lettering's own pink glow carries the growth
+	void mx;
 	// aifix: no four-point star glint over the gem (mxGlint stays exported, unused)
 }
 // Glint anchors (percent of the .mx box) relative to the text span: [fraction along text, y%].

@@ -906,3 +906,12 @@ body{--at:2} body.turbo{--at:1}
 .cell.wild::before{content:none;display:none}
 .cell.wLand .sym{animation:wPop calc(.28s*var(--at,2)) cubic-bezier(.3,1.4,.5,1)}
 /* ===== end aifix wild landing ===== */
+/* ===== aifix: old round-frame (circle symbol) leftovers removed (audit 18). The frameless cutouts carry no disc, so no
+   ring, disc or round clip is drawn round a cell any more: the round win glow disc (.lit), the round clip on winning art,
+   the round LOCKED ring (the LOCKED tag stays), the merge pulse ring (.mRing, mergefx) and the single-wild neon ring. */
+.cell .lit{display:none}
+.cell.win .sym.art{border-radius:0}
+.cell.locked::after{content:none;display:none}
+.mRing{display:none}
+.cell.wild::before{content:none;display:none}
+canvas.wfxRing{display:none}

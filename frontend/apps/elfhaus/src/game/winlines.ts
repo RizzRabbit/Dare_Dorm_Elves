@@ -74,7 +74,7 @@ export const linesActive = () => active;
 /** Small floating amount over the middle of the line's winning cells (rises and fades in; transform/opacity only). */
 function label(pos: { reel: number; row: number }[], txt: string) {
 	const el = document.createElement('div'); el.className = 'wlAmt'; el.innerHTML = `<b></b>`; el.firstElementChild!.textContent = txt;
-	setTimeout(() => el.isConnected && play('fx_winplate_glint', 'glint', el, { cls: 'wlGlint', prepend: false }), T(250));
+	// aifix (audit 1): no win-plate glint (its sheet carries a four-point star)
 	const m = pos[Math.floor((pos.length - 1) / 2)], W = REELS * S.cell;
 	el.style.left = Math.max(S.cell * .6, Math.min(W - S.cell * .6, m.reel * S.cell + S.cell / 2)) + 'px'; el.style.top = (m.row * S.cell + S.cell * .5) + 'px';
 	$('#board').appendChild(el); return el;

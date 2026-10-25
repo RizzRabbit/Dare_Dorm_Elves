@@ -17,8 +17,8 @@ export function featOpen(fx: HTMLElement | null) {
 }
 export function featBurst(fx: HTMLElement | null) {
 	if (!fx || !hasSheet(ID)) return;
-	let b = fx.querySelector<HTMLElement>('.ffBurst'); if (!b) { b = document.createElement('div'); b.className = 'ffBurst'; fx.appendChild(b); }
-	play(ID, 'burst', b, { cls: 'ffFill' });
+	// aifix (audit 18, circle leftovers): the spoked ring burst behind banner titles is off; the title's own neon stays
+	void play;
 }
 /** Star glints over a title that just swapped in. */
 export function featPop(title: HTMLElement | null) {
