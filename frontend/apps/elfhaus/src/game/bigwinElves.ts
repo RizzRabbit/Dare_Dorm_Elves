@@ -7,7 +7,7 @@ import { loadSheet, hasSheet, play, stop } from './sprite';
 export const BIGWIN_ELVES_MIN_X = 1000;
 const ID = 'bigwin_group';
 const atlases = import.meta.glob('./bigwin/*.json', { eager: true, import: 'default' }) as Record<string, any>;
-const urls = import.meta.glob('../../assets/bigwin/*.webp', { eager: true, query: '?url', import: 'default' }) as Record<string, string>;
+const urls = import.meta.glob('../assets/bigwin/*.webp', { eager: true, query: '?url', import: 'default' }) as Record<string, string>;
 const url = Object.entries(urls).find(([k]) => k.endsWith(`/${ID}.webp`))?.[1];
 const atlas = Object.entries(atlases).find(([k]) => k.endsWith(`/${ID}.json`))?.[1];
 

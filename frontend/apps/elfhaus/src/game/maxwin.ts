@@ -10,7 +10,7 @@ import { loadSheet, hasSheet, play, stop, unloadSheet, type Anim, type Atlas } f
 
 // atlases live outside ./fx/ on purpose so fx.ts doesn't load them on the loading screen
 const ATL = import.meta.glob('./maxwin/*.json', { eager: true, import: 'default' }) as Record<string, Atlas>;
-const IMG = import.meta.glob('../../assets/maxwin/*.webp', { eager: true, import: 'default', query: '?url' }) as Record<string, string>;
+const IMG = import.meta.glob('../assets/maxwin/*.webp', { eager: true, import: 'default', query: '?url' }) as Record<string, string>;
 const ids = Object.keys(ATL).map((p) => p.split('/').pop()!.replace('.json', ''));
 const src = (id: string) => Object.entries(IMG).find(([p]) => p.endsWith('/' + id + '.webp'))?.[1] || '';
 
@@ -21,7 +21,7 @@ const COUNT_MS = 4200, COUNT_AT = 600;
 
 let loading: Promise<void> | null = null;
 export function preloadMaxWin() {
-	const go = () => { loading ??= Promise.all(ids.map((id) => hasSheet(id) ? 0 : loadSheet(id, src(id), ATL['./maxwin/' + id + '.json']).catch(() => {}))).then(() => {}); };
+	const go = () => { loading ??= Promise.all(ids.map((id) => hasSheet(id) ? 0 : loadSheet(id, src(id), ATL['./maxwin/' + id + '.json']).catch((e) => console.warn('maxwin sheet', id, e)))).then(() => {}); };
 	const ric = (window as any).requestIdleCallback as ((f: () => void, o?: object) => void) | undefined;
 	setTimeout(() => (ric ? ric(go, { timeout: 4000 }) : go()), 1500);
 }
