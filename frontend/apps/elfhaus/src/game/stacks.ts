@@ -18,6 +18,10 @@
 //   merge_join decodes as soon as two or more adjacent wild overlays are on the board (during the 2nd stack_form);
 //   stack_form decodes when stackPrefetch() reports wilds on that reel (reveal / respin reveal); merge_win when the
 //   win starts (the CSS win outline covers the decode). A sheet no overlay / prefetch needs for FREE_MS is closed.
+//   Released AT ONCE (drop): a stack_form / merge_join when its one-shot ends; a superseded merge_join prefetch (the run grew);
+//   the singles' sheets at the merge's lean (stackRelease: the stage holds snapshots); the group's merge_join when its
+//   merge_win starts; merge_win when the win ends. So merge_win is never resident with merge_join: the 5-wide peak is
+//   join + idle + letters (29.2 MB) at the cut, idle + letters + win (20.4 MB) during a win.
 // Letters are a separate layer above the body: idle / join keep the hips rigid after the letters light up; merge_win
 // bakes the letters into its frames, so the letters layer is hidden while it plays. letters_ignite restarts with
 // stack_form (its leading blank frames wait for the build-up to finish).
@@ -75,6 +79,21 @@ function run(a: StackAnim, ov: HTMLElement, layer: 'body' | 'letters' | 'win', o
 	return an;
 }
 const pin = (id: string) => { if (listed.has(id)) { pins.set(id, performance.now() + PIN_MS); void ensure(id); } };
+const ANIMS: StackAnim[] = ['stack_form', 'merge_join', 'letters_ignite', 'merge_idle', 'merge_win'];
+/** Close these sheets now unless one is playing or a shown overlay (not in `skip`, not hidden) still needs it. */
+function drop(ids: string[], skip: HTMLElement[] = []) {
+	const need = new Set<string>(playing);
+	document.querySelectorAll<HTMLElement>('#overlays .ov').forEach((ov) => {
+		if (skip.includes(ov) || ov.style.visibility === 'hidden') return;
+		need.add(sheetId('merge_idle', ov)); need.add(sheetId('letters_ignite', ov)); if (ov.classList.contains('win')) need.add(sheetId('merge_win', ov));
+	});
+	ids.forEach((id) => { if (need.has(id)) return; pins.delete(id); joinPins.delete(id); if (hasSheet(id)) unloadSheet(id); });
+}
+const joinPins = new Set<string>();
+/** A merge's lean took snapshots of these overlays: close every sheet of theirs that nothing shown still needs. */
+export function stackRelease(ovs: HTMLElement[]) {
+	drop([...new Set(ovs.flatMap((ov) => ANIMS.map((a) => sheetId(a, ov))))], ovs);
+}
 /** Wilds are on these reels (0-based) and they are not full yet: decode their stack_form sheets ahead of stackComplete. */
 export function stackPrefetch(reels: number[]) {
 	reels.forEach((r) => { const id = `stack_form_WF${suffix([r])}`; pin(listed.has(id) ? id : 'stack_form_WF'); });
@@ -84,13 +103,17 @@ function prefetchJoins() {
 	const ovs = [...document.querySelectorAll<HTMLElement>('#overlays .ov.full[data-reel], #overlays .ov.merge[data-reels]')];
 	const owner = new Map<number, HTMLElement>();
 	ovs.forEach((o) => reelsOf(o).forEach((r) => owner.set(r, o)));
-	const occ = [...owner.keys()].sort((a, b) => a - b);
+	const occ = [...owner.keys()].sort((a, b) => a - b), now = new Set<string>();
 	for (let i = 0; i < occ.length;) {
 		let j = i; while (j + 1 < occ.length && occ[j + 1] === occ[j] + 1) j++;
 		const run = occ.slice(i, j + 1);
-		if (run.length > 1 && new Set(run.map((r) => owner.get(r))).size > 1) { const id = `merge_join_WM${run.length}${suffix(run)}`; pin(listed.has(id) ? id : `merge_join_WM${run.length}`); }
+		if (run.length > 1 && new Set(run.map((r) => owner.get(r))).size > 1) { const id0 = `merge_join_WM${run.length}${suffix(run)}`, id = listed.has(id0) ? id0 : `merge_join_WM${run.length}`; now.add(id); if (!joinPins.has(id)) { joinPins.add(id); pin(id); } }
 		i = j + 1;
 	}
+	// the run grew (2 -> 3 wide ...): the narrower join prefetch is superseded. (When the run became one group, its join is
+	// about to play: stackOnce drops it when it ends.)
+	const old = now.size ? [...joinPins].filter((id) => !now.has(id) && !playing.has(id) && !loading.has(id)) : [];
+	if (old.length) drop(old);
 }
 /** A merge of these reels (0-based) is about to land: decode the merged overlay's join, idle and letters sheets now. */
 export function stackPrepare(reels: number[]) {
@@ -132,7 +155,8 @@ export function stackIdle(ov: HTMLElement) {
 /** A one-shot (stack_form / merge_join) and then the idle loop. Resolves when the one-shot ends (or at once if absent). */
 export function stackOnce(a: 'stack_form' | 'merge_join', ov: HTMLElement) {
 	return new Promise<void>((res) => {
-		if (!run(a, ov, 'body', { onEnd: () => { run('merge_idle', ov, 'body', { loop: true }); res(); } })) return res();
+		const id = sheetId(a, ov);
+		if (!run(a, ov, 'body', { onEnd: () => { run('merge_idle', ov, 'body', { loop: true }); drop([id]); res(); } })) return res();
 		if (a === 'stack_form') stackLetters(ov); // re-ignite: its blank lead-in waits for the build-up
 	});
 }
@@ -149,10 +173,12 @@ export function stackWin(ov: HTMLElement) {
 		if (run('merge_win', ov, 'win', { loop: true })) { const l = live.get(ov)?.letters; if (l) l.cv.style.opacity = '0'; }
 	};
 	const id = sheetId('merge_win', ov);
+	if (ov.classList.contains('merge')) drop([sheetId('merge_join', ov)]); // never resident together with merge_win (peak)
 	if (hasSheet(id)) go(); else if (listed.has(id)) void ensure(id).then(go);
 }
 export function stackWinOff(ov: HTMLElement) {
 	const s = live.get(ov), w = s?.win; if (w && !w.done) stop(w);
 	if (s?.letters) s.letters.cv.style.opacity = '';
+	drop([sheetId('merge_win', ov)], [ov]); // released right away (another winning overlay that shares it keeps it)
 	sweepSoon();
 }

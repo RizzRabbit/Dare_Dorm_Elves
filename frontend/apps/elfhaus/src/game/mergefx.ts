@@ -20,7 +20,7 @@ import { burst } from './fx';
 import { mergeFx, stackForm, wfExpand, warmExpand } from './wildfx';
 import { grab } from './combine';
 import { toStage } from './stage';
-import { hasStack, stackOnce, stackLetters, stackWin, stackWinOff, stackPrepare } from './stacks';
+import { hasStack, stackOnce, stackLetters, stackWin, stackWinOff, stackPrepare, stackRelease } from './stacks';
 
 let skipping = false, running = 0;
 const anims = new Set<Animation>();
@@ -91,13 +91,17 @@ export async function mergeIn(reels: number[], values: number[], product: number
 		B.classList.add('mAnt');
 		const olds = [...new Set(reels.map(ovOf))].filter((o): o is HTMLElement => !!o);
 		olds.forEach((o) => { const g = document.createElement('i'); g.className = 'ovGlow'; o.appendChild(g); A(g, [{ opacity: 0 }, { opacity: 1 }], { duration: 220, fill: 'forwards' }); });
+		// the singles' badges: fly clones made now (positions) but kept hidden until recombine; the originals stay until the
+		// lean hides their overlays. So exactly one badge per reel shows before the lean, none during it, one gem after.
 		const badges = grab(reels.map((r) => ovMx(r)));
-		const warm = stackPrepare(reels); // the group's join / idle / letters sheets decode during the anticipation + lean
+		badges.forEach((g) => (g.style.opacity = '0'));
 		await sw(260);
 		// 2) the singles physically move: snapshots of their bodies on ONE stage over the merged area (no inner borders; their
 		//    own letters fade as the lean starts), elastic lean / slide toward the centre, then a squash at contact
 		const mid = lo + (n - 1) / 2;
 		stage = leanStage(olds);
+		stackRelease(olds); // the stage holds snapshots: the singles' sheets close before the group's decode (memory peak)
+		const warm = stackPrepare(reels); // the group's join (usually prefetched already) / idle / letters decode during the lean
 		const parts = stage.parts.map((pt) => {
 			const d = (mid - pt.rc) * step, L = d * (n >= 4 ? 0.2 : 0.26), dir = Math.sign(d);
 			pt.lets.forEach((l) => A(l, [{ opacity: 1 }, { opacity: 0 }], { duration: 110, fill: 'forwards' }));
@@ -204,8 +208,10 @@ async function recombine(gems: HTMLElement[], target: HTMLElement | null, values
 	await Promise.all(gems.map((g, i) => {
 		const r = g.getBoundingClientRect(), k = r.width ? tr.width / r.width : 1; // getBoundingClientRect: same (screen) space for both
 		const sc = toStage(r).width / (r.width || 1), dx = (tr.left - r.left) * sc, dy = (tr.top - r.top) * sc, lift = g.closest('.ov') ? S.cell * 0.14 : -S.cell * 0.3; // inside an overlay (overflow hidden) it dips instead
-		return A(g, [{ transform: 'translate(0,0) scale(1)', opacity: 1 }, { transform: `translate(${dx * 0.5}px,${dy * 0.5 + lift}px) scale(1.12)`, offset: .5 }, { transform: `translate(${dx}px,${dy}px) scale(${k})`, opacity: 1 }],
-			{ duration: 280, delay: i * 80, easing: 'cubic-bezier(.45,0,.35,1)', fill: 'forwards' }).finished.catch(() => {}).then(async () => {
+		const hid = g.style.opacity === '0'; g.style.opacity = ''; // mergeIn's clones were hidden through the lean: they fade in at their corner, then fly
+		const here = Math.hypot(dx, dy) < 6; // the clone already sits on the group's gem (first reel): it simply becomes the gem
+		return A(g, here ? [{ opacity: 0 }, { opacity: 0 }] : [{ transform: `translate(0,0) scale(${hid ? 0.8 : 1})`, opacity: hid ? 0 : 1 }, { transform: 'translate(0,0) scale(1)', opacity: 1, offset: .18 }, { opacity: 1, offset: .5 }, { transform: `translate(${dx * 0.5}px,${dy * 0.5 + lift}px) scale(1.12)`, offset: .58 }, { opacity: 0, offset: .78 }, { transform: `translate(${dx}px,${dy}px) scale(${k})`, opacity: 0 }], // fades into the gem: never two badges on one corner
+			{ duration: here ? 1 : 340, delay: i * 80, easing: 'cubic-bezier(.45,0,.35,1)', fill: 'both' }).finished.catch(() => {}).then(async () => {
 			g.style.opacity = '0';
 			const last = i === gems.length - 1, v = last ? product : prodTo(values, i);
 			if (!last) { target.style.opacity = ''; setGem(target, v, false); A(target, [{ transform: 'scale(1)' }, { transform: 'scale(1.18)', offset: .4 }, { transform: 'scale(1)' }], { duration: 200 }); return; }
