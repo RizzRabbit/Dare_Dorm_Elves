@@ -361,5 +361,20 @@
   ],
   "fx_winplate_glint": [
     "assets/final/fx/fx_winplate_glint.webp"
+  ],
+  "title_bigwin": [
+    "assets/final/titles/title_bigwin.webp"
+  ],
+  "title_megawin": [
+    "assets/final/titles/title_megawin.webp"
+  ],
+  "title_superwin": [
+    "assets/final/titles/title_superwin.webp"
+  ],
+  "title_epicwin": [
+    "assets/final/titles/title_epicwin.webp"
+  ],
+  "title_legendarywin": [
+    "assets/final/titles/title_legendarywin.webp"
   ]
 }

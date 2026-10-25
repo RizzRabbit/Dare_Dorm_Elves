@@ -973,3 +973,38 @@ html,body{background:#120C18}
 #roxySh{position:fixed;display:none;pointer-events:none;border-radius:50%;opacity:.9;
   background:radial-gradient(closest-side,#0b0610e6,#0b061066 55%,#0b061000)}
 body:not(.hasRoxy) #roxySh{display:none!important}
+
+/* ---------- aifix 12/13: FS intro/outro card + win-title type system ----------
+   One title face (Cinzel 900) for every win/feature title: cream fill, plum ink line, one static neon halo per tier
+   (the neon is kept on purpose). No animated filters: the old stacked drop-shadow filters are replaced by a text stroke.
+   Sprite hook: ui.ts titleHook sets data-tier + .spr + --title-img when title_<tier>win art exists (brand-v3 titles). */
+:root{--tt-ink:#3A2347;--tt-fill:#FFF4FA;--tt-neon:#FF5FB0}
+.tierName,.bwTier{font-family:"Cinzel",serif;font-weight:900;line-height:1.05;text-transform:uppercase;
+  background:none;-webkit-background-clip:border-box;background-clip:border-box;color:var(--tt-fill);filter:none;
+  -webkit-text-stroke:.09em var(--tt-ink);paint-order:stroke fill;
+  text-shadow:0 .04em 0 var(--tt-ink),0 0 .28em color-mix(in srgb,var(--tt-neon) 70%,transparent)}
+.bwTier[data-tier="big"]{--tt-neon:#FF5FB0}
+.bwTier[data-tier="mega"],.bwTier[data-tier="super"]{--tt-neon:#C07BFF}
+.bwTier[data-tier="epic"]{--tt-neon:#7FD8FF}
+.bwTier[data-tier="legendary"]{--tt-neon:#FFD27A;--tt-fill:#FFF8E6}
+#maxwin .mwTier{--tt-neon:#FF5FB0} /* max: style owned by motion.patch; var exposed for parity only */
+.bwTier.spr{font-size:0;color:transparent;-webkit-text-stroke:0;text-shadow:none;width:min(calc(60*var(--vw)),860px);aspect-ratio:3.6;
+  margin:0 auto;background:var(--title-img) center/contain no-repeat}
+body.portrait .bwTier.spr{width:calc(86*var(--vw))}
+.bwTier.on{transition-duration:calc(.12s*var(--at)/2),calc(.25s*var(--at)/2)}
+.bwTier.pop{animation-duration:calc(.32s*var(--at)/2)}
+.bwAmt{filter:none;-webkit-text-stroke:.07em var(--tt-ink);paint-order:stroke fill;text-shadow:0 .05em 0 var(--tt-ink)}
+
+/* FS intro / outro: one calm plum card, same frame as the splash cards; no confetti (featfx off) */
+#intro .card,#outro .card{background:linear-gradient(#24162EF2,#170E1FF2);border:1.5px solid #6E4A7E;border-radius:16px;
+  box-shadow:0 18px 40px -12px #000C;padding:28px 60px 26px;color:#F6ECF3;animation-name:aiCardIn;animation-timing-function:cubic-bezier(.2,.8,.3,1)}
+@keyframes aiCardIn{0%{opacity:0;transform:translateY(14px) scale(.97)}100%{opacity:1;transform:none}}
+#intro .tierName,#outro .tierName{font-size:56px;letter-spacing:2px}
+#intro .spins{font-family:"Nunito",sans-serif;font-weight:800;font-size:22px;letter-spacing:3px;color:#E9D6EE;margin:8px 0 18px}
+#intro .cont{background:#FF5FB0;color:#2A1433;border:0;border-radius:999px;padding:11px 40px;font-weight:900;letter-spacing:2px;font-size:15px}
+#outro .otAmt{font-family:"Nunito",sans-serif;font-size:44px;color:#fff;margin-top:6px}
+#outro .otHint{letter-spacing:2px;opacity:.5}
+body.portrait #intro .tierName,body.portrait #outro .tierName{font-size:34px}
+body.portrait #intro .card,body.portrait #outro .card{padding:22px 24px}
+body.portrait #outro .otAmt{font-size:32px}
+@media (prefers-reduced-motion:reduce){#intro .card,#outro .card{animation:none}}

@@ -194,9 +194,18 @@ export function resetWinMeter() { S.meterX = 0; setAmount($('#win'), 0); }
  *  into each threshold, the tier title swaps in with a pop as it crosses, much faster past 1000x, eased into the
  *  exact amount). At 1000x the character layer fades in behind the amount (bigwinElves.ts, the Vi / Roxy / Coco POV group). Tap once = jump to the
  *  end, tap again (or wait) = close. Turbo shortens everything. featfx.ts adds burst / confetti / pop sheets. */
+/** aifix 12: win-title type system hook. Sets data-tier (big|mega|super|epic|legendary) for the CSS type ramp and,
+ *  when the hand-lettered sprite exists (manifest key title_<tier>win, from elfhaus-brand-v3/titles), swaps the text
+ *  for it via --title-img + .spr. The text stays in the DOM (aria-label) so a missing sprite falls back to type. */
+function titleHook(T: HTMLElement, name: string) {
+	const tier = name.split(' ')[0].toLowerCase(), src = ART['title_' + tier + 'win'];
+	T.dataset.tier = tier; T.setAttribute('aria-label', name);
+	T.classList.toggle('spr', !!src);
+	if (src) T.style.setProperty('--title-img', `url("${src}")`); else T.style.removeProperty('--title-img');
+}
 export async function bigWin(x: number, label?: string) {
 	const B = $('#bigwin'), T = B.querySelector('.bwTier') as HTMLElement;
-	T.textContent = label || ''; T.classList.toggle('on', !!label);
+	T.textContent = label || ''; T.classList.toggle('on', !!label); T.classList.remove('spr'); delete T.dataset.tier; if (label) T.dataset.tier = 'label';
 	(B.querySelector('.bwX') as HTMLElement).textContent = `${x.toLocaleString('en-US')}x`;
 	const amt = B.querySelector('.bwAmt') as HTMLElement; setAmount(amt, 0);
 	B.classList.remove('hidden'); B.classList.remove('chars'); fxHooks.start?.(B, x);
@@ -206,7 +215,7 @@ export async function bigWin(x: number, label?: string) {
 	B.addEventListener('pointerdown', tap);
 	await countTiers(amt, x, bet(), {
 		turbo: S.turbo,
-		onTier: (i) => { if (label) return; T.textContent = BIG_TIERS[i].name; T.classList.add('on'); T.classList.remove('pop'); void T.offsetWidth; T.classList.add('pop'); fxHooks.tier?.(B, i); },
+		onTier: (i) => { if (label) return; T.textContent = BIG_TIERS[i].name; titleHook(T, BIG_TIERS[i].name); T.classList.add('on'); T.classList.remove('pop'); void T.offsetWidth; T.classList.add('pop'); fxHooks.tier?.(B, i); },
 		onX: (v) => { if (!chars && v >= 1000) { chars = true; B.classList.add('chars'); fxHooks.chars?.(B); } },
 	});
 	landed = true;
