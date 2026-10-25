@@ -374,3 +374,34 @@ body.short #maxwin .mwText{bottom:3vh} body.short .mwTier{font-size:40px} body.s
 #maxwin .mwBg{z-index:0} #maxwin .mwVid{z-index:1} #maxwin .mwShade{z-index:2} #maxwin .mwConf{z-index:3} #maxwin .mwText{z-index:4}
 body.portrait #maxwin .mwVid{top:17vh;-webkit-mask-image:linear-gradient(#0000,#000 9%,#000 88%,#0000);mask-image:linear-gradient(#0000,#000 9%,#000 88%,#0000)}
 body.portrait #maxwin .mwText{bottom:16vh}
+
+/* ---- Respin counter: compact matte plaque (distinct from the wide free-spin bar) ---- */
+#respinCtr{position:fixed;left:-999px;top:0;z-index:7;min-width:132px;padding:8px 16px 9px;border-radius:10px;text-align:center;pointer-events:none;
+  background:linear-gradient(#2C2738f2,#1C1922f2);border:2px solid #8E7BB5;box-shadow:inset 0 1px 0 #ffffff1f,0 8px 18px -8px #000c;
+  color:#F2EEFA;font-family:"Nunito";transition:opacity .3s}
+#respinCtr.fade{opacity:0}
+#respinCtr .rcLbl{font-family:"Cinzel";font-weight:800;font-size:15px;letter-spacing:3px;color:#CDBDEB}
+#respinCtr .rcRow{display:flex;align-items:baseline;justify-content:center;gap:6px;line-height:1;margin:2px 0 6px}
+#respinCtr .rcNum{font-family:"Cinzel";font-weight:900;font-size:46px;color:#F2EEFA;font-variant-numeric:tabular-nums;
+  filter:drop-shadow(0 2px 0 #120F18)}
+#respinCtr .rcOf{font-family:"Cinzel";font-weight:800;font-size:22px;color:#B9B3C6}
+#respinCtr .rcPips{display:flex;justify-content:center;gap:7px}
+#respinCtr .rcPips i{width:22px;height:7px;border-radius:2px;background:#3A3448;border:1px solid #5D5370}
+#respinCtr .rcPips i.used{background:#8E7BB5;border-color:#A28FC8}
+#respinCtr .rcPips i.now{background:#E4DCF6;border-color:#F2EEFA}
+#respinCtr .rcLeft{margin-top:6px;font-weight:900;font-size:13px;letter-spacing:1.5px;color:#DCD8E6}
+#respinCtr.bump .rcNum{animation:rcBump .38s ease-out}
+#respinCtr.reset{animation:rcIn .4s ease-out}
+@keyframes rcBump{0%{transform:scale(1)}40%{transform:scale(1.22)}100%{transform:scale(1)}}
+@keyframes rcIn{0%{transform:scale(.82);opacity:0}100%{transform:scale(1);opacity:1}}
+/* above-the-board mode (portrait / narrow): horizontal layout, banner moves onto the board top while it shows */
+body.rcTop #respinCtr{display:flex;align-items:center;gap:12px;padding:5px 14px;min-width:0}
+body.rcTop #respinCtr .rcRow{margin:0} body.rcTop #respinCtr .rcNum{font-size:34px} body.rcTop #respinCtr .rcOf{font-size:18px}
+body.rcTop #respinCtr .rcLbl{font-size:14px;letter-spacing:2px} body.rcTop #respinCtr .rcLeft{margin:0;font-size:12px}
+body.rcTop #respinCtr .rcPips{flex-direction:row}
+body.rcTop #respinCtr.hidden{display:none!important}
+body.rcOn.rcTop #banner{top:calc(50% - var(--cell)*2 + 10px)}
+body:not(.rcTop) #respinCtr{min-width:156px;padding:10px 18px 11px}
+body:not(.rcTop) #respinCtr .rcNum{font-size:58px} body:not(.rcTop) #respinCtr .rcOf{font-size:26px}
+body:not(.rcTop) #respinCtr .rcLbl{font-size:17px} body:not(.rcTop) #respinCtr .rcLeft{font-size:14px}
+body:not(.rcTop) #respinCtr .rcPips i{width:28px;height:8px}

@@ -4,6 +4,7 @@ import { money } from './format';
 import type { BookEvent, BookEventOf, BookEventType } from './typesBookEvent';
 import { roxy, roxyState } from './roxy';
 import { maxWinCelebration } from './maxwin';
+import { showRespin, endRespin, hideRespin } from './respin';
 import { $, S, k, bet, wait, banner, toast, hideToast, bigWin, setWinMeter, clearLines, drawWins, renderCell, renderOverlays, cellEl } from './ui';
 
 const TL = (t: Tier) => TIER_LABEL[t].toUpperCase();
@@ -16,7 +17,7 @@ export const endBonusUi = () => { document.body.classList.remove('inBonus'); $('
 type Handlers = { [T in BookEventType]: (ev: BookEventOf<T>) => Promise<void> };
 export const bookEventHandlerMap: Handlers = {
 	async reveal(ev) {
-		clearLines(); hideToast();
+		clearLines(); hideToast(); hideRespin();
 		S.sym = ev.board.map((col) => col.slice(1, 1 + ROWS).map((s) => s.name));
 		S.vals = new Map(); S.full = new Map(); S.groups = [];
 		ev.locked.fullReels.forEach((f) => S.full.set(f.reel, f.value));
@@ -81,7 +82,7 @@ export const bookEventHandlerMap: Handlers = {
 		$('#lines').innerHTML = '';
 		ev.locked.singles.forEach((s) => cellEl(s.reel, s.row).classList.add('locked'));
 		ev.replace.forEach((p) => cellEl(p.reel, p.row).classList.add('replace'));
-		banner(`RESPIN ${ev.step} / 3`, 1300);
+		showRespin(ev.step, ev.remaining);
 		await wait(700);
 		ev.replace.forEach((p) => cellEl(p.reel, p.row).classList.add('out'));
 		await wait(250);
@@ -98,7 +99,7 @@ export const bookEventHandlerMap: Handlers = {
 	},
 	async respinEnd(ev) {
 		const why = { noConnection: 'no new connection', maxRespins: 'max 3 respins', wincap: 'max win reached' }[ev.reason] || ev.reason;
-		banner(`RESPINS END · ${why}`, 1000);
+		if (ev.step > 0) { banner(`RESPINS END · ${why}`, 1000); endRespin(); }
 		await wait(450);
 	},
 	async setWin(ev) { const x = ev.amount / 100; if (x >= 10 && x < MAX_WIN_X) await bigWin(x); },

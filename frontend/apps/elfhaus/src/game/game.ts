@@ -15,6 +15,7 @@ import { playBookEvents, endBonusUi } from './bookEventHandlerMap';
 import { initRoxy, placeRoxy } from './roxy';
 import { initLoader, preloadArt, track, loaderReady, hideLoader } from './loader';
 import { preloadMaxWin } from './maxwin';
+import { placeRespin } from './respin';
 import type { BookEvent } from './typesBookEvent';
 
 const DISCLAIMER =
@@ -229,6 +230,7 @@ export function layout() {
 	const bgArt = (portrait && ART.background_portrait) || ART.background;
 	if (bgArt) { $('#bg').classList.add('art'); $('#bg').style.backgroundImage = `url(${bgArt})`; }
 	placeRoxy(portrait, $('#frame').getBoundingClientRect());
+	placeRespin();
 }
 
 // ---------- wiring ----------
