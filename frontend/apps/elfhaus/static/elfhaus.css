@@ -945,3 +945,13 @@ canvas.wfxRing{display:none}
   background:linear-gradient(#2a1934f0,#1a0f21f0);font:800 34px/1 "Cinzel";letter-spacing:.08em;color:#FBEAF4;text-align:center}
 #loader #lGo{animation:tapPulse 2.2s ease-in-out infinite alternate}
 @keyframes tapPulse{from{opacity:.75;transform:scale(.985)}to{opacity:1;transform:scale(1.015)}}
+/* ===== aifix: buy cards (audit 5): real art, framed to the figures (heads always in), Mystery = ink "?" card; ANTE label
+   legible (the 3x cost was a 9px grey footnote) */
+.bArt{background:linear-gradient(#2a1a33,#1c1224)}
+.bArt img{object-fit:cover;object-position:50% 50%}
+.bcard[data-m="double_dare"] .bArt img,.bcard[data-m="triple_dare"] .bArt img{object-position:50% 6%}
+.bcard[data-m="egw"] .bArt img{object-fit:contain;object-position:50% 30%;transform:scale(1.08)}
+.bArt .bMyst{display:block;width:100%;height:100%}
+#anteRow .lbl{font-size:15px;letter-spacing:1.5px}
+#anteRow .lbl small{font-size:14px;opacity:1;color:#F3C6DE;margin-left:8px;letter-spacing:.5px}
+.bcard[data-m="dare"] .bArt img{object-fit:contain;transform:scale(1.3);transform-origin:50% 40%}

@@ -255,15 +255,19 @@ async function playReplay() {
 }
 
 // ---------- bonus menu: Ante toggle, activate a bonus, bet -/+ with live prices ----------
-const CARD_ART: Partial<Record<ModeKey, string>> = { dare: 'W', double_dare: 'WM2', triple_dare: 'WM3', mystery: 'buy_icon', egw: 'WF' };
+// aifix (audit 5): real in-game art on every card: Dare = a single (per-reel) wild, Double / Triple = the merged 2- and
+// 3-elf groups, Elves Gone Wild = the 5-wide group; Mystery Spin is a face-down card with an ink "?" (not the studio logo).
+const CARD_ART: Partial<Record<ModeKey, string>> = { dare: 'W_R1', double_dare: 'WM2', triple_dare: 'WM3', egw: 'WM5' };
+const MYSTERY_CARD = `<svg class="bMyst" viewBox="0 0 100 100" aria-hidden="true"><rect x="23" y="12" width="54" height="76" rx="7" fill="#2A1734" stroke="#E7A6CB" stroke-width="2.5"/>` +
+	`<rect x="29" y="18" width="42" height="64" rx="4" fill="none" stroke="#E7A6CB" stroke-width="1" opacity=".55"/><text x="50" y="64" text-anchor="middle" font-family="Cinzel" font-weight="800" font-size="40" fill="#FBEAF4">?</text></svg>`;
 function buildBuy() {
 	const off = !!S.jur.disabledBuyFeature;
 	$('#buyTitle').textContent = t('buyTitle');
-	$('#anteCost').textContent = fmtX(ANTE_COST);
+	$('#anteCost').textContent = fmtX(ANTE_COST) + ' bet';
 	$('#buyCards').classList.toggle('hidden', off);
 	$('#buyCards').innerHTML = off ? '' : BUY_MODES.map((m) => {
-		const a = CARD_ART[m] && ART[CARD_ART[m]!];
-		return `<button class="bcard" data-m="${m}" aria-pressed="false"><span class="bArt${m === 'egw' ? ' tall' : ''}">${a ? `<img src="${a}" alt="" draggable="false">` : ''}</span>` +
+		const a = CARD_ART[m] && (ART[CARD_ART[m]!] || ART.W);
+		return `<button class="bcard" data-m="${m}" aria-pressed="false"><span class="bArt">${m === 'mystery' ? MYSTERY_CARD : a ? `<img src="${a}" alt="" draggable="false">` : ''}</span>` +
 			`<span class="bName">${MODE_LABEL[m].toUpperCase()}</span><span class="bPrice"></span><span class="bX">${mult(modeCost(m))}</span></button>`;
 	}).join('');
 	$('#buyCards').querySelectorAll<HTMLElement>('.bcard').forEach((b) => (b.onclick = () => {
