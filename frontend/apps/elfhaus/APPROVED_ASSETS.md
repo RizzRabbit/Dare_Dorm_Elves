@@ -24,6 +24,7 @@ Branch `final` is the integration branch. It holds **only** work the user has ap
 | Smooth stacks frame crossfade while slowed | 12396d3 (here 92c4e8c) | 2026-10-25 ~4:20 PM |
 | Win screens: per-elf max-win / big-win sheets (elfrig), slowed ~2x (TEMPO 1.8), lazy decode; p3d max-win title | `/workspace/elfhaus-restyle/winscreens_preview/motion.patch` (15:01 build, sha256 8fb9d3f0…40e8); `maxwin_p3d/sheets/maxwin_title.webp` | 2026-10-25 (max-win slowed motion) |
 | Symbols v3: painted H1–H4, L1–L5, S with neon outline win glow (`_win` = `_glow`), sheets at 12/15 fps; reel blur strips regenerated | `/workspace/elfhaus-symbols-v3/import` via `import-art.mjs symbols`, then `gen_reelblur.py` | 2026-10-25 ~4:30 PM ("go with what we had already decided") |
+| Lounge retouch v3 (clean stair rail, string lights, smooth window sky, corbels on pilasters, ferns, side props, static grain; neon trim unchanged) + carved neon win titles matching the stone logo | `/workspace/elfhaus-brand-v3` lounge/background*.webp (2560x1440 / 1440x2560) -> `assets/final/webp/bg_*` (manifest keys background, background_portrait, background_fs, background_fs_portrait); titles/maxwin_title_sheet.webp -> `src/assets/maxwin/maxwin_title.webp` (same 2256x656 atlas, maxwin_title.json unchanged); all 9 titles/*.webp -> `assets/final/titles/`. Status: **in**. Note: title_<tier>win code hookup (manifest keys + countup) is **pending, owned by aifix**; process/ not imported | 2026-10-25 4:44 PM ("It all looks good to me") |
 | Pipeline/QA commits | 2c88dba fd709ea 477db47 576e609 0f992c6 9b509d6 11b3200 (import guard, dev PORT, egw_wm5 book, runbook, tsc fixes) | n/a (tooling) |
 
 ## Approved but held (do not import yet)
@@ -38,7 +39,6 @@ Branch `final` is the integration branch. It holds **only** work the user has ap
 | Calm reel spin + full-reel stack forming from the merging singles | branch `spinfix` (`/workspace/elfhaus-fe-spinfix`) |
 | Per-elf face reactions after a stack merges | `/workspace/elfhaus-stack-react` |
 | Stacks r8d (cutout halos, one ink colour per group) | `/workspace/elfhaus-frameless/stacks_anim/out` (being rebuilt) |
-| Lounge retouch + neon carved win titles matching the stone logo | `/workspace/elfhaus-brand-v3` (the only active Lounge retouch candidate) |
 | Win-screen cast v6 | `/workspace/elfhaus-restyle/cast_v6` (motion.patch v6) |
 | Roxy out_v2 fixes (incl. the mouth hole) | `/workspace/elfhaus-roxy-p3d` |
 
