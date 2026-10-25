@@ -19,6 +19,7 @@ import { setArmedGlow, wireTapFx } from './uifx';
 import { featOpen, featClose } from './featfx';
 import { BIGWIN_ELVES_MIN_X, preloadBigWinElves, bigWinElvesStart, bigWinElvesEnd } from './bigwinElves';
 import { setBigWinFx } from './ui';
+import { initSettings, syncSettings } from './settings';
 import { setSocial, isSocial, t } from './strings';
 import { $, S, ART, bet, buildCells, renderAll, renderOverlays, setOverlayHook, resetWinMeter, setWinMeter, banner, wait, waitRaw } from './ui';
 import { skipHolds, syncTempo } from './tempo';
@@ -393,7 +394,8 @@ function wire() {
 	$('#buyBtn').onclick = () => { buildBuy(); show('#buyConfirm', false); show('#buyMenu', true); };
 	$('#buyClose').onclick = () => { show('#buyMenu', false); show('#buyConfirm', false); };
 	$('#buyNo').onclick = () => show('#buyConfirm', false);
-	$('#menuBtn').onclick = () => { buildRules(); show('#menu', true); };
+	$('#menuBtn').onclick = () => { buildRules(); syncSettings(); show('#menu', true); };
+	initSettings();
 	$('#menuClose').onclick = () => show('#menu', false);
 	$('#replayPlay').onclick = () => playReplay();
 	addEventListener('keydown', (e) => {

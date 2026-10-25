@@ -1008,3 +1008,16 @@ body.portrait #intro .tierName,body.portrait #outro .tierName{font-size:34px}
 body.portrait #intro .card,body.portrait #outro .card{padding:22px 24px}
 body.portrait #outro .otAmt{font-size:32px}
 @media (prefers-reduced-motion:reduce){#intro .card,#outro .card{animation:none}}
+
+/* ---------- aifix 13 (audit 24): settings panel (no audio in the game, so no sound toggle) ---------- */
+#settings{margin:0 0 14px;padding-bottom:12px;border-bottom:1.5px solid #6E4A7E}
+#settings h2{margin:0 0 8px}
+.setRow{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:8px 2px;font-size:15px;color:#F6ECF3}
+.sw{position:relative;width:46px;height:26px;padding:0;border-radius:999px;background:#2A1B33;border:1.5px solid #6E4A7E;cursor:pointer;flex:none}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:17px;height:17px;border-radius:50%;background:#F6ECF3;transition:transform calc(.12s*var(--at))}
+.sw.on{background:#FF5FB0;border-color:#FF5FB0} .sw.on::after{transform:translateX(20px);background:#2A1433}
+/* Calm motion = the same switches as prefers-reduced-motion */
+body.calm .cell.win .sym.art>img,body.calm .cell.win .sym .symGlow img,body.calm .cell.win .sym.art>.symGlow,
+body.calm #alcove .tw,body.calm #intro .card,body.calm #outro .card{animation:none}
+body.calm #alcove .tw{opacity:.45}
+body.calm #loader #lGo{animation:none}
