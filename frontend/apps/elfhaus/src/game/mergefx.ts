@@ -60,7 +60,7 @@ export async function stackIn(reel: number, render: () => void) {
 	begin();
 	try {
 		const cells = cellsOf(reel), c = S.cell;
-		const probe = document.createElement('div'); probe.className = 'ov full';
+		const probe = document.createElement('div'); probe.className = 'ov full'; probe.dataset.reel = String(reel);
 		if (hasStack('stack_form', probe)) { // the sheet does the flash + build-up itself
 			render(); const ov = ovOf(reel); if (ov) { ov.style.animation = 'none'; await Promise.race([stackOnce('stack_form', ov), sw(700)]); }
 			return;
@@ -85,23 +85,25 @@ export async function mergeIn(reels: number[], values: number[], product: number
 	try {
 		// 1) anticipation: board dims, the stacks about to join glow
 		B.classList.add('mAnt');
-		const olds = reels.map(ovOf).filter((o): o is HTMLElement => !!o);
+		const olds = [...new Set(reels.map(ovOf))].filter((o): o is HTMLElement => !!o);
 		olds.forEach((o) => { const g = document.createElement('i'); g.className = 'ovGlow'; o.appendChild(g); A(g, [{ opacity: 0 }, { opacity: 1 }], { duration: 220, fill: 'forwards' }); });
 		const badges = grab(reels.map((r) => ovMx(r)));
 		await sw(260);
 		// 2) lean together
 		const mid = lo + (n - 1) / 2;
-		olds.forEach((o) => { const r = Number(o.dataset.reel ?? lo); const dx = (mid - r) * step * 0.07; A(o, [{ transform: 'none' }, { transform: `translateX(${dx}px) scale(.97,1)` }], { duration: 200, easing: 'cubic-bezier(.6,0,.9,.5)', fill: 'forwards' }); });
+		const leans = olds.map((o) => { const r = Number(o.dataset.reel ?? o.dataset.reels?.split(',')[0] ?? lo) + (o.offsetWidth / step - 1) / 2; return `translateX(${(mid - r) * step * 0.07}px) scale(.97,1)`; });
+		olds.forEach((o, i) => A(o, [{ transform: 'none' }, { transform: leans[i] }], { duration: 200, easing: 'cubic-bezier(.6,0,.9,.5)', fill: 'forwards' }));
+		const ghosts = olds.map((o, i) => ghostOf(o, leans[i])); // the singles' current poses, to scale up into the group pose
 		await sw(200);
 		// 3) hit: merged overlay in, shockwave + burst per seam, micro shake
 		apply();
 		const ov = ovOf(lo);
 		if (ov) {
 			ov.style.animation = 'none';
-			A(ov, [{ transform: 'scale(1.035,.97)' }, { transform: 'scale(.99,1.02)', offset: .5 }, { transform: 'none' }], { duration: 360, easing: 'ease-out' });
 			{ const m = ov.querySelector<HTMLElement>('.mx'); if (m) m.style.opacity = '0'; }
-		}
-		if (ov && hasStack('merge_join', ov)) void stackOnce('merge_join', ov);
+			if (hasStack('merge_join', ov)) { ghosts.forEach((g) => g.el.remove()); void stackOnce('merge_join', ov); }
+			else scaleUpInto(ov, ghosts);
+		} else ghosts.forEach((g) => g.el.remove());
 		mergeFx(reels);
 		for (let i = 1; i < n; i++) ring(x0 + i * step - (step - S.cell) / 2, big);
 		if (big) { const h = col(x0, n * step); burst(h, 'big', 60); made.push(h); }
@@ -120,6 +122,31 @@ export async function mergeIn(reels: number[], values: number[], product: number
 		document.querySelectorAll('#flyLayer .fly').forEach((f) => f.remove());
 		end();
 	}
+}
+
+/** Snapshot of a single (or smaller merged) wild's art at its board position: its stack canvases drawn into one canvas,
+ *  or a copy of its placeholder image. Taken before the overlays re-render. */
+function ghostOf(o: HTMLElement, lean: string) {
+	const el = document.createElement('div'); el.className = 'mGhost';
+	const cvs = [...o.querySelectorAll<HTMLCanvasElement>(':scope>canvas.stk_body,:scope>canvas.stk_letters')];
+	if (cvs.length) {
+		const c = document.createElement('canvas'); c.width = cvs[0].width; c.height = cvs[0].height; const g = c.getContext('2d')!;
+		cvs.forEach((x) => { try { g.drawImage(x, 0, 0, c.width, c.height); } catch { /* empty canvas */ } });
+		el.appendChild(c);
+	} else { const w = o.querySelector(':scope>.wart'); if (w) el.appendChild(w.cloneNode(true)); }
+	return { el, x: o.offsetLeft, w: o.offsetWidth, lean };
+}
+/** The merge hit without a merge_join sheet: each single's pose scales UP (and fades) into the merged group pose, which
+ *  grows in from slightly smaller. The group art is drawn larger than the singles, so heads / legs may be cropped:
+ *  everything stays inside the merged overlay (overflow hidden = exactly the merged reels' area). */
+function scaleUpInto(ov: HTMLElement, ghosts: ReturnType<typeof ghostOf>[]) {
+	const x0 = ov.offsetLeft, body = ov.querySelector<HTMLElement>(':scope>canvas.stk_body') || ov.querySelector<HTMLElement>(':scope>.wart');
+	ghosts.forEach((g) => {
+		g.el.style.left = g.x - x0 + 'px'; g.el.style.width = g.w + 'px'; ov.appendChild(g.el);
+		A(g.el, [{ transform: g.lean, opacity: 1 }, { transform: `${g.lean} scale(1.1)`, opacity: 1, offset: .35 }, { transform: 'scale(1.24)', opacity: 0 }], { duration: 340, easing: 'cubic-bezier(.3,0,.4,1)', fill: 'forwards' })
+			.finished.catch(() => {}).finally(() => g.el.remove());
+	});
+	if (body) A(body, [{ transform: 'scale(.84)', opacity: 0 }, { transform: 'scale(1.035)', opacity: 1, offset: .55 }, { transform: 'scale(.995)', offset: .8 }, { transform: 'none', opacity: 1 }], { duration: 420, easing: 'ease-out' });
 }
 
 const prodTo = (v: number[], i: number) => v.slice(0, i + 1).reduce((a, b) => a * b, 1);

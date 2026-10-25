@@ -6,7 +6,8 @@
 //   node scripts/import-art.mjs splash  <dir>   panel_*.webp, splash_*.webp, sting_*, splash_layout.json -> src/assets/intro/
 //   node scripts/import-art.mjs stacks  <dir>   <anim>_<variant>.webp + .atlas.json/.json -> static/assets/stacks/, writes index.json
 //                                              (anim: stack_form | merge_join | letters_ignite | merge_idle | merge_win;
-//                                               variant: WF | WM2..WM5; see INTEGRATION.md). Unmatched names are reported.
+//                                               variant: WF | WM2..WM5, optionally per reel: _R<n> / _R<a>-<b>, e.g.
+//                                               merge_idle_WM3_R2-4; see INTEGRATION.md). Unmatched names are reported.
 //   node scripts/import-art.mjs roxy    <dir>   roxy_<tag>_<state>_<page>.{json,webp} (roxy_full_ / roxy_p3d_) -> static/assets/atlases/
 //                                              as roxy_full_* (old pages removed first, so a new page count drops in cleanly)
 // Add --dry to list what would be copied. Then: pnpm test && pnpm build.
@@ -30,7 +31,7 @@ if (kind === 'symbols') {
 	const dest = join(app, 'src/assets/intro');
 	for (const f of walk(src)) { const b = basename(f); if (/^(panel_|splash_|sting_).*\.(webp|json)$/.test(b)) cp(f, join(dest, b)); }
 } else if (kind === 'stacks') {
-	const dest = join(app, 'static/assets/stacks'), RE = /^(stack_form|merge_join|letters_ignite|merge_idle|merge_win)_(WF|WM[2-5])(?:\.atlas)?\.(webp|json)$/;
+	const dest = join(app, 'static/assets/stacks'), RE = /^(stack_form|merge_join|letters_ignite|merge_idle|merge_win)_((?:WF|WM[2-5])(?:_R[1-5](?:-[1-5])?)?)(?:\.atlas)?\.(webp|json)$/;
 	const ids = new Set();
 	for (const f of walk(src)) {
 		const b = basename(f), m = b.match(RE);

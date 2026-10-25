@@ -10,6 +10,9 @@
 // Sheets use the sym_<K> atlas schema {image?, anims:{name:{fps,loop,frames:[[x,y,w,h]...]}}, size:[W,H]}; the
 // anim played is the one named like the file's anim (or the first one). Each frame is drawn over the whole
 // overlay (frames are made at the overlay's aspect: 256 x 1024 per reel). Transform / opacity only.
+// Per-position art (stacks_v2): the elf is fixed per reel (1 Roxy, 2 Jade, 3 Vi, 4 Coco, 5 Delilah), so a sheet may carry
+// the overlay's reels as a suffix, _R<first>-<last> (1-based; _R<n> for a single full reel), e.g. merge_idle_WM3_R2-4,
+// letters_ignite_WF_R5. The suffixed sheet wins; the plain <anim>_<variant> is the fallback, so both kinds can coexist.
 import { loadSheet, play, hasSheet, stop, type Atlas, type Anim } from './sprite';
 
 export type StackAnim = 'stack_form' | 'merge_join' | 'letters_ignite' | 'merge_idle' | 'merge_win';
@@ -24,7 +27,7 @@ export function initStacks() {
 			await Promise.all((ix.sheets || []).map(async (id) => {
 				try {
 					const atlas = (await (await fetch(`${DIR}${id}.json`)).json()) as Atlas & { image?: string };
-					const anim = id.replace(/_(WF|WM[2-5])$/, '');
+					const anim = id.replace(/_(WF|WM[2-5])(_R[1-5](-[1-5])?)?$/, '');
 					names.set(id, atlas.anims[anim] ? anim : Object.keys(atlas.anims)[0]);
 					await loadSheet(id, DIR + (atlas.image || id + '.webp'), atlas); listed.add(id);
 				} catch (e) { console.warn('stack sheet', id, e); }
@@ -33,12 +36,20 @@ export function initStacks() {
 		}));
 }
 const variant = (ov: HTMLElement) => (ov.classList.contains('merge') ? `WM${(ov.dataset.reels || '').split(',').filter(Boolean).length}` : 'WF');
-/** Is the sheet for this overlay's width there? */
-export const hasStack = (a: StackAnim, ov: HTMLElement) => listed.has(`${a}_${variant(ov)}`) && hasSheet(`${a}_${variant(ov)}`);
+/** _R<first>-<last> for the overlay's reels (data-reel / data-reels are 0-based), '' when unknown. */
+const posSuffix = (ov: HTMLElement) => {
+	const r = (ov.dataset.reels ?? ov.dataset.reel ?? '').split(',').filter(Boolean).map((x) => +x + 1);
+	return r.length ? (r.length === 1 ? `_R${r[0]}` : `_R${r[0]}-${r[r.length - 1]}`) : '';
+};
+const ok = (id: string) => listed.has(id) && hasSheet(id);
+/** The sheet id for this anim on this overlay: the reel-specific one if imported, else the plain width one. */
+export const sheetId = (a: StackAnim, ov: HTMLElement) => { const pos = `${a}_${variant(ov)}${posSuffix(ov)}`; return ok(pos) ? pos : `${a}_${variant(ov)}`; };
+/** Is there a sheet (reel-specific or plain) for this overlay? */
+export const hasStack = (a: StackAnim, ov: HTMLElement) => ok(sheetId(a, ov));
 const live = new WeakMap<HTMLElement, Partial<Record<'body' | 'letters' | 'win', Anim>>>();
 function run(a: StackAnim, ov: HTMLElement, layer: 'body' | 'letters' | 'win', o: { loop?: boolean; hold?: boolean; onEnd?: () => void } = {}) {
 	if (!hasStack(a, ov)) return null;
-	const id = `${a}_${variant(ov)}`, slots = live.get(ov) || {};
+	const id = sheetId(a, ov), slots = live.get(ov) || {};
 	const old = slots[layer]; if (old && !old.done) stop(old);
 	const an = play(id, names.get(id)!, ov, { cls: `stk stk_${layer}`, loop: o.loop, hold: o.hold, onEnd: o.onEnd });
 	if (an) { slots[layer] = an; live.set(ov, slots); } // CSS (:has canvas.stk_<layer>) hides the placeholder it replaces

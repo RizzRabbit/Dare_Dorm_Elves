@@ -31,13 +31,20 @@ node scripts/import-art.mjs stacks <dir>
 * Names: `<anim>_<variant>[.atlas].(webp|json)`. `anim` is one of `stack_form`, `merge_join`, `letters_ignite`, `merge_idle` or `merge_win`.
   `variant` is one of `WF` (single full reel), `WM2`, `WM3`, `WM4` or `WM5`.
   The files are copied to `static/assets/stacks/<anim>_<variant>.{webp,json}`, and the ids are merged into `static/assets/stacks/index.json`.
+* Per-reel art (stacks_v2): each reel has a fixed elf (1 Roxy, 2 Jade, 3 Vi, 4 Coco, 5 Delilah), so every contiguous run has its own art.
+  Add the overlay's reels as a 1-based suffix: `_R<n>` for a single full reel, `_R<first>-<last>` for a merge,
+  e.g. `merge_idle_WM3_R2-4`, `letters_ignite_WF_R5`. The runtime uses the reel-specific sheet when it is imported and falls
+  back to the plain `<anim>_<variant>` sheet, so both kinds can coexist.
+  Static set to test: `node scripts/import-art.mjs stacks /workspace/elfhaus-frameless/stacks_v2/dropin_static/per_reel`.
 * Atlas schema (same as `sym_<K>`):
   `{"image": "<file>.webp", "anims": {"<anim>": {"fps": 20, "loop": false, "frames": [[x,y,w,h], ...]}}, "size": [W, H]}`.
   The anim with the file's name is played, or the first one if that name is missing.
   Each frame is drawn over the whole overlay, so make frames at the overlay's aspect (1 x 4 cells per reel).
 * Runtime (`src/game/stacks.ts`):
   * `stack_form` plays once when a reel completes (it replaces the squash and flash placeholder), then `merge_idle` loops.
-  * `merge_join` plays once at the merge hit, then `merge_idle`.
+  * `merge_join` plays once at the merge hit, then `merge_idle`. Without it, the singles' poses scale UP and fade into the
+    merged group pose, which grows in from 84%. The group art may be drawn larger than the singles (heads or legs cropped):
+    the merged overlay clips everything to exactly the merged reels' area.
   * `letters_ignite` plays at the letters beat and holds its last frame. It replaces the CSS `.mLets` letters.
   * `merge_win` loops while a win line runs through the wild.
 * **Any missing sheet keeps today's placeholder**, so sheets can land one at a time.
