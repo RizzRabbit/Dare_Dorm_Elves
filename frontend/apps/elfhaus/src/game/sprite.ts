@@ -15,15 +15,20 @@ const live = new Set<Anim>();
 let raf = 0;
 
 export function loadSheet(id: string, src: string, atlas: Atlas) {
-	return new Promise<void>((res, rej) => {
+	const done = (bm: CanvasImageSource) => { warm(bm); sheets.set(id, { img: bm, atlas, src }); };
+	// Decoded once into an ImageBitmap that canvases draw from, so a sheet is never lazily (re)decoded mid-spin.
+	// fetch -> blob -> createImageBitmap decodes OFF the main thread; createImageBitmap(<img>) copied the decoded
+	// pixels on the main thread (2.3 s long task for the max-win group sheet at 4x throttle), so it is only the fallback.
+	const viaImg = () => new Promise<void>((res, rej) => {
 		const img = new Image();
-		// decoded once during loading into an ImageBitmap that canvases draw from, so a sheet is never lazily
-		// (re)decoded on the main thread mid-spin (an <img> source can be evicted and re-decoded at commit)
 		img.onload = () => img.decode().catch(() => {})
 			.then(() => (typeof createImageBitmap === 'function' ? createImageBitmap(img).catch(() => img) : img))
-			.then((bm: CanvasImageSource) => { warm(bm); sheets.set(id, { img: bm, atlas, src }); res(); });
+			.then((bm: CanvasImageSource) => { done(bm); res(); });
 		img.onerror = rej; img.src = src;
 	});
+	if (typeof createImageBitmap !== 'function' || typeof fetch !== 'function') return viaImg();
+	return fetch(src).then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.blob(); })
+		.then((b) => createImageBitmap(b)).then(done).catch(viaImg);
 }
 let warmCv: HTMLCanvasElement | null = null;
 function warm(img: CanvasImageSource) { try { warmCv ||= document.createElement('canvas'); warmCv.width = warmCv.height = 1; warmCv.getContext('2d')!.drawImage(img, 0, 0, 1, 1); } catch { /* ignore */ } }

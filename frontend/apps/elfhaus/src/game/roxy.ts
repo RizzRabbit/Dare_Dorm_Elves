@@ -1,8 +1,9 @@
+import { ST, toStage } from './stage';
 // Full-body Roxy: plays the keyed roxy_full_* atlases (static/assets/atlases, scripts/pack-atlases.py) on a canvas
 // with a tiny frame-stepper (no Pixi in this DOM renderer). States per atlases/README.md: idle (resting frame +
 // occasional full clip, see below), anticipation (loop), disappointed / excited (once, then back to idle).
 export type RoxyState = 'idle' | 'anticipation' | 'disappointed' | 'excited';
-type Frame = { img: HTMLImageElement; x: number; y: number; w: number; h: number; dx: number; dy: number };
+type Frame = { img: CanvasImageSource; x: number; y: number; w: number; h: number; dx: number; dy: number };
 const FPS = 12, LOOP: Record<RoxyState, boolean> = { idle: true, anticipation: true, disappointed: false, excited: false };
 const DIR = 'assets/atlases/';
 const anims = new Map<RoxyState, Frame[]>();
@@ -10,7 +11,13 @@ let cv: HTMLCanvasElement | null = null, ctx: CanvasRenderingContext2D | null = 
 let state: RoxyState = 'idle', want: RoxyState = 'idle', frame = 0, last = 0;
 export let roxySize = { w: 0, h: 0 };
 
-const loadImg = (src: string) => new Promise<HTMLImageElement>((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+const loadEl = (src: string) => new Promise<HTMLImageElement>((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+// Pages become ImageBitmaps decoded off the main thread (fetch -> blob -> createImageBitmap). Drawing from an <img>
+// left Chrome to decode the ~2000x1650 page lazily at commit, on the main thread, and to re-decode it whenever its
+// decode cache evicted it: 90-280 ms long tasks each time Roxy switched state mid-feature (4x-throttle trace).
+// Cost: the pages stay decoded (~176 MB for all four states), which is what showing them without stalls needs anyway.
+const loadImg = (src: string): Promise<CanvasImageSource> => typeof createImageBitmap !== 'function' ? loadEl(src)
+	: fetch(src).then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.blob(); }).then((b) => createImageBitmap(b) as Promise<CanvasImageSource>).catch(() => loadEl(src));
 async function load(s: RoxyState) {
 	const name = `roxy_full_${s}`;
 	const first = await (await fetch(`${DIR}${name}_0.json`)).json();
@@ -84,14 +91,14 @@ function tick(t: number) {
  *  reel frame; portrait = large behind the board (the board and HUD draw over her). */
 export function placeRoxy(portrait: boolean, frameRect: DOMRect) {
 	if (!cv || !roxySize.h) return;
-	const W = innerWidth, H = innerHeight, ar = roxySize.w / roxySize.h;
+	const W = ST.w, H = ST.h, ar = roxySize.w / roxySize.h;
 	let h: number, left: number;
 	let top: number | null = null;
 	if (portrait) {
 		// Board sits low; Roxy's head and shoulders fill the space between the title and the board, face offset
 		// right of center so it is never behind the board or the title. Sheet fractions: hair top ~4%, face ~14%
 		// (x ~43% of the width), shoulders ~27% of the height.
-		const logo = document.getElementById('logo')?.getBoundingClientRect();
+		const logoEl = document.getElementById('logo'); const logo = logoEl ? toStage(logoEl.getBoundingClientRect()) : null; 
 		const y0 = logo && logo.height ? logo.bottom - 8 : 8;
 		const space = Math.max(80, frameRect.top - y0);
 		h = Math.min(H * 1.2, (W * 1.25) / ar, space / 0.27);
