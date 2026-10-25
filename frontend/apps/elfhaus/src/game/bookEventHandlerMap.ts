@@ -56,11 +56,15 @@ export const bookEventHandlerMap: Handlers = {
 		const ant = ev.anticipation.some((a) => a > 0);
 		if (ant && ev.gameType === 'basegame') roxy('anticipation');
 		// every reel gets an absolute settle time; reels.ts eases each one in (decel, overshoot, settle)
-		let at = Math.max(T.first, sinceStart() + 120);
+		// anticipation reels (math flags them once 2 Dare Cards have landed) each glow from the previous reel's stop,
+		// hold an extra T.ant and brake slowly, one after another, so reel 5 always lands last
+		let at = Math.max(T.first, sinceStart() + 120), prev = at;
 		const stops: Promise<void>[] = [];
 		for (let r = 0; r < REELS; r++) {
+			prev = at;
 			if (r > 0) at += T.gap;
-			if (ev.anticipation[r] > 0) at += T.ant;
+			const slow = ev.anticipation[r] > 0 ? T.antD : 0;
+			if (slow) at += T.ant;
 			const finals = Array.from({ length: ROWS }, (_, row) => symHTML(S.sym[r][row], S.vals.get(k(r, row))));
 			stops.push(stopReel(r, at, finals, () => {
 				for (let row = 0; row < ROWS; row++) {
@@ -70,7 +74,7 @@ export const bookEventHandlerMap: Handlers = {
 					if (!locked && !fullLocked.has(r) && S.sym[r][row] === 'W') wildLand(cellEl(r, row));
 					else if (S.sym[r][row] === 'S') symLand(cellEl(r, row));
 				}
-			}));
+			}, slow, prev));
 		}
 		await Promise.all(stops);
 		markStopped();

@@ -687,3 +687,8 @@ html{background:#2A2533}
 #cardFlip .cfName{font-family:"Cinzel";font-weight:900;font-size:calc(var(--cell)*.42);color:#FFF6FA;letter-spacing:.04em;opacity:0;text-shadow:0 2px 0 #3A0A26,0 0 14px #E255A0aa}
 #cardFlip .cfName.pop{animation:cfPop .45s cubic-bezier(.3,1.6,.5,1) forwards}
 @keyframes cfPop{0%{opacity:0;transform:scale(.6)}100%{opacity:1;transform:scale(1)}}
+/* anticipation (reels.ts .strip.ant): baked pink/magenta edge glow over the slow-spinning reel; opacity-only pulse */
+.strip .antGlow{position:absolute;inset:0;opacity:0;pointer-events:none;z-index:2;transition:opacity .25s;
+ background:linear-gradient(90deg,#E255A0b0,#E255A000 22%,#E255A000 78%,#E255A0b0),linear-gradient(#FFF6FA90,#FFF6FA00 18%,#FFF6FA00 82%,#FFF6FA90)}
+.strip.ant .antGlow{opacity:1;animation:antPulse .55s ease-in-out infinite alternate}
+@keyframes antPulse{from{opacity:.55}to{opacity:1}}

@@ -27,7 +27,7 @@ import { preloadMaxWin } from './maxwin';
 import { fitStage, toStage } from './stage';
 import { placeRespin } from './respin';
 import { loadAllFx } from './fx';
-import { startSpin, abortSpin } from './reels';
+import { startSpin, abortSpin, hurry } from './reels';
 import { hideRespin } from './respin';
 import type { BookEvent } from './typesBookEvent';
 
@@ -157,7 +157,9 @@ async function round(mode: ModeKey) {
 	setBusy(true); resetWinMeter(); endBonusUi();
 	// base-game state never carries: clear last spin's stacks, then the reels start turning at the press
 	S.full.clear(); S.groups = []; S.vals.clear(); renderOverlays(false); hideRespin();
-	document.querySelectorAll('.cell').forEach((c) => c.classList.remove('locked'));
+	// cells hidden under last round's full-reel wilds must spin again (a hidden cell is skipped by startSpin,
+	// so its reel would "land" instantly at reveal: the bonus-buy reel-5-first bug)
+	document.querySelectorAll<HTMLElement>('#cells .cell').forEach((c) => { c.classList.remove('locked'); c.style.visibility = ''; });
 	startSpin();
 	try {
 		const data: any = import.meta.env.DEV && url.mock
@@ -421,7 +423,7 @@ export async function initGame() {
 	});
 	const ric = (window as any).requestIdleCallback as ((f: () => void, o?: object) => void) | undefined;
 	setTimeout(() => (ric ? ric(() => preloadBigWinElves(), { timeout: 5000 }) : preloadBigWinElves()), 2500);
-	document.addEventListener('pointerdown', (e) => { if (!(e.target as Element)?.closest?.('#bigwin,#outro')) { skipCounts(); tapLines(); } }, { capture: true, passive: true });
+	document.addEventListener('pointerdown', (e) => { if (!(e.target as Element)?.closest?.('#bigwin,#outro')) { skipCounts(); tapLines(); if (!(e.target as Element)?.closest?.('#menu,#buyMenu,#autoMenu,#msg')) hurry(); } }, { capture: true, passive: true });
 	track(initRoxy(layout));
 	loadAllFx(track).then(() => renderAll());
 	track(document.fonts?.ready ?? Promise.resolve());

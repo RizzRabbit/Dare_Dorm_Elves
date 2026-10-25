@@ -12,8 +12,8 @@ import { S, ART, symHTML, k } from './ui';
 import { ROWS, REELS } from './config';
 
 export const timing = () => (S.turbo
-	? { first: 440, gap: 60, ant: 250, resp: 400, land: 60 }
-	: { first: 1100, gap: 180, ant: 750, resp: 760, land: 140 });
+	? { first: 440, gap: 60, ant: 450, antD: 420, resp: 400, land: 60 }
+	: { first: 1100, gap: 180, ant: 1150, antD: 1000, resp: 760, land: 140 });
 const P = () => (S.turbo
 	? { wu: 40, amp: 0.07, acc: 90, v: 44, D: 230, ov: 0.1, set: 70 }
 	: { wu: 90, amp: 0.12, acc: 220, v: 26, D: 420, ov: 0.16, set: 110 });
@@ -22,7 +22,7 @@ type Slot = HTMLElement & { n?: number };
 type Reel = {
 	r: number; el: HTMLElement; tape: HTMLElement; blur: HTMLElement; slots: Slot[]; on: boolean;
 	t0: number; p: ReturnType<typeof P>; init: string[];
-	stop?: { tD: number; at: number; finals: string[]; onLand: () => void; res: () => void; s0?: number; v0?: number; dist?: number; D?: number; sEnd?: number };
+	stop?: { tD: number; at: number; finals: string[]; onLand: () => void; res: () => void; slow?: number; s0?: number; v0?: number; dist?: number; D?: number; sEnd?: number };
 	blurA: number; tapeA: number;
 };
 const reels: Reel[] = [];
@@ -43,8 +43,9 @@ function ensure() {
 		const tape = document.createElement('div'); tape.className = 'tape';
 		const slots: Slot[] = []; for (let i = 0; i < 6; i++) { const s = document.createElement('div') as Slot; s.className = 'slot'; tape.appendChild(s); slots.push(s); }
 		const blur = document.createElement('div'); blur.className = 'sblur';
+		const glow = document.createElement('div'); glow.className = 'antGlow';
 		const src = ART[r % 2 ? 'reel_stripB' : 'reel_stripA']; if (src) blur.style.backgroundImage = `url(${src})`;
-		el.append(tape, blur); host.appendChild(el);
+		el.append(tape, blur, glow); host.appendChild(el);
 		reels.push({ r, el, tape, blur, slots, on: false, t0: 0, p: P(), init: [], blurA: -1, tapeA: -1 });
 	}
 	return true;
@@ -80,8 +81,9 @@ function frame(now: number) {
 		if (st && now >= st.tD) {
 			if (st.s0 === undefined) { // plan the landing once, at the decel start
 				const m = run(R, st.tD - R.t0); st.s0 = m.s; st.v0 = Math.max(m.v, 1);
-				st.sEnd = Math.max(Math.round(m.s + (st.v0 * p.D) / 2000 - p.ov), Math.floor(m.s) + 5);
-				st.dist = st.sEnd + p.ov - m.s; st.D = Math.min(900, Math.max(p.D, (2000 * st.dist) / Math.max(st.v0, p.v * 0.5)));
+				const D0 = st.slow || p.D; // anticipation reels brake over a much longer, slower ease-out
+				st.sEnd = Math.max(Math.round(m.s + (st.v0 * D0) / 2000 - p.ov), Math.floor(m.s) + 5);
+				st.dist = st.sEnd + p.ov - m.s; st.D = Math.min(st.slow ? D0 + 400 : 900, Math.max(D0, (2000 * st.dist) / Math.max(st.v0, p.v * 0.5)));
 				R.slots.forEach((x) => { if (x.n !== undefined && st.sEnd! - x.n >= 0 && st.sEnd! - x.n < ROWS) x.n = undefined; });
 			}
 			const td = now - st.tD;
@@ -106,7 +108,7 @@ function frame(now: number) {
 function land(R: Reel) {
 	const st = R.stop!; R.on = false; R.stop = undefined;
 	st.onLand(); // cells now show the same symbols in the same place
-	R.el.style.visibility = 'hidden';
+	R.el.style.visibility = 'hidden'; R.el.classList.remove('ant');
 	st.res();
 }
 function startReel(R: Reel, rows: number[], now: number) {
@@ -142,13 +144,20 @@ export function startSpin(keep: (reel: number, row: number) => boolean = () => f
 }
 export const reelSpinning = (r: number) => !!reels[r]?.on;
 /** Land reels: `at` = ms after the spin start when the reel must be settled; `finals` = 4 row HTML strings. */
-export function stopReel(r: number, at: number, finals: string[], onLand: () => void) {
+/** `slow` (ms) = anticipation: the reel glows from `glowAt` (ms after spin start) and brakes over `slow` ms. */
+export function stopReel(r: number, at: number, finals: string[], onLand: () => void, slow = 0, glowAt = 0) {
 	const R = reels[r];
 	if (!R?.on) { onLand(); return Promise.resolve(); }
 	return new Promise<void>((res) => {
-		const tEnd = R.t0 + at, tD = Math.max(performance.now(), tEnd - R.p.set - R.p.D);
-		R.stop = { tD, at, finals, onLand, res };
+		const D0 = slow || R.p.D, tEnd = R.t0 + at, tD = Math.max(performance.now(), tEnd - R.p.set - D0);
+		R.stop = { tD, at, finals, onLand, res, slow: slow || undefined };
+		if (slow) { const g = () => R.on && R.stop?.res === res && R.el.classList.add('ant'); const dt = R.t0 + glowAt - performance.now(); dt > 0 ? setTimeout(g, dt) : g(); }
 	});
+}
+/** Tap to skip: every reel that hasn't started braking lands now, left to right, with the normal (fast) brake. */
+export function hurry() {
+	const now = performance.now(); let i = 0;
+	reels.forEach((R) => { const st = R.stop; if (!R.on || !st || st.s0 !== undefined) return; st.slow = undefined; st.tD = Math.min(st.tD, now + 60 * i++); R.el.classList.remove('ant'); });
 }
 /** Hard stop (errors / resume): hide strips, unhide cells. */
 export function abortSpin() {
