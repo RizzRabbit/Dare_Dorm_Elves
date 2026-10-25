@@ -2,6 +2,7 @@
 // Supports ?book=<name> to play a specific fixture book from src/mock/books/*.json.
 import type { BookEvent } from '../game/typesBookEvent';
 import { MODES } from '../game/config';
+import { API_AMOUNT_MULTIPLIER } from 'constants-shared/bet';
 
 // Mode price multipliers come from the math index (modes.generated.json): ante 3x as of math 6a1be1b.
 export const mockModeCost = (mode?: string) => (mode && (MODES as any)[mode]?.cost) || 1;
@@ -26,7 +27,9 @@ for (const [path, mod] of Object.entries(bookModules)) {
 
 export const AVAILABLE_BOOKS = Object.keys(books);
 
-let mockBalance = 10000000; // 100,000.00
+// API amounts are micro-units: 1,000,000 = $1.00 (constants-shared/bet).
+const $ = (dollars: number) => Math.round(dollars * API_AMOUNT_MULTIPLIER);
+let mockBalance = $(1000); // $1,000.00
 let mockCurrency = 'USD';
 
 export function setMockBalance(amount: number) {
@@ -63,10 +66,11 @@ export async function mockAuthenticate(params: { language?: string; currency?: s
 			currency: mockCurrency,
 		},
 		config: {
-			minBet: 20,
-			maxBet: 10000,
-			betLevels: [20, 50, 100, 200, 500, 1000, 2000, 5000],
-			defaultBetLevel: 100,
+			// Realistic Stake-style ladder, $0.01 to $100, default $1.00 (the UI only ever uses these RGS values).
+			minBet: $(0.01),
+			maxBet: $(100),
+			betLevels: [0.01, 0.02, 0.05, 0.1, 0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.6, 2, 3, 4, 5, 6, 8, 10, 15, 20, 25, 50, 100].map($),
+			defaultBetLevel: $(1),
 			jurisdiction: {},
 		},
 		round: null,
@@ -91,9 +95,11 @@ export async function mockBet(params: { currency: string; amount: number; mode: 
 		book = books[Object.keys(books)[0]];
 	}
 
-	// payoutMultiplier is in 100x units (cents of x bet)
-	const winAmount = ((book.payoutMultiplier ?? 0) / 100) * params.amount;
-	mockBalance += winAmount - params.amount * mockModeCost(params.mode);
+	// params.amount is the base bet in dollars (the real client converts with toApiAmount); payoutMultiplier is in
+	// 100x units (cents of x bet). The mode cost (ante 3x, buys) is charged up front, as the RGS does.
+	const amount = $(params.amount);
+	const winAmount = Math.round(((book.payoutMultiplier ?? 0) / 100) * amount);
+	mockBalance += winAmount - Math.round(amount * mockModeCost(params.mode));
 
 	return {
 		balance: {
@@ -103,7 +109,7 @@ export async function mockBet(params: { currency: string; amount: number; mode: 
 		round: {
 			id: book.id || 'mock_round',
 			mode: book.mode || params.mode,
-			amount: params.amount,
+			amount,
 			payoutMultiplier: book.payoutMultiplier,
 			payout: winAmount,
 			state: book.events,
