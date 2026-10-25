@@ -40,13 +40,22 @@ node scripts/import-art.mjs stacks <dir>
   `{"image": "<file>.webp", "anims": {"<anim>": {"fps": 20, "loop": false, "frames": [[x,y,w,h], ...]}}, "size": [W, H]}`.
   The anim with the file's name is played, or the first one if that name is missing.
   Each frame is drawn over the whole overlay, so make frames at the overlay's aspect (1 x 4 cells per reel).
-* Runtime (`src/game/stacks.ts`):
+  Trimmed frames (optional, per anim): `"canvas": [W, H]` plus frames `[x, y, w, h, ox, oy]` draw each frame 1:1 at `(ox, oy)` on a
+  W x H canvas that is then stretched over the overlay (stacks_anim uses this for `letters_ignite`: only the letter band is stored).
+* Animated set (all 15 runs x 4-5 anims, 60 sheets): `/workspace/elfhaus-frameless/stacks_anim/build_anim.py` builds them from stacks_v2
+  into `stacks_anim/out/sheets` (`report.json` has the decoded MB per sheet), then import that folder.
+* Runtime (`src/game/stacks.ts`). Sheets decode ON DEMAND (all 60 decoded would be ~680 MB); only `index.json` is read at start:
+  * `merge_idle` + `letters_ignite` decode when an overlay shows (placeholder until then); `stack_form` when `reveal` /
+    `respinReveal` see 2+ wilds on a reel that is not full (`stackPrefetch`); `merge_join` as soon as 2+ adjacent single full
+    reels are on the board; `merge_win` when the win starts. Sheets nothing needs are closed after 4 s.
   * `stack_form` plays once when a reel completes (it replaces the squash and flash placeholder), then `merge_idle` loops.
-  * `merge_join` plays once at the merge hit, then `merge_idle`. Without it, the singles' poses scale UP and fade into the
+    `letters_ignite` restarts with it (its blank lead-in frames wait for the build-up).
+  * `merge_join` plays once at the merge hit, then `merge_idle` (only when every merging overlay is a single full reel: its first
+    frame is the singles' pose; growing an existing group uses the fallback). Without it, the singles' poses scale UP and fade into the
     merged group pose, which grows in from 84%. The group art may be drawn larger than the singles (heads or legs cropped):
     the merged overlay clips everything to exactly the merged reels' area.
   * `letters_ignite` plays at the letters beat and holds its last frame. It replaces the CSS `.mLets` letters.
-  * `merge_win` loops while a win line runs through the wild.
+  * `merge_win` loops while a win line runs through the wild. Its frames carry the letters, so the letters layer is hidden meanwhile.
 * **Any missing sheet keeps today's placeholder**, so sheets can land one at a time.
   Today `index.json` is `{"sheets": []}`, so everything is placeholder.
 

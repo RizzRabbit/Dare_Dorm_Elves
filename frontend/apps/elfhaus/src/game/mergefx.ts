@@ -102,7 +102,8 @@ export async function mergeIn(reels: number[], values: number[], product: number
 		if (ov) {
 			ov.style.animation = 'none';
 			{ const m = ov.querySelector<HTMLElement>('.mx'); if (m) m.style.opacity = '0'; }
-			if (hasStack('merge_join', ov)) { ghosts.forEach((g) => g.el.remove()); void stackOnce('merge_join', ov); }
+			// the join sheet starts from the singles' poses: only a fresh merge of single full reels uses it
+			if (olds.every((o) => o.classList.contains('full')) && hasStack('merge_join', ov)) { ghosts.forEach((g) => g.el.remove()); void stackOnce('merge_join', ov); }
 			else scaleUpInto(ov, ghosts);
 		} else ghosts.forEach((g) => g.el.remove());
 		mergeFx(reels);

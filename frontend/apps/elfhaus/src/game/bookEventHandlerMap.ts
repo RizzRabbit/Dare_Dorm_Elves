@@ -12,6 +12,9 @@ import { $, S, k, bet, wait, banner, toast, hideToast, bigWin, setWinMeter, clea
 import { playWins } from './winlines';
 import { wildLand, wfExpand, warmExpand } from './wildfx';
 import { stackIn, mergeIn, growIn, clearOvWins } from './mergefx';
+import { stackPrefetch } from './stacks';
+/** stack_form sheets decode ahead for reels with 2+ wilds that are not full yet (stacks.ts loads sheets on demand). */
+const warmStacks = () => stackPrefetch(S.sym.flatMap((c, r) => (!S.full.has(r) && c.filter((x) => x === 'W').length >= 2 ? [r] : [])));
 import { featOpen, featPop, featClose } from './featfx';
 import { countTo, countMs, setAmount, skipCounts } from './countup';
 import { grab, combineInto } from './combine';
@@ -52,7 +55,7 @@ export const bookEventHandlerMap: Handlers = {
 			const values = g.reels.map((r) => S.full.get(r)!); return { reels: g.reels, values, product: values.reduce((a, b) => a * b, 1) };
 		});
 		ev.board.forEach((col, r) => col.slice(1, 1 + ROWS).forEach((s, row) => { if (s.wild && !S.full.has(r)) S.vals.set(k(r, row), s.multiplier || 1); }));
-		renderOverlays(false);
+		renderOverlays(false); warmStacks();
 		const T = timing();
 		const ant = ev.anticipation.some((a) => a > 0);
 		if (ant && ev.gameType === 'basegame') roxy('anticipation');
@@ -153,6 +156,7 @@ export const bookEventHandlerMap: Handlers = {
 			S.sym[s.reel][s.row] = s.name;
 			if (s.wild) S.vals.set(k(s.reel, s.row), s.multiplier || 1); else S.vals.delete(k(s.reel, s.row));
 		});
+		warmStacks();
 		// each replaced cell lands on its own, left to right then top to bottom
 		const order = [...ev.newSymbols].sort((x, y) => x.reel - y.reel || x.row - y.row);
 		const at0 = Math.max(T.resp, sinceStart() + 120);

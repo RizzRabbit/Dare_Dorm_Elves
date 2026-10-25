@@ -11,7 +11,7 @@
 //                      frame (so each wild shimmers every few seconds), at most 2 at once, paused while the reels
 //                      spin, during win lines, or when the tab is hidden
 import { play, hasSheet, loadSheet, unloadSheet, type Atlas } from './sprite';
-import { hasStack } from './stacks';
+import { stackListed } from './stacks';
 import { burst } from './fx';
 import { S, $ } from './ui';
 import { isSpinning } from './reels';
@@ -82,7 +82,7 @@ export function wfExpand(ov: HTMLElement | null) {
 	if (own) { // this reel's own elf: play now if decoded, else as soon as it is (or skip the elf if that takes too long)
 		const t0 = performance.now(), go = () => { own.used = performance.now(); if (hasSheet(rid(r)) && ov.isConnected && performance.now() - t0 < WAIT_MS) expandWith(rid(r), ov); };
 		if (hasSheet(rid(r))) go(); else void warmExpand(r)?.then(go);
-	} else if (ok() && !hasStack('merge_idle', ov) && !hasStack('stack_form', ov)) expandWith(ID, ov); // the old row (one baked elf) only on the placeholder art
+	} else if (ok() && !stackListed('merge_idle', ov) && !stackListed('stack_form', ov)) expandWith(ID, ov); // the old row (one baked elf) only on the placeholder art
 	if (ok()) play(ID, 'wshineT', ov, { cls: 'wfx wfxIn wfxTop', delay: 420 });
 }
 export function mergeFx(reels: number[]) {

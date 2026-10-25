@@ -4,7 +4,9 @@
 // front of DOM content via CSS classes) and advances it on one shared rAF ticker. Options: loop / once, hold
 // the last frame, reverse, fps override, delay. Static frames can be shown without a canvas via frameCSS()
 // (CSS background-position into the same sheet), which survives innerHTML re-renders.
-export type Atlas = { size: [number, number]; anims: Record<string, { fps: number; loop: boolean; frames: number[][] }> };
+// Trimmed frames (optional): an anim may set canvas:[W,H] and give frames as [x,y,w,h,ox,oy]; each frame is then drawn
+// 1:1 at (ox,oy) on a W x H canvas (e.g. the stack letters band, so mostly-empty frames cost no sheet memory).
+export type Atlas = { size: [number, number]; anims: Record<string, { fps: number; loop: boolean; frames: number[][]; canvas?: [number, number] }> };
 type Sheet = { img: CanvasImageSource; atlas: Atlas; src: string };
 export type PlayOpts = { cls?: string; style?: string; loop?: boolean; hold?: boolean; reverse?: boolean; fps?: number; delay?: number; prepend?: boolean; onEnd?: () => void };
 export type Anim = { cv: HTMLCanvasElement; sheet: Sheet; frames: number[][]; fps: number; loop: boolean; hold: boolean; t0: number; last: number; done: boolean; onEnd?: () => void };
@@ -62,8 +64,10 @@ export function stop(a: Anim) {
 	a.cv.remove(); if (pool.length < 48) pool.push(a.cv);
 }
 function draw(a: Anim, i: number) {
-	const [x, y, w, h] = a.frames[i], ctx = a.cv.getContext('2d')!;
-	ctx.clearRect(0, 0, a.cv.width, a.cv.height); ctx.drawImage(a.sheet.img, x, y, w, h, 0, 0, a.cv.width, a.cv.height);
+	const [x, y, w, h, ox, oy] = a.frames[i], ctx = a.cv.getContext('2d')!;
+	ctx.clearRect(0, 0, a.cv.width, a.cv.height);
+	if (ox !== undefined) ctx.drawImage(a.sheet.img, x, y, w, h, ox, oy, w, h); // trimmed frame, 1:1 at its offset
+	else ctx.drawImage(a.sheet.img, x, y, w, h, 0, 0, a.cv.width, a.cv.height);
 }
 function tick(t: number) {
 	raf = 0;
@@ -73,7 +77,7 @@ function tick(t: number) {
 		let i = Math.floor(((t - a.t0) / 1000) * a.fps);
 		if (i >= a.frames.length) {
 			if (a.loop) i %= a.frames.length;
-			else { draw(a, a.frames.length - 1); live.delete(a); a.onEnd?.(); if (!a.hold) stop(a); continue; }
+			else { draw(a, a.frames.length - 1); live.delete(a); a.onEnd?.(); if (!a.hold && !a.done) stop(a); continue; } // onEnd may already have stopped it (and reused its pooled canvas)
 		}
 		if (i !== a.last) { a.last = i; draw(a, i); }
 	}
@@ -85,12 +89,13 @@ export function play(id: string, name: string, host: Element, o: PlayOpts = {}):
 	const sheet = sheets.get(id); const def = sheet?.atlas.anims[name];
 	if (!sheet || !def || !host.isConnected) return null;
 	const frames = o.reverse ? [...def.frames].reverse() : def.frames;
-	const cv = take(frames[0][2], frames[0][3]);
+	const cv = def.canvas ? take(def.canvas[0], def.canvas[1]) : take(frames[0][2], frames[0][3]);
 	if (o.cls) cv.className += ' ' + o.cls;
 	if (o.style) cv.setAttribute('style', o.style);
 	o.prepend ? host.prepend(cv) : host.appendChild(cv);
 	const a: Anim = { cv, sheet, frames, fps: o.fps || def.fps, loop: o.loop ?? def.loop, hold: !!o.hold, t0: performance.now() + (o.delay || 0), last: -1, done: false, onEnd: o.onEnd };
-	cv.getContext('2d')!.clearRect(0, 0, cv.width, cv.height);
+	if (o.delay) cv.getContext('2d')!.clearRect(0, 0, cv.width, cv.height);
+	else { a.last = 0; draw(a, 0); } // first frame now: a hand-off (one-shot -> loop) never shows an empty canvas for a frame
 	live.add(a);
 	if (!raf) raf = requestAnimationFrame(tick);
 	return a;
