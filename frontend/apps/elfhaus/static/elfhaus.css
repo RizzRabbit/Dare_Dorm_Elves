@@ -1049,3 +1049,9 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:45;bac
 .chip.on{box-shadow:0 0 0 1px #F06AAE}
 .lock{box-shadow:inset 0 0 0 1px #C9B3EC66}
 .ov .ovGlow{display:none} /* radial pink ellipse = old circle highlight; the outline glow replaces it */
+/* ===== house-rule pass (final): every animated property is transform or opacity ===== */
+#lBar i{width:100%;transform:scaleX(0);transform-origin:0 50%;transition:transform .25s ease} /* loader.ts sets scaleX */
+.sw i{display:none} /* the knob is .sw::after (translateX); the old <i> knob left a second dot on Ante / Stop on feature */
+#buyCards .bcard{transition:none}
+body:not(.portrait) #bigwin .bw{top:0;transition:translate calc(.35s*var(--at,1)) ease-out}
+body:not(.portrait) #bigwin.chars .bw{top:0;translate:0 calc(-17*var(--vh))}

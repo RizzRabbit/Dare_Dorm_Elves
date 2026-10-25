@@ -15,7 +15,7 @@ let total = 0, done = 0;
 const pending: Promise<unknown>[] = [];
 function progress() {
 	const bar = document.querySelector('#lBar i') as HTMLElement | null;
-	if (bar) bar.style.width = `${total ? Math.round((done / total) * 100) : 0}%`;
+	if (bar) bar.style.transform = `scaleX(${total ? (done / total).toFixed(3) : 0})`;
 }
 /** Count a promise toward the progress bar (failures still count as done; callers handle their own errors). */
 export function track<T>(p: Promise<T>): Promise<T> {
