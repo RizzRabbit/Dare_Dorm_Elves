@@ -24,6 +24,7 @@ import { playBookEvents, endBonusUi } from './bookEventHandlerMap';
 import { initRoxy, placeRoxy } from './roxy';
 import { initLoader, preloadArt, track, loaderReady, hideLoader } from './loader';
 import { preloadMaxWin } from './maxwin';
+import { fitStage, toStage } from './stage';
 import { placeRespin } from './respin';
 import { loadAllFx } from './fx';
 import { startSpin, abortSpin } from './reels';
@@ -327,7 +328,8 @@ function buildRules() {
 
 // ---------- layout ----------
 export function layout() {
-	const W = innerWidth, H = innerHeight, portrait = H > W * 1.1, short = H < 520;
+	// one shared scale (stage.ts): lay out in stage design px; the stage is never 'short' any more
+	const st = fitStage(), W = st.w, H = st.h, portrait = st.portrait, short = false;
 	document.body.classList.toggle('portrait', portrait);
 	document.body.classList.toggle('short', short && !portrait);
 	// Vertical budget: title + control panel + the fsBar/step-message rows that sit in the stage grid above and
@@ -339,13 +341,13 @@ export function layout() {
 	const lane = short ? 16 : portrait ? 42 : Math.max(fsH - 14, 26), FRAME = short || portrait ? 0 : 34;
 	const used = top + hud + 2 * lane + FRAME + (short ? 14 : portrait ? 30 : 12);
 	let cell = portrait ? Math.min((W - 40) / 5, (H - used) / 4) : Math.min((H - used) / 4, (W - 120) / 5);
-	cell = Math.max(short ? 26 : 36, Math.floor(cell));
+	cell = Math.max(1, Math.floor(cell)); // no px floor: it broke the board/Roxy/background proportion in small windows
 	document.documentElement.style.setProperty('--cell', cell + 'px');
 	S.cell = cell; renderAll();
 	// Roxy stands in the room as an animated sprite, so the backgrounds are the Roxy-free paintings.
 	const bgArt = (portrait && ART.background_portrait) || ART.background;
 	if (bgArt) { $('#bg').classList.add('art'); $('#bg').style.backgroundImage = `url(${bgArt})`; }
-	const fr = $('#frame').getBoundingClientRect();
+	const fr = toStage($('#frame').getBoundingClientRect());
 	document.documentElement.style.setProperty('--gutR', Math.max(0, W - fr.right) + 'px');
 	document.documentElement.style.setProperty('--frB', Math.round(fr.bottom) + 'px');
 	placeRoxy(portrait, fr);
@@ -389,6 +391,8 @@ function wire() {
 		S.replay ? playReplay() : round(spinMode());
 	});
 	addEventListener('resize', layout);
+	addEventListener('orientationchange', () => setTimeout(layout, 120));
+	visualViewport?.addEventListener('resize', layout);
 }
 function applyJurisdiction() {
 	if (S.jur.disabledAutoplay) $('#autoBtn').style.visibility = 'hidden';

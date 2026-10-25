@@ -7,6 +7,7 @@
 	onMount(() => { initGame(); });
 </script>
 
+<div id="root">
 <div id="bg"></div>
 <canvas id="roxy" aria-hidden="true"></canvas>
 <div id="app">
@@ -113,4 +114,5 @@
 		<button id="lGo">CLICK TO CONTINUE</button>
 	</div>
 	<div class="lCredit">Rizzin Games</div>
+</div>
 </div>

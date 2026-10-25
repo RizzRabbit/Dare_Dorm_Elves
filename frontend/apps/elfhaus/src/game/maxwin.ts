@@ -72,7 +72,7 @@ export async function maxWinCelebration() {
 	const conf = document.createElement('div'); conf.className = 'mwConfetti'; stage.insertBefore(conf, crowd);
 	const portrait = document.body.classList.contains('portrait');
 	for (let i = 0; i < (portrait ? 3 : 1); i++) {                       // 16:9 confetti tiles, stacked in portrait
-		const t = document.createElement('div'); t.className = 'mwConfTile'; t.style.top = `calc(${i} * 100vw * 9 / 16)`; conf.appendChild(t);
+		const t = document.createElement('div'); t.className = 'mwConfTile'; t.style.top = `calc(${i} * 100 * var(--vw) * 9 / 16)`; conf.appendChild(t);
 		run('maxwin_confetti', 'fall', t, { delay: 150 + i * 270 });
 	}
 	const xEl = M.querySelector('.mwX') as HTMLElement, amtEl = M.querySelector('.mwAmt') as HTMLElement, hint = M.querySelector('.mwHint') as HTMLElement;

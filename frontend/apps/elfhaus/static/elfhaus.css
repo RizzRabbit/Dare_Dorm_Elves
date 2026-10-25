@@ -175,7 +175,7 @@ body:not(.portrait) #fsBar:not(.hidden) ~ #banner{top:calc(50% - var(--cell)*2 -
 
 /* ---------- overlays / cards / modals ---------- */
 .overlay{position:fixed;inset:0;background:#110F1699;display:flex;align-items:center;justify-content:center;z-index:50}
-#intro .card{text-align:center;padding:30px 56px;border-radius:10px;max-width:90vw;animation:settle .45s ease-out}
+#intro .card{text-align:center;padding:30px 56px;border-radius:10px;max-width:calc(90*var(--vw));animation:settle .45s ease-out}
 .gold{background-image:linear-gradient(#FFFFFF,#DCD3F0 42%,#8E7BB5 54%,#CFC3EA 80%,#F2EEFA)}
 .tierName{font-family:"Cinzel";font-weight:900;font-size:62px;letter-spacing:2px;background-image:linear-gradient(#FFFFFF,#DCD3F0 42%,#8E7BB5 54%,#CFC3EA 80%,#F2EEFA);
   -webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(2px 0 0 #1E1A26) drop-shadow(-2px 0 0 #1E1A26) drop-shadow(0 2px 0 #1E1A26) drop-shadow(0 -2px 0 #1E1A26) drop-shadow(0 4px 0 #120F18)}
@@ -198,7 +198,7 @@ body:not(.portrait) #fsBar:not(.hidden) ~ #banner{top:calc(50% - var(--cell)*2 -
 .bwAmt{font-family:"Nunito";font-weight:900;font-size:62px;color:#fff;
   filter:drop-shadow(2px 0 0 #1E1A26) drop-shadow(-2px 0 0 #1E1A26) drop-shadow(0 2px 0 #1E1A26) drop-shadow(0 -2px 0 #1E1A26) drop-shadow(0 4px 0 #120F18)}
 .bwX{display:inline-block;margin-top:8px;font-size:16px;font-weight:800;letter-spacing:1px;background:var(--glass2);color:#fff;border:1px solid var(--hair);border-radius:5px;padding:3px 12px}
-.modal{border-radius:10px;padding:20px 26px;max-width:min(1100px,94vw);max-height:90vh;overflow:auto}
+.modal{border-radius:10px;padding:20px 26px;max-width:min(1100px,calc(94*var(--vw)));max-height:calc(90*var(--vh));overflow:auto}
 .modal h2{margin:0 0 16px;font-family:"Cinzel";font-weight:900;font-size:30px;letter-spacing:2px;color:var(--gold)}
 .modal h2 small{font-family:"Nunito";font-weight:800;font-size:11px;letter-spacing:1px;color:#ECEAF3;border:1px solid var(--hair);padding:2px 8px;border-radius:4px;margin-left:10px;vertical-align:middle}
 #buyCards{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
@@ -210,7 +210,7 @@ body:not(.portrait) #fsBar:not(.hidden) ~ #banner{top:calc(50% - var(--cell)*2 -
 .bcard button{padding:8px;background:var(--gold);color:#1A1722;border-color:transparent} .bcard button:hover{background:#CBB8EE}
 #buyConfirm{margin-top:14px;text-align:center} #buyConfirm button{padding:8px 20px;margin:0 6px}
 #buyClose,#menuClose{margin-top:14px;padding:8px 20px}
-.rules{font-size:14px;font-weight:600;line-height:1.45;max-width:min(900px,94vw)} .rules table{border-collapse:collapse} .rules td,.rules th{border:1px solid #ffffff2a;padding:2px 8px}
+.rules{font-size:14px;font-weight:600;line-height:1.45;max-width:min(900px,calc(94*var(--vw)))} .rules table{border-collapse:collapse} .rules td,.rules th{border:1px solid #ffffff2a;padding:2px 8px}
 
 /* ---------- mobile portrait ---------- */
 body.portrait #top{width:100%;height:auto;position:relative;padding-top:6px;text-align:center}
@@ -228,7 +228,7 @@ body.portrait #bar{height:58px;grid-template-columns:1fr 50px 92px 50px 1fr;padd
 body.portrait #spinBtn{width:86px;height:86px} body.portrait #spinBtn svg{width:50px;height:50px}
 body.portrait #strip{padding:6px 12px 7px;margin-top:22px} body.portrait #strip label{font-size:11px} body.portrait #strip span{font-size:16px}
 body.portrait #fsBar{font-size:14px;gap:10px;padding:3px 14px}
-body.portrait #banner{font-size:13px;padding:4px 12px;white-space:normal;width:max-content;max-width:94vw;text-align:center}
+body.portrait #banner{font-size:13px;padding:4px 12px;white-space:normal;width:max-content;max-width:calc(94*var(--vw));text-align:center}
 body.portrait .tierName{font-size:38px} body.portrait .spins{font-size:22px} body.portrait #intro .card{padding:22px 20px}
 body.portrait .bwTier{font-size:52px} body.portrait .bwAmt{font-size:38px}
 body.portrait #buyCards{grid-template-columns:1fr 1fr} body.portrait .bcard:last-child{grid-column:span 2}
@@ -242,14 +242,14 @@ body.portrait #buyCards{grid-template-columns:1fr 1fr} body.portrait .bcard:last
 #logo.art{width:260px;height:130px} #logo.art img{max-width:100%;max-height:100%;object-fit:contain}
 #logo .phTag{position:absolute;bottom:-6px;font:800 9px "Nunito";letter-spacing:1px;color:#F1F0F5;background:#2A2433aa;padding:0 4px;border-radius:3px}
 #frame.art{background-size:100% 100%}
-#intro .card.art{background-size:cover;background-position:center;min-width:min(560px,90vw)}
+#intro .card.art{background-size:cover;background-position:center;min-width:min(560px,calc(90*var(--vw)))}
 .ico:disabled{opacity:.35}
 #strip span{white-space:nowrap}
 #replayBar{position:fixed;top:calc(8px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:40;display:flex;gap:10px;align-items:center;justify-content:center;padding:10px;background:var(--glass);border:1px solid var(--hair);border-radius:10px;color:#fff}
 .modal p{margin:6px 0}
 .bcard .rtp{font-size:12px;opacity:.75}
 .bcard.off{opacity:.5}
-#msg{z-index:70} #msg .modal{max-width:min(520px,92vw);text-align:center}
+#msg{z-index:70} #msg .modal{max-width:min(520px,calc(92*var(--vw)));text-align:center}
 #msg h2{color:var(--gold)} #buyConfirmNote{font-size:13px;opacity:.85} #intro .card{position:relative} .rules .ri{width:28px;height:28px;object-fit:cover;vertical-align:middle;margin-right:6px;border-radius:4px} .rules .lines{font-size:12px;line-height:1.7} .rules .ln{white-space:nowrap;margin-right:8px} .rules .disc{opacity:.8}
 .rules h3{font-family:"Cinzel";color:var(--gold);margin:14px 0 4px}
 .rules table{margin:6px 0;font-size:13px}
@@ -276,40 +276,40 @@ body.hasRoxy #roxy{display:block}
 
 /* ---- In-game title: ELFHAUS wordmark centered above the reel board ---- */
 #top{position:relative;top:auto;left:auto;right:auto;width:100%;height:auto;display:flex;justify-content:center;padding-top:6px;pointer-events:none;z-index:5}
-#logo.art,body.portrait #logo.art{position:relative;left:auto;right:auto;top:auto;margin:0 auto;width:auto;height:clamp(46px,10.5vh,118px);max-width:min(560px,70vw)}
+#logo.art,body.portrait #logo.art{position:relative;left:auto;right:auto;top:auto;margin:0 auto;width:auto;height:clamp(46px,calc(10.5*var(--vh)),118px);max-width:min(560px,calc(70*var(--vw)))}
 #logo.art img{display:block;height:100%;width:auto;max-width:100%;object-fit:contain}
-body.portrait #logo.art{height:clamp(40px,8vh,92px);max-width:78vw}
+body.portrait #logo.art{height:clamp(40px,calc(8*var(--vh)),92px);max-width:calc(78*var(--vw))}
 
 /* ---- Loading screen (matte: greys/purples, no glow) ---- */
-#loader{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(8px,2vh,22px);
-  background:#1C1922;overflow:hidden;opacity:1;transition:opacity .6s ease;user-select:none;-webkit-user-select:none;padding:3vh 4vw 6vh;box-sizing:border-box}
+#loader{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(8px,calc(2*var(--vh)),22px);
+  background:#1C1922;overflow:hidden;opacity:1;transition:opacity .6s ease;user-select:none;-webkit-user-select:none;padding:calc(3*var(--vh)) calc(4*var(--vw)) calc(6*var(--vh));box-sizing:border-box}
 #loader.out{opacity:0;pointer-events:none}
 #loader .lbg{position:absolute;inset:-60px;background-size:cover;background-position:center;filter:blur(22px) saturate(.55) brightness(.34)}
 #loader .lbg::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,#2A243300,#15121Acc 78%)}
-#lLogo{position:relative;display:block;width:min(64vw,820px);max-height:46vh;object-fit:contain;pointer-events:none}
+#lLogo{position:relative;display:block;width:min(calc(64*var(--vw)),820px);max-height:calc(46*var(--vh));object-fit:contain;pointer-events:none}
 #lLogo.txt{font:900 72px "Cinzel";color:#DCD3F0;text-align:center}
-.lSide{position:relative;display:flex;flex-direction:column;align-items:center;gap:clamp(8px,1.6vh,16px);width:min(600px,92vw)}
+.lSide{position:relative;display:flex;flex-direction:column;align-items:center;gap:clamp(8px,calc(1.6*var(--vh)),16px);width:min(600px,calc(92*var(--vw)))}
 #lCards{position:relative;width:100%;overflow:hidden;border-radius:8px;touch-action:pan-y;cursor:grab}
 #lCards:active{cursor:grabbing}
 #lTrack{display:flex;transition:transform .5s cubic-bezier(.3,.7,.3,1)}
 .lCard{flex:0 0 100%;box-sizing:border-box;display:flex;align-items:center;gap:18px;padding:12px 18px 12px 12px;
   background:linear-gradient(#2B2634e6,#1E1A25e6);border:1px solid #4A4258;border-radius:8px}
-.lCard h3{margin:0;font-family:"Cinzel";font-weight:800;font-size:clamp(15px,2.2vh,21px);line-height:1.25;letter-spacing:.6px;color:#ECE6F6}
-.lArt{position:relative;flex:0 0 auto;width:clamp(84px,14vh,128px);height:clamp(84px,14vh,128px);border-radius:6px;overflow:hidden;background:#2A2433;border:1px solid #5A5068}
+.lCard h3{margin:0;font-family:"Cinzel";font-weight:800;font-size:clamp(15px,calc(2.2*var(--vh)),21px);line-height:1.25;letter-spacing:.6px;color:#ECE6F6}
+.lArt{position:relative;flex:0 0 auto;width:clamp(84px,calc(14*var(--vh)),128px);height:clamp(84px,calc(14*var(--vh)),128px);border-radius:6px;overflow:hidden;background:#2A2433;border:1px solid #5A5068}
 .lArt img{display:block;width:100%;height:100%;object-fit:cover;pointer-events:none}
 .lArt.wild img{object-fit:contain}
 .lLock{position:absolute;top:5px;left:50%;translate:-50% 0;font:800 9px "Nunito";letter-spacing:1px;color:#ECE6F6;background:#1E1A26d9;border:1px solid #6B6080;border-radius:3px;padding:0 5px}
 .lBadge{position:absolute;bottom:5px;left:50%;translate:-50% 0;font:900 13px "Nunito";color:#1E1A26;background:linear-gradient(#EFE8FA,#B9A9D6);border:1px solid #1E1A26;border-radius:4px;padding:0 7px}
 .lArt.max img{filter:saturate(.75) brightness(.72)}
-.lBig{position:absolute;left:0;right:0;bottom:8%;text-align:center;font-family:"Cinzel";font-weight:900;font-size:clamp(17px,3vh,26px);letter-spacing:.5px;
+.lBig{position:absolute;left:0;right:0;bottom:8%;text-align:center;font-family:"Cinzel";font-weight:900;font-size:clamp(17px,calc(3*var(--vh)),26px);letter-spacing:.5px;
   color:transparent;background-image:linear-gradient(#FFFFFF,#DCD3F0 42%,#8E7BB5 54%,#CFC3EA 80%,#F2EEFA);-webkit-background-clip:text;background-clip:text;
   -webkit-text-stroke:1px #1E1A26;paint-order:stroke fill}
 #lDots{display:flex;gap:8px}
 #lDots button{width:9px;height:9px;padding:0;border-radius:50%;border:1px solid #1E1A26;background:#5D5370;cursor:pointer}
 #lDots button.on{background:#CDBDEB}
-#lBar{width:min(420px,70vw);height:7px;border-radius:4px;background:#26212E;border:1px solid #4A4258;overflow:hidden}
+#lBar{width:min(420px,calc(70*var(--vw)));height:7px;border-radius:4px;background:#26212E;border:1px solid #4A4258;overflow:hidden}
 #lBar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#5E4C80,#A28FC8);transition:width .25s ease}
-#lGo{display:none;font-family:"Cinzel";font-weight:800;font-size:clamp(15px,2.2vh,20px);letter-spacing:2px;color:#1E1A26;padding:11px 34px;border-radius:6px;
+#lGo{display:none;font-family:"Cinzel";font-weight:800;font-size:clamp(15px,calc(2.2*var(--vh)),20px);letter-spacing:2px;color:#1E1A26;padding:11px 34px;border-radius:6px;
   border:1px solid #1E1A26;background:linear-gradient(#EEE8F8,#BBAAD8);cursor:pointer;animation:lPulse 1.8s ease-in-out infinite}
 #lGo:hover{background:linear-gradient(#F6F2FC,#C9BBE3)}
 #loader.ready #lBar{display:none}
@@ -317,14 +317,14 @@ body.portrait #logo.art{height:clamp(40px,8vh,92px);max-width:78vw}
 @keyframes lPulse{50%{transform:scale(1.04)}}
 .lCredit{position:absolute;bottom:max(10px,env(safe-area-inset-bottom));left:0;right:0;text-align:center;font:700 12px "Nunito";letter-spacing:1.5px;color:#9A90AE}
 @media (orientation:portrait){
-  #lLogo{width:94vw;max-height:34vh}
+  #lLogo{width:calc(94*var(--vw));max-height:calc(34*var(--vh))}
   .lCard{gap:12px;padding:10px 12px 10px 10px}
 }
 /* short popout (landscape, under 520px tall): logo left, cards and controls right */
-@media (orientation:landscape) and (max-height:520px){
-  #loader{flex-direction:row;gap:3vw;padding:12px 4vw 28px}
-  #lLogo{width:44vw;max-height:78vh}
-  .lSide{width:min(460px,46vw);gap:8px}
+@media (orientation:landscape) and (max-height:0px){ /* retired: fixed design stage */
+  #loader{flex-direction:row;gap:calc(3*var(--vw));padding:12px calc(4*var(--vw)) 28px}
+  #lLogo{width:calc(44*var(--vw));max-height:calc(78*var(--vh))}
+  .lSide{width:min(460px,calc(46*var(--vw)));gap:8px}
   .lArt{width:72px;height:72px}
   .lCard{padding:8px 12px 8px 8px;gap:12px}
   .lCard h3{font-size:14px}
@@ -368,46 +368,46 @@ body.short #strip{margin-top:3px;padding:2px 10px}
 #maxwin .mwStage{position:absolute;inset:0}
 #maxwin .mwBg{position:absolute;inset:-40px;background-size:cover;background-position:center;filter:blur(22px) saturate(.55) brightness(.34)}
 #maxwin .mwShade{position:absolute;inset:0;background:linear-gradient(180deg,#1C192200 45%,#1C1922b0 78%,#1C1922e6)}
-#maxwin .mwText{position:absolute;left:0;right:0;bottom:5vh;display:flex;flex-direction:column;align-items:center;text-align:center;pointer-events:none}
-.mwTier{font-family:"Cinzel";font-weight:900;font-size:clamp(44px,9vw,128px);line-height:1;letter-spacing:4px;
+#maxwin .mwText{position:absolute;left:0;right:0;bottom:calc(5*var(--vh));display:flex;flex-direction:column;align-items:center;text-align:center;pointer-events:none}
+.mwTier{font-family:"Cinzel";font-weight:900;font-size:clamp(44px,calc(9*var(--vw)),128px);line-height:1;letter-spacing:4px;
   background-image:linear-gradient(#FFFFFF,#E6E0F2 40%,#9C8CC0 52%,#D3C8EC 78%,#F4F1FA);-webkit-background-clip:text;background-clip:text;color:transparent;
   filter:drop-shadow(3px 0 0 #1E1A26) drop-shadow(-3px 0 0 #1E1A26) drop-shadow(0 3px 0 #1E1A26) drop-shadow(0 -3px 0 #1E1A26) drop-shadow(0 7px 0 #120F18) drop-shadow(0 12px 14px #000a);
   transform:scale(.6);opacity:0;transition:transform .55s cubic-bezier(.2,1.4,.4,1),opacity .3s}
 #maxwin.on .mwTier{transform:scale(1);opacity:1}
-.mwX{font-family:"Cinzel";font-weight:900;font-size:clamp(34px,6vw,84px);line-height:1.05;letter-spacing:2px;color:#F2EEFA;font-variant-numeric:tabular-nums;
+.mwX{font-family:"Cinzel";font-weight:900;font-size:clamp(34px,calc(6*var(--vw)),84px);line-height:1.05;letter-spacing:2px;color:#F2EEFA;font-variant-numeric:tabular-nums;
   filter:drop-shadow(2px 0 0 #1E1A26) drop-shadow(-2px 0 0 #1E1A26) drop-shadow(0 2px 0 #1E1A26) drop-shadow(0 -2px 0 #1E1A26) drop-shadow(0 5px 0 #120F18)}
 #maxwin.landed .mwX{animation:mwThump .5s ease-out}
 @keyframes mwThump{0%{transform:scale(1)}35%{transform:scale(1.12)}100%{transform:scale(1)}}
-.mwAmt{margin-top:6px;font-family:"Nunito";font-weight:900;font-size:clamp(22px,3.2vw,44px);color:#fff;font-variant-numeric:tabular-nums;
+.mwAmt{margin-top:6px;font-family:"Nunito";font-weight:900;font-size:clamp(22px,calc(3.2*var(--vw)),44px);color:#fff;font-variant-numeric:tabular-nums;
   background:#1C1922c8;border:1px solid #4A4258;border-radius:8px;padding:2px 18px;
   filter:drop-shadow(0 4px 8px #0008)}
-.mwHint{margin-top:14px;font-family:"Nunito";font-weight:900;font-size:clamp(12px,1.4vw,16px);letter-spacing:2px;color:#DCD3F0;opacity:0;transition:opacity .4s}
+.mwHint{margin-top:14px;font-family:"Nunito";font-weight:900;font-size:clamp(12px,calc(1.4*var(--vw)),16px);letter-spacing:2px;color:#DCD3F0;opacity:0;transition:opacity .4s}
 #maxwin.held .mwHint{opacity:1;animation:mwPulse 1.6s ease-in-out infinite}
 #maxwin.held{cursor:pointer}
 @keyframes mwPulse{50%{opacity:.55}}
 body.portrait #maxwin .mwShade{background:linear-gradient(180deg,#1C192200 52%,#1C1922c0 70%,#1C1922f0)}
-body.portrait #maxwin .mwText{bottom:12vh}
-body.short #maxwin .mwText{bottom:3vh} body.short .mwTier{font-size:40px} body.short .mwX{font-size:30px} body.short .mwAmt{font-size:18px} body.short .mwHint{margin-top:4px;font-size:11px}
+body.portrait #maxwin .mwText{bottom:calc(12*var(--vh))}
+body.short #maxwin .mwText{bottom:calc(3*var(--vh))} body.short .mwTier{font-size:40px} body.short .mwX{font-size:30px} body.short .mwAmt{font-size:18px} body.short .mwHint{margin-top:4px;font-size:11px}
 #maxwin .mwBg{z-index:0} #maxwin .mwShade{z-index:1} #maxwin .mwText{z-index:4}
-body.portrait #maxwin .mwText{bottom:16vh}
+body.portrait #maxwin .mwText{bottom:calc(16*var(--vh))}
 
 
 /* ---- layout v2: one control panel centered under the board, in every orientation; viewport-relative sizes ----
    #ctrlTop/.side/#bar/#strip dissolve (display:contents) so every control and the balance/bet/win readouts sit in one
    symmetric 11-column grid: [menu turbo ante] · [− SPIN +] · [auto buy], readouts on a second row. The spin button is
    the middle column, so it sits on the panel's (and the screen's) center line. #app-prefixed to outrank older rules. */
-body{--hb:clamp(34px,5.4vh,56px);--sp:clamp(54px,9vh,96px);--mt:clamp(26px,4.2vh,40px);--cg:clamp(6px,1vw,14px)}
+body{--hb:clamp(34px,calc(5.4*var(--vh)),56px);--sp:clamp(54px,calc(9*var(--vh)),96px);--mt:clamp(26px,calc(4.2*var(--vh)),40px);--cg:clamp(6px,calc(1*var(--vw)),14px)}
 body.short:not(.portrait){--hb:32px;--sp:46px;--mt:22px}
-body.portrait{--hb:min(40px,8.4vw);--sp:min(66px,14.5vw);--mt:30px;--cg:min(5px,1vw)}
-body:not(.portrait) #top{padding-top:clamp(8px,1.6vh,16px);flex:0 0 auto}
-body:not(.portrait) #logo.art{height:clamp(40px,8.6vh,104px)}
+body.portrait{--hb:min(40px,calc(8.4*var(--vw)));--sp:min(66px,calc(14.5*var(--vw)));--mt:30px;--cg:min(5px,calc(1*var(--vw)))}
+body:not(.portrait) #top{padding-top:clamp(8px,calc(1.6*var(--vh)),16px);flex:0 0 auto}
+body:not(.portrait) #logo.art{height:clamp(40px,calc(8.6*var(--vh)),104px)}
 #app #stage{flex:1 1 auto}
 #app #hud{flex:0 0 auto;display:grid;align-items:center;justify-items:center;
   grid-template-columns:var(--hb) var(--hb) var(--hb) minmax(0,1fr) var(--hb) var(--sp) var(--hb) minmax(0,1fr) var(--hb) var(--hb) var(--hb);
   grid-template-rows:var(--sp) var(--mt);column-gap:var(--cg);row-gap:4px;
-  width:clamp(560px,calc(var(--cell)*5 + 160px),980px);max-width:calc(100vw - 16px);margin:0 auto clamp(6px,1.4vh,14px);
-  padding:clamp(4px,.8vh,8px) clamp(10px,1.4vw,20px) 2px;background:var(--glass);border:1px solid var(--hair);border-radius:12px;box-shadow:0 10px 24px -10px #000a}
-body.portrait #app #hud{width:calc(100vw - 12px);max-width:none;padding:6px 6px 2px;margin-bottom:max(8px,env(safe-area-inset-bottom))}
+  width:clamp(560px,calc(var(--cell)*5 + 160px),980px);max-width:calc(calc(100*var(--vw)) - 16px);margin:0 auto clamp(6px,calc(1.4*var(--vh)),14px);
+  padding:clamp(4px,calc(.8*var(--vh)),8px) clamp(10px,calc(1.4*var(--vw)),20px) 2px;background:var(--glass);border:1px solid var(--hair);border-radius:12px;box-shadow:0 10px 24px -10px #000a}
+body.portrait #app #hud{width:calc(calc(100*var(--vw)) - 12px);max-width:none;padding:6px 6px 2px;margin-bottom:max(8px,env(safe-area-inset-bottom))}
 #app #hud::before{content:"";grid-row:2;grid-column:1/-1;align-self:start;width:100%;border-top:1px solid var(--hair)}
 #app #ctrlTop,#app #ctrlTop .side,#app #bar,#app #strip{display:contents}
 #app #menuBtn{grid-area:1/1} #app #turboBtn{grid-area:1/2} #app #anteBtn{grid-area:1/3}
@@ -423,15 +423,15 @@ body.portrait #app #hud{width:calc(100vw - 12px);max-width:none;padding:6px 6px 
 #app #buyBtn.emblem{width:calc(var(--sp)*.86);height:calc(var(--sp)*.86);background:#1A1722e6;border:2px solid var(--gold);justify-self:center}
 #app #buyBtn.emblem img{width:calc(var(--sp)*.6);height:calc(var(--sp)*.6)}
 /* readouts: label + value on one line, each centered under its control group */
-#app #strip .m{grid-row:2;display:flex;align-items:baseline;justify-content:center;gap:clamp(4px,.8vw,8px);white-space:nowrap;min-width:0;color:#fff;padding:0;margin:0}
+#app #strip .m{grid-row:2;display:flex;align-items:baseline;justify-content:center;gap:clamp(4px,calc(.8*var(--vw)),8px);white-space:nowrap;min-width:0;color:#fff;padding:0;margin:0}
 #app #strip .m:nth-child(1){grid-column:1/5} #app #strip .m:nth-child(2){grid-column:5/8} #app #strip .m:nth-child(3){grid-column:8/12}
-#app #strip label{display:inline;font-size:clamp(10px,1.5vh,13px);letter-spacing:.8px;color:#CFC9DA}
-#app #strip span{font-size:clamp(14px,2.3vh,20px)}
+#app #strip label{display:inline;font-size:clamp(10px,calc(1.5*var(--vh)),13px);letter-spacing:.8px;color:#CFC9DA}
+#app #strip span{font-size:clamp(14px,calc(2.3*var(--vh)),20px)}
 body.portrait #app #strip .m{flex-direction:column;align-items:center;gap:0;line-height:1.05}
-body.portrait #app #strip label{font-size:10px} body.portrait #app #strip span{font-size:min(15px,4vw)}
+body.portrait #app #strip label{font-size:10px} body.portrait #app #strip span{font-size:min(15px,calc(4*var(--vw)))}
 /* stage: tighter gaps above/below the board */
 #app #fsBar{margin-bottom:6px}
-body:not(.portrait) #app #fsBar{font-size:clamp(14px,2.6vh,20px);line-height:1.4;padding:4px clamp(12px,1.6vw,22px)}
+body:not(.portrait) #app #fsBar{font-size:clamp(14px,calc(2.6*var(--vh)),20px);line-height:1.4;padding:4px clamp(12px,calc(1.6*var(--vw)),22px)}
 #app #stepToast{margin-top:6px;min-height:32px}
 /* portrait: the board sits low, a comfortable gap above the controls; Roxy's upper body fills the space above it */
 body.portrait #app #stage{grid-template-rows:minmax(0,1fr) auto auto}
@@ -460,7 +460,7 @@ body.short:not(.portrait) #logo.art img{width:100%;height:100%}
 .ov .mx.total{top:auto;right:auto;left:50%;bottom:5px;translate:-50% 0;height:max(17px,calc(var(--cell)*.22));transform-origin:50% 60%;
   background:radial-gradient(closest-side,#2A243366,#2A243300);padding:0 4px}
 /* landscape: banners sit in the fsBar lane just above the board (never up in the title); during bonuses they overlap the board's top edge */
-body:not(.portrait) #app #banner{top:calc(50% - var(--cell)*2 - 6px);transform:translate(-50%,-100%);font-size:clamp(13px,2.4vh,20px);padding:4px clamp(12px,1.6vw,24px)}
+body:not(.portrait) #app #banner{top:calc(50% - var(--cell)*2 - 6px);transform:translate(-50%,-100%);font-size:clamp(13px,calc(2.4*var(--vh)),20px);padding:4px clamp(12px,calc(1.6*var(--vw)),24px)}
 body:not(.portrait) #app #fsBar:not(.hidden) ~ #banner{top:calc(50% - var(--cell)*2 + 8px);transform:translateX(-50%)}
 /* free-spin bar: landscape tucks into the bezel top; landscape phone puts it in the right gutter, level with the board bottom */
 body:not(.portrait):not(.short) #app #fsBar{margin-bottom:-10px;position:relative;z-index:4}
@@ -548,7 +548,7 @@ body{--bw:calc(var(--sp)*.86)}
 .sw{position:relative;width:46px;height:26px;padding:0;border-radius:99px;background:#2A2236;border:1.5px solid #6B6080;flex:none}
 .sw i{position:absolute;top:2px;left:2px;width:19px;height:19px;border-radius:50%;background:#C9C2D8;transition:left .15s ease}
 .sw.on{background:#C42A78;border-color:#F06AAE;box-shadow:0 0 8px #F06AAE66} .sw.on i{left:22px;background:#FFE6F2}
-.modal.bm{width:min(860px,94vw)} .modal.am{width:min(460px,94vw)}
+.modal.bm{width:min(860px,calc(94*var(--vw)))} .modal.am{width:min(460px,calc(94*var(--vw)))}
 #anteRow.on{border-color:#F06AAE88}
 #buyCards{grid-template-columns:repeat(5,1fr);gap:10px;margin:12px 0}
 #buyCards.hidden{display:none}
@@ -618,13 +618,13 @@ canvas.wfxTop{z-index:4}
 
 /* ---- feature moments (fx_feat): burst behind the title, matte confetti, title pop; free-spin outro ---- */
 .ffConf{position:absolute;left:0;top:0;width:100%;height:100%;opacity:.85}
-.ffBurst{position:absolute;left:50%;top:42%;width:min(80vw,560px);aspect-ratio:1;transform:translate(-50%,-50%)}
+.ffBurst{position:absolute;left:50%;top:42%;width:min(calc(80*var(--vw)),560px);aspect-ratio:1;transform:translate(-50%,-50%)}
 body.portrait .ffBurst{top:46%}
 canvas.ffFill{position:absolute;inset:0;width:100%;height:100%}
 canvas.ffPop{position:absolute;left:50%;top:50%;width:160%;aspect-ratio:1;transform:translate(-50%,-50%);pointer-events:none;z-index:1}
 #intro,#outro{cursor:pointer}
 #intro .card,#outro .card{position:relative;z-index:1}
-#outro .card{text-align:center;padding:26px 56px;border-radius:10px;max-width:90vw;animation:settle .45s ease-out}
+#outro .card{text-align:center;padding:26px 56px;border-radius:10px;max-width:calc(90*var(--vw));animation:settle .45s ease-out}
 .otAmt{font-family:"Cinzel";font-weight:900;font-size:46px;color:#fff;font-variant-numeric:tabular-nums;min-width:8ch;display:inline-block;margin-top:4px}
 body.portrait .otAmt{font-size:34px}
 .otHint{font-size:12px;opacity:.6;margin-top:10px;letter-spacing:1px}
@@ -644,20 +644,20 @@ canvas.uiFill{position:absolute;inset:0;width:100%;height:100%}
 
 /* MAX WIN sprite layout. One POV group sprite (frame 716x417): Coco | Jade | WF | Roxy | Vi, cropped at the waist. */
 #maxwin .mwCrowd{position:absolute;inset:0;z-index:3;pointer-events:none;overflow:hidden}
-#maxwin .mwGroup{position:absolute;left:50%;bottom:-1vh;height:62vh;aspect-ratio:716/417;
+#maxwin .mwGroup{position:absolute;left:50%;bottom:calc(-1*var(--vh));height:calc(62*var(--vh));aspect-ratio:716/417;
   transform:translate(-50%,40%);opacity:0;transition:transform .45s cubic-bezier(.2,.9,.25,1.15),opacity .2s ease}
 #maxwin .mwGroup.up{transform:translate(-50%,0);opacity:1}
-body.portrait #maxwin .mwGroup{height:auto;width:128vw;bottom:0}
+body.portrait #maxwin .mwGroup{height:auto;width:calc(128*var(--vw));bottom:0}
 #maxwin .mwSpr{position:absolute;inset:0;width:100%;height:100%;image-rendering:auto}
 #maxwin .mwConfetti{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden;animation:mwConfIn .5s ease both}
 @keyframes mwConfIn{from{opacity:0}to{opacity:1}}
 #maxwin .mwConfTile{position:absolute;left:0;width:100%;aspect-ratio:16/9}
-#maxwin .mwSpark{position:absolute;z-index:5;width:calc(7vmin*var(--s,1));aspect-ratio:1;transform:translate(-50%,-50%);pointer-events:none}
+#maxwin .mwSpark{position:absolute;z-index:5;width:calc(calc(7*var(--vmin))*var(--s,1));aspect-ratio:1;transform:translate(-50%,-50%);pointer-events:none}
 /* title + count-up sit in the clear centre band above the elves */
-#maxwin .mwText{top:6vh;bottom:auto;z-index:4}
-#maxwin .mwTier.spr{position:relative;width:min(48vw,720px);aspect-ratio:560/160;font-size:0;color:transparent}
-body.portrait #maxwin .mwText{top:24vh;bottom:auto}
-body.portrait #maxwin .mwTier.spr{width:80vw}
+#maxwin .mwText{top:calc(6*var(--vh));bottom:auto;z-index:4}
+#maxwin .mwTier.spr{position:relative;width:min(calc(48*var(--vw)),720px);aspect-ratio:560/160;font-size:0;color:transparent}
+body.portrait #maxwin .mwText{top:calc(24*var(--vh));bottom:auto}
+body.portrait #maxwin .mwTier.spr{width:calc(80*var(--vw))}
 /* soft plate so the amount stays readable where it meets the row of heads */
 #maxwin .mwText::before{content:'';position:absolute;inset:-4% -12%;z-index:-1;background:radial-gradient(closest-side,rgba(20,12,24,.5),rgba(20,12,24,0))}
 
@@ -666,12 +666,17 @@ body.portrait #maxwin .mwTier.spr{width:80vw}
 #bigwin .bw { position: relative; z-index: 2; }
 #bigwin .bwFx { z-index: 1; }
 #bigwin .bwGroup {                       /* frame 584x397: Vi | Roxy | Coco, cropped at the waist */
-	position: absolute; left: 50%; bottom: -1vh; height: 74vh; aspect-ratio: 584 / 397;
+	position: absolute; left: 50%; bottom: calc(-1*var(--vh)); height: calc(74*var(--vh)); aspect-ratio: 584 / 397;
 	transform: translate(-50%, 10%); opacity: 0; transition: transform .45s cubic-bezier(.2, 1.4, .4, 1), opacity .16s linear;
 }
 #bigwin .bwGroup.in { transform: translate(-50%, 0); opacity: 1; }
 #bigwin .bwSpr { position: absolute; inset: 0; width: 100%; height: 100%; }
-body.portrait #bigwin .bwGroup { height: auto; width: 122vw; bottom: 0; }
+body.portrait #bigwin .bwGroup { height: auto; width: calc(122*var(--vw)); bottom: 0; }
 /* keep the amount legible over the group: soft dark plate behind the text block */
 #bigwin .bw::before { content: ''; position: absolute; inset: -6% -14%; z-index: -1;
 	background: radial-gradient(closest-side, rgba(20, 12, 24, .55), rgba(20, 12, 24, 0)); }
+
+/* ---- one shared scale (stage.ts): the whole game is laid out on a design stage and scaled as one ---- */
+html{background:#2A2533}
+#root{position:fixed;left:0;top:0;width:var(--dw,100vw);height:var(--dh,100vh);overflow:hidden;transform-origin:0 0;
+  transform:translate(var(--ox,0),var(--oy,0)) scale(var(--s,1));contain:layout size}

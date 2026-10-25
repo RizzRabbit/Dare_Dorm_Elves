@@ -5,16 +5,17 @@
 // the arrival burst is the sprite sheet.
 import { S } from './ui';
 import { mxBurst } from './fx';
+import { toStage } from './stage';
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 function layer() {
 	let l = document.getElementById('flyLayer');
-	if (!l) { l = document.createElement('div'); l.id = 'flyLayer'; document.body.appendChild(l); }
+	if (!l) { l = document.createElement('div'); l.id = 'flyLayer'; (document.getElementById('root') || document.body).appendChild(l); }
 	return l;
 }
 /** Snapshot multipliers where they are now (call before the DOM under them is replaced). */
 export function grab(mxs: (HTMLElement | null)[]) {
 	return [...new Set(mxs)].filter((m): m is HTMLElement => !!m && !!m.offsetParent).map((m) => {
-		const r = m.getBoundingClientRect(), c = m.cloneNode(true) as HTMLElement;
+		const r = toStage(m.getBoundingClientRect()), c = m.cloneNode(true) as HTMLElement;
 		c.querySelectorAll('canvas').forEach((x) => x.remove());
 		c.classList.add('fly');
 		c.style.cssText = `position:fixed;left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;right:auto;bottom:auto;margin:0;translate:none`;
@@ -26,9 +27,9 @@ export async function combineInto(clones: HTMLElement[], target: HTMLElement | n
 	if (!target || !clones.length) { clones.forEach((c) => c.remove()); return; }
 	const fast = S.turbo, dur = fast ? 300 : 600, stag = fast ? 25 : 70;
 	target.style.visibility = 'hidden';
-	const t = target.getBoundingClientRect(), tx = t.left + t.width * 0.62, ty = t.top + t.height / 2;
+	const t = toStage(target.getBoundingClientRect()), tx = t.left + t.width * 0.62, ty = t.top + t.height / 2;
 	await Promise.all(clones.map((c, i) => {
-		const r = c.getBoundingClientRect(), dx = tx - (r.left + r.width * 0.62), dy = ty - (r.top + r.height / 2);
+		const r = toStage(c.getBoundingClientRect()), dx = tx - (r.left + r.width * 0.62), dy = ty - (r.top + r.height / 2);
 		return c.animate([
 			{ transform: 'translate(0,0) scale(1)', opacity: 1 },
 			{ transform: `translate(${dx * 0.35}px,${dy * 0.35 - 10}px) scale(1.12)`, opacity: 1, offset: 0.35 },

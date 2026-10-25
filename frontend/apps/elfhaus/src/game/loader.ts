@@ -1,3 +1,4 @@
+import { ST } from './stage';
 // Loading screen: full ELFHAUS logo, feature-card carousel, progress bar, then CLICK/TAP TO CONTINUE (the press is
 // the user gesture later sound needs). Progress counts every tracked promise: art images, Roxy sheets, RGS/mock auth.
 import { $, ART } from './ui';
@@ -49,7 +50,7 @@ function wireCarousel() {
 	});
 	view.addEventListener('pointermove', (e) => {
 		if (!drag) return;
-		dx = e.clientX - x0;
+		dx = (e.clientX - x0) / ST.s; // screen px -> stage px
 		track_.style.transform = `translateX(calc(${-idx * 100}% + ${dx}px))`;
 	});
 	const end = () => {
