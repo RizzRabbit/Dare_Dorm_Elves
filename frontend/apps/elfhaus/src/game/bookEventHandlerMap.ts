@@ -10,6 +10,8 @@ import { timing, isSpinning, startSpin, markStopped, sinceStart, sleep, spinCell
 import { $, S, k, bet, wait, banner, toast, hideToast, bigWin, setWinMeter, clearLines, renderCell, renderOverlays, cellEl, setGem, ovMx, symHTML } from './ui';
 import { playWins } from './winlines';
 import { wildLand, stackForm, wfExpand, mergeFx } from './wildfx';
+import { featOpen, featPop, featClose } from './featfx';
+import { countTo, countMs, setAmount, skipCounts } from './countup';
 import { grab, combineInto } from './combine';
 
 const TL = (t: Tier) => TIER_LABEL[t].toUpperCase();
@@ -143,8 +145,10 @@ export const bookEventHandlerMap: Handlers = {
 		(I.querySelector('.tierName') as HTMLElement).textContent = TL(ev.tier) + '!';
 		(I.querySelector('.spins') as HTMLElement).textContent = `${ev.totalFs} FREE SPINS`;
 		I.dataset.tier = ev.tier; I.classList.remove('hidden');
-		await Promise.race([wait(2600), new Promise<void>((res) => ((I.querySelector('.cont') as HTMLElement).onclick = () => res()))]);
-		I.classList.add('hidden');
+		const fx = I.querySelector<HTMLElement>('.bwFx'); featOpen(fx); featPop(I.querySelector('.tierName'));
+		// brief and skippable: a tap anywhere on the overlay continues
+		await Promise.race([wait(S.turbo ? 1400 : 2600), new Promise<void>((res) => (I.onclick = () => res()))]);
+		I.onclick = null; I.classList.add('hidden'); featClose(fx);
 		showFsBar();
 		$('#fsTier').textContent = TL(ev.tier); $('#fsCount').textContent = `FREE SPIN 0 / ${ev.totalFs}`;
 	},
@@ -164,8 +168,16 @@ export const bookEventHandlerMap: Handlers = {
 		$('#fsTier').textContent = TL(ev.to); setFsTotal(ev.totalFs); await wait(1400);
 	},
 	async freeSpinEnd(ev) {
-		banner(`TOTAL WIN ${money(Math.min(ev.amount / 100, MAX_WIN_X) * bet())}`, 2200);
-		await wait(1600); endBonusUi();
+		// outro: TOTAL WIN counts up over a burst + confetti; tap = jump to the amount, tap again (or wait) = close
+		const O = $('#outro'), fx = O.querySelector<HTMLElement>('.bwFx'), amt = O.querySelector<HTMLElement>('.otAmt')!;
+		const total = Math.min(ev.amount / 100, MAX_WIN_X) * bet();
+		setAmount(amt, 0); O.classList.remove('hidden'); featOpen(fx); featPop(O.querySelector('.tierName'));
+		let close = () => {}; const closed = new Promise<void>((r) => (close = r)); let landed = false;
+		O.onclick = () => (landed ? close() : skipCounts());
+		await countTo(amt, total, countMs(total / Math.max(bet(), 1e-9), S.turbo));
+		landed = true;
+		await Promise.race([wait(S.turbo ? 900 : 1800), closed]);
+		O.onclick = null; O.classList.add('hidden'); featClose(fx); endBonusUi();
 	},
 	async mysteryStart() { await wait(200); },
 	async mysteryResult(ev) {

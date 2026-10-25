@@ -1,6 +1,7 @@
 // Loading screen: full ELFHAUS logo, feature-card carousel, progress bar, then CLICK/TAP TO CONTINUE (the press is
 // the user gesture later sound needs). Progress counts every tracked promise: art images, Roxy sheets, RGS/mock auth.
 import { $, ART } from './ui';
+import { loadPulse } from './uifx';
 
 // Card titles (checked by the social-mode word scan in scripts/test-books.mjs).
 export const LOADER_CARDS = [
@@ -75,7 +76,7 @@ export async function loaderReady() {
 	const touch = matchMedia('(pointer: coarse)').matches;
 	const btn = $('#lGo');
 	btn.textContent = touch ? 'TAP TO CONTINUE' : 'CLICK TO CONTINUE';
-	L.classList.add('ready');
+	L.classList.add('ready'); loadPulse(btn, true);
 	btn.focus({ preventScroll: true });
 	await new Promise<void>((res) => {
 		const go_ = () => { removeEventListener('keydown', key); res(); };
@@ -83,7 +84,7 @@ export async function loaderReady() {
 		btn.onclick = go_;
 		addEventListener('keydown', key, { capture: true });
 	});
-	hideLoader();
+	loadPulse(btn, false); hideLoader();
 }
 /** Fade the loader out into the game (also used to get it out of the way of an error message). */
 export function hideLoader() {

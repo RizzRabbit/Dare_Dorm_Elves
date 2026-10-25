@@ -14,6 +14,10 @@ import { money, mult, setCurrency, setLocale, isSocialCurrency, amountStr } from
 import { skipCounts } from './countup';
 import { tapLines } from './winlines';
 import { startShimmer } from './wildfx';
+import { setArmedGlow, wireTapFx } from './uifx';
+import { featOpen, featPop, featClose } from './featfx';
+import { showChars, hideChars } from './bigwinChars';
+import { setBigWinFx } from './ui';
 import { setSocial, isSocial, t } from './strings';
 import { $, S, ART, bet, buildCells, renderAll, renderOverlays, resetWinMeter, setWinMeter, banner, wait } from './ui';
 import { playBookEvents, endBonusUi } from './bookEventHandlerMap';
@@ -53,7 +57,7 @@ const SHORT: Partial<Record<ModeKey, string>> = { ante: 'ANTE', dare: 'DARE', do
 function setArm(m: ModeKey | null, ante = false) {
 	armed = m; S.ante = !m && ante;
 	const mode = spinMode(), on = mode !== 'base';
-	$('#spinBtn').classList.toggle('armed', on);
+	$('#spinBtn').classList.toggle('armed', on); setArmedGlow($('#spinBtn'), on);
 	const tag = $('#armTag'); tag.classList.toggle('hidden', !on);
 	($('#armTag .t') as HTMLElement).textContent = SHORT[mode] ?? '';
 	tag.setAttribute('aria-label', on ? `${MODE_LABEL[mode]} active, tap to turn off` : '');
@@ -401,8 +405,15 @@ export async function initGame() {
 	setLocale(url.lang);
 	initLoader(); preloadArt();
 	// any tap lands a running count-up on its final value (the big-win banner handles its own taps)
-	startShimmer();
-	document.addEventListener('pointerdown', (e) => { if (!(e.target as Element)?.closest?.('#bigwin')) { skipCounts(); tapLines(); } }, { capture: true, passive: true });
+	startShimmer(); wireTapFx();
+	// big-win banner moments: burst + confetti on open, a star pop on each tier title, the character layer from 1000x
+	setBigWinFx({
+		start: (B) => featOpen(B.querySelector('.bwFx')),
+		tier: (B) => featPop(B.querySelector('.bwTier')),
+		chars: (B) => showChars(B),
+		end: (B) => { featClose(B.querySelector('.bwFx')); hideChars(); },
+	});
+	document.addEventListener('pointerdown', (e) => { if (!(e.target as Element)?.closest?.('#bigwin,#outro')) { skipCounts(); tapLines(); } }, { capture: true, passive: true });
 	track(initRoxy(layout));
 	loadAllFx(track).then(() => renderAll());
 	track(document.fonts?.ready ?? Promise.resolve());

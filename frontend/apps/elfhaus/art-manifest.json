@@ -194,5 +194,11 @@
   ],
   "fx_wild": [
     "assets/final/fx/fx_wild.webp"
+  ],
+  "fx_feat": [
+    "assets/final/fx/fx_feat.webp"
+  ],
+  "fx_btn": [
+    "assets/final/fx/fx_btn.webp"
   ]
 }
