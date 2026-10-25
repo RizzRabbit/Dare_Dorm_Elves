@@ -8,7 +8,7 @@
 		"sync": "node scripts/sync-art.mjs && node scripts/sync-config.mjs",
 		"dev": "node scripts/sync-art.mjs && node scripts/sync-config.mjs && vite dev --host --port 3001",
 		"build": "node scripts/sync-art.mjs && node scripts/sync-config.mjs && node scripts-build.mjs",
-		"test": "node scripts/test-books.mjs",
+		"test": "node scripts/sync-config.mjs && node scripts/test-books.mjs",
 		"preview": "vite preview"
 	},
 	"devDependencies": {

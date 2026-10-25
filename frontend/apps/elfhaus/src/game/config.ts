@@ -8,7 +8,6 @@ export const REELS = 5;
 export const ROWS = 4;
 export const MAX_WIN_X = 50000;
 export const SPIN_CAP = 18;
-export const ANTE_COST = 1.25;
 export const CONFIRM_ABOVE_X = 2;
 
 // SPEC §2 (row 0 = top)
@@ -38,9 +37,17 @@ export const BUY_MODES: ModeKey[] = ['dare', 'double_dare', 'triple_dare', 'myst
 export const MODE_LABEL: Record<ModeKey, string> = {
 	base: 'Spin', ante: 'Ante', dare: 'Dare', double_dare: 'Double Dare', triple_dare: 'Triple Dare', mystery: 'Mystery Spin', egw: 'Elves Gone Wild',
 };
+type ModeInfo = { cost: number; rtp: number | null; maxWinX: number; pBonus?: number | null };
+export const MODES: Record<ModeKey, ModeInfo> = (generated as any).modes;
+export const MODES_SOURCE: string = (generated as any).source;
+export const isProvisional = () => MODES_SOURCE.startsWith('PROVISIONAL');
+// Ante price comes from the math index (modes.generated.json); 3x as of math 6a1be1b.
+export const ANTE_COST: number = MODES.ante?.cost ?? 3;
+export const fmtX = (x: number) => `${+x.toFixed(2)}x`;
+const oneIn = (m: ModeKey, fallback: number) => `about 1 in ${MODES[m]?.pBonus ? Math.round(1 / MODES[m].pBonus!) : fallback}`;
 export const MODE_DESC: Record<ModeKey, string> = {
 	base: 'A normal spin.',
-	ante: 'Costs 1.25x the play amount; about twice the chance of triggering a bonus naturally. Same symbols, wins and rules.',
+	ante: `Costs ${fmtX(ANTE_COST)} the play amount; a bonus triggers naturally ${oneIn('ante', 68)} spins, versus ${oneIn('base', 190)} in base play. Same symbols, wins and rules.`,
 	dare: 'One real trigger spin (with respins, it wins as normal), then 8 free spins. Dare wilds clear after each spin; the first completed full-reel wild upgrades the bonus once to Double Dare (+2 spins).',
 	double_dare: 'One real trigger spin, then 10 free spins starting with 1 locked full-reel wild. All wilds stay locked and keep growing.',
 	triple_dare: 'One real trigger spin, then 10 free spins starting with 1 locked full-reel wild and 2 or more sticky wilds.',
@@ -48,7 +55,3 @@ export const MODE_DESC: Record<ModeKey, string> = {
 	egw: 'One supercharged spin: 2 to 5 full-reel wilds (x4 each) are placed before the reels land, then respins. It never awards free spins.',
 };
 
-type ModeInfo = { cost: number; rtp: number | null; maxWinX: number };
-export const MODES: Record<ModeKey, ModeInfo> = (generated as any).modes;
-export const MODES_SOURCE: string = (generated as any).source;
-export const isProvisional = () => MODES_SOURCE.startsWith('PROVISIONAL');

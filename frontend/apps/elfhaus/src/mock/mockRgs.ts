@@ -1,6 +1,10 @@
 // Offline mock RGS for development, testing, and fixture playback (?mock=true or local dev).
 // Supports ?book=<name> to play a specific fixture book from src/mock/books/*.json.
 import type { BookEvent } from '../game/typesBookEvent';
+import { MODES } from '../game/config';
+
+// Mode price multipliers come from the math index (modes.generated.json): ante 3x as of math 6a1be1b.
+export const mockModeCost = (mode?: string) => (mode && (MODES as any)[mode]?.cost) || 1;
 
 export interface MockBook {
 	id: string;
@@ -89,7 +93,7 @@ export async function mockBet(params: { currency: string; amount: number; mode: 
 
 	// payoutMultiplier is in 100x units (cents of x bet)
 	const winAmount = ((book.payoutMultiplier ?? 0) / 100) * params.amount;
-	mockBalance += winAmount;
+	mockBalance += winAmount - params.amount * mockModeCost(params.mode);
 
 	return {
 		balance: {
@@ -131,6 +135,6 @@ export async function mockReplay(params: { mode?: string; event?: string; forced
 
 	return {
 		state: book?.events || [],
-		costMultiplier: 1,
+		costMultiplier: mockModeCost(book?.mode || params.mode),
 	};
 }

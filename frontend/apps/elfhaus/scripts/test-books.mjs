@@ -132,11 +132,33 @@ for (const txt of loaderTexts) {
 	else console.log(`  OK loader: "${txt}"`);
 }
 
+// Mode prices: the generated config must match the math index it came from (ante 3x as of math 6a1be1b),
+// and no hardcoded ante price may remain in the UI sources.
+let priceErrors = 0;
+{
+	const gen = JSON.parse(readFileSync(join(appDir, 'src/game/modes.generated.json'), 'utf8'));
+	const live = resolve(appDir, '../../../math/games/elfhaus/library/publish_files/index.json');
+	let idx = null;
+	for (const f of [live, join(appDir, 'math-snapshot/index.json')]) { try { idx = JSON.parse(readFileSync(f, 'utf8')); break; } catch {} }
+	console.log('\n=== Mode prices ===');
+	for (const m of idx?.modes || []) {
+		const got = gen.modes?.[m.name]?.cost;
+		if (got !== Number(m.cost)) { console.error(`  MISMATCH ${m.name}: generated ${got} vs index ${m.cost}`); priceErrors++; }
+		else console.log(`  OK ${m.name} ${got}x`);
+	}
+	if (!idx) { console.error('  no math index found'); priceErrors++; }
+	for (const f of ['src/game/config.ts', 'src/game/game.ts', 'src/components/Game.svelte', 'src/game/strings.ts']) {
+		if (/ante[^\n]{0,60}1\.25|1\.25x/i.test(readFileSync(join(appDir, f), 'utf8'))) { console.error(`  stale 1.25x ante price in ${f}`); priceErrors++; }
+	}
+}
+
 console.log(`\n=== Summary ===`);
 console.log(`Books: ${bookFiles.length - failedBooks}/${bookFiles.length} passed`);
 console.log(`Social scan: ${violations === 0 ? 'CLEAN (0 violations)' : `${violations} violations`}`);
 
-if (failedBooks > 0 || violations > 0) {
+console.log(`Mode prices: ${priceErrors === 0 ? 'match math index' : `${priceErrors} errors`}`);
+
+if (failedBooks > 0 || violations > 0 || priceErrors > 0) {
 	process.exit(1);
 } else {
 	console.log(`All checks passed!`);

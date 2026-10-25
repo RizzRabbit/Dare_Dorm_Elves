@@ -5,7 +5,7 @@ import { requestAuthenticate, requestBet, requestEndRound, requestReplay } from 
 import { mockAuthenticate, mockBet, mockEndRound, mockReplay } from '../mock/mockRgs';
 import { API_AMOUNT_MULTIPLIER } from 'constants-shared/bet';
 import {
-	ANTE_COST, BUY_MODES, CONFIRM_ABOVE_X, GAME_ID, LINES, MAX_WIN_X, MODES, MODE_DESC, MODE_LABEL, MYSTERY_ODDS, PAYTABLE,
+	ANTE_COST, fmtX, BUY_MODES, CONFIRM_ABOVE_X, GAME_ID, LINES, MAX_WIN_X, MODES, MODE_DESC, MODE_LABEL, MYSTERY_ODDS, PAYTABLE,
 	SPIN_CAP, START_FS, SYMBOL_NAMES, VERSION, isProvisional, type ModeKey,
 } from './config';
 import { money, mult, setCurrency, setLocale, isSocialCurrency } from './format';
@@ -41,6 +41,7 @@ const spinMode = (): ModeKey => (S.ante ? 'ante' : 'base');
 function setStrip() {
 	$('#balance').textContent = S.replay ? '—' : money(S.balance);
 	$('#bet').textContent = money(bet() * (S.replay ? replayCost : modeCost(spinMode())));
+	$('#betLabel').textContent = t('betLabel') + (S.ante && !S.replay ? ` · ANTE ${fmtX(ANTE_COST)}` : '');
 }
 function message(title: string, body: string, opts: { reload?: boolean } = {}) {
 	$('#msgTitle').textContent = title; $('#msgBody').textContent = body;
@@ -211,7 +212,7 @@ function buildRules() {
 <p>Values shown in ${xb} for a full line.</p>
 <h3>Lines</h3><p class="lines">${lines}</p><p>Rows numbered 1 (top) to 4 (bottom).</p>
 <h3>Controls</h3>
-<p>Spin with the round button${S.jur.disabledSpacebar ? '' : ' or the Space bar'}. − and + change the ${isSocial() ? 'play amount' : 'bet'}. Ante (${mult(ANTE_COST)}) roughly doubles the chance of a natural bonus.${S.jur.disabledTurbo ? '' : ' Turbo speeds up animations.'}${S.jur.disabledAutoplay ? '' : ' Autoplay runs 10 spins and stops on any error or low balance; press it again to stop.'} Replays never change your balance.</p>
+<p>Spin with the round button${S.jur.disabledSpacebar ? '' : ' or the Space bar'}. − and + change the ${isSocial() ? 'play amount' : 'bet'}. Ante (${mult(ANTE_COST)}) raises the chance of a natural bonus; see Modes.${S.jur.disabledTurbo ? '' : ' Turbo speeds up animations.'}${S.jur.disabledAutoplay ? '' : ' Autoplay runs 10 spins and stops on any error or low balance; press it again to stop.'} Replays never change your balance.</p>
 <p>All characters are adults. Elfhaus is a Rizzin Games production.</p>
 <h3>Disclaimer</h3><p class="disc">${DISCLAIMER}</p>`;
 }
@@ -265,6 +266,8 @@ function applyJurisdiction() {
 	$('#buyTitle').textContent = t('buyTitle');
 	$('#betDown').setAttribute('aria-label', t('betDown')); $('#betUp').setAttribute('aria-label', t('betUp'));
 	$('#betLabel').textContent = t('betLabel');
+	const ante = `Ante ${fmtX(ANTE_COST)}`;
+	$('#anteBtn').setAttribute('aria-label', `${ante} (higher bonus chance)`); $('#anteBtn').title = ante;
 }
 // Static idle board (no randomness, no win) shown until the first round.
 const IDLE = [['H1', 'L2', 'L4', 'H3'], ['L1', 'H2', 'L5', 'L3'], ['H4', 'L3', 'W', 'L1'], ['L5', 'H1', 'L2', 'H2'], ['L4', 'L1', 'H3', 'L5']];
