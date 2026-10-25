@@ -46,13 +46,16 @@ node scripts/import-art.mjs stacks <dir>
   into `stacks_anim/out/sheets` (`report.json` has the decoded MB per sheet), then import that folder.
 * Runtime (`src/game/stacks.ts`). Sheets decode ON DEMAND (all 60 decoded would be ~680 MB); only `index.json` is read at start:
   * `merge_idle` + `letters_ignite` decode when an overlay shows (placeholder until then); `stack_form` when `reveal` /
-    `respinReveal` see 2+ wilds on a reel that is not full (`stackPrefetch`); `merge_join` as soon as 2+ adjacent single full
-    reels are on the board; `merge_win` when the win starts. Sheets nothing needs are closed after 4 s.
+    `respinReveal` see 2+ wilds on a reel that is not full (`stackPrefetch`); `merge_join` as soon as 2+ adjacent wild overlays
+    are on the board; `merge_win` when the win starts. Sheets nothing needs are closed after 4 s.
   * `stack_form` plays once when a reel completes (it replaces the squash and flash placeholder), then `merge_idle` loops.
     `letters_ignite` restarts with it (its blank lead-in frames wait for the build-up).
-  * `merge_join` plays once at the merge hit, then `merge_idle` (only when every merging overlay is a single full reel: its first
-    frame is the singles' pose; growing an existing group uses the fallback). Without it, the singles' poses scale UP and fade into the
-    merged group pose, which grows in from 84%. The group art may be drawn larger than the singles (heads or legs cropped):
+  * Merge (`mergefx.ts`): the singles' bodies (snapshots on one stage over the merged area, so no inner borders; their letters
+    fade) lean / slide together with an elastic overshoot, squash at contact under a rising white-pink bloom, then a HARD cut at
+    the bloom's peak to the merged overlay (never a cross-dissolve). `merge_join` is GROUP ONLY: it starts at about a single's
+    size, bottom anchored, and scales up into the group pose with an elastic settle, then hair / heads settle; `letters_ignite`
+    starts at the cut and its blank lead-in waits for the settle. `merge_join` plays then `merge_idle`. Without it, the placeholder group art
+    does the same scale-up as a transform. The group art may be drawn larger than the singles (heads or legs cropped):
     the merged overlay clips everything to exactly the merged reels' area.
   * `letters_ignite` plays at the letters beat and holds its last frame. It replaces the CSS `.mLets` letters.
   * `merge_win` loops while a win line runs through the wild. Its frames carry the letters, so the letters layer is hidden meanwhile.

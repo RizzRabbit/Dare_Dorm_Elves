@@ -15,7 +15,7 @@
 // letters_ignite_WF_R5. The suffixed sheet wins; the plain <anim>_<variant> is the fallback, so both kinds can coexist.
 // Memory (stacks_anim: 60 per-reel sheets, ~680 MB decoded if all were resident): only index.json is read at start.
 //   merge_idle + letters_ignite decode when an overlay needs them (it keeps its placeholder until then, a few frames);
-//   merge_join decodes as soon as two or more adjacent single full reels are on the board (during the 2nd stack_form);
+//   merge_join decodes as soon as two or more adjacent wild overlays are on the board (during the 2nd stack_form);
 //   stack_form decodes when stackPrefetch() reports wilds on that reel (reveal / respin reveal); merge_win when the
 //   win starts (the CSS win outline covers the decode). A sheet no overlay / prefetch needs for FREE_MS is closed.
 // Letters are a separate layer above the body: idle / join keep the hips rigid after the letters light up; merge_win
@@ -79,14 +79,25 @@ const pin = (id: string) => { if (listed.has(id)) { pins.set(id, performance.now
 export function stackPrefetch(reels: number[]) {
 	reels.forEach((r) => { const id = `stack_form_WF${suffix([r])}`; pin(listed.has(id) ? id : 'stack_form_WF'); });
 }
-/** merge_join ahead of the merge: every run of 2+ adjacent single full reels on the board (only fresh merges of singles use it). */
+/** merge_join ahead of the merge: every run of 2+ adjacent wild overlays (full reels or groups) that is not one group yet. */
 function prefetchJoins() {
-	const full = [...document.querySelectorAll<HTMLElement>('#overlays .ov.full')].map((o) => +o.dataset.reel!).sort((a, b) => a - b);
-	for (let i = 0; i < full.length;) {
-		let j = i; while (j + 1 < full.length && full[j + 1] === full[j] + 1) j++;
-		if (j > i) { const run = full.slice(i, j + 1), id = `merge_join_WM${run.length}${suffix(run)}`; pin(listed.has(id) ? id : `merge_join_WM${run.length}`); }
+	const ovs = [...document.querySelectorAll<HTMLElement>('#overlays .ov.full[data-reel], #overlays .ov.merge[data-reels]')];
+	const owner = new Map<number, HTMLElement>();
+	ovs.forEach((o) => reelsOf(o).forEach((r) => owner.set(r, o)));
+	const occ = [...owner.keys()].sort((a, b) => a - b);
+	for (let i = 0; i < occ.length;) {
+		let j = i; while (j + 1 < occ.length && occ[j + 1] === occ[j] + 1) j++;
+		const run = occ.slice(i, j + 1);
+		if (run.length > 1 && new Set(run.map((r) => owner.get(r))).size > 1) { const id = `merge_join_WM${run.length}${suffix(run)}`; pin(listed.has(id) ? id : `merge_join_WM${run.length}`); }
 		i = j + 1;
 	}
+}
+/** A merge of these reels (0-based) is about to land: decode the merged overlay's join, idle and letters sheets now. */
+export function stackPrepare(reels: number[]) {
+	const r = [...reels].sort((a, b) => a - b), v = `WM${r.length}`, sx = suffix(r);
+	return Promise.all((['merge_join', 'merge_idle', 'letters_ignite'] as const).map((a) => {
+		const id = listed.has(`${a}_${v}${sx}`) ? `${a}_${v}${sx}` : `${a}_${v}`; pin(id); return ensure(id);
+	})).then(() => {});
 }
 let sweepT = 0;
 function sweepSoon() { if (!sweepT) sweepT = window.setTimeout(sweep, FREE_MS); }
@@ -109,7 +120,7 @@ function sweep() {
 export function stackIdle(ov: HTMLElement) {
 	if (!listed.size) return;
 	const idle = sheetId('merge_idle', ov), lets = sheetId('letters_ignite', ov);
-	if (ov.classList.contains('full')) prefetchJoins();
+	prefetchJoins();
 	if ((listed.has(idle) && !hasSheet(idle)) || (listed.has(lets) && !hasSheet(lets))) {
 		void Promise.all([ensure(idle), ensure(lets)]).then(() => { if (ov.isConnected) stackIdle(ov); });
 		return;

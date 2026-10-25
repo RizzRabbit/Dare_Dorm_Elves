@@ -1,9 +1,11 @@
 // Stack + merge choreography (display only; the math is already decided by the book).
 //   stackIn(reel)        : the 4 wild cells squash toward the reel centre, flash, and the full-height elf pops in
 //                          with an elastic overshoot.
-//   mergeIn(reels, vals) : anticipation (board dims, the adjacent stacks glow) → the stacks lean together →
-//                          hit (magenta shockwave + lock burst per seam, 2-4 px micro shake) → WILD letters
-//                          ignite left to right (80 ms apart) → each reel's corner gem flies into the merged wild's
+//   mergeIn(reels, vals) : anticipation (board dims, the adjacent stacks glow) → the stacks physically lean / slide
+//                          together on one stage (their letters and the inner borders go) → squash at contact under a
+//                          rising bloom → HARD cut to the merged group at the bloom's peak, which scales up from about the
+//                          singles' size with an elastic settle (merge_join sheet) + magenta shockwave + lock burst per seam,
+//                          2-4 px micro shake → WILD letters ignite left to right after the settle → each reel's corner gem flies into the merged wild's
 //                          one corner gem, which shows the running product as they land (x7, then x42) and pops.
 //                          4-5 wide: bigger burst, stronger shake, longer hold. ~1.3-1.8 s.
 //   growIn(ov, ...)      : a merged group grows (connecting respin): the total splits back into one gem per reel corner,
@@ -18,7 +20,7 @@ import { burst } from './fx';
 import { mergeFx, stackForm, wfExpand, warmExpand } from './wildfx';
 import { grab } from './combine';
 import { toStage } from './stage';
-import { hasStack, stackOnce, stackLetters, stackWin, stackWinOff } from './stacks';
+import { hasStack, stackOnce, stackLetters, stackWin, stackWinOff, stackPrepare } from './stacks';
 
 let skipping = false, running = 0;
 const anims = new Set<Animation>();
@@ -83,36 +85,55 @@ export async function mergeIn(reels: number[], values: number[], product: number
 	begin();
 	const B = $('#board'), n = reels.length, big = n >= 4, lo = reels[0], step = n > 1 ? pos(lo + 1, 0).x - pos(lo, 0).x : S.cell, x0 = pos(lo, 0).x;
 	const made: HTMLElement[] = [];
+	let stage: ReturnType<typeof leanStage> | null = null;
 	try {
 		// 1) anticipation: board dims, the stacks about to join glow
 		B.classList.add('mAnt');
 		const olds = [...new Set(reels.map(ovOf))].filter((o): o is HTMLElement => !!o);
 		olds.forEach((o) => { const g = document.createElement('i'); g.className = 'ovGlow'; o.appendChild(g); A(g, [{ opacity: 0 }, { opacity: 1 }], { duration: 220, fill: 'forwards' }); });
 		const badges = grab(reels.map((r) => ovMx(r)));
+		const warm = stackPrepare(reels); // the group's join / idle / letters sheets decode during the anticipation + lean
 		await sw(260);
-		// 2) lean together
+		// 2) the singles physically move: snapshots of their bodies on ONE stage over the merged area (no inner borders; their
+		//    own letters fade as the lean starts), elastic lean / slide toward the centre, then a squash at contact
 		const mid = lo + (n - 1) / 2;
-		const leans = olds.map((o) => { const r = Number(o.dataset.reel ?? o.dataset.reels?.split(',')[0] ?? lo) + (o.offsetWidth / step - 1) / 2; return `translateX(${(mid - r) * step * 0.07}px) scale(.97,1)`; });
-		olds.forEach((o, i) => A(o, [{ transform: 'none' }, { transform: leans[i] }], { duration: 200, easing: 'cubic-bezier(.6,0,.9,.5)', fill: 'forwards' }));
-		const ghosts = olds.map((o, i) => ghostOf(o, leans[i])); // the singles' current poses, to scale up into the group pose
-		await sw(200);
-		// 3) hit: merged overlay in, shockwave + burst per seam, micro shake
+		stage = leanStage(olds);
+		const parts = stage.parts.map((pt) => {
+			const d = (mid - pt.rc) * step, L = d * (n >= 4 ? 0.2 : 0.26), dir = Math.sign(d);
+			pt.lets.forEach((l) => A(l, [{ opacity: 1 }, { opacity: 0 }], { duration: 110, fill: 'forwards' }));
+			A(pt.el, [
+				{ transform: 'none', easing: 'cubic-bezier(.4,0,.6,1)' },
+				{ transform: `translateX(${-d * 0.035}px) rotate(${-dir}deg) scale(.99,1.012)`, offset: 0.26, easing: 'cubic-bezier(.55,0,.75,.5)' },
+				{ transform: `translateX(${L * 1.1}px) rotate(${dir * 3.6}deg) scale(1.01,.995)`, offset: 0.76, easing: 'cubic-bezier(.3,.6,.4,1)' },
+				{ transform: `translateX(${L}px) rotate(${dir * 2.6}deg)` }], { duration: LEAN, fill: 'forwards' });
+			return { ...pt, L, dir };
+		});
+		await sw(LEAN);
+		parts.forEach((pt) => A(pt.el, [{ transform: `translateX(${pt.L}px) rotate(${pt.dir * 2.6}deg)` }, { transform: `translateX(${pt.L * 1.04}px) rotate(${pt.dir * 1.6}deg) scale(1.075,.915)` }], { duration: SQUASH, easing: 'cubic-bezier(.3,0,.7,1)', fill: 'forwards' }));
+		const bloom = bloomOver(stage.el);
+		A(bloom, [{ opacity: 0 }, { opacity: 1 }], { duration: SQUASH, easing: 'cubic-bezier(.5,0,.9,.6)', fill: 'forwards' });
+		await sw(SQUASH);
+		await Promise.race([warm, sw(400)]); // (rarely waits: the bloom just holds a moment longer)
+		// 3) HARD cut under the opaque bloom: the merged overlay replaces the stage in the same frame, the group scales up
+		//    from about the singles' size (merge_join sheet, or a transform on the placeholder art); shockwave + burst per seam
+		stage.el.remove(); stage = null;
 		apply();
 		const ov = ovOf(lo);
 		if (ov) {
 			ov.style.animation = 'none';
 			{ const m = ov.querySelector<HTMLElement>('.mx'); if (m) m.style.opacity = '0'; }
-			// the join sheet starts from the singles' poses: only a fresh merge of single full reels uses it
-			if (olds.every((o) => o.classList.contains('full')) && hasStack('merge_join', ov)) { ghosts.forEach((g) => g.el.remove()); void stackOnce('merge_join', ov); }
-			else scaleUpInto(ov, ghosts);
-		} else ghosts.forEach((g) => g.el.remove());
-		mergeFx(reels);
+			if (hasStack('merge_join', ov)) void stackOnce('merge_join', ov);
+			else growFromSingles(ov, n);
+		}
+		A(bloom, [{ opacity: 1 }, { opacity: 1, offset: 0.1 }, { opacity: 0 }], { duration: 210, easing: 'ease-out', fill: 'forwards' }).finished.catch(() => {}).finally(() => bloom.remove());
+		made.push(bloom);
+		mergeFx(reels, false); // no seam beams: the merged wild reads as one piece
 		for (let i = 1; i < n; i++) ring(x0 + i * step - (step - S.cell) / 2, big);
 		if (big) { const h = col(x0, n * step); burst(h, 'big', 60); made.push(h); }
 		shake(big ? 4 : 2.5, big ? 170 : 120);
-		// 4) letters ignite left to right
+		// 4) letters ignite left to right after the scale settle (the letters sheet's blank lead-in waits for it)
 		const lets = ov && !stackLetters(ov) ? [...ov.querySelectorAll<HTMLElement>('.mLets b')] : [];
-		lets.forEach((l, i) => A(l, [{ opacity: 0, transform: 'translate(-50%,0) scale(1.7)' }, { opacity: 1, transform: 'translate(-50%,0) scale(.92)', offset: .6 }, { opacity: 1, transform: 'translate(-50%,0) scale(1)' }], { duration: 280, delay: 120 + i * 80, easing: 'ease-out', fill: 'backwards' }));
+		lets.forEach((l, i) => A(l, [{ opacity: 0, transform: 'translate(-50%,0) scale(1.7)' }, { opacity: 1, transform: 'translate(-50%,0) scale(.92)', offset: .6 }, { opacity: 1, transform: 'translate(-50%,0) scale(1)' }], { duration: 280, delay: 600 + i * 80, easing: 'ease-out', fill: 'backwards' }));
 		await sw(140);
 		// 5) each reel's corner gem flies into the merged wild's one corner gem; it shows the running product as they land
 		const mx = ov?.querySelector<HTMLElement>('.mx') || null;
@@ -120,35 +141,57 @@ export async function mergeIn(reels: number[], values: number[], product: number
 		await sw(big ? 420 : 240);
 	} finally {
 		made.forEach((m) => m.remove()); B.classList.remove('mAnt');
+		if (stage) { stage.el.remove(); stage.olds.forEach((o) => (o.style.visibility = '')); }
 		const ov = ovOf(lo), mx = ov?.querySelector<HTMLElement>('.mx'); if (mx) { mx.style.opacity = ''; setGem(mx, product, false); }
 		document.querySelectorAll('#flyLayer .fly').forEach((f) => f.remove());
 		end();
 	}
 }
 
-/** Snapshot of a single (or smaller merged) wild's art at its board position: its stack canvases drawn into one canvas,
- *  or a copy of its placeholder image. Taken before the overlays re-render. */
-function ghostOf(o: HTMLElement, lean: string) {
-	const el = document.createElement('div'); el.className = 'mGhost';
-	const cvs = [...o.querySelectorAll<HTMLCanvasElement>(':scope>canvas.stk_body,:scope>canvas.stk_letters')];
-	if (cvs.length) {
-		const c = document.createElement('canvas'); c.width = cvs[0].width; c.height = cvs[0].height; const g = c.getContext('2d')!;
-		cvs.forEach((x) => { try { g.drawImage(x, 0, 0, c.width, c.height); } catch { /* empty canvas */ } });
-		el.appendChild(c);
-	} else { const w = o.querySelector(':scope>.wart'); if (w) el.appendChild(w.cloneNode(true)); }
-	return { el, x: o.offsetLeft, w: o.offsetWidth, lean };
-}
-/** The merge hit without a merge_join sheet: each single's pose scales UP (and fades) into the merged group pose, which
- *  grows in from slightly smaller. The group art is drawn larger than the singles, so heads / legs may be cropped:
- *  everything stays inside the merged overlay (overflow hidden = exactly the merged reels' area). */
-function scaleUpInto(ov: HTMLElement, ghosts: ReturnType<typeof ghostOf>[]) {
-	const x0 = ov.offsetLeft, body = ov.querySelector<HTMLElement>(':scope>canvas.stk_body') || ov.querySelector<HTMLElement>(':scope>.wart');
-	ghosts.forEach((g) => {
-		g.el.style.left = g.x - x0 + 'px'; g.el.style.width = g.w + 'px'; ov.appendChild(g.el);
-		A(g.el, [{ transform: g.lean, opacity: 1 }, { transform: `${g.lean} scale(1.1)`, opacity: 1, offset: .35 }, { transform: 'scale(1.24)', opacity: 0 }], { duration: 340, easing: 'cubic-bezier(.3,0,.4,1)', fill: 'forwards' })
-			.finished.catch(() => {}).finally(() => g.el.remove());
+const LEAN = 340, SQUASH = 110;
+/** One stage over the merging overlays (same look as an overlay, but one piece: no inner borders / gaps), holding a
+ *  snapshot of each overlay's body (its stack canvas, or a copy of its placeholder image) and, separately, its letters.
+ *  The overlays themselves are hidden under it; mergeIn's apply() re-renders them at the cut. */
+function leanStage(olds: HTMLElement[]) {
+	const host = olds[0].parentElement!, x0 = Math.min(...olds.map((o) => o.offsetLeft)), x1 = Math.max(...olds.map((o) => o.offsetLeft + o.offsetWidth));
+	const el = document.createElement('div'); el.className = 'ov art mStage';
+	el.style.cssText = `left:${x0}px;width:${x1 - x0}px;top:${olds[0].offsetTop}px;height:${olds[0].offsetHeight}px;animation:none;z-index:3`;
+	const parts = olds.map((o) => {
+		const p = document.createElement('div');
+		p.style.cssText = `position:absolute;top:0;height:100%;left:${o.offsetLeft - x0}px;width:${o.offsetWidth}px;transform-origin:50% 100%;will-change:transform`;
+		const snap = (sel: string) => {
+			const cvs = [...o.querySelectorAll<HTMLCanvasElement>(sel)]; if (!cvs.length) return null;
+			const c = document.createElement('canvas'); c.width = cvs[0].width; c.height = cvs[0].height; const g = c.getContext('2d')!;
+			cvs.forEach((x) => { try { g.drawImage(x, 0, 0, c.width, c.height); } catch { /* empty canvas */ } });
+			c.style.cssText = 'position:absolute;inset:0;width:100%;height:100%'; p.appendChild(c); return c;
+		};
+		if (!snap(':scope>canvas.stk_body')) { const w = o.querySelector(':scope>.wart'); if (w) p.appendChild(w.cloneNode(true)); }
+		const lets = [snap(':scope>canvas.stk_letters'), o.querySelector<HTMLElement>(':scope>.mLets')?.cloneNode(true) as HTMLElement | undefined].filter((x): x is HTMLElement => !!x);
+		lets.forEach((l) => { if (!l.parentElement) p.appendChild(l); });
+		const rs = (o.dataset.reels ?? o.dataset.reel ?? '0').split(',').map(Number);
+		return { el: p, lets, rc: (rs[0] + rs[rs.length - 1]) / 2 };
 	});
-	if (body) A(body, [{ transform: 'scale(.84)', opacity: 0 }, { transform: 'scale(1.035)', opacity: 1, offset: .55 }, { transform: 'scale(.995)', offset: .8 }, { transform: 'none', opacity: 1 }], { duration: 420, easing: 'ease-out' });
+	parts.slice().sort((a, b) => Math.abs(b.rc - (parts[0].rc + parts[parts.length - 1].rc) / 2) - Math.abs(a.rc - (parts[0].rc + parts[parts.length - 1].rc) / 2)).forEach((pt) => el.appendChild(pt.el)); // centre on top
+	host.appendChild(el);
+	olds.forEach((o) => (o.style.visibility = 'hidden'));
+	return { el, parts, olds };
+}
+/** White-pink bloom over `over`'s box, opaque edge to edge at full opacity (so the cut under it is never seen). */
+function bloomOver(over: HTMLElement) {
+	const b = document.createElement('div'), host = $('#board'); // outside #overlays: the cut re-renders that
+	let x = 0, y = 0; for (let e: HTMLElement | null = over; e && e !== host; e = e.offsetParent as HTMLElement | null) { x += e.offsetLeft; y += e.offsetTop; }
+	b.style.cssText = `position:absolute;left:${x}px;top:${y}px;width:${over.offsetWidth}px;height:${over.offsetHeight}px;z-index:40;pointer-events:none;opacity:0;` +
+		'border-radius:6px;background:radial-gradient(ellipse at 50% 58%,#FFFFFF 0%,#FFF1F8 38%,#FFC4E3 78%,#FF9FD0 100%);box-shadow:0 0 34px 14px #FF9FD099;will-change:opacity';
+	host.appendChild(b); return b;
+}
+/** No merge_join sheet: the placeholder group art scales up from about a single's size (bottom anchored) with an elastic settle. */
+function growFromSingles(ov: HTMLElement, n: number) {
+	const body = ov.querySelector<HTMLElement>(':scope>canvas.stk_body') || ov.querySelector<HTMLElement>(':scope>.wart'); if (!body) return;
+	const s0 = n >= 5 ? 0.62 : n >= 3 ? 0.72 : 0.8;
+	body.style.transformOrigin = '50% 100%';
+	A(body, [{ transform: `scale(${s0})` }, { transform: `scale(${s0 + (1 - s0) * 0.62},${(s0 + (1 - s0) * 0.62) * 1.04})`, offset: 0.2 }, { transform: 'scale(1.06,1.02)', offset: 0.42 },
+		{ transform: 'scale(1.04,.96)', offset: 0.55 }, { transform: 'scale(.99,1.012)', offset: 0.72 }, { transform: 'scale(1.004,.997)', offset: 0.86 }, { transform: 'none' }],
+	{ duration: 560, easing: 'ease-out' }).finished.catch(() => {}).finally(() => { body.style.transformOrigin = ''; });
 }
 
 const prodTo = (v: number[], i: number) => v.slice(0, i + 1).reduce((a, b) => a * b, 1);

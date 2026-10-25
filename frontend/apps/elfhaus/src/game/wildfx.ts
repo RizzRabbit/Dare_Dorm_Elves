@@ -85,10 +85,10 @@ export function wfExpand(ov: HTMLElement | null) {
 	} else if (ok() && !stackListed('merge_idle', ov) && !stackListed('stack_form', ov)) expandWith(ID, ov); // the old row (one baked elf) only on the placeholder art
 	if (ok()) play(ID, 'wshineT', ov, { cls: 'wfx wfxIn wfxTop', delay: 420 });
 }
-export function mergeFx(reels: number[]) {
+export function mergeFx(reels: number[], seams = true) {
 	if (!ok() || reels.length < 2) return;
 	const lo = Math.min(...reels), hi = Math.max(...reels);
-	for (let r = lo + 1; r <= hi; r++) { const h = column(r); h.classList.add('seam'); play(ID, 'seam', h, { cls: 'wfx', onEnd: () => h.remove() }); }
+	if (seams) for (let r = lo + 1; r <= hi; r++) { const h = column(r); h.classList.add('seam'); play(ID, 'seam', h, { cls: 'wfx', onEnd: () => h.remove() }); }
 	const g = column(lo); g.style.width = (hi - lo + 1) * S.cell + 'px';
 	play(ID, 'msweep', g, { cls: 'wfx', delay: 180, onEnd: () => g.remove() });
 	// sparkle burst on every merged reel's centre
