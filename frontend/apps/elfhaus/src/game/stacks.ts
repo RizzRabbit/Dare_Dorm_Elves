@@ -22,6 +22,8 @@
 //   the singles' sheets at the merge's lean (stackRelease: the stage holds snapshots); the group's merge_join when its
 //   merge_win starts; merge_win when the win ends. So merge_win is never resident with merge_join: the 5-wide peak is
 //   join + idle + letters (29.2 MB) at the cut, idle + letters + win (20.4 MB) during a win.
+// Smooth: every stacks sheet plays with the sprite crossfade (blend) while it is slowed by the board tempo, so the half-fps
+// sheets (7.5 fps; merge_idle 3 fps) dissolve frame to frame instead of stepping (sprite.ts; turbo keeps the plain step).
 // Letters are a separate layer above the body: idle / join keep the hips rigid after the letters light up; merge_win
 // bakes the letters into its frames, so the letters layer is hidden while it plays. letters_ignite restarts with
 // stack_form (its leading blank frames wait for the build-up to finish).
@@ -74,7 +76,7 @@ function run(a: StackAnim, ov: HTMLElement, layer: 'body' | 'letters' | 'win', o
 	const old = slots[layer]; if (old && !old.done) stop(old);
 	used.set(id, performance.now());
 	const once = !o.loop && !o.hold; if (once) playing.add(id);
-	const an = play(id, names.get(id)!, ov, { cls: `stk stk_${layer}`, loop: o.loop, hold: o.hold, onEnd: () => { if (once) { playing.delete(id); used.set(id, performance.now()); sweepSoon(); } o.onEnd?.(); } });
+	const an = play(id, names.get(id)!, ov, { cls: `stk stk_${layer}`, blend: true, loop: o.loop, hold: o.hold, onEnd: () => { if (once) { playing.delete(id); used.set(id, performance.now()); sweepSoon(); } o.onEnd?.(); } });
 	if (an) { slots[layer] = an; live.set(ov, slots); } else if (once) playing.delete(id); // CSS (:has canvas.stk_<layer>) hides the placeholder it replaces
 	return an;
 }
