@@ -6,7 +6,7 @@
 	"type": "module",
 	"scripts": {
 		"sync": "node scripts/sync-art.mjs && node scripts/sync-config.mjs",
-		"dev": "node scripts/sync-art.mjs && node scripts/sync-config.mjs && vite dev --host --port 3001",
+		"dev": "node scripts/sync-art.mjs && node scripts/sync-config.mjs && vite dev --host",
 		"build": "node scripts/sync-art.mjs && node scripts/sync-config.mjs && node scripts-build.mjs",
 		"test": "node scripts/sync-config.mjs && node scripts/test-format.mjs && node scripts/test-books.mjs",
 		"package": "node scripts/package-release.mjs",
