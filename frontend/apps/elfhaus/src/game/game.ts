@@ -13,6 +13,7 @@ import { setSocial, isSocial, t } from './strings';
 import { $, S, ART, bet, buildCells, renderAll, resetWinMeter, setWinMeter, banner, wait } from './ui';
 import { playBookEvents, endBonusUi } from './bookEventHandlerMap';
 import { initRoxy, placeRoxy } from './roxy';
+import { initLoader, preloadArt, track, loaderReady, hideLoader } from './loader';
 import type { BookEvent } from './typesBookEvent';
 
 const DISCLAIMER =
@@ -267,18 +268,21 @@ const IDLE = [['H1', 'L2', 'L4', 'H3'], ['L1', 'H2', 'L5', 'L3'], ['H4', 'L3', '
 
 export async function initGame() {
 	setLocale(url.lang);
-	initRoxy(layout);
+	initLoader(); preloadArt();
+	track(initRoxy(layout));
+	track(document.fonts?.ready ?? Promise.resolve());
 	buildCells(); S.sym = IDLE.map((c) => [...c]); S.vals = new Map([[2 * 4 + 2, 1]]);
 	wire(); layout(); setBusy(true);
 	try {
-		if (url.replay) { setSocial(url.social || isSocialCurrency()); applyJurisdiction(); await loadReplay(); }
+		if (url.replay) { setSocial(url.social || isSocialCurrency()); applyJurisdiction(); await track(loadReplay()); await loaderReady(); }
 		else {
-			const rd = await authenticate();
+			const rd = await track(authenticate());
 			setSocial(url.social || !!S.jur.socialCasino || isSocialCurrency());
 			applyJurisdiction(); sessionReady = true; setStrip(); resetWinMeter();
+			await loaderReady(); layout();
 			setBusy(false);
 			await resume(rd);
 		}
-	} catch (e) { showError(e); }
+	} catch (e) { hideLoader(); showError(e); }
 	finally { setBusy(false); setStrip(); layout(); document.body.dataset.ready = '1'; }
 }

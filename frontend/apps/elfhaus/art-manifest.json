@@ -94,8 +94,10 @@
     "assets/final/background_fs_portrait.png"
   ],
   "logo": [
-    "assets/final/logo.png",
-    "assets/concepts/logo.png"
+    "assets/final/logo.png"
+  ],
+  "logo_full": [
+    "assets/final/logo_full.png"
   ],
   "frame": [
     "assets/final/reel_frame.png"

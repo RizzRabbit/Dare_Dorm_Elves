@@ -117,6 +117,21 @@ if (disclaimerMatch) {
 	}
 }
 
+// Loading-screen texts: feature cards (loader.ts) and the visible text in the loader markup (Game.svelte)
+const loaderCode = readFileSync(join(appDir, 'src/game/loader.ts'), 'utf8');
+const cardBlock = loaderCode.match(/LOADER_CARDS = \[(.*?)\]/s);
+const loaderTexts = cardBlock ? [...cardBlock[1].matchAll(/'([^']*)'/g)].map((m) => m[1]) : [];
+loaderTexts.push(...[...loaderCode.matchAll(/'((?:TAP|CLICK) TO CONTINUE)'/g)].map((m) => m[1]));
+const svelte = readFileSync(join(appDir, 'src/components/Game.svelte'), 'utf8');
+const loaderMarkup = svelte.slice(svelte.indexOf('<div id="loader"'));
+loaderTexts.push(...[...loaderMarkup.replace(/<script[\s\S]*?<\/script>/g, '').matchAll(/>([^<>{}]*[A-Za-z][^<>{}]*)</g)].map((m) => m[1].trim()));
+if (!cardBlock) { console.error('  VIOLATION: LOADER_CARDS not found in loader.ts'); violations++; }
+for (const txt of loaderTexts) {
+	const hit = txt.match(RESTRICTED);
+	if (hit) { console.error(`  VIOLATION in loading screen: "${txt}" matches "${hit[0]}"`); violations++; }
+	else console.log(`  OK loader: "${txt}"`);
+}
+
 console.log(`\n=== Summary ===`);
 console.log(`Books: ${bookFiles.length - failedBooks}/${bookFiles.length} passed`);
 console.log(`Social scan: ${violations === 0 ? 'CLEAN (0 violations)' : `${violations} violations`}`);

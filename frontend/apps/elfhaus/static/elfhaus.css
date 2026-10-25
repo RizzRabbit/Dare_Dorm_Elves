@@ -251,6 +251,64 @@ body:not(.portrait).short #hud{max-width:none}
 .ov .badge{max-width:none;transform:none;translate:-50% 0;bottom:6px;font-size:max(11px,calc(var(--cell)*.12));padding:0 8px;z-index:3}
 
 /* ---------- full-body Roxy (animated sprite, roxy.ts) between the room and the game UI ---------- */
-#roxy{position:fixed;left:0;bottom:0;pointer-events:none;display:none;image-rendering:auto}
+#roxy{position:fixed;left:0;bottom:0;pointer-events:none;display:none;image-rendering:auto;transform-origin:56% 99%;will-change:transform}
 body.hasRoxy #roxy{display:block}
-body.hasRoxy:not(.portrait) #logo{left:auto;right:34px}
+
+/* ---- In-game title: ELFHAUS wordmark centered above the reel board ---- */
+#top{position:relative;top:auto;left:auto;right:auto;width:100%;height:auto;display:flex;justify-content:center;padding-top:6px;pointer-events:none;z-index:5}
+#logo.art,body.portrait #logo.art{position:relative;left:auto;right:auto;top:auto;margin:0 auto;width:auto;height:clamp(46px,10.5vh,118px);max-width:min(560px,70vw)}
+#logo.art img{display:block;height:100%;width:auto;max-width:100%;object-fit:contain}
+body.portrait #logo.art{height:clamp(40px,8vh,92px);max-width:78vw}
+
+/* ---- Loading screen (matte: greys/purples, no glow) ---- */
+#loader{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(8px,2vh,22px);
+  background:#1C1922;overflow:hidden;opacity:1;transition:opacity .6s ease;user-select:none;-webkit-user-select:none;padding:3vh 4vw 6vh;box-sizing:border-box}
+#loader.out{opacity:0;pointer-events:none}
+#loader .lbg{position:absolute;inset:-60px;background-size:cover;background-position:center;filter:blur(22px) saturate(.55) brightness(.34)}
+#loader .lbg::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,#2A243300,#15121Acc 78%)}
+#lLogo{position:relative;display:block;width:min(64vw,820px);max-height:46vh;object-fit:contain;pointer-events:none}
+#lLogo.txt{font:900 72px "Cinzel";color:#DCD3F0;text-align:center}
+.lSide{position:relative;display:flex;flex-direction:column;align-items:center;gap:clamp(8px,1.6vh,16px);width:min(600px,92vw)}
+#lCards{position:relative;width:100%;overflow:hidden;border-radius:8px;touch-action:pan-y;cursor:grab}
+#lCards:active{cursor:grabbing}
+#lTrack{display:flex;transition:transform .5s cubic-bezier(.3,.7,.3,1)}
+.lCard{flex:0 0 100%;box-sizing:border-box;display:flex;align-items:center;gap:18px;padding:12px 18px 12px 12px;
+  background:linear-gradient(#2B2634e6,#1E1A25e6);border:1px solid #4A4258;border-radius:8px}
+.lCard h3{margin:0;font-family:"Cinzel";font-weight:800;font-size:clamp(15px,2.2vh,21px);line-height:1.25;letter-spacing:.6px;color:#ECE6F6}
+.lArt{position:relative;flex:0 0 auto;width:clamp(84px,14vh,128px);height:clamp(84px,14vh,128px);border-radius:6px;overflow:hidden;background:#2A2433;border:1px solid #5A5068}
+.lArt img{display:block;width:100%;height:100%;object-fit:cover;pointer-events:none}
+.lArt.wild img{object-fit:contain}
+.lLock{position:absolute;top:5px;left:50%;translate:-50% 0;font:800 9px "Nunito";letter-spacing:1px;color:#ECE6F6;background:#1E1A26d9;border:1px solid #6B6080;border-radius:3px;padding:0 5px}
+.lBadge{position:absolute;bottom:5px;left:50%;translate:-50% 0;font:900 13px "Nunito";color:#1E1A26;background:linear-gradient(#EFE8FA,#B9A9D6);border:1px solid #1E1A26;border-radius:4px;padding:0 7px}
+.lArt.max img{filter:saturate(.75) brightness(.72)}
+.lBig{position:absolute;left:0;right:0;bottom:8%;text-align:center;font-family:"Cinzel";font-weight:900;font-size:clamp(17px,3vh,26px);letter-spacing:.5px;
+  color:transparent;background-image:linear-gradient(#FFFFFF,#DCD3F0 42%,#8E7BB5 54%,#CFC3EA 80%,#F2EEFA);-webkit-background-clip:text;background-clip:text;
+  -webkit-text-stroke:1px #1E1A26;paint-order:stroke fill}
+#lDots{display:flex;gap:8px}
+#lDots button{width:9px;height:9px;padding:0;border-radius:50%;border:1px solid #1E1A26;background:#5D5370;cursor:pointer}
+#lDots button.on{background:#CDBDEB}
+#lBar{width:min(420px,70vw);height:7px;border-radius:4px;background:#26212E;border:1px solid #4A4258;overflow:hidden}
+#lBar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#5E4C80,#A28FC8);transition:width .25s ease}
+#lGo{display:none;font-family:"Cinzel";font-weight:800;font-size:clamp(15px,2.2vh,20px);letter-spacing:2px;color:#1E1A26;padding:11px 34px;border-radius:6px;
+  border:1px solid #1E1A26;background:linear-gradient(#EEE8F8,#BBAAD8);cursor:pointer;animation:lPulse 1.8s ease-in-out infinite}
+#lGo:hover{background:linear-gradient(#F6F2FC,#C9BBE3)}
+#loader.ready #lBar{display:none}
+#loader.ready #lGo{display:block}
+@keyframes lPulse{50%{transform:scale(1.04)}}
+.lCredit{position:absolute;bottom:max(10px,env(safe-area-inset-bottom));left:0;right:0;text-align:center;font:700 12px "Nunito";letter-spacing:1.5px;color:#9A90AE}
+@media (orientation:portrait){
+  #lLogo{width:94vw;max-height:34vh}
+  .lCard{gap:12px;padding:10px 12px 10px 10px}
+}
+/* short popout (landscape, under 520px tall): logo left, cards and controls right */
+@media (orientation:landscape) and (max-height:520px){
+  #loader{flex-direction:row;gap:3vw;padding:12px 4vw 28px}
+  #lLogo{width:44vw;max-height:78vh}
+  .lSide{width:min(460px,46vw);gap:8px}
+  .lArt{width:72px;height:72px}
+  .lCard{padding:8px 12px 8px 8px;gap:12px}
+  .lCard h3{font-size:14px}
+  .lBig{font-size:13px}
+  #lGo{padding:8px 22px;font-size:14px}
+  .lCredit{bottom:6px;font-size:10px}
+}

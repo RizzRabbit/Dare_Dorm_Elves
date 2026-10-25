@@ -1,6 +1,6 @@
 // Full-body Roxy: plays the keyed roxy_full_* atlases (static/assets/atlases, scripts/pack-atlases.py) on a canvas
-// with a tiny frame-stepper (no Pixi in this DOM renderer). States per atlases/README.md: idle (loop),
-// anticipation (loop), disappointed / excited (once, then back to idle).
+// with a tiny frame-stepper (no Pixi in this DOM renderer). States per atlases/README.md: idle (resting frame +
+// occasional full clip, see below), anticipation (loop), disappointed / excited (once, then back to idle).
 export type RoxyState = 'idle' | 'anticipation' | 'disappointed' | 'excited';
 type Frame = { img: HTMLImageElement; x: number; y: number; w: number; h: number; dx: number; dy: number };
 const FPS = 12, LOOP: Record<RoxyState, boolean> = { idle: true, anticipation: true, disappointed: false, excited: false };
@@ -26,19 +26,59 @@ async function load(s: RoxyState) {
 	}
 	anims.set(s, frames);
 }
+// Idle behaviour: she holds a resting frame (eyes open, no wink) with a slight code-driven sway, and every 15-30s
+// plays the full idle clip once. The clip is played rotated (REST+1 .. end, 0 .. REST) so it starts right after
+// and ends exactly on the resting pose; state switches cross-fade over ~150ms so nothing pops.
+const REST = 8, FADE_MS = 150;
+let resting = true, clipPos = 0, nextClipAt = 0, cur: Frame | null = null, fadeFrom: Frame | null = null, fadeT0 = 0;
+const schedule = (t: number) => (nextClipAt = t + 15000 + Math.random() * 15000);
+function setFrame(f: Frame, t: number, fade = false) {
+	if (fade && cur && cur !== f) { fadeFrom = cur; fadeT0 = t; }
+	cur = f;
+}
+function step(t: number) {
+	if (!cv) return;
+	if (want !== state && anims.has(want)) {
+		state = want; frame = 0; cv.dataset.state = state;
+		if (state === 'idle') { resting = true; schedule(t); }
+		const fr = anims.get(state) as Frame[];
+		setFrame(state === 'idle' ? fr[Math.min(REST, fr.length - 1)] : fr[frame++], t, true);
+		return;
+	}
+	const fr = anims.get(state); if (!fr?.length) return;
+	if (state === 'idle') {
+		const rest = Math.min(REST, fr.length - 1);
+		if (resting) {
+			if (t >= nextClipAt) { resting = false; clipPos = 0; cv.dataset.idle = 'clip'; }
+			else { setFrame(fr[rest], t, cur !== fr[rest]); return; }
+		}
+		setFrame(fr[(rest + 1 + clipPos) % fr.length], t);
+		if (++clipPos >= fr.length) { resting = true; cv.dataset.idle = 'rest'; schedule(t); }
+		return;
+	}
+	if (frame >= fr.length) {
+		if (LOOP[state]) frame = 0;
+		else { want = 'idle'; step(t); return; }
+	}
+	setFrame(fr[frame++], t);
+}
+const blit = (f: Frame) => ctx!.drawImage(f.img, f.x, f.y, f.w, f.h, f.dx, f.dy, f.w, f.h);
 function tick(t: number) {
 	requestAnimationFrame(tick);
-	if (!ctx || !cv || t - last < 1000 / FPS) return;
-	last = t;
-	if (want !== state && anims.has(want)) { state = want; frame = 0; cv.dataset.state = state; }
-	let fr = anims.get(state); if (!fr?.length) return;
-	if (frame >= fr.length) {
-		frame = 0;
-		if (!LOOP[state]) { want = state = 'idle'; cv.dataset.state = state; fr = anims.get('idle') as Frame[]; }
-	}
-	const f = fr[frame++];
+	if (!ctx || !cv) return;
+	if (!nextClipAt) schedule(t);
+	// slow sway about her feet: ±0.6° over ~5s, plus a 3px bob on a slightly different period
+	const rot = 0.6 * Math.sin((t / 5200) * Math.PI * 2), bob = 3 * Math.sin((t / 4300) * Math.PI * 2 + 1);
+	cv.style.transform = `translateY(${bob.toFixed(2)}px) rotate(${rot.toFixed(3)}deg)`;
+	if (t - last >= 1000 / FPS) { last = t; step(t); }
+	if (!cur) return;
 	ctx.clearRect(0, 0, cv.width, cv.height);
-	ctx.drawImage(f.img, f.x, f.y, f.w, f.h, f.dx, f.dy, f.w, f.h);
+	ctx.globalAlpha = 1; blit(cur);
+	if (fadeFrom) {
+		const p = (t - fadeT0) / FADE_MS;
+		if (p >= 1) fadeFrom = null;
+		else { ctx.globalAlpha = 1 - p; blit(fadeFrom); ctx.globalAlpha = 1; }
+	}
 }
 /** Size and place Roxy: landscape = standing in the gutter left of the reels, ~full height, never over the
  *  reel frame; portrait = large behind the board (the board and HUD draw over her). */
@@ -55,15 +95,17 @@ export function placeRoxy(portrait: boolean, frameRect: DOMRect) {
 	cv.style.visibility = show ? 'visible' : 'hidden';
 	cv.style.height = h + 'px'; cv.style.width = h * ar + 'px'; cv.style.left = left + 'px';
 }
-/** Starts Roxy; resolves once the idle loop can show (then the other states load in the background). */
+/** Starts Roxy: calls onReady as soon as the idle loop can show; resolves once every state's sheets are loaded
+ *  (the loading screen waits on it). */
 export async function initRoxy(onReady: () => void) {
 	cv = document.getElementById('roxy') as HTMLCanvasElement | null;
 	if (!cv) return;
 	try { await load('idle'); } catch (e) { console.warn('roxy atlas missing', e); return; }
-	cv.width = roxySize.w; cv.height = roxySize.h; ctx = cv.getContext('2d'); cv.dataset.state = 'idle';
+	cv.width = roxySize.w; cv.height = roxySize.h; ctx = cv.getContext('2d'); cv.dataset.state = 'idle'; cv.dataset.idle = 'rest';
+	cur = anims.get('idle')![Math.min(REST, anims.get('idle')!.length - 1)];
 	document.body.classList.add('hasRoxy'); onReady();
 	requestAnimationFrame(tick);
-	for (const s of ['anticipation', 'excited', 'disappointed'] as RoxyState[]) load(s).catch((e) => console.warn('roxy', s, e));
+	await Promise.all((['anticipation', 'excited', 'disappointed'] as RoxyState[]).map((s) => load(s).catch((e) => console.warn('roxy', s, e))));
 }
 /** Switch state: loops stay until changed; one-shots return to idle by themselves. */
 export function roxy(s: RoxyState) { want = s; }
