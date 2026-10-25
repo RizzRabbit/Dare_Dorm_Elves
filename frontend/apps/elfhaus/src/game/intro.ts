@@ -59,7 +59,8 @@ function runSting() {
 			{ duration: 2300, fill: 'forwards' });
 		logo.animate([{ transform: 'scale(.96)' }, { transform: 'none' }], { duration: 450, easing: ease });
 		glow.animate([{ opacity: 0 }, { opacity: .8, offset: .2 }, { opacity: .9, offset: .45 }, { opacity: .7, offset: .7 }, { opacity: .8 }], { duration: 2000, delay: 200, fill: 'both' });
-		timers.push(window.setTimeout(() => sheet.then(() => !ended && play('sting_glint', 'glint', gl, { cls: 'fxFill' })), 700));
+		// aifix: the sting_glint sheet ends in four-point stars, so the studio logo just settles in (scale + glow opacity)
+		void sheet; void gl; void play;
 		timers.push(window.setTimeout(end, 2300));
 	});
 }

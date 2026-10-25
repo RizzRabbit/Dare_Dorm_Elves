@@ -11,10 +11,8 @@ export function featOpen(fx: HTMLElement | null) {
 	if (!fx || !hasSheet(ID)) return;
 	featClose(fx);
 	const portrait = document.body.classList.contains('portrait');
-	for (let i = 0; i < (portrait ? 3 : 1); i++) {
-		const t = document.createElement('div'); t.className = 'ffConf'; if (portrait) { t.style.top = i * 33.4 + '%'; t.style.height = '33.4%'; }
-		fx.appendChild(t); keep(fx, play(ID, 'confetti', t, { loop: true, delay: 150 + i * 270, cls: 'ffFill' }));
-	}
+	// aifix: the flat paper-rectangle confetti loop read as placeholder; banners open on the soft burst only
+	void portrait; void keep;
 	featBurst(fx);
 }
 export function featBurst(fx: HTMLElement | null) {
@@ -24,8 +22,7 @@ export function featBurst(fx: HTMLElement | null) {
 }
 /** Star glints over a title that just swapped in. */
 export function featPop(title: HTMLElement | null) {
-	if (!title || !hasSheet(ID)) return;
-	play(ID, 'pop', title, { cls: 'ffPop' });
+	void title; // aifix: the pop sheet is four-point stars; the tier title keeps its own CSS pop (transform only)
 }
 export function featClose(fx: HTMLElement | null) {
 	if (!fx) return;

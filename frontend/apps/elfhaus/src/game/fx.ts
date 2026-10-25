@@ -20,19 +20,23 @@ const symOf = (cell: Element) => cell.querySelector<HTMLElement>('.sym');
 const symName = (cell: Element) => [...(symOf(cell)?.classList || [])].find((c) => /^(H\d|L\d|W|S)$/.test(c)) || '';
 /** Wild idle loop (random phase so neighbouring wilds don't breathe in sync). */
 export function symIdle(cell: HTMLElement) {
-	const sym = symOf(cell); if (!sym || symName(cell) !== 'W' || !hasSheet('sym_W') || sym.querySelector('canvas.fxIdle')) return;
+	const sym = symOf(cell); if (!SYM_STRIPS || !sym || symName(cell) !== 'W' || !hasSheet('sym_W') || sym.querySelector('canvas.fxIdle')) return;
 	play('sym_W', 'idle', sym, { cls: 'fxFill symFx fxIdle', delay: -Math.random() * 1000, prepend: false });
 }
 /** Win highlight: the symbol's own win loop (pulse, shine, edge glow, sparkles; characters lean and sway). */
+// aifix: the baked sym_<S> win / idle strips carry four-point star twinkles (the generic "AI sparkle"), so they are
+// not played any more. Winning symbols keep the static art + lit outline layer and get a slow transform-only bob
+// (.cell.win .sym>img, CSS). Re-enable once the symbols-v3 strips ship without the stars.
+const SYM_STRIPS = false;
 export function symWin(cell: HTMLElement) {
-	const sym = symOf(cell), n = symName(cell); if (!sym || !hasSheet('sym_' + n) || sym.querySelector('canvas.fxWin')) return false;
+	const sym = symOf(cell), n = symName(cell); if (!SYM_STRIPS || !sym || !hasSheet('sym_' + n) || sym.querySelector('canvas.fxWin')) return false;
 	play('sym_' + n, 'win', sym, { cls: 'fxFill symFx fxWin' });
 	cell.classList.add('sprWin');
 	return true;
 }
 /** Scatter land: the Dare Card's own land sheet (squash-pop + ring flash + sparkles); the only symbol with one. */
 export function symLand(cell: HTMLElement) {
-	const sym = symOf(cell); if (!sym || symName(cell) !== 'S' || !hasSheet('sym_S')) return;
+	const sym = symOf(cell); if (!SYM_STRIPS || !sym || symName(cell) !== 'S' || !hasSheet('sym_S')) return;
 	sym.querySelectorAll('canvas.fxLand').forEach((c) => c.remove());
 	play('sym_S', 'land', sym, { cls: 'fxFill symFx fxLand', rate: 1, onEnd: () => sym.querySelectorAll('canvas.fxLand').forEach((c) => c.remove()) });
 }
@@ -60,8 +64,11 @@ export function litOn(cell: HTMLElement) {
 /** Impact bursts (fx_burst, glow baked; frame-shape independent): land 1.5x cell (wild / scatter landing),
  * lock 1.9x (wild locks or merges), pop 0.9x (win-cell pop). Drawn above the symbol, centred on the host. */
 const BURST = { land: 1.5, lock: 1.9, pop: 0.9, big: 3.2 } as const; // big = the lock anim, scaled up (4-5 wide merges)
+// aifix: every fx_burst row is a ring of four-point stars (+ hearts), so impact bursts are off; landings keep the
+// transform squash (landBump) and merges keep their own motion. Kept as a no-op so callers (mergefx, winlines) stay as is.
+const BURSTS = false;
 export function burst(host: HTMLElement, kind: keyof typeof BURST, delay = 0) {
-	if (!hasSheet('fx_burst')) return;
+	if (!BURSTS || !hasSheet('fx_burst')) return;
 	const k = BURST[kind];
 	play('fx_burst', kind === 'big' ? 'lock' : kind, host, { cls: 'bfx', delay, prepend: false, rate: kind === 'land' ? 1 : undefined, // the reel-stop impact keeps its snap (tempo.ts)
 		 style: `width:calc(var(--cell)*${k});height:calc(var(--cell)*${k});margin:calc(var(--cell)*${-k / 2}) 0 0 calc(var(--cell)*${-k / 2})` });
@@ -74,8 +81,8 @@ export function clearSymWins() {
 /** Multiplier increase: burst sheet behind the lettering, centred on the text. */
 export function mxBurst(mx: HTMLElement) {
 	const c = Number(mx.dataset.cx || 70);
-	play(FX, 'mxburst', mx, { cls: 'fxBurst', style: `left:${c}%`, prepend: true });
-	mxGlint(mx, 0);
+	play(FX, 'mxburst', mx, { cls: 'fxBurst', style: `left:${c}%`, prepend: true }); // the gem is a light source: its ring flash stays
+	// aifix: no four-point star glint over the gem (mxGlint stays exported, unused)
 }
 // Glint anchors (percent of the .mx box) relative to the text span: [fraction along text, y%].
 const GL = [[0.82, 22], [0.3, 48], [0.58, 80]];
@@ -91,8 +98,7 @@ export function lockFx(cell: HTMLElement) {
 		slot.querySelectorAll('canvas').forEach((c) => c.remove());
 		if (play(FX, 'lock', slot, { cls: 'fxFill', onEnd: () => setLockIcon(slot) })) slot.style.cssText = '';
 	}
-	play(FX, 'lockrim', cell, { cls: 'fxRim' });
-	burst(cell, 'lock'); // sparkle burst as the wild locks
+	// aifix: the lockrim sheet (corner stars) and the sparkle burst are off; the padlock clamp above is the lock cue
 }
 export function setLockIcon(slot: HTMLElement) {
 	slot.style.cssText = frameCSS(FX, 'lock', -1);
@@ -108,4 +114,4 @@ export function rcFill(dot: HTMLElement, reverse = false) {
 	void a;
 }
 /** Relight flash over a respin circle (ring burst + star), drawn larger than the dot. */
-export function rcFlash(dot: HTMLElement) { play(FX, 'rcflash', dot, { cls: 'rcFlash', prepend: false }); }
+export function rcFlash(dot: HTMLElement) { void dot; } // aifix: the rcflash sheet is a four-point star; the fill anim is enough

@@ -895,3 +895,9 @@ body{--at:2} body.turbo{--at:1}
 .cell .symSh{transition-duration:calc(.22s*var(--at)),calc(.26s*var(--at))}
 .sym .olWin,.ov .ovWinO{transition-duration:calc(.2s*var(--at))}
 /* ===== end board tempo ===== */
+/* ===== aifix: no four-point sparkles (fx.ts / wildfx.ts / featfx.ts / intro.ts). Winning symbols: the baked sym_<S>
+   strips (star twinkles) are not played, so the static art + its lit outline layer bob slowly instead (transform only). ===== */
+.cell.win .sym.art>img{animation:aiSymBob calc(1.3s*var(--at,2)) ease-in-out infinite alternate;transform-origin:50% 80%;will-change:transform}
+@keyframes aiSymBob{from{transform:translateY(0) scale(1)}to{transform:translateY(-2.5%) scale(1.025)}}
+@media (prefers-reduced-motion:reduce){.cell.win .sym.art>img{animation:none}}
+/* ===== end aifix sparkles ===== */

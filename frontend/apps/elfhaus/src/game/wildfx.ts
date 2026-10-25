@@ -12,11 +12,9 @@
 //                      spin, during win lines, or when the tab is hidden
 import { play, hasSheet, loadSheet, unloadSheet, type Atlas } from './sprite';
 import { stackListed } from './stacks';
-import { burst } from './fx';
 import { S, $ } from './ui';
 import { isSpinning } from './reels';
 import { linesActive } from './winlines';
-import { T } from './tempo';
 const ID = 'fx_wild';
 const ok = () => hasSheet(ID);
 
@@ -31,10 +29,12 @@ function column(r: number) {
 	d.style.left = r * S.cell + 'px'; d.style.width = S.cell + 'px';
 	$('#board').appendChild(d); return d;
 }
+// aifix: stackform frames 0-4 are four-point stars at the four rows; only the light column (frames 5-11) plays
+const COL_FROM = 5;
 export function stackForm(reel: number) {
 	if (!ok()) return Promise.resolve();
 	const host = column(reel);
-	return new Promise<void>((res) => { if (!play(ID, 'stackform', host, { cls: 'wfx', onEnd: () => { host.remove(); res(); } })) { host.remove(); res(); } });
+	return new Promise<void>((res) => { const a = play(ID, 'stackform', host, { cls: 'wfx', onEnd: () => { host.remove(); res(); } }); if (!a) { host.remove(); res(); } else { a.frames = a.frames.slice(COL_FROM); a.last = -1; } });
 }
 // ---- per-reel wild-expand sheets (assets/fx/fx_wfexpand_R<n>.{webp,json}, listed in assets/fx/index.json) ----
 const FX_DIR = 'assets/fx/', FREE_MS = 4000, WAIT_MS = 220;
@@ -89,11 +89,10 @@ export function wfExpand(ov: HTMLElement | null) {
 export function mergeFx(reels: number[], seams = true) {
 	if (!ok() || reels.length < 2) return;
 	const lo = Math.min(...reels), hi = Math.max(...reels);
-	if (seams) for (let r = lo + 1; r <= hi; r++) { const h = column(r); h.classList.add('seam'); play(ID, 'seam', h, { cls: 'wfx', onEnd: () => h.remove() }); }
+	void seams; // aifix: the seam sheet has star crossings on the light lines; the soft sweep below is the merge cue
 	const g = column(lo); g.style.width = (hi - lo + 1) * S.cell + 'px';
 	play(ID, 'msweep', g, { cls: 'wfx', delay: 180, onEnd: () => g.remove() });
-	// sparkle burst on every merged reel's centre
-	for (let r = lo; r <= hi; r++) { const h = column(r); h.classList.add('burstCol'); burst(h, 'lock', 120 + (r - lo) * 60); setTimeout(() => h.remove(), T(900 + (r - lo) * 60)); } // sprite delays stretch in play()
+	// aifix: no sparkle burst per merged reel (four-point stars)
 }
 
 // ---- shared shimmer scheduler ----
