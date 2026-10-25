@@ -22,7 +22,7 @@ import { burst } from './fx';
 import { mergeFx, stackForm, wfExpand, warmExpand } from './wildfx';
 import { grab } from './combine';
 import { toStage } from './stage';
-import { hasStack, stackOnce, stackLetters, stackWin, stackWinOff, stackPrepare, stackRelease, stackWarm } from './stacks';
+import { hasStack, stackOnce, stackLetters, stackWin, stackWinOff, stackPrepare, stackRelease, stackWarm, stackReact, stackReactSkip } from './stacks';
 import { T } from './tempo';
 
 let skipping = false, running = 0;
@@ -37,6 +37,7 @@ const sw = (ms: number, raw = false) => (skipping ? Promise.resolve() : new Prom
 const waiters = new Set<() => void>();
 /** Tap: snap whatever merge/stack is playing to its end state. */
 export function skipMerge() {
+	stackReactSkip(); // a face reaction snaps to the idle loop
 	if (!running) return;
 	skipping = true; anims.forEach((a) => { try { a.finish(); } catch { a.cancel(); } }); waiters.forEach((w) => w()); waiters.clear();
 }
@@ -94,7 +95,7 @@ export async function stackIn(reel: number, render: (frameDelay?: number) => voi
 
 async function stackFromSingles(reel: number, render: (frameDelay?: number) => void) {
 	begin();
-	const cells = cellsOf(reel), c = S.cell;
+	const cells = cellsOf(reel), c = S.cell; let tapped = false;
 	try {
 		const probe = document.createElement('div'); probe.className = 'ov full'; probe.dataset.reel = String(reel);
 		const warm = stackWarm(probe); // idle + letters decode during the hold / lean (usually prefetched already)
@@ -127,12 +128,17 @@ async function stackFromSingles(reel: number, render: (frameDelay?: number) => v
 		await sw(300);
 	} finally {
 		cells.forEach((el) => { el.getAnimations({ subtree: true }).forEach((a) => a.cancel()); if (S.full.has(reel)) el.style.visibility = 'hidden'; });
-		end();
+		tapped = skipping; end();
 	}
+	// 5) the settled elf reacts (per-elf face, ~2.6-2.75 s at 12 fps, real speed); letters + frame keep drawing in alongside.
+	// Not awaited: it doesn't block the win flow. Skipped (straight to idle) when the stack was tapped through / turbo.
+	const ov = ovOf(reel);
+	if (ov && !tapped && !S.turbo && ov.classList.contains('full')) void stackReact(ov, reel);
 }
 
 /** mergeGroups (a fresh group): the full choreography. `apply` swaps the overlays to the merged one at the hit. */
 export async function mergeIn(reels: number[], values: number[], product: number, apply: () => void) {
+	stackReactSkip(); // the lean snapshots idle art
 	begin();
 	const B = $('#board'), n = reels.length, big = n >= 4, lo = reels[0], step = n > 1 ? pos(lo + 1, 0).x - pos(lo, 0).x : S.cell, x0 = pos(lo, 0).x;
 	const made: HTMLElement[] = [];

@@ -70,13 +70,13 @@ export const hasStack = (a: StackAnim, ov: HTMLElement) => ok(sheetId(a, ov));
 /** Is there art for it at all (decoded or not)? Use this to decide between the art and an old placeholder effect. */
 export const stackListed = (a: StackAnim, ov: HTMLElement) => listed.has(sheetId(a, ov));
 const live = new WeakMap<HTMLElement, Partial<Record<'body' | 'letters' | 'win', Anim>>>();
-function run(a: StackAnim, ov: HTMLElement, layer: 'body' | 'letters' | 'win', o: { loop?: boolean; hold?: boolean; onEnd?: () => void } = {}) {
+function run(a: StackAnim, ov: HTMLElement, layer: 'body' | 'letters' | 'win', o: { loop?: boolean; hold?: boolean; still?: boolean; onEnd?: () => void } = {}) {
 	if (!hasStack(a, ov)) return null;
 	const id = sheetId(a, ov), slots = live.get(ov) || {};
 	const old = slots[layer]; if (old && !old.done) stop(old);
 	used.set(id, performance.now());
-	const once = !o.loop && !o.hold; if (once) playing.add(id);
-	const an = play(id, names.get(id)!, ov, { cls: `stk stk_${layer}`, blend: true, loop: o.loop, hold: o.hold, onEnd: () => { if (once) { playing.delete(id); used.set(id, performance.now()); sweepSoon(); } o.onEnd?.(); } });
+	const once = !o.loop && !o.hold && !o.still; if (once) playing.add(id);
+	const an = play(id, names.get(id)!, ov, { cls: `stk stk_${layer}`, blend: !o.still, loop: o.still ? false : o.loop, hold: o.hold || o.still, ...(o.still ? { fps: 1e-6, rate: 1 } : {}), onEnd: () => { if (once) { playing.delete(id); used.set(id, performance.now()); sweepSoon(); } o.onEnd?.(); } });
 	if (an) { slots[layer] = an; live.set(ov, slots); } else if (once) playing.delete(id); // CSS (:has canvas.stk_<layer>) hides the placeholder it replaces
 	return an;
 }
@@ -177,6 +177,7 @@ export function stackLetters(ov: HTMLElement, settled = false) {
 }
 /** Win bounce (its frames carry the letters, so the letters layer hides meanwhile). Decodes on first use. */
 export function stackWin(ov: HTMLElement) {
+	const rx = reacts.get(ov); if (rx) { void rx.p.then(() => stackWin(ov)); return; } // the win bounce starts after the face reaction (the CSS win outline shows meanwhile)
 	const go = () => {
 		if (!ov.isConnected || !ov.classList.contains('win')) return;
 		if (run('merge_win', ov, 'win', { loop: true })) { const l = live.get(ov)?.letters; if (l) l.cv.style.opacity = '0'; }
@@ -190,4 +191,42 @@ export function stackWinOff(ov: HTMLElement) {
 	if (s?.letters) s.letters.cv.style.opacity = '';
 	drop([sheetId('merge_win', ov)], [ov]); // released right away (another winning overlay that shares it keeps it)
 	sweepSoon();
+}
+
+// Face reaction (stack-react, user-approved 2026-10-25): after a full-reel elf settles (stackIn at normal pace), the body
+// holds merge_idle frame 0 while stack_react_R<n> (a feathered face patch, 12 fps, authored at real speed: rate 1, no
+// blend) plays once on its own layer between body and letters; then the idle loop starts. Frame 0 and the last frame are
+// transparent, so it starts and ends invisibly. Turbo, a skip / tap (skipMerge -> stackReactSkip), a merge lean or a
+// re-render go straight to idle; a win on that overlay starts its merge_win bounce after the reaction. The sheet (~0.2 MB decoded) is loaded per play and closed at the end.
+// Not listed in index.json: loaded by name from assets/stacks/stack_react_R<n>.{webp,atlas.json}.
+const reacts = new Map<HTMLElement, { an: Anim | null; id: string; done: () => void; p?: Promise<void> }>();
+function reactStop(ov: HTMLElement) { const r = reacts.get(ov); if (r) r.done(); }
+/** Snap every running face reaction to the idle loop (tap / skip / merge). */
+export function stackReactSkip() { [...reacts.keys()].forEach(reactStop); }
+/** Play reel `reel` (0-based)'s face reaction on its settled full-reel overlay. Resolves when it ends or is skipped. */
+export function stackReact(ov: HTMLElement, reel: number): Promise<void> {
+	if (document.body.classList.contains('turbo') || !ov.isConnected || reacts.has(ov)) return Promise.resolve();
+	const id = `stack_react_R${reel + 1}`;
+	let st0: { p?: Promise<void> } = {};
+	const p = new Promise<void>((res) => {
+		let fin = false;
+		const st = { an: null as Anim | null, id, done: () => {
+			if (fin) return; fin = true; reacts.delete(ov);
+			if (st.an && !st.an.done) stop(st.an);
+			if (hasSheet(id)) unloadSheet(id);
+			if (ov.isConnected) run('merge_idle', ov, 'body', { loop: true });
+			res();
+		} };
+		reacts.set(ov, st); st0 = st;
+		const go = () => {
+			if (fin) return;
+			if (!ov.isConnected || !hasStack('merge_idle', ov) || !hasSheet(id)) return st.done();
+			run('merge_idle', ov, 'body', { still: true }); // body holds frame 0 (merge_idle nudges the head a few px)
+			st.an = play(id, 'stack_react', ov, { cls: 'stk stk_react', rate: 1, onEnd: st.done });
+			if (!st.an) st.done();
+		};
+		if (hasSheet(id)) go();
+		else fetch(`${DIR}${id}.atlas.json`).then((r) => r.json() as Promise<Atlas>).then((at) => loadSheet(id, `${DIR}${id}.webp`, at)).then(go, (e) => { console.warn('stack react', id, e); st.done(); });
+	});
+	st0.p = p; return p;
 }
