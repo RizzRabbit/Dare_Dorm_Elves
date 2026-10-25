@@ -6,6 +6,7 @@ import { loadSheet, play, type Atlas } from './sprite';
 import { LOADER_CARDS } from './loader';
 import LAYOUT from '../assets/intro/splash_layout.json';
 import { ART } from './ui';
+import { fitStage } from './stage';
 import GLINT_ATLAS from '../assets/intro/sting_glint.atlas.json';
 const U = import.meta.glob('../assets/intro/*.webp', { eager: true, import: 'default', query: '?url' }) as Record<string, string>;
 const url = (f: string) => U['../assets/intro/' + f] || '';
@@ -28,11 +29,15 @@ const place = (el: HTMLElement, o: { cx: number; cy: number; w: number }) => { e
 
 function layout() {
 	const R = document.getElementById('loader'); if (!R) return;
-	const o: 'land' | 'port' = innerWidth >= innerHeight ? 'land' : 'port', d = L[o];
+	// The loader lives inside #root, which stage.ts already scales to the window (one shared scale). So the splash is
+	// laid out against the STAGE (design px), not the window: using innerWidth/innerHeight here scaled it twice (tiny
+	// splash on every window that is not 390-wide portrait or 1920x1080) and could pick the other orientation than the
+	// game (window 1.0-1.1 tall). fitStage() is idempotent and makes ST current even before the game's first layout().
+	const S = fitStage(), o: 'land' | 'port' = S.portrait ? 'port' : 'land', d = L[o];
 	R.dataset.o = o;
 	const st = R.querySelector<HTMLElement>('.spStage')!;
 	st.style.width = d.size[0] + 'px'; st.style.height = d.size[1] + 'px';
-	st.style.setProperty('--sps', String(Math.min(innerWidth / d.size[0], innerHeight / d.size[1])));
+	st.style.setProperty('--sps', String(Math.min(S.w / d.size[0], S.h / d.size[1])));
 	R.querySelector<HTMLElement>('.spBg')!.style.backgroundImage = `url(${url(d.bg)})`;
 	const t = R.querySelector<HTMLImageElement>('.spTitle')!; if (!t.src.endsWith(d.title.img)) t.src = url(d.title.img); place(t, d.title);
 	// aifix (audit 3): the painted panels (garbled AI lettering, fake mini-boards) are replaced by plain HTML cards: the
