@@ -8,6 +8,7 @@
 
 <div id="root">
 <div id="bg"></div>
+<div id="roxySh" aria-hidden="true"></div>
 <canvas id="roxy" aria-hidden="true"></canvas>
 <div id="app">
 	<header id="top">

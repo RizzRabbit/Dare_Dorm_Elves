@@ -151,6 +151,10 @@ export function placeRoxy(portrait: boolean, frameRect: DOMRect) {
 	cv.style.visibility = show ? 'visible' : 'hidden';
 	cv.style.height = h + 'px'; cv.style.width = h * ar + 'px'; cv.style.left = left + 'px';
 	cv.style.top = top == null ? '' : top + 'px'; cv.style.bottom = top == null ? '' : 'auto';
+	// aifix: soft contact shadow under her sneakers (landscape only; feet span ~14-76% of the sheet width, soles at ~97.8%)
+	const sh = document.getElementById('roxySh');
+	if (sh) { const w = h * ar; sh.style.display = top == null && show ? 'block' : 'none';
+		sh.style.left = (left + w * 0.08) + 'px'; sh.style.width = (w * 0.76) + 'px'; sh.style.height = (h * 0.045) + 'px'; sh.style.top = (H - h * (0.022 + 0.0225)) + 'px'; }
 	// portrait: only her head and shoulders, above the board. Cut her off just under the board frame's top edge: the
 	// reel window is translucent, so anything lower showed her whole body (waist, thong) through and behind the cells.
 	const bEl = document.getElementById('board'); const bTop = bEl ? toStage(bEl.getBoundingClientRect()).top : frameRect.top + 10;

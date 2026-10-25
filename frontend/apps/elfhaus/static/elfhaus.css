@@ -969,3 +969,7 @@ html,body{background:#120C18}
 #buyCards .bcard:hover{border-color:#9A6FAE}
 #buyCards .bcard.armed{border-color:#F06AAE}
 #app #hud .ico.toggle.on,#app #hud #autoBtn.on{border-color:var(--gold)}
+/* ===== aifix: soft contact shadow under the side Roxy (roxy.ts places it under her soles; static, no animation) */
+#roxySh{position:fixed;display:none;pointer-events:none;border-radius:50%;opacity:.9;
+  background:radial-gradient(closest-side,#0b0610e6,#0b061066 55%,#0b061000)}
+body:not(.hasRoxy) #roxySh{display:none!important}
