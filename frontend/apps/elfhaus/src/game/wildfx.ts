@@ -22,7 +22,8 @@ export function wildLand(cell: HTMLElement) {
 	if (!ok()) return;
 	cell.classList.remove('wLand'); void cell.offsetWidth; cell.classList.add('wLand');
 	play(ID, 'wflash', cell, { cls: 'wfx wfxRing', rate: 1 }); // a landing is part of the reel stop: own pace (tempo.ts)
-	play(ID, 'wland', cell, { cls: 'wfx wfxBurst', rate: 1, onEnd: () => cell.classList.remove('wLand') });
+	// aifix (audit 1): the wland ring + six star sparkles are off; only the wflash ring plays
+	setTimeout(() => cell.classList.remove('wLand'), 600);
 }
 function column(r: number) {
 	const d = document.createElement('div'); d.className = 'wfxCol';
