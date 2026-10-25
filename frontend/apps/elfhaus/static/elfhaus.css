@@ -767,8 +767,7 @@ canvas.wlGlint{position:absolute;inset:0;width:100%;height:100%;pointer-events:n
 .ov.win .ovWinO{opacity:1}
 .ov .rGrowSum.mSum{top:16%}
 /* win: 3D tilt toward the camera (6-8°) eased with the 1.08 pop, and a separate soft shadow that shifts with it */
-.cell{perspective:calc(var(--cell)*5)}
-.cell.win .sym{transform:scale(1.08) rotateX(var(--tX,6deg)) rotateY(var(--tY,0deg));transition:transform .26s cubic-bezier(.3,1.5,.5,1)}
+.cell.win .sym{transform:perspective(calc(var(--cell)*5)) scale(1.08) rotateX(var(--tX,6deg)) rotateY(var(--tY,0deg));transition:transform .26s cubic-bezier(.3,1.5,.5,1)}
 .cell .symSh{position:absolute;left:12%;right:12%;bottom:4%;height:22%;z-index:0;pointer-events:none;border-radius:50%;opacity:0;
   background:radial-gradient(closest-side,#1A0F20aa,#1A0F2000);transform:none;transition:opacity .22s,transform .26s cubic-bezier(.3,1.5,.5,1)}
 .cell.win .symSh{opacity:.75;transform:translate(var(--shX,0%),calc(var(--cell)*.06)) scale(1.12,1.2)}
