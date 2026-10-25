@@ -8,7 +8,7 @@
         },
         {
             "name": "ante",
-            "cost": 1.25,
+            "cost": 3.0,
             "events": "books_ante.jsonl.zst",
             "weights": "lookUpTable_ante_0.csv"
         },
