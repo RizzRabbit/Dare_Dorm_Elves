@@ -13,8 +13,8 @@ JOBS = {  # src -> (max width, max height, quality)
     'symbol_L4_red_cup.png': (512, 512, 86), 'symbol_L5_leaf.png': (512, 512, 86), 'wild_W_single.png': (512, 512, 86),
     'wild_WF_fullreel.png': (384, 1536, 86), 'wild_WM2_two_elves.png': (768, 1536, 86), 'wild_WM3_three_elves.png': (1152, 1536, 86),
     'wild_WM4_four_elves.png': (1536, 1536, 86), 'wild_WM5_five_elves.png': (1920, 1536, 86),
-    'bg_base_noroxy_1920x1080.png': (1920, 1080, 84), 'bg_base_mobile_noroxy_1080x1920.png': (1080, 1920, 84),
-    'bg_freespins_1920x1080.png': (1920, 1080, 84), 'logo.png': (1200, 1200, 90), 'logo_full.png': (1600, 1600, 90),
+    # backgrounds are not converted here: the Lounge webps in assets/final/webp are the masters (no PNG source)
+    'logo.png': (1200, 1200, 90), 'logo_full.png': (1600, 1600, 90),
 }
 def main():
     os.makedirs(OUT, exist_ok=True); before = after = 0

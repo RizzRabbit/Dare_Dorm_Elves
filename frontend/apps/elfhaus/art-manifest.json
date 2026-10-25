@@ -117,21 +117,16 @@
   ],
   "background": [
     "assets/final/webp/bg_base_noroxy_1920x1080.webp",
-    "assets/final/bg_base_noroxy_1920x1080.png",
-    "assets/final/bg_base_1920x1080.png",
     "assets/final/background_base.jpg",
     "assets/final/background_base.png"
   ],
   "background_portrait": [
     "assets/final/webp/bg_base_mobile_noroxy_1080x1920.webp",
-    "assets/final/bg_base_mobile_noroxy_1080x1920.png",
-    "assets/final/bg_base_mobile_1080x1920.png",
     "assets/final/background_base_portrait.jpg",
     "assets/final/background_base_portrait.png"
   ],
   "background_fs": [
     "assets/final/webp/bg_freespins_1920x1080.webp",
-    "assets/final/bg_freespins_1920x1080.png",
     "assets/final/background_fs.jpg",
     "assets/final/background_fs.png"
   ],
