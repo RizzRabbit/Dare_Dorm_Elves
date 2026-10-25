@@ -16,7 +16,7 @@ const paint = (reels: number[], pal: readonly string[]) => {
 };
 /** Frame markup for an overlay covering `reels` (0-based). */
 export const frameHTML = (reels: number[]) =>
-	`<i class="wFrame" style="--wfL:${paint(reels, ELF_RIM)};--wfG:${paint(reels, ELF_ACC)}"><b class="wfG"></b><b class="wfL"></b></i>`;
+	`<i class="wFrame" style="--wfL:${paint(reels, ELF_RIM)};--wfG:${paint(reels, ELF_ACC)}"><b class="wfG"></b><b class="wfH"></b><b class="wfL"></b></i>`;
 /** Draw-in: opacity 0 -> 1 plus scale 1.04 -> 1, ease-out, ~0.3 s. */
 export function frameIn(ov: HTMLElement | null | undefined, delay = 0) {
 	const f = ov?.querySelector<HTMLElement>(':scope>.wFrame'); if (!f) return;

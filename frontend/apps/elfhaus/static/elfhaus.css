@@ -846,18 +846,25 @@ body.alcove.portrait #app #fsBar{position:relative;z-index:4}
    alcove. --wfL (bright rim line) / --wfG (glow) are per-elf colours or a per-reel gradient. Transform / opacity only. */
 .ov>.wFrame{position:absolute;inset:0;z-index:5;pointer-events:none;border-radius:9px;transform-origin:50% 50%;will-change:transform,opacity}
 .ov>.wFrame>b{position:absolute;display:block;border-radius:inherit}
-/* soft glow: peaks at the line, a short falloff outward, a longer one inward over the art */
-.ov>.wFrame>.wfG{inset:0;--w:max(10px,calc(var(--cell)*.12));background:var(--wfG);opacity:.75;
-  -webkit-mask:linear-gradient(90deg,#0008 0,#000 3px,#0000 var(--w),#0000 calc(100% - var(--w)),#000 calc(100% - 3px),#0008 100%),
-               linear-gradient(180deg,#0008 0,#000 3px,#0000 var(--w),#0000 calc(100% - var(--w)),#000 calc(100% - 3px),#0008 100%);
-          mask:linear-gradient(90deg,#0008 0,#000 3px,#0000 var(--w),#0000 calc(100% - var(--w)),#000 calc(100% - 3px),#0008 100%),
-               linear-gradient(180deg,#0008 0,#000 3px,#0000 var(--w),#0000 calc(100% - var(--w)),#000 calc(100% - 3px),#0008 100%);
-  animation:wfBreath 1.2s ease-in-out infinite alternate}
-/* crisp 2.5 px inner line (a gradient ring: padding-box minus content-box) */
-.ov>.wFrame>.wfL{inset:3px;padding:2.5px;border-radius:7px;background:var(--wfL);
+/* v2 (thicker + brighter): two glow layers inside the overlay (.ov clips, so nothing reaches the board edge / alcove).
+   wfG  wide soft halo in the ACC tone, inward to max(18px, cell*.2), breathes .82-1 (opacity only, 3.6 s cycle)
+   wfH  tight hot glow in the bright RIM tone hugging the line, inward to max(9px, cell*.08), static */
+.ov>.wFrame>.wfG{inset:0;--w:max(18px,calc(var(--cell)*.2));background:var(--wfG);opacity:.82;will-change:opacity;
+  -webkit-mask:linear-gradient(90deg,#000 0,#000 6px,#0007 calc(var(--w)*.5),#0000 var(--w),#0000 calc(100% - var(--w)),#0007 calc(100% - var(--w)*.5),#000 calc(100% - 6px),#000 100%),
+               linear-gradient(180deg,#000 0,#000 6px,#0007 calc(var(--w)*.5),#0000 var(--w),#0000 calc(100% - var(--w)),#0007 calc(100% - var(--w)*.5),#000 calc(100% - 6px),#000 100%);
+          mask:linear-gradient(90deg,#000 0,#000 6px,#0007 calc(var(--w)*.5),#0000 var(--w),#0000 calc(100% - var(--w)),#0007 calc(100% - var(--w)*.5),#000 calc(100% - 6px),#000 100%),
+               linear-gradient(180deg,#000 0,#000 6px,#0007 calc(var(--w)*.5),#0000 var(--w),#0000 calc(100% - var(--w)),#0007 calc(100% - var(--w)*.5),#000 calc(100% - 6px),#000 100%);
+  animation:wfBreath 1.8s ease-in-out infinite alternate}
+.ov>.wFrame>.wfH{inset:0;--h:max(9px,calc(var(--cell)*.08));background:var(--wfL);opacity:.9;
+  -webkit-mask:linear-gradient(90deg,#000 0,#000 4px,#0000 var(--h),#0000 calc(100% - var(--h)),#000 calc(100% - 4px),#000 100%),
+               linear-gradient(180deg,#000 0,#000 4px,#0000 var(--h),#0000 calc(100% - var(--h)),#000 calc(100% - 4px),#000 100%);
+          mask:linear-gradient(90deg,#000 0,#000 4px,#0000 var(--h),#0000 calc(100% - var(--h)),#000 calc(100% - 4px),#000 100%),
+               linear-gradient(180deg,#000 0,#000 4px,#0000 var(--h),#0000 calc(100% - var(--h)),#000 calc(100% - 4px),#000 100%)}
+/* crisp 5 px line (a gradient ring: padding-box minus content-box) */
+.ov>.wFrame>.wfL{inset:2px;padding:5px;border-radius:7px;background:var(--wfL);
   -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
           mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
-@keyframes wfBreath{from{opacity:.75}to{opacity:1}}
+@keyframes wfBreath{from{opacity:.82}to{opacity:1}}
 /* the corner gem and the respin dots stay on top of the frame */
 .ov>.mx,.ov>.ovrd{z-index:6}
 /* ===== end wild frame ===== */
