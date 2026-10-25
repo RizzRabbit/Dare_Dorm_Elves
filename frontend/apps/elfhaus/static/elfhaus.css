@@ -901,3 +901,8 @@ body{--at:2} body.turbo{--at:1}
 @keyframes aiSymBob{from{transform:translateY(0) scale(1)}to{transform:translateY(-2.5%) scale(1.025)}}
 @media (prefers-reduced-motion:reduce){.cell.win .sym.art>img{animation:none}}
 /* ===== end aifix sparkles ===== */
+/* ===== aifix: calm wild landing (audit 18). No neon ring round single wilds; the art's own elf-colour sticker border
+   is the read, the landing is the transform squash (.wLand). The bold frames on stacked / merged wilds stay as approved. ===== */
+.cell.wild::before{content:none;display:none}
+.cell.wLand .sym{animation:wPop calc(.28s*var(--at,2)) cubic-bezier(.3,1.4,.5,1)}
+/* ===== end aifix wild landing ===== */

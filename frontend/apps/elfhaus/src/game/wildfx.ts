@@ -19,10 +19,9 @@ const ID = 'fx_wild';
 const ok = () => hasSheet(ID);
 
 export function wildLand(cell: HTMLElement) {
-	if (!ok()) return;
+	// aifix (audit 18): a calm landing: the symbol's own squash-pop (.wLand, transform only). The pink neon ring flare
+	// (wflash) and the ring + star crown (wland) are gone; the glow budget goes to the merged / stacked wild frames.
 	cell.classList.remove('wLand'); void cell.offsetWidth; cell.classList.add('wLand');
-	play(ID, 'wflash', cell, { cls: 'wfx wfxRing', rate: 1 }); // a landing is part of the reel stop: own pace (tempo.ts)
-	// aifix (audit 1): the wland ring + six star sparkles are off; only the wflash ring plays
 	setTimeout(() => cell.classList.remove('wLand'), 600);
 }
 function column(r: number) {
@@ -99,7 +98,7 @@ export function mergeFx(reels: number[], seams = true) {
 // ---- shared shimmer scheduler ----
 let timer = 0, turn = 0;
 function visibleWilds(): HTMLElement[] {
-	const singles = [...document.querySelectorAll<HTMLElement>('#cells .cell.wild')].filter((c) => c.style.visibility !== 'hidden' && !c.classList.contains('dim') && !c.querySelector('canvas.wfxShine'));
+	const singles: HTMLElement[] = []; // aifix: no comet round single wilds (their round neon ring is gone); full reels keep the edge glint
 	const fulls = [...document.querySelectorAll<HTMLElement>('#overlays .ov.full')].filter((o) => !o.querySelector('canvas.wfxShine'));
 	return [...singles, ...fulls];
 }
