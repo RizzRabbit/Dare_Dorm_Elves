@@ -4,7 +4,8 @@ import { LINES, MAX_WIN_X, ROWS, REELS, SYMBOL_NAMES } from './config';
 import { money } from './format';
 import type { Group, LineWin } from './typesBookEvent';
 import { DOTS } from './respin';
-import { mxBurst, lockIconCSS, symLand, symWin, clearSymWins } from './fx';
+import { mxBurst, lockIconCSS, symWin, clearSymWins } from './fx';
+import { countTo, countMs, setAmount, skipCounts, countTiers, BIG_TIERS } from './countup';
 
 export const ART = ART_JSON as Record<string, string | null>;
 export const $ = <T extends HTMLElement = HTMLElement>(s: string) => document.querySelector(s) as T;
@@ -78,10 +79,10 @@ export function setGem(el: Element | null, v: number) {
 export function symHTML(name: string, v?: number) {
 	if (name === 'W') {
 		const val = v || 1;
-		return `<div class="sym W">${ART.W ? img('W') : `<span class="nm">WILD</span>${ph('W')}`}<span class="plate">WILD</span></div>${gemHTML(val)}<div class="lock"><i class="lkI" style="${lockIconCSS()}"></i><span class="lkT">LOCKED</span>${DOTS}</div>`;
+		return `<div class="sym W${ART.W ? ' art' : ''}">${ART.W ? img('W') : `<span class="nm">WILD</span>${ph('W')}`}<span class="plate">WILD</span></div>${gemHTML(val)}<div class="lock"><i class="lkI" style="${lockIconCSS()}"></i><span class="lkT">LOCKED</span>${DOTS}</div>`;
 	}
 	const t = name[0];
-	if (ART[name]) return `<div class="sym ${t} ${name}">${img(name)}</div>`;
+	if (ART[name]) return `<div class="sym ${t} ${name} art">${img(name)}</div>`;
 	return `<div class="sym ${t} ${name}"><span class="id">${name}</span><span class="nm">${(SYMBOL_NAMES[name] || name).toUpperCase()}</span>${ph(name)}</div>`;
 }
 export function buildCells() {
@@ -91,14 +92,14 @@ export function buildCells() {
 	}
 }
 export const cellEl = (r: number, row: number) => document.getElementById(`c${r}${row}`) as HTMLElement;
-/** Render one cell. cls 'drop' = reel-stop landing: the symbol's land sprite (CSS drop only as a fallback). */
+/** Render one cell (reel stops are animated by reels.ts; cls adds a one-shot CSS class). */
 export function renderCell(r: number, row: number, cls?: string | null, delayMs = 0) {
 	const d = cellEl(r, row), p = pos(r, row);
 	d.style.left = p.x + 'px'; d.style.top = p.y + 'px';
 	d.innerHTML = symHTML(S.sym[r]?.[row] ?? 'L5', S.vals.get(k(r, row)));
+	d.classList.toggle('wild', S.sym[r]?.[row] === 'W');
 	d.style.visibility = S.full.has(r) ? 'hidden' : 'visible';
 	d.classList.remove('sprWin', 'spinning', 'noBlur');
-	if (cls === 'drop' && symLand(d, delayMs)) { d.classList.remove('drop'); return; }
 	if (cls) {
 		d.classList.remove(cls); void d.offsetWidth; d.classList.add(cls);
 		if (delayMs) (d.querySelector('.sym') as HTMLElement | null)?.style.setProperty('animation-delay', delayMs + 'ms');
@@ -165,17 +166,37 @@ export function banner(txt: string, ms = 1400) {
 	if (ms) bannerT = setTimeout(() => b.classList.add('hidden'), ms * (S.turbo ? 0.5 : 1));
 }
 // C17: the round's win meter only counts up and never exceeds the 50,000x cap.
+/** WIN field: counts up smoothly from what it shows to the new total (duration scaled by the step's size). */
 export function setWinMeter(x: number) {
-	S.meterX = Math.min(MAX_WIN_X, Math.max(S.meterX, x));
-	$('#win').textContent = money(S.meterX * bet());
+	const nx = Math.min(MAX_WIN_X, Math.max(S.meterX, x)), dx = nx - S.meterX;
+	S.meterX = nx;
+	if (dx > 0) countTo($('#win'), nx * bet(), countMs(dx, S.turbo));
+	else setAmount($('#win'), nx * bet());
 }
-export function resetWinMeter() { S.meterX = 0; $('#win').textContent = money(0); }
+export function resetWinMeter() { S.meterX = 0; setAmount($('#win'), 0); }
+/** Big-win banner. The amount climbs through the tiers (countup.ts countTiers: fast between tiers, a short crawl
+ *  into each threshold, the tier title swaps in with a pop as it crosses, much faster past 1000x, eased into the
+ *  exact amount). At 1000x the character layer fades in behind the amount (bigwinChars.ts). Tap once = jump to the
+ *  end, tap again (or wait) = close. Turbo shortens everything. featfx.ts adds burst / confetti / pop sheets. */
 export async function bigWin(x: number, label?: string) {
-	const tier = label || (x >= 1000 ? 'LEGENDARY WIN' : x >= 100 ? 'EPIC WIN' : x >= 50 ? 'SUPER WIN' : x >= 25 ? 'MEGA WIN' : 'BIG WIN');
-	const B = $('#bigwin'); (B.querySelector('.bwTier') as HTMLElement).textContent = tier;
+	const B = $('#bigwin'), T = B.querySelector('.bwTier') as HTMLElement;
+	T.textContent = label || ''; T.classList.toggle('on', !!label);
 	(B.querySelector('.bwX') as HTMLElement).textContent = `${x.toLocaleString('en-US')}x`;
-	B.classList.remove('hidden');
-	const amt = B.querySelector('.bwAmt') as HTMLElement, steps = S.turbo ? 10 : 30;
-	for (let i = 1; i <= steps; i++) { amt.textContent = money((x * bet() * i) / steps); await wait(45); }
-	await wait(1500); B.classList.add('hidden');
+	const amt = B.querySelector('.bwAmt') as HTMLElement; setAmount(amt, 0);
+	B.classList.remove('hidden'); B.classList.remove('chars'); fxHooks.start?.(B, x);
+	let close = () => {}; const closed = new Promise<void>((r) => (close = r));
+	let landed = false, chars = false;
+	const tap = () => { if (!landed) skipCounts(); else close(); };
+	B.addEventListener('pointerdown', tap);
+	await countTiers(amt, x, bet(), {
+		turbo: S.turbo,
+		onTier: (i) => { if (label) return; T.textContent = BIG_TIERS[i].name; T.classList.add('on'); T.classList.remove('pop'); void T.offsetWidth; T.classList.add('pop'); fxHooks.tier?.(B, i); },
+		onX: (v) => { if (!chars && v >= 1000) { chars = true; B.classList.add('chars'); fxHooks.chars?.(B); } },
+	});
+	landed = true;
+	await Promise.race([wait(S.turbo ? 700 : x >= 1000 ? 2200 : 1500), closed]);
+	B.removeEventListener('pointerdown', tap); B.classList.add('hidden'); B.classList.remove('chars'); fxHooks.end?.(B);
 }
+type BwHooks = { start?: (B: HTMLElement, x: number) => void; tier?: (B: HTMLElement, i: number) => void; chars?: (B: HTMLElement) => void; end?: (B: HTMLElement) => void };
+const fxHooks: BwHooks = {};
+export function setBigWinFx(h: BwHooks) { Object.assign(fxHooks, h); }

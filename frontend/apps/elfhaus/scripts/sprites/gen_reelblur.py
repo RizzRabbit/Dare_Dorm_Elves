@@ -1,5 +1,7 @@
-"""Reel spin: a looping, vertically motion-blurred strip of the symbol art, one cell window per frame.
-sheet reel_blur: spinA / spinB (two symbol orders so neighbouring reels differ), 12 frames each, 30 fps loop."""
+"""Reel spin top-speed layer: a seamless, vertically motion-blurred strip of the symbol art (one 6-symbol cycle).
+reels.ts scrolls it with translateY on a GPU layer and crossfades it in only near full speed (the real symbol
+strip scrolls underneath). Two symbol orders so neighbouring reels differ:
+  assets/final/fx/reel_stripA.webp, reel_stripB.webp  (W px wide, 6*W tall, alpha)"""
 import os
 from PIL import Image, ImageFilter
 from sprlib import ROOT, pack
@@ -11,7 +13,7 @@ SYM = {'H1': 'symbol_H1', 'H2': 'symbol_H2', 'H3': 'symbol_H3', 'H4': 'symbol_H4
 
 def tile(n):
     im = Image.open(os.path.join(ART, SYM[n] + '.webp')).convert('RGBA')
-    im.thumbnail((int(F * .86), int(F * .86)), Image.LANCZOS)
+    im = im.resize((F, F), Image.LANCZOS)  # same footprint as the cell art (transparent round-frame cut)
     t = Image.new('RGBA', (F, F), (0, 0, 0, 0)); t.alpha_composite(im, ((F - im.width) // 2, (F - im.height) // 2)); return t
 
 def vblur(im, r):
@@ -27,15 +29,14 @@ def strip(order):
     for i, n in enumerate(order[-1:] + order + order[:2]): s.alpha_composite(tile(n), (0, i * F))
     return s
 
-def frames(order):
-    s = strip(order); cyc = F * len(order); out = []
-    # blur the wrapped strip once, then cut windows (seamless: window k at k*cyc/N)
-    b = vblur(s, 72)
-    for k in range(N):
-        y = F + int(k * cyc / N)
-        fr = b.crop((0, y, F, y + F)); a = fr.getchannel('A').point(lambda v: int(v * .82)); fr.putalpha(a)
-        out.append(fr)
-    return out
+W = 144
+def save(name, order):
+    s = strip(order); cyc = F * len(order)
+    b = vblur(s, 72).crop((0, F, F, F + cyc))  # one seamless cycle
+    a = b.getchannel('A').point(lambda v: int(255 * min(1, (v / 255) ** .6 * 1.08))); b.putalpha(a)  # keep the moving strip readable over the translucent board
+    b = b.resize((W, W * len(order)), Image.LANCZOS)
+    p = os.path.join(ROOT, 'assets/final/fx', name + '.webp'); b.save(p, 'WEBP', quality=72, alpha_quality=72, method=6)
+    print(name, b.size, os.path.getsize(p) // 1024, 'KB')
 
-pack('reel_blur', {'spinA': (frames(['H1', 'L3', 'H4', 'L1', 'W', 'L5']), 30, True),
-                   'spinB': (frames(['L2', 'H3', 'L4', 'H2', 'L5', 'H1']), 30, True)}, cols=12, quality=70, alpha_quality=70)
+save('reel_stripA', ['H1', 'L3', 'H4', 'L1', 'W', 'L5'])
+save('reel_stripB', ['L2', 'H3', 'L4', 'H2', 'L5', 'H1'])

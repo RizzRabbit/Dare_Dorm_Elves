@@ -10,7 +10,8 @@ import {
 	ANTE_COST, fmtX, BUY_MODES, CONFIRM_ABOVE_X, GAME_ID, LINES, MAX_WIN_X, MODES, MODE_DESC, MODE_LABEL, MYSTERY_ODDS, PAYTABLE,
 	SPIN_CAP, START_FS, SYMBOL_NAMES, VERSION, isProvisional, type ModeKey,
 } from './config';
-import { money, mult, setCurrency, setLocale, isSocialCurrency } from './format';
+import { money, mult, setCurrency, setLocale, isSocialCurrency, amountStr } from './format';
+import { skipCounts } from './countup';
 import { setSocial, isSocial, t } from './strings';
 import { $, S, ART, bet, buildCells, renderAll, renderOverlays, resetWinMeter, setWinMeter, banner, wait } from './ui';
 import { playBookEvents, endBonusUi } from './bookEventHandlerMap';
@@ -19,7 +20,7 @@ import { initLoader, preloadArt, track, loaderReady, hideLoader } from './loader
 import { preloadMaxWin } from './maxwin';
 import { placeRespin } from './respin';
 import { loadAllFx } from './fx';
-import { startSpin, markStopped } from './reels';
+import { startSpin, abortSpin } from './reels';
 import { hideRespin } from './respin';
 import type { BookEvent } from './typesBookEvent';
 
@@ -165,7 +166,7 @@ async function round(mode: ModeKey) {
 		await finishRound(rd);
 		if (S.auto > 0 && autoStopReason(S.meterX * bet())) stopAuto();
 	} catch (e) {
-		stopAuto(); endBonusUi(); markStopped(); renderAll(); showError(e);
+		stopAuto(); endBonusUi(); abortSpin(); renderAll(); showError(e);
 	} finally { setBusy(false); }
 	if (S.auto > 0) { S.auto--; setAuto(); if (S.auto) setTimeout(() => { if (S.auto) round(spinMode()); }, 300); }
 }
@@ -360,7 +361,11 @@ function wire() {
 	$('#autoStart').onclick = startAuto;
 	$('#advBtn').onclick = () => { const open = $('#adv').classList.toggle('hidden') === false; $('#advBtn').setAttribute('aria-expanded', String(open)); $('#advBtn').classList.toggle('open', open); };
 	$('#stFeat').onclick = () => { featStop = !featStop; buildAuto(); };
-	['#stLoss', '#stWin', '#stUp'].forEach((id) => ($(id).oninput = () => readStops()));
+	['#stLoss', '#stWin', '#stUp'].forEach((id) => {
+		const el = $(id) as HTMLInputElement; el.oninput = () => readStops();
+		// on blur a valid amount is tidied to the money decimals rule (2 places; more only below one unit when significant)
+		el.onchange = () => { const v = parseAmt(el.value); if (v > 0) { el.value = amountStr(v); readStops(); } };
+	});
 	$('#buyBtn').onclick = () => { buildBuy(); show('#buyConfirm', false); show('#buyMenu', true); };
 	$('#buyClose').onclick = () => { show('#buyMenu', false); show('#buyConfirm', false); };
 	$('#buyNo').onclick = () => show('#buyConfirm', false);
@@ -393,6 +398,8 @@ const IDLE = [['H1', 'L2', 'L4', 'H3'], ['L1', 'H2', 'L5', 'L3'], ['H4', 'L3', '
 export async function initGame() {
 	setLocale(url.lang);
 	initLoader(); preloadArt();
+	// any tap lands a running count-up on its final value (the big-win banner handles its own taps)
+	document.addEventListener('pointerdown', (e) => { if (!(e.target as Element)?.closest?.('#bigwin')) skipCounts(); }, { capture: true, passive: true });
 	track(initRoxy(layout));
 	loadAllFx(track).then(() => renderAll());
 	track(document.fonts?.ready ?? Promise.resolve());

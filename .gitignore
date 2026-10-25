@@ -13,3 +13,6 @@ math/games/*/library/temp*/
 assets/reference/
 .tools/
 
+
+# intermediate round-cut symbol PNGs (regenerate: frontend/apps/elfhaus/scripts/sprites/cut_symbols.py)
+assets/final/cut/

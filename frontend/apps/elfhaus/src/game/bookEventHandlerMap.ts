@@ -6,8 +6,8 @@ import { roxy, roxyState } from './roxy';
 import { maxWinCelebration } from './maxwin';
 import { showRespin, endRespin, hideRespin } from './respin';
 import { mxBurst, lockFx, clearSymWins } from './fx';
-import { timing, isSpinning, startSpin, markStart, markStopped, sinceStart, sleep, spinCell } from './reels';
-import { $, S, k, bet, wait, banner, toast, hideToast, bigWin, setWinMeter, clearLines, drawWins, renderCell, renderOverlays, cellEl, setGem, ovMx } from './ui';
+import { timing, isSpinning, startSpin, markStopped, sinceStart, sleep, spinCells, stopReel } from './reels';
+import { $, S, k, bet, wait, banner, toast, hideToast, bigWin, setWinMeter, clearLines, drawWins, renderCell, renderOverlays, cellEl, setGem, ovMx, symHTML } from './ui';
 import { grab, combineInto } from './combine';
 
 const TL = (t: Tier) => TIER_LABEL[t].toUpperCase();
@@ -36,17 +36,22 @@ export const bookEventHandlerMap: Handlers = {
 		const T = timing();
 		const ant = ev.anticipation.some((a) => a > 0);
 		if (ant && ev.gameType === 'basegame') roxy('anticipation');
-		const ref = performance.now(); let at = Math.max(0, T.first - sinceStart());
+		// every reel gets an absolute settle time; reels.ts eases each one in (decel, overshoot, settle)
+		let at = Math.max(T.first, sinceStart() + 120);
+		const stops: Promise<void>[] = [];
 		for (let r = 0; r < REELS; r++) {
 			if (r > 0) at += T.gap;
 			if (ev.anticipation[r] > 0) at += T.ant;
-			await sleep(at - (performance.now() - ref));
-			for (let row = 0; row < ROWS; row++) {
-				const locked = lockedSingles.has(k(r, row));
-				renderCell(r, row, locked || S.full.has(r) ? null : 'drop');
-				cellEl(r, row).classList.toggle('locked', locked);
-			}
+			const finals = Array.from({ length: ROWS }, (_, row) => symHTML(S.sym[r][row], S.vals.get(k(r, row))));
+			stops.push(stopReel(r, at, finals, () => {
+				for (let row = 0; row < ROWS; row++) {
+					const locked = lockedSingles.has(k(r, row));
+					renderCell(r, row, null);
+					cellEl(r, row).classList.toggle('locked', locked);
+				}
+			}));
 		}
+		await Promise.all(stops);
 		markStopped();
 		await sleep(T.land);
 	},
@@ -103,22 +108,23 @@ export const bookEventHandlerMap: Handlers = {
 		});
 		showRespin(ev.step, ev.remaining);
 		await wait(450);
-		markStart();
-		ev.replace.forEach((p) => spinCell(cellEl(p.reel, p.row), p.reel));
+		spinCells(ev.replace);
 	},
 	async respinReveal(ev) {
 		const T = timing();
 		const reels = [...new Set(ev.newSymbols.map((s) => s.reel))].sort((a, b) => a - b);
-		const ref = performance.now(); let at = Math.max(0, T.resp - sinceStart());
-		for (const [i, r] of reels.entries()) {
+		ev.newSymbols.forEach((s) => {
+			S.sym[s.reel][s.row] = s.name;
+			if (s.wild) S.vals.set(k(s.reel, s.row), s.multiplier || 1); else S.vals.delete(k(s.reel, s.row));
+		});
+		let at = Math.max(T.resp, sinceStart() + 120);
+		await Promise.all(reels.map((r, i) => {
 			if (i) at += T.gap;
-			await sleep(at - (performance.now() - ref));
-			ev.newSymbols.filter((s) => s.reel === r).forEach((s) => {
-				S.sym[s.reel][s.row] = s.name;
-				if (s.wild) S.vals.set(k(s.reel, s.row), s.multiplier || 1); else S.vals.delete(k(s.reel, s.row));
-				renderCell(s.reel, s.row, 'drop');
-			});
-		}
+			const rows = ev.newSymbols.filter((s) => s.reel === r).map((s) => s.row);
+			const finals = Array.from({ length: ROWS }, (_, row) => symHTML(S.sym[r][row], S.vals.get(k(r, row))));
+			return stopReel(r, at, finals, () => rows.forEach((row) => renderCell(r, row, null)));
+		}));
+		markStopped();
 		await sleep(T.land);
 	},
 	async respinEnd(ev) {

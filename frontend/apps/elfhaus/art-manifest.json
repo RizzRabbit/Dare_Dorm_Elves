@@ -186,7 +186,13 @@
   "sym_W": [
     "assets/final/fx/sym_W.webp"
   ],
-  "reel_blur": [
-    "assets/final/fx/reel_blur.webp"
+  "reel_stripA": [
+    "assets/final/fx/reel_stripA.webp"
+  ],
+  "reel_stripB": [
+    "assets/final/fx/reel_stripB.webp"
+  ],
+  "fx_wild": [
+    "assets/final/fx/fx_wild.webp"
   ]
 }

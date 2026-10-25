@@ -25,6 +25,7 @@
 		<div id="banner" class="hidden"></div>
 		<div id="frame" class:art={!!art.frame} style={art.frame ? `border-image: url(${art.frame}) 30 fill / 30px stretch` : ''}>
 			<div id="board">
+				<div id="strips"></div>
 				<div id="cells"></div>
 				<div id="overlays"></div>
 				<svg id="lines"></svg>
@@ -60,7 +61,7 @@
 <div id="replayBar" class="hidden"><span>REPLAY · <b id="replayMode"></b></span><button id="replayPlay">PLAY</button></div>
 <div id="intro" class="overlay hidden"><div class="card"><div class="tierName"></div><div class="spins"></div><button class="cont">PRESS TO CONTINUE</button><span class="ph">intro art placeholder</span></div></div>
 <div id="maxwin" class="hidden" role="dialog" aria-label="Max win"><div class="mwStage"><div class="mwBg" style={art.background_fs ? `background-image:url(${art.background_fs})` : ''}></div><div class="mwShade"></div></div><canvas class="mwConf"></canvas><div class="mwText"><div class="mwTier">MAX WIN</div><div class="mwX">0x</div><div class="mwAmt"></div><div class="mwHint">CLICK TO CONTINUE</div></div></div>
-<div id="bigwin" class="overlay hidden"><div class="bw"><div class="bwTier">BIG WIN</div><div class="bwAmt"></div><div class="bwX"></div></div></div>
+<div id="bigwin" class="overlay hidden"><div class="bwFx" aria-hidden="true"></div><div class="bw"><div class="bwTier">BIG WIN</div><div class="bwChars" aria-hidden="true"><span class="bwcPh">ROXY · VI · COCO</span></div><div class="bwAmt"></div><div class="bwX"></div></div></div>
 <div id="buyMenu" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="buyTitle"><div class="modal bm">
 	<div class="mHead"><h2 id="buyTitle">BONUS</h2><button id="buyClose" class="mX" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg></button></div>
 	<div id="anteRow" class="row"><span class="lbl">ANTE <small id="anteCost">3x</small></span><button id="anteSw" class="sw" role="switch" aria-checked="false" aria-label="Ante"><i></i></button></div>

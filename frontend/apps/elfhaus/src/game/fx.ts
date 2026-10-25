@@ -18,13 +18,6 @@ export function loadAllFx(track: <T>(p: Promise<T>) => Promise<T>) {
 // ---------- symbols (scripts/sprites/gen_symbols.py: sheet sym_<S> with land / win / idle) ----------
 const symOf = (cell: Element) => cell.querySelector<HTMLElement>('.sym');
 const symName = (cell: Element) => [...(symOf(cell)?.classList || [])].find((c) => /^(H\d|L\d|W)$/.test(c)) || '';
-/** Reel-stop landing for a freshly rendered cell; wilds continue into their idle loop. Returns false without a sheet. */
-export function symLand(cell: HTMLElement, delay = 0) {
-	const sym = symOf(cell), n = symName(cell); if (!sym || !hasSheet('sym_' + n)) return false;
-	sym.querySelectorAll('canvas.symFx').forEach((c) => c.remove());
-	play('sym_' + n, 'land', sym, { cls: 'fxFill symFx', delay, });
-	return true;
-}
 /** Wild idle loop (random phase so neighbouring wilds don't breathe in sync). */
 export function symIdle(cell: HTMLElement) {
 	const sym = symOf(cell); if (!sym || symName(cell) !== 'W' || !hasSheet('sym_W') || sym.querySelector('canvas.fxIdle')) return;

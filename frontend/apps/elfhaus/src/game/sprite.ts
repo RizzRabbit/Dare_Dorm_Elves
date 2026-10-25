@@ -5,7 +5,7 @@
 // the last frame, reverse, fps override, delay. Static frames can be shown without a canvas via frameCSS()
 // (CSS background-position into the same sheet), which survives innerHTML re-renders.
 export type Atlas = { size: [number, number]; anims: Record<string, { fps: number; loop: boolean; frames: number[][] }> };
-type Sheet = { img: HTMLImageElement; atlas: Atlas; src: string };
+type Sheet = { img: CanvasImageSource; atlas: Atlas; src: string };
 export type PlayOpts = { cls?: string; style?: string; loop?: boolean; hold?: boolean; reverse?: boolean; fps?: number; delay?: number; prepend?: boolean; onEnd?: () => void };
 export type Anim = { cv: HTMLCanvasElement; sheet: Sheet; frames: number[][]; fps: number; loop: boolean; hold: boolean; t0: number; last: number; done: boolean; onEnd?: () => void };
 
@@ -17,10 +17,16 @@ let raf = 0;
 export function loadSheet(id: string, src: string, atlas: Atlas) {
 	return new Promise<void>((res, rej) => {
 		const img = new Image();
-		img.onload = () => { sheets.set(id, { img, atlas, src }); res(); };
+		// decoded once during loading into an ImageBitmap that canvases draw from, so a sheet is never lazily
+		// (re)decoded on the main thread mid-spin (an <img> source can be evicted and re-decoded at commit)
+		img.onload = () => img.decode().catch(() => {})
+			.then(() => (typeof createImageBitmap === 'function' ? createImageBitmap(img).catch(() => img) : img))
+			.then((bm: CanvasImageSource) => { warm(bm); sheets.set(id, { img: bm, atlas, src }); res(); });
 		img.onerror = rej; img.src = src;
 	});
 }
+let warmCv: HTMLCanvasElement | null = null;
+function warm(img: CanvasImageSource) { try { warmCv ||= document.createElement('canvas'); warmCv.width = warmCv.height = 1; warmCv.getContext('2d')!.drawImage(img, 0, 0, 1, 1); } catch { /* ignore */ } }
 export const hasSheet = (id: string) => sheets.has(id);
 
 /** Inline CSS that shows one frame of `anim` as a background, scaled to the element's box. */

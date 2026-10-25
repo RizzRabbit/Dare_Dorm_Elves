@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Per-symbol sprite sheets rendered from the final symbol art (assets/final/symbol_*.png, wild_W_single.png).
-Frames are F x F (2x the largest on-screen cell). One sheet per symbol: assets/final/fx/sym_<S>.webp + atlas JSON.
+Frames are F x F (256: ~1.2x a 210-device-px phone cell; the static art covers the rest). The old land
+animation is no longer packed: reels.ts scrolls the real art into place, so no reel-stop sprite is needed. One sheet per symbol: assets/final/fx/sym_<S>.webp + atlas JSON.
   land  10f @30fps once : streaks in from above with vertical motion blur (reel-stop frames), squash, overshoot, settle
   win   16f @24fps loop : pulse + shine sweep + soft pink edge glow + sparkles; character symbols (H1-H4) also lean
                           and sway (mesh-warped hair/upper body), low symbols wobble
@@ -11,13 +12,15 @@ from PIL import Image, ImageDraw, ImageFilter, ImageChops
 sys.path.insert(0, os.path.dirname(__file__))
 from sprlib import ROOT, rgba, star4, glow, ease_out, pack, PINK, PINKL, LAV, MAG, PLUM, WHITE
 
-F = 384
+F = 256
 SRC = {'H1': 'symbol_H1.png', 'H2': 'symbol_H2.png', 'H3': 'symbol_H3.png', 'H4': 'symbol_H4.png',
        'L1': 'symbol_L1_spin_bottle.png', 'L2': 'symbol_L2_lips.png', 'L3': 'symbol_L3_pink_phone.png',
        'L4': 'symbol_L4_red_cup.png', 'L5': 'symbol_L5_leaf.png', 'W': 'wild_W_single.png'}
 
+CUT = {k: os.path.splitext(v)[0] for k, v in SRC.items()}
+
 def base(sym):
-    im = Image.open(os.path.join(ROOT, 'assets/final', SRC[sym])).convert('RGBA')
+    im = Image.open(os.path.join(ROOT, 'assets/final/cut', CUT[sym] + '.png')).convert('RGBA')  # cut_symbols.py: round frame only
     big = im.resize((F * 2, F * 2), Image.LANCZOS)  # working res for warps
     return big
 
@@ -126,6 +129,6 @@ if __name__ == '__main__':
     syms = sys.argv[1:] or list(SRC)
     for s in syms:
         img = base(s)
-        anims = {'land': (gen_land(img), 30, False), 'win': (gen_win(s, img), 24, True)}
+        anims = {'win': (gen_win(s, img), 24, True)}
         if s == 'W': anims['idle'] = (gen_idle(img), 24, True)
         pack(f'sym_{s}', anims, cols=8, quality=80)

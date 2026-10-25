@@ -22,7 +22,9 @@ export function track<T>(p: Promise<T>): Promise<T> {
 	pending.push(q.catch(() => {}));
 	return q;
 }
-const loadImg = (src: string) => new Promise<void>((res, rej) => { const i = new Image(); i.onload = () => res(); i.onerror = rej; i.src = src; });
+// art is decoded up front (img.decode) and kept referenced so the first full-reel / merge overlay never decodes mid-round
+const keep: HTMLImageElement[] = [];
+const loadImg = (src: string) => new Promise<void>((res, rej) => { const i = new Image(); i.onload = () => { keep.push(i); i.decode().catch(() => {}).then(() => res()); }; i.onerror = rej; i.src = src; });
 /** Preload every art file from the manifest. */
 export function preloadArt() {
 	for (const src of new Set((Object.entries(ART).filter(([k, u]) => u && !/^(sym_|fx_)/.test(k)).map(([, u]) => u) as string[]).filter((u) => !/\.(webm|mp4)$/i.test(u)))) track(loadImg(src)).catch(() => console.warn('art missing', src));

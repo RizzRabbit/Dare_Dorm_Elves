@@ -23,6 +23,9 @@ body.inBonus #bg:not(.fs){filter:saturate(1.1) hue-rotate(18deg) brightness(.92)
 #app{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0)}
 .hidden{display:none!important}
 .meter span,.m span,.bcard .price,.bwAmt,#stepToast{font-variant-numeric:tabular-nums}
+/* count-ups only change textContent; a min-width box keeps the strip from reflowing while digits roll */
+#win{display:inline-block;min-width:7.5ch;contain:layout paint} .m.r #win{text-align:right}
+.bwAmt{min-width:8ch;display:inline-block}
 /* shared outline+bevel for serif display text (fill gradient clipped to text; outline via stacked hard drop-shadows) */
 .bevel{-webkit-background-clip:text;background-clip:text;color:transparent;
   filter:drop-shadow(1.6px 0 0 #1E1A26) drop-shadow(-1.6px 0 0 #1E1A26) drop-shadow(0 1.6px 0 #1E1A26) drop-shadow(0 -1.6px 0 #1E1A26) drop-shadow(0 3px 0 #120F18) drop-shadow(0 6px 6px #0007)}
@@ -49,12 +52,19 @@ button.small{padding:3px 10px;font-size:12px}
 
 /* ---------- reel frame: painted slate-grey frame around a cool-grey board ---------- */
 #stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;position:relative;min-height:0}
-#frame{padding:14px;border-radius:22px 18px 24px 19px / 19px 24px 18px 22px;border:3px solid var(--ink);
+#frame{position:relative;padding:14px;border-radius:22px 18px 24px 19px / 19px 24px 18px 22px;border:3px solid var(--ink);
+  box-shadow:0 6px 0 #2A243377, 0 18px 30px -8px #2A243388}
+/* the bezel is painted on a pseudo-element whose centre (the reel window) is masked out, so the room shows through
+   the translucent reel area; same paint and inner shadows as before. Static mask: no per-frame cost. */
+#frame::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;padding:inherit;pointer-events:none;
   background:var(--paint),repeating-linear-gradient(92deg,#0000 0 22px,#2A243312 22px 24px,#0000 24px 61px),linear-gradient(#77728A,var(--slate) 45%,var(--slate2));
-  box-shadow:inset 0 3px 0 #ffffff40, inset 0 -5px 0 #2A243344, inset 0 0 22px #2A243355, 0 6px 0 #2A243377, 0 18px 30px -8px #2A243388}
+  box-shadow:inset 0 3px 0 #ffffff40, inset 0 -5px 0 #2A243344, inset 0 0 22px #2A243355;
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+#frame>#board{z-index:0}
 #board{position:relative;width:calc(var(--cell)*5 + var(--gap)*4);height:calc(var(--cell)*4 + var(--gap)*3);border-radius:10px 8px 11px 9px;overflow:hidden;
   border:2px solid var(--ink);box-shadow:inset 0 4px 12px #2A24334d, inset 0 -3px 8px #2A24332e;
-  background:var(--paint),linear-gradient(#F2F1F6f2,#D9D6E2f2)}
+  background:linear-gradient(#2A24334d,#2A243366)}
+/* translucent reel area (~25-36% dark plum) so the room shows through; no live backdrop blur (cost) */
 
 /* ---------- symbol tiles ---------- */
 .cell{position:absolute;width:var(--cell);height:var(--cell);transition:opacity .2s,filter .2s}
@@ -169,7 +179,20 @@ body:not(.portrait) #fsBar:not(.hidden) ~ #banner{top:calc(50% - var(--cell)*2 -
 .carried{font-size:15px;color:#DCD8E6;margin:8px 0}
 .note{font-size:14px;opacity:.7;margin-bottom:16px}
 .cont{padding:12px 28px;font-size:15px}
-.bw{text-align:center;animation:settle .45s ease-out}
+.bw{position:relative;text-align:center;animation:settle .45s ease-out}
+/* big-win layers, back to front: .bwFx (burst + confetti canvases) < .bwChars (Roxy/Vi/Coco, from 1000x) < amount < title */
+#bigwin{cursor:pointer} .bwFx{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.bwTier{position:relative;z-index:3;opacity:0;transform:scale(.9);will-change:transform,opacity}
+.bwTier.on{opacity:1;transform:none;transition:opacity .12s,transform .25s cubic-bezier(.3,1.6,.5,1)}
+.bwTier.pop{animation:tierPop .32s cubic-bezier(.3,1.6,.5,1)}
+@keyframes tierPop{0%{transform:scale(.82);opacity:.4}100%{transform:none;opacity:1}}
+.bwAmt,.bwX{position:relative;z-index:2}
+.bwChars{position:absolute;z-index:1;left:50%;top:var(--bwTierH,104px);width:min(94vw,760px);aspect-ratio:16/9;transform:translate(-50%,-6%) scale(.96);
+  opacity:0;pointer-events:none;display:flex;align-items:center;justify-content:center;will-change:transform,opacity}
+#bigwin.chars .bwChars{opacity:1;transform:translate(-50%,-6%);transition:opacity .45s ease-out,transform .6s ease-out}
+.bwChars canvas{position:absolute;inset:0;width:100%;height:100%}
+.bwcPh{font:800 12px "Nunito";letter-spacing:2px;color:#F1F0F5aa;border:1px dashed #F1F0F566;border-radius:8px;padding:30% 24px 8px;width:70%;text-align:center}
+.bwChars:has(canvas) .bwcPh{display:none}
 .bwTier{font-family:"Cinzel";font-weight:900;font-size:96px;letter-spacing:3px;background-image:linear-gradient(#FFFFFF,#DCD3F0 42%,#8E7BB5 54%,#CFC3EA 80%,#F2EEFA);
   -webkit-background-clip:text;background-clip:text;color:transparent;
   filter:drop-shadow(3px 0 0 #1E1A26) drop-shadow(-3px 0 0 #1E1A26) drop-shadow(0 3px 0 #1E1A26) drop-shadow(0 -3px 0 #1E1A26) drop-shadow(0 6px 0 #120F18) drop-shadow(0 10px 12px #0009)}
@@ -196,6 +219,7 @@ body.portrait #logo{position:relative;left:auto;top:auto;margin:0 auto;width:180
 body.portrait #logo .crest{width:120px;height:120px}
 body.portrait #logo .l1{font-size:42px} body.portrait #logo .l2{font-size:32px}
 body.portrait #frame{padding:7px;border-width:2px}
+body.portrait #board{background:linear-gradient(#2A243366,#2A243375)} /* the portrait room is busier behind the board */
 body.portrait #hud{padding:0 6px 8px}
 body.portrait #ctrlTop{padding:0 4px;margin-bottom:6px}
 body.portrait #ctrlTop .ico{width:48px;height:48px} body.portrait #ctrlTop .ico svg{width:24px;height:24px}
@@ -207,12 +231,15 @@ body.portrait #strip{padding:6px 12px 7px;margin-top:22px} body.portrait #strip 
 body.portrait #fsBar{font-size:14px;gap:10px;padding:3px 14px}
 body.portrait #banner{font-size:13px;padding:4px 12px;white-space:normal;width:max-content;max-width:94vw;text-align:center}
 body.portrait .tierName{font-size:38px} body.portrait .spins{font-size:22px} body.portrait #intro .card{padding:22px 20px}
-body.portrait .bwTier{font-size:52px} body.portrait .bwAmt{font-size:38px}
+body.portrait .bwTier{font-size:52px} body.portrait .bwAmt{font-size:38px} body.portrait .bwChars{--bwTierH:58px}
 body.portrait #buyCards{grid-template-columns:1fr 1fr} body.portrait .bcard:last-child{grid-column:span 2}
 
 /* ---------- production additions ---------- */
 .ph{position:absolute;top:3px;right:3px;z-index:3;font:900 max(7px,calc(var(--cell)*.06)) "Nunito";letter-spacing:.5px;background:#2A2433bb;color:#F1F0F5;padding:0 3px;border-radius:3px;text-transform:uppercase}
 .sym.L img,.sym.H img{object-fit:cover}
+/* final art is cut to its round frame (cut_symbols.py): no painted square tile, grain or inset frame behind it */
+.sym.art{background:none;box-shadow:none} .sym.art::before,.sym.art::after{display:none}
+.cell.win .sym.art{border-radius:50%;background:none}
 #logo.art{width:260px;height:130px} #logo.art img{max-width:100%;max-height:100%;object-fit:contain}
 #logo .phTag{position:absolute;bottom:-6px;font:800 9px "Nunito";letter-spacing:1px;color:#F1F0F5;background:#2A2433aa;padding:0 4px;border-radius:3px}
 #frame.art{background-size:100% 100%}
@@ -467,11 +494,15 @@ canvas.fxFill{position:absolute;inset:0;width:100%;height:100%}
 .cell.sprWin .sym{animation:none;outline:none;background:none}
 .sym:has(canvas.fxIdle) img{animation:none}
 
-/* ---- reel spin (reels.ts): the motion-blur strip sprite replaces the cell content while a reel turns ---- */
-.cell canvas.fxSpin{position:absolute;inset:0;width:100%;height:100%;z-index:5}
-.cell.spinning > :not(canvas.fxSpin){visibility:hidden}
-.cell.spinning::after{display:none}
-.cell.noBlur{opacity:.25}
+/* ---- reel spin (reels.ts): per reel a column of 6 recycled slots scrolled with translate3d (GPU layer, no layout
+   per frame) plus the seamless blur strip, faded in only near full speed. Spinning cells hide; locked cells stay on top. */
+#strips{position:absolute;inset:0;z-index:0;pointer-events:none}
+#cells{position:absolute;inset:0;z-index:1}
+.strip{position:absolute;top:0;width:var(--cell);height:calc(var(--cell)*4);overflow:hidden;visibility:hidden;contain:strict}
+.strip .tape{position:absolute;inset:0;will-change:opacity}
+.slot{position:absolute;left:0;top:0;width:var(--cell);height:var(--cell);will-change:transform}
+.strip .sblur{position:absolute;left:0;top:0;width:100%;opacity:0;background-repeat:repeat-y;background-size:100% calc(var(--cell)*6);will-change:transform,opacity}
+.cell.spinning{visibility:hidden !important}
 
 /* ---- respins remaining (respin.ts): 3 dots inside each LOCKED strip and at the foot of every stack; only while respinning.
    Lit = respins still to come. A thin divider keeps the LOCKED word reading first. ---- */
