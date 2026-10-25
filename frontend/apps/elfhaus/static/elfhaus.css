@@ -605,6 +605,11 @@ body.portrait .plGrid{grid-template-columns:repeat(3,1fr);gap:6px} body.portrait
 .cell.locked::after{inset:4%;border-radius:50%;border-width:2px}
 .cell.wLand .sym{animation:wPop .28s cubic-bezier(.3,1.6,.5,1)}
 @keyframes wPop{0%{transform:scale(.9)}100%{transform:none}}
+/* spinfix (calm landing, normal pace only; turbo keeps wPop + the sprites): a wild settles in with one soft ease (no
+   elastic pop) and the landing ring flare / burst sprites (wfxRing, wfxBurst) and the scatter land sheet do not show */
+body:not(.turbo) #cells .cell.wLand .sym{animation:wSettle .42s cubic-bezier(.3,.6,.4,1)}
+@keyframes wSettle{0%{transform:scale(.97)}100%{transform:none}}
+body:not(.turbo) canvas.wfxRing,body:not(.turbo) canvas.wfxBurst,body:not(.turbo) canvas.fxLand{display:none}
 canvas.wfx{position:absolute;pointer-events:none;z-index:3}
 canvas.wfxRing{inset:-12%;width:124%;height:124%}
 canvas.wfxBurst{inset:-12%;width:124%;height:124%;z-index:4}
