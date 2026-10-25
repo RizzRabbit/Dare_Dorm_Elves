@@ -165,9 +165,24 @@ def rcfill(n=10, S=32):
         fr.append(down(im, S, S, [0,0,0,.2,.6,.7,.5,.3,.12,0][i], '#F06AAE', 0.1))
     return fr
 
+# ---------------- respin refill flash: a ring burst + star behind a circle that relights ----------------
+def rcflash(n=9, S=64):
+    fr = []
+    for i in range(n):
+        t = i / (n - 1)
+        im = canvas(S, S); d = ImageDraw.Draw(im); c = S * SS / 2
+        a = int(255 * (1 - t) ** 1.1)
+        R = c * (0.32 + 0.6 * ease_out(t)); w = max(SS, int(SS * 3.2 * (1 - t)))
+        d.ellipse([c - R, c - R, c + R, c + R], outline=rgba(WHITE, a), width=w)
+        d.ellipse([c - R * .82, c - R * .82, c + R * .82, c + R * .82], outline=rgba(PINKL, int(a * .7)), width=max(1, w // 2))
+        sr = c * 0.62 * math.sin(min(1, t * 1.6) * math.pi)
+        if sr > SS: star4(d, c, c, sr, .2, t * .6, rgba(WHITE, a))
+        fr.append(down(im, S, S, 0.8 * (1 - t), '#F06AAE', 0.08))
+    return fr
+
 ANIMS = {  # name: (frames, fps, loop)
     'glint': (glint(), 24, False), 'mxburst': (mxburst(), 24, False), 'lock': (lock(), 24, False),
-    'lockrim': (lockrim(), 24, False), 'rcfill': (rcfill(), 30, False),
+    'lockrim': (lockrim(), 24, False), 'rcfill': (rcfill(), 30, False), 'rcflash': (rcflash(), 30, False),
 }
 
 def pack():
