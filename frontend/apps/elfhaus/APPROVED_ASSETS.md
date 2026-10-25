@@ -17,7 +17,7 @@ Branch `final` is the integration branch. It holds **only** work the user has ap
 | Board frame B2 "Lounge Alcove" | `/workspace/elfhaus-bg/board_frame/r2`; commit 0b51f91 | 2026-10-25 ~1:25 PM |
 | Stone ELFHAUS logo, unchanged | already in base (frontend-elfhaus) | 2026-10-25 (user: "the stone title can stay") |
 | Merge animation motion: lean-in, flash cut, group scale-up, letters ignite | 0e83f90 lineage (in base) | 2026-10-25 1:01 PM |
-| Stacks round 8c sheets (60 ids, 364.9 MB decoded total, 11.7 MB webp) | `stacks_anim/out/sheets` as of the dry run (15:10); taken byte-for-byte from dryrun-final f16cc93 into `static/assets/stacks` | 2026-10-25 ~3:15 PM |
+| Stacks r8d sheets (cutout halos removed, one ink colour per group; 60 ids, 363.5 MB decoded total, 11.7 MB webp; WM5 join + idle + letters 29.2 MB peak). Replaces round 8c | `/workspace/elfhaus-frameless/stacks_anim/out/sheets` (report.json 16:28) copied into `static/assets/stacks` (index.json unchanged, same 60 ids). Status: **in** | 2026-10-25 4:44 PM ("It all looks good to me") |
 | Glowing wild frames, thick + bright | 322951a + ffaaacd (here 6de02f7, 5d27bf9) | 2026-10-25 ~3:15 PM |
 | Multipliers shown separately, count up, re-merge (also on growth); no doubled badges | 7a4b98a (in base) + 24e2471 (here bf02f56) | 2026-10-25 |
 | Board tempo ~2x calmer, turbo = old timings, Space/tap skips | 766bb71 (here a08f4a0), `src/game/tempo.ts` | 2026-10-25 ~4:00 PM |
@@ -38,7 +38,6 @@ Branch `final` is the integration branch. It holds **only** work the user has ap
 | AI-audit code fixes (a411067 no sparkles, 1f47d9c per-reel single wilds, de3e825 removes the pink circles/rings, 95134cd outline win glow, splash, buy cards, rules, HUD icons, loader flash, Roxy contact shadow, …; 002e837 is HOLD) | branch `aifix` (`/workspace/elfhaus-fe-aifix`) |
 | Calm reel spin + full-reel stack forming from the merging singles | branch `spinfix` (`/workspace/elfhaus-fe-spinfix`) |
 | Per-elf face reactions after a stack merges | `/workspace/elfhaus-stack-react` |
-| Stacks r8d (cutout halos, one ink colour per group) | `/workspace/elfhaus-frameless/stacks_anim/out` (being rebuilt) |
 | Win-screen cast v6 | `/workspace/elfhaus-restyle/cast_v6` (motion.patch v6) |
 | Roxy out_v2 fixes (incl. the mouth hole) | `/workspace/elfhaus-roxy-p3d` |
 
