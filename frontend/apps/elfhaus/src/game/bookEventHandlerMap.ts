@@ -5,7 +5,7 @@ import type { BookEvent, BookEventOf, BookEventType } from './typesBookEvent';
 import { roxy, roxyState } from './roxy';
 import { maxWinCelebration } from './maxwin';
 import { showRespin, endRespin, hideRespin } from './respin';
-import { mxBurst, lockFx } from './fx';
+import { mxBurst, lockFx, clearSymWins } from './fx';
 import { $, S, k, bet, wait, banner, toast, hideToast, bigWin, setWinMeter, clearLines, drawWins, renderCell, renderOverlays, cellEl, setGem } from './ui';
 
 const TL = (t: Tier) => TIER_LABEL[t].toUpperCase();
@@ -26,10 +26,8 @@ export const bookEventHandlerMap: Handlers = {
 		const lockedSingles = new Set(ev.locked.singles.map((s) => k(s.reel, s.row)));
 		for (let r = 0; r < REELS; r++) for (let row = 0; row < ROWS; row++) {
 			const locked = lockedSingles.has(k(r, row));
-			renderCell(r, row, locked ? null : 'drop');
+			renderCell(r, row, locked ? null : 'drop', r * 70);
 			cellEl(r, row).classList.toggle('locked', locked);
-			const d = cellEl(r, row).querySelector('.sym') as HTMLElement | null;
-			if (d && !locked) d.style.animationDelay = r * 0.07 + 's';
 		}
 		renderOverlays(false);
 		if (ev.anticipation.some((a) => a > 0)) { banner('3 WILDS… THE RESPINS ARE THE REVEAL', 1600); if (ev.gameType === 'basegame') roxy('anticipation'); }
@@ -79,7 +77,7 @@ export const bookEventHandlerMap: Handlers = {
 	},
 	async respinStart(ev) {
 		hideToast();
-		document.querySelectorAll('.cell').forEach((c) => c.classList.remove('win', 'dim'));
+		document.querySelectorAll('.cell').forEach((c) => c.classList.remove('win', 'dim')); clearSymWins();
 		$('#lines').innerHTML = '';
 		ev.locked.singles.forEach((s) => {
 			const c = cellEl(s.reel, s.row);

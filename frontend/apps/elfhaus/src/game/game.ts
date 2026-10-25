@@ -18,7 +18,7 @@ import { initRoxy, placeRoxy } from './roxy';
 import { initLoader, preloadArt, track, loaderReady, hideLoader } from './loader';
 import { preloadMaxWin } from './maxwin';
 import { placeRespin } from './respin';
-import { loadFx, startGlints } from './fx';
+import { loadAllFx, startGlints } from './fx';
 import type { BookEvent } from './typesBookEvent';
 
 const DISCLAIMER =
@@ -289,7 +289,7 @@ export async function initGame() {
 	setLocale(url.lang);
 	initLoader(); preloadArt();
 	track(initRoxy(layout));
-	track(loadFx().catch(() => console.warn('fx sheet missing'))).then(startGlints);
+	loadAllFx(track).then(() => { startGlints(); renderAll(); });
 	track(document.fonts?.ready ?? Promise.resolve());
 	buildCells(); S.sym = IDLE.map((c) => [...c]); S.vals = new Map([[2 * 4 + 2, 1]]);
 	wire(); layout(); setBusy(true);

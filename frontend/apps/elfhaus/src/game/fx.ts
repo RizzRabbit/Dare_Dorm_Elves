@@ -1,11 +1,46 @@
 // UI effects played through SpriteAnim (sheet "fx", scripts/sprites/gen_fx_ui.py -> assets/final/fx/fx_ui.*).
-import { loadSheet, play, stop, frameCSS, type Atlas } from './sprite';
-import atlas from './fx/fx_ui.atlas.json';
+import { loadSheet, play, stop, frameCSS, hasSheet, type Atlas } from './sprite';
+// Every generated atlas (scripts/sprites/*) is bundled; its sheet image comes from the art manifest under the same key.
+const ATLASES = import.meta.glob('./fx/*.atlas.json', { eager: true, import: 'default' }) as Record<string, Atlas>;
 import ART_JSON from './art.generated.json';
 const ART = ART_JSON as Record<string, string | null>;
 
-export const FX = 'fx';
-export function loadFx() { return ART.fx_ui ? loadSheet(FX, ART.fx_ui as string, atlas as unknown as Atlas) : Promise.resolve(); }
+export const FX = 'fx_ui';
+/** Load every sprite sheet (called once from the loading screen; each counts toward the progress bar). */
+export function loadAllFx(track: <T>(p: Promise<T>) => Promise<T>) {
+	return Promise.all(Object.entries(ATLASES).map(([path, atlas]) => {
+		const id = path.split('/').pop()!.replace('.atlas.json', '');
+		const src = ART[id];
+		return src ? track(loadSheet(id, src, atlas).catch(() => console.warn('sprite sheet missing', id))) : Promise.resolve();
+	}));
+}
+
+// ---------- symbols (scripts/sprites/gen_symbols.py: sheet sym_<S> with land / win / idle) ----------
+const symOf = (cell: Element) => cell.querySelector<HTMLElement>('.sym');
+const symName = (cell: Element) => [...(symOf(cell)?.classList || [])].find((c) => /^(H\d|L\d|W)$/.test(c)) || '';
+/** Reel-stop landing for a freshly rendered cell; wilds continue into their idle loop. Returns false without a sheet. */
+export function symLand(cell: HTMLElement, delay = 0) {
+	const sym = symOf(cell), n = symName(cell); if (!sym || !hasSheet('sym_' + n)) return false;
+	sym.querySelectorAll('canvas.symFx').forEach((c) => c.remove());
+	play('sym_' + n, 'land', sym, { cls: 'fxFill symFx', delay, onEnd: () => { if (n === 'W') symIdle(cell); } });
+	return true;
+}
+/** Wild idle loop (random phase so neighbouring wilds don't breathe in sync). */
+export function symIdle(cell: HTMLElement) {
+	const sym = symOf(cell); if (!sym || symName(cell) !== 'W' || !hasSheet('sym_W') || sym.querySelector('canvas.fxIdle')) return;
+	play('sym_W', 'idle', sym, { cls: 'fxFill symFx fxIdle', delay: -Math.random() * 1000, prepend: false });
+}
+/** Win highlight: the symbol's own win loop (pulse, shine, edge glow, sparkles; characters lean and sway). */
+export function symWin(cell: HTMLElement) {
+	const sym = symOf(cell), n = symName(cell); if (!sym || !hasSheet('sym_' + n) || sym.querySelector('canvas.fxWin')) return false;
+	play('sym_' + n, 'win', sym, { cls: 'fxFill symFx fxWin' });
+	cell.classList.add('sprWin');
+	return true;
+}
+export function clearSymWins() {
+	document.querySelectorAll('canvas.fxWin').forEach((c) => c.remove());
+	document.querySelectorAll('.cell.sprWin').forEach((c) => c.classList.remove('sprWin'));
+}
 
 /** Multiplier increase: burst sheet behind the lettering, centred on the text. */
 export function mxBurst(mx: HTMLElement) {

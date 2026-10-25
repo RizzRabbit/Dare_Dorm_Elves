@@ -475,3 +475,9 @@ canvas.fxFill{position:absolute;inset:0;width:100%;height:100%}
 .cell.locked .lock{display:inline-flex}
 .cell.locked::after{content:"";position:absolute;inset:1px;z-index:2;pointer-events:none;border:2px solid #D7B8EE;
   box-shadow:inset 0 0 0 1px #F48FC0,inset 0 0 8px #F06AAE66,0 0 0 1px #1A1420}
+
+/* ---- symbol sprites (gen_symbols.py): while a land / win / idle sheet plays it replaces the static art ---- */
+.sym canvas.symFx{position:absolute;inset:0;width:100%;height:100%;z-index:1}
+.sym:has(canvas.symFx) img{visibility:hidden}
+.cell.sprWin .sym{animation:none;outline:none;background:none}
+.sym:has(canvas.fxIdle) img{animation:none}

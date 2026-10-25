@@ -3,7 +3,7 @@ import ART_JSON from './art.generated.json';
 import { LINES, MAX_WIN_X, ROWS, REELS, SYMBOL_NAMES } from './config';
 import { money } from './format';
 import type { Group, LineWin } from './typesBookEvent';
-import { mxBurst, lockIconCSS } from './fx';
+import { mxBurst, lockIconCSS, symLand, symIdle, symWin, clearSymWins } from './fx';
 
 export const ART = ART_JSON as Record<string, string | null>;
 export const $ = <T extends HTMLElement = HTMLElement>(s: string) => document.querySelector(s) as T;
@@ -90,12 +90,19 @@ export function buildCells() {
 	}
 }
 export const cellEl = (r: number, row: number) => document.getElementById(`c${r}${row}`) as HTMLElement;
-export function renderCell(r: number, row: number, cls?: string | null) {
+/** Render one cell. cls 'drop' = reel-stop landing: the symbol's land sprite (CSS drop only as a fallback). */
+export function renderCell(r: number, row: number, cls?: string | null, delayMs = 0) {
 	const d = cellEl(r, row), p = pos(r, row);
 	d.style.left = p.x + 'px'; d.style.top = p.y + 'px';
 	d.innerHTML = symHTML(S.sym[r]?.[row] ?? 'L5', S.vals.get(k(r, row)));
 	d.style.visibility = S.full.has(r) ? 'hidden' : 'visible';
-	if (cls) { d.classList.remove(cls); void d.offsetWidth; d.classList.add(cls); }
+	d.classList.remove('sprWin');
+	if (cls === 'drop' && symLand(d, delayMs)) { d.classList.remove('drop'); return; }
+	if (cls) {
+		d.classList.remove(cls); void d.offsetWidth; d.classList.add(cls);
+		if (delayMs) (d.querySelector('.sym') as HTMLElement | null)?.style.setProperty('animation-delay', delayMs + 'ms');
+	}
+	symIdle(d);
 }
 export function renderOverlays(anim: boolean | number = false) {
 	const o = $('#overlays'); o.innerHTML = '';
@@ -132,6 +139,7 @@ export function renderAll() {
 export function clearLines() {
 	$('#lines').innerHTML = '';
 	document.querySelectorAll('.cell').forEach((c) => c.classList.remove('win', 'dim', 'replace', 'out'));
+	clearSymWins();
 }
 export function drawWins(wins: LineWin[]) {
 	const svg = $('#lines'); svg.innerHTML = '';
@@ -142,7 +150,7 @@ export function drawWins(wins: LineWin[]) {
 		const pl = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
 		pl.setAttribute('points', pts); pl.setAttribute('stroke', LINE_COLORS[i % LINE_COLORS.length]); pl.setAttribute('opacity', '.85');
 		svg.appendChild(pl);
-		w.positions.forEach((p) => { const c = cellEl(p.reel, p.row); c.classList.remove('dim'); c.classList.add('win'); });
+		w.positions.forEach((p) => { const c = cellEl(p.reel, p.row); c.classList.remove('dim'); c.classList.add('win'); symWin(c); });
 	});
 }
 export function toast(html: string) { const t = $('#stepToast'); t.innerHTML = html; t.classList.remove('hidden'); }

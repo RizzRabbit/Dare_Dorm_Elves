@@ -155,5 +155,35 @@
   "_atlases": "Pixi atlases + idle sprite sheets: static/assets/atlases (scripts/pack-atlases.py)",
   "fx_ui": [
     "assets/final/fx/fx_ui.webp"
+  ],
+  "sym_H1": [
+    "assets/final/fx/sym_H1.webp"
+  ],
+  "sym_H2": [
+    "assets/final/fx/sym_H2.webp"
+  ],
+  "sym_H3": [
+    "assets/final/fx/sym_H3.webp"
+  ],
+  "sym_H4": [
+    "assets/final/fx/sym_H4.webp"
+  ],
+  "sym_L1": [
+    "assets/final/fx/sym_L1.webp"
+  ],
+  "sym_L2": [
+    "assets/final/fx/sym_L2.webp"
+  ],
+  "sym_L3": [
+    "assets/final/fx/sym_L3.webp"
+  ],
+  "sym_L4": [
+    "assets/final/fx/sym_L4.webp"
+  ],
+  "sym_L5": [
+    "assets/final/fx/sym_L5.webp"
+  ],
+  "sym_W": [
+    "assets/final/fx/sym_W.webp"
   ]
 }
