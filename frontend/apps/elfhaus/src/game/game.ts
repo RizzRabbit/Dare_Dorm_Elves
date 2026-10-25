@@ -14,6 +14,7 @@ import { $, S, ART, bet, buildCells, renderAll, resetWinMeter, setWinMeter, bann
 import { playBookEvents, endBonusUi } from './bookEventHandlerMap';
 import { initRoxy, placeRoxy } from './roxy';
 import { initLoader, preloadArt, track, loaderReady, hideLoader } from './loader';
+import { preloadMaxWin } from './maxwin';
 import type { BookEvent } from './typesBookEvent';
 
 const DISCLAIMER =
@@ -274,12 +275,12 @@ export async function initGame() {
 	buildCells(); S.sym = IDLE.map((c) => [...c]); S.vals = new Map([[2 * 4 + 2, 1]]);
 	wire(); layout(); setBusy(true);
 	try {
-		if (url.replay) { setSocial(url.social || isSocialCurrency()); applyJurisdiction(); await track(loadReplay()); await loaderReady(); }
+		if (url.replay) { setSocial(url.social || isSocialCurrency()); applyJurisdiction(); await track(loadReplay()); await loaderReady(); preloadMaxWin(); }
 		else {
 			const rd = await track(authenticate());
 			setSocial(url.social || !!S.jur.socialCasino || isSocialCurrency());
 			applyJurisdiction(); sessionReady = true; setStrip(); resetWinMeter();
-			await loaderReady(); layout();
+			await loaderReady(); layout(); preloadMaxWin();
 			setBusy(false);
 			await resume(rd);
 		}

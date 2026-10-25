@@ -96,6 +96,8 @@
   "logo": [
     "assets/final/logo.png"
   ],
+  "maxwin_webm": ["assets/final/fx/maxwin_elves.webm"],
+  "maxwin_mp4": ["assets/final/fx/maxwin_elves.mp4"],
   "logo_full": [
     "assets/final/logo_full.png"
   ],
@@ -103,6 +105,8 @@
     "assets/final/reel_frame.png"
   ],
   "buy_icon": [
+    "assets/final/ui/buy_icon_rizzin.svg",
+    "assets/final/ui/buy_icon_rizzin.png",
     "assets/final/buy_icon.png"
   ],
   "intro_dare": [

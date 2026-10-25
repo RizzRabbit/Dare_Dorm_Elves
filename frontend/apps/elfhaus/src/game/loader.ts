@@ -25,7 +25,7 @@ export function track<T>(p: Promise<T>): Promise<T> {
 const loadImg = (src: string) => new Promise<void>((res, rej) => { const i = new Image(); i.onload = () => res(); i.onerror = rej; i.src = src; });
 /** Preload every art file from the manifest. */
 export function preloadArt() {
-	for (const src of new Set(Object.values(ART).filter(Boolean) as string[])) track(loadImg(src)).catch(() => console.warn('art missing', src));
+	for (const src of new Set((Object.values(ART).filter(Boolean) as string[]).filter((u) => !/\.(webm|mp4)$/i.test(u)))) track(loadImg(src)).catch(() => console.warn('art missing', src));
 }
 
 // ---------- carousel ----------

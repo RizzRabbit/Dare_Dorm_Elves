@@ -312,3 +312,65 @@ body.portrait #logo.art{height:clamp(40px,8vh,92px);max-width:78vw}
   #lGo{padding:8px 22px;font-size:14px}
   .lCredit{bottom:6px;font-size:10px}
 }
+
+/* ---- Rizzin Games rabbit as the bonus-button icon (white solid, like the other icons) ---- */
+#buyBtn.emblem img{display:block;width:auto;height:38px;max-width:44px;object-fit:contain;margin:0 auto;pointer-events:none}
+body.portrait #buyBtn.emblem img{height:32px;max-width:36px}
+body.short #buyBtn.emblem img{height:28px;max-width:30px}
+
+/* ---- centering / balance pass: one vertical axis, board centered between title and controls ---- */
+#stage{display:grid;grid-template-rows:minmax(0,1fr) auto minmax(0,1fr);grid-template-columns:100%;justify-items:center;align-items:center}
+#fsBar{grid-row:1;align-self:end}
+#frame{grid-row:2}
+#stepToast{grid-row:3;align-self:start}
+#hud{margin:0 auto}
+#bar{grid-template-columns:minmax(0,1fr) 64px 112px 64px minmax(0,1fr)}
+body.portrait #bar{grid-template-columns:minmax(0,1fr) 50px 92px 50px minmax(0,1fr)}
+#menuBtn,#autoBtn,#betDown,#betUp,#spinBtn{align-self:center}
+#strip .m,#strip .c,#strip .r{text-align:center}
+#stepToast,#banner,#fsBar{text-align:center;justify-content:center}
+#ctrlTop{align-items:center}
+/* short popout: the turbo/ante/bonus row floats at the edges beside the board instead of stacking above the bar */
+body.short #hud{position:relative;padding:0 10px 4px}
+body.short #ctrlTop{position:absolute;left:10px;right:10px;bottom:calc(100% + 6px);margin:0;padding:0}
+body.short #ctrlTop .ico{width:38px;height:38px} body.short #ctrlTop .ico svg{width:20px;height:20px}
+body.short #buyBtn.emblem{width:42px;height:42px}
+body.short #bar{height:40px;grid-template-columns:minmax(0,1fr) 40px 64px 40px minmax(0,1fr);padding:0 8px}
+body.short #menuBtn,body.short #autoBtn,body.short #betDown,body.short #betUp{width:36px;height:36px}
+body.short #betDown svg,body.short #betUp svg{width:24px;height:24px}
+body.short #spinBtn{width:50px;height:50px} body.short #spinBtn svg{width:28px;height:28px}
+body.short #strip{margin-top:3px;padding:2px 10px}
+
+/* ---- MAX WIN (50,000x cap only): elves clip + matte confetti + carved title, holds until a press ---- */
+#maxwin{position:fixed;inset:0;z-index:70;overflow:hidden;background:#1C1922;opacity:0;transition:opacity .45s ease;cursor:default}
+#maxwin.on{opacity:1} #maxwin.out{opacity:0}
+#maxwin .mwStage{position:absolute;inset:0}
+#maxwin .mwBg{position:absolute;inset:-40px;background-size:cover;background-position:center;filter:blur(22px) saturate(.55) brightness(.34)}
+#maxwin .mwVid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:saturate(.92)}
+#maxwin.noVid .mwVid{display:none}
+#maxwin .mwShade{position:absolute;inset:0;background:linear-gradient(180deg,#1C192200 45%,#1C1922b0 78%,#1C1922e6)}
+#maxwin .mwConf{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#maxwin .mwText{position:absolute;left:0;right:0;bottom:5vh;display:flex;flex-direction:column;align-items:center;text-align:center;pointer-events:none}
+.mwTier{font-family:"Cinzel";font-weight:900;font-size:clamp(44px,9vw,128px);line-height:1;letter-spacing:4px;
+  background-image:linear-gradient(#FFFFFF,#E6E0F2 40%,#9C8CC0 52%,#D3C8EC 78%,#F4F1FA);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(3px 0 0 #1E1A26) drop-shadow(-3px 0 0 #1E1A26) drop-shadow(0 3px 0 #1E1A26) drop-shadow(0 -3px 0 #1E1A26) drop-shadow(0 7px 0 #120F18) drop-shadow(0 12px 14px #000a);
+  transform:scale(.6);opacity:0;transition:transform .55s cubic-bezier(.2,1.4,.4,1),opacity .3s}
+#maxwin.on .mwTier{transform:scale(1);opacity:1}
+.mwX{font-family:"Cinzel";font-weight:900;font-size:clamp(34px,6vw,84px);line-height:1.05;letter-spacing:2px;color:#F2EEFA;font-variant-numeric:tabular-nums;
+  filter:drop-shadow(2px 0 0 #1E1A26) drop-shadow(-2px 0 0 #1E1A26) drop-shadow(0 2px 0 #1E1A26) drop-shadow(0 -2px 0 #1E1A26) drop-shadow(0 5px 0 #120F18)}
+#maxwin.landed .mwX{animation:mwThump .5s ease-out}
+@keyframes mwThump{0%{transform:scale(1)}35%{transform:scale(1.12)}100%{transform:scale(1)}}
+.mwAmt{margin-top:6px;font-family:"Nunito";font-weight:900;font-size:clamp(22px,3.2vw,44px);color:#fff;font-variant-numeric:tabular-nums;
+  background:#1C1922c8;border:1px solid #4A4258;border-radius:8px;padding:2px 18px;
+  filter:drop-shadow(0 4px 8px #0008)}
+.mwHint{margin-top:14px;font-family:"Nunito";font-weight:900;font-size:clamp(12px,1.4vw,16px);letter-spacing:2px;color:#DCD3F0;opacity:0;transition:opacity .4s}
+#maxwin.held .mwHint{opacity:1;animation:mwPulse 1.6s ease-in-out infinite}
+#maxwin.held{cursor:pointer}
+@keyframes mwPulse{50%{opacity:.55}}
+body.portrait #maxwin .mwVid{object-fit:contain;top:12vh;height:auto;aspect-ratio:16/9}
+body.portrait #maxwin .mwShade{background:linear-gradient(180deg,#1C192200 52%,#1C1922c0 70%,#1C1922f0)}
+body.portrait #maxwin .mwText{bottom:12vh}
+body.short #maxwin .mwText{bottom:3vh} body.short .mwTier{font-size:40px} body.short .mwX{font-size:30px} body.short .mwAmt{font-size:18px} body.short .mwHint{margin-top:4px;font-size:11px}
+#maxwin .mwBg{z-index:0} #maxwin .mwVid{z-index:1} #maxwin .mwShade{z-index:2} #maxwin .mwConf{z-index:3} #maxwin .mwText{z-index:4}
+body.portrait #maxwin .mwVid{top:17vh;-webkit-mask-image:linear-gradient(#0000,#000 9%,#000 88%,#0000);mask-image:linear-gradient(#0000,#000 9%,#000 88%,#0000)}
+body.portrait #maxwin .mwText{bottom:16vh}

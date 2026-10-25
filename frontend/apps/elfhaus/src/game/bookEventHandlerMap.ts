@@ -3,6 +3,7 @@ import { MAX_WIN_X, ROWS, REELS, TIER_LABEL, type Tier } from './config';
 import { money } from './format';
 import type { BookEvent, BookEventOf, BookEventType } from './typesBookEvent';
 import { roxy, roxyState } from './roxy';
+import { maxWinCelebration } from './maxwin';
 import { $, S, k, bet, wait, banner, toast, hideToast, bigWin, setWinMeter, clearLines, drawWins, renderCell, renderOverlays, cellEl } from './ui';
 
 const TL = (t: Tier) => TIER_LABEL[t].toUpperCase();
@@ -149,7 +150,7 @@ export const bookEventHandlerMap: Handlers = {
 		await wait(700);
 	},
 	async buyTriggerStart(ev) { banner(`${TL(ev.tier)} · TRIGGER SPIN`, 1600); await wait(700); },
-	async wincap() { setWinMeter(MAX_WIN_X); await bigWin(MAX_WIN_X, 'MAX WIN'); },
+	async wincap() { setWinMeter(MAX_WIN_X); await maxWinCelebration(); },
 	async finalWin(ev) { setWinMeter(Math.min(ev.amount / 100, MAX_WIN_X)); },
 };
 
