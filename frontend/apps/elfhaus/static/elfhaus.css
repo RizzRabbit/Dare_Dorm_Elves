@@ -927,3 +927,21 @@ canvas.wfxRing{display:none}
 .cell.win .sym.art>.symGlow{animation:aiSymBob calc(1.3s*var(--at)) ease-in-out infinite alternate}
 @keyframes aiGlowPulse{from{opacity:1;transform:none}to{opacity:.55;transform:scale(1.015)}}
 @media (prefers-reduced-motion:reduce){.cell.win .sym .symGlow img,.cell.win .sym.art>.symGlow{animation:none}}
+/* ===== aifix: splash (audit 3): blurred, darkened Lounge plate (splash_bg_*.webp) + 3 plain feature cards with real
+   in-game art (intro.ts CARDS). Plum ink frame, one line of copy; the cards only fade/rise in (transform/opacity). */
+#loader .spCard{box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:18px;padding:30px 30px 34px;border-radius:18px;
+  background:linear-gradient(#24162ee6,#170e1ee6);border:2px solid #4A2D58;box-shadow:0 18px 40px #0a050e80;color:#F3ECF6;text-align:center}
+#loader .spCard .spArt{width:300px;height:300px;display:flex;align-items:center;justify-content:center}
+#loader .spCard .spArt img{max-width:100%;max-height:100%;object-fit:contain;display:block}
+#loader .spCard h3{margin:0;font:800 42px/1.05 "Cinzel";letter-spacing:.04em;color:#FBEAF4}
+#loader .spCard p{margin:8px 0 0;font:700 25px/1.3 "Nunito";color:#CDBFD6}
+#loader[data-o="port"] .spCard{flex-direction:row;text-align:left;gap:30px;padding:24px 34px}
+#loader[data-o="port"] .spCard .spArt{width:300px;height:300px;flex:none}
+#loader[data-o="port"] .spCard h3{font-size:46px} #loader[data-o="port"] .spCard p{font-size:28px}
+#loader.in .spPanel{animation-duration:.6s}
+/* the painted TAP TO PARTY plate carries four-point star sparkles (audit 1): a plain lettered button instead, calm pulse */
+#loader #lGo img{display:none}
+#loader #lGo::after{content:"TAP TO PARTY";display:block;box-sizing:border-box;padding:22px 0 20px;border:2px solid #4A2D58;border-radius:14px;
+  background:linear-gradient(#2a1934f0,#1a0f21f0);font:800 34px/1 "Cinzel";letter-spacing:.08em;color:#FBEAF4;text-align:center}
+#loader #lGo{animation:tapPulse 2.2s ease-in-out infinite alternate}
+@keyframes tapPulse{from{opacity:.75;transform:scale(.985)}to{opacity:1;transform:scale(1.015)}}
