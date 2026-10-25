@@ -9,6 +9,7 @@ import { mxBurst, lockFx, clearSymWins } from './fx';
 import { timing, isSpinning, startSpin, markStopped, sinceStart, sleep, spinCells, stopReel } from './reels';
 import { $, S, k, bet, wait, banner, toast, hideToast, bigWin, setWinMeter, clearLines, renderCell, renderOverlays, cellEl, setGem, ovMx, symHTML } from './ui';
 import { playWins } from './winlines';
+import { wildLand, stackForm, wfExpand, mergeFx } from './wildfx';
 import { grab, combineInto } from './combine';
 
 const TL = (t: Tier) => TIER_LABEL[t].toUpperCase();
@@ -49,6 +50,7 @@ export const bookEventHandlerMap: Handlers = {
 					const locked = lockedSingles.has(k(r, row));
 					renderCell(r, row, null);
 					cellEl(r, row).classList.toggle('locked', locked);
+					if (!locked && !fullLocked.has(r) && S.sym[r][row] === 'W') wildLand(cellEl(r, row));
 				}
 			}));
 		}
@@ -58,10 +60,12 @@ export const bookEventHandlerMap: Handlers = {
 	},
 	async stackComplete(ev) {
 		// the four wild values ADD into the stack's value (SPEC: sum of the 4 cell values)
+		if (!ev.instant) await stackForm(ev.reel);
 		const flying = grab([0, 1, 2, 3].map((row) => cellEl(ev.reel, row).querySelector<HTMLElement>('.mx')));
 		S.full.set(ev.reel, ev.value);
 		for (let row = 0; row < ROWS; row++) { S.vals.delete(k(ev.reel, row)); cellEl(ev.reel, row).style.visibility = 'hidden'; }
 		renderOverlays(ev.reel);
+		if (!ev.instant) wfExpand(document.querySelector<HTMLElement>(`.ov.full[data-reel="${ev.reel}"]`));
 		await combineInto(flying, ovMx(ev.reel));
 		await wait(250);
 	},
@@ -71,6 +75,7 @@ export const bookEventHandlerMap: Handlers = {
 		const flights = fresh.map((g) => ({ g, c: grab(g.reels.map((r) => ovMx(r))) }));
 		S.groups = ev.groups.map((g) => ({ reels: [...g.reels], values: [...g.values], product: g.product }));
 		renderOverlays(fresh.length > 0);
+		fresh.forEach((g) => mergeFx(g.reels));
 		await Promise.all(flights.map(({ g, c }) => combineInto(c, ovMx(g.reels[0]))));
 		if (fresh.length) await wait(250);
 	},
@@ -121,7 +126,7 @@ export const bookEventHandlerMap: Handlers = {
 			if (i) at += T.gap;
 			const rows = ev.newSymbols.filter((s) => s.reel === r).map((s) => s.row);
 			const finals = Array.from({ length: ROWS }, (_, row) => symHTML(S.sym[r][row], S.vals.get(k(r, row))));
-			return stopReel(r, at, finals, () => rows.forEach((row) => renderCell(r, row, null)));
+			return stopReel(r, at, finals, () => rows.forEach((row) => { renderCell(r, row, null); if (S.sym[r][row] === 'W') wildLand(cellEl(r, row)); }));
 		}));
 		markStopped();
 		await sleep(T.land);

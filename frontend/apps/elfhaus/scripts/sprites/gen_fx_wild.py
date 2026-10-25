@@ -7,9 +7,9 @@ the full-reel expand bakes the real WF art so the unfurl ends exactly on the sta
   wfexpand  12f 144x576 @30 once : WF art unfurls from the middle rows with bright edges        (inside the overlay)
   seam      12f  64x384 @30 once : a seam of light closes between two adjacent reels           (at each boundary)
   msweep    10f 128x128 @30 once : soft diagonal light band crossing a merged group (gradient only, stretched)
-  wshine    24f 160x160 @30 once : a short bright comet runs once round the wild frame (periodic shimmer)
+  wshine    24f 160x160 @30 once : a short bright comet runs once round the round wild frame (periodic shimmer)
   wshineT   24f  96x384 @30 once : the same comet round a full-reel wild's frame
-  wflash    10f 160x160 @30 once : the wild frame flares white-pink on land, then settles to the static frame
+  wflash    10f 160x160 @30 once : the round wild frame flares white-pink on land, then settles to the static frame
 Usage: python3 scripts/sprites/gen_fx_wild.py"""
 import math, os, sys
 from PIL import Image, ImageDraw, ImageFilter
@@ -121,14 +121,18 @@ def perim(W, H, ins, u):
     if d < w: return W - ins - d, H - ins
     d -= w; return ins, H - ins - d
 
-def shine(n, W, H, ins_frac):
+def circ(W, H, ins, u):
+    c = W / 2; r = c - ins; a = -math.pi / 2 + 2 * math.pi * u
+    return c + r * math.cos(a), H / 2 + r * math.sin(a)
+
+def shine(n, W, H, ins_frac, round_=False):
     out = []
     for i in range(n):
         t = i / (n - 1); im = cv(W, H); d = ImageDraw.Draw(im)
         env = math.sin(t * math.pi) ** 0.6; ins = ins_frac * W * SS; head = 0.08 + 0.98 * ease_io(t)
         for k in range(72):  # comet: head bright, tail fading over ~18% of the perimeter
             f = k / 71; u = head - f * 0.18
-            x, y = perim(W * SS, H * SS, ins, u); r = SS * (3.2 - 2.2 * f)
+            x, y = (circ if round_ else perim)(W * SS, H * SS, ins, u); r = SS * (3.2 - 2.2 * f)
             a = int(255 * env * (1 - f) ** 1.6)
             if a > 3: d.ellipse([x - r, y - r, x + r, y + r], fill=rgba(WHITE if f < .25 else PINKL, a))
         out.append(fin(im, W, H, 1.2 * env, MAG, 0.05))
@@ -140,7 +144,7 @@ def wflash(n=10, S=192):
         t = i / (n - 1); im = cv(S, S); d = ImageDraw.Draw(im); a = (1 - t) ** 1.4
         ins = (0.035 - 0.02 * (1 - t)) * S * SS; wd = int(SS * (2 + 5 * (1 - t)))
         if a > .02:
-            d.rounded_rectangle([ins, ins, S * SS - ins, S * SS - ins], radius=SS * 8, outline=rgba(WHITE, int(255 * a)), width=wd)
+            d.ellipse([ins, ins, S * SS - ins, S * SS - ins], outline=rgba(WHITE, int(255 * a)), width=wd)  # symbols are round
         out.append(fin(im, S, S, 1.4 * a, MAG, 0.06))
     return out
 
@@ -148,4 +152,4 @@ if __name__ == '__main__':
     # sized for phones (a phone cell is ~70 CSS px): ~1920x2880, one shared sheet
     pack('fx_wild', {'wland': (wland(12, 160), 30, False), 'stackform': (stackform(12, 96, 384), 30, False), 'wfexpand': (wfexpand(12, 144, 576), 30, False),
                      'seam': (seam(12, 64, 384), 30, False), 'msweep': (msweep(10, 128), 30, False),
-                     'wshine': (shine(24, 160, 160, 0.03), 30, False), 'wshineT': (shine(24, 96, 384, 0.045), 30, False), 'wflash': (wflash(10, 160), 30, False)}, cols=12, quality=82)
+                     'wshine': (shine(24, 160, 160, 0.045, True), 30, False), 'wshineT': (shine(24, 96, 384, 0.045), 30, False), 'wflash': (wflash(10, 160), 30, False)}, cols=12, quality=82)

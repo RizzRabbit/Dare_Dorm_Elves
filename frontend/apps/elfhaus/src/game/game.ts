@@ -13,6 +13,7 @@ import {
 import { money, mult, setCurrency, setLocale, isSocialCurrency, amountStr } from './format';
 import { skipCounts } from './countup';
 import { tapLines } from './winlines';
+import { startShimmer } from './wildfx';
 import { setSocial, isSocial, t } from './strings';
 import { $, S, ART, bet, buildCells, renderAll, renderOverlays, resetWinMeter, setWinMeter, banner, wait } from './ui';
 import { playBookEvents, endBonusUi } from './bookEventHandlerMap';
@@ -400,6 +401,7 @@ export async function initGame() {
 	setLocale(url.lang);
 	initLoader(); preloadArt();
 	// any tap lands a running count-up on its final value (the big-win banner handles its own taps)
+	startShimmer();
 	document.addEventListener('pointerdown', (e) => { if (!(e.target as Element)?.closest?.('#bigwin')) { skipCounts(); tapLines(); } }, { capture: true, passive: true });
 	track(initRoxy(layout));
 	loadAllFx(track).then(() => renderAll());

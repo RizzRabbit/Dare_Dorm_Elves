@@ -607,3 +607,21 @@ body.short:not(.portrait) #buyCards{margin:8px 0}
 .pl rect.on{fill:#C42A78;stroke:#F48FC0}
 .pl polyline{fill:none;stroke:#FFE6F2;stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round;opacity:.9;filter:drop-shadow(0 0 1.5px #F06AAE)}
 body.portrait .plGrid{grid-template-columns:repeat(3,1fr);gap:6px} body.portrait .pl{padding:5px 6px;gap:4px} body.portrait .pl figcaption{font-size:11px}
+
+/* ---- wild: bright round frame (static ring painted once; no animated filter or shadow) + fx_wild sprites ---- */
+.cell.wild::before{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;border-radius:50%;
+  background:radial-gradient(closest-side,transparent 80%,#F06AB033 84%,#E0409Acc 88.5%,#FFE6F2 91%,#F48FC0 93%,#C42A7899 95.5%,#C42A7833 98%,transparent 100%)}
+.cell.locked::after{inset:4%;border-radius:50%;border-width:2px}
+.cell.wLand .sym{animation:wPop .28s cubic-bezier(.3,1.6,.5,1)}
+@keyframes wPop{0%{transform:scale(.9)}100%{transform:none}}
+canvas.wfx{position:absolute;pointer-events:none;z-index:3}
+canvas.wfxRing{inset:-12%;width:124%;height:124%}
+canvas.wfxBurst{inset:-12%;width:124%;height:124%;z-index:4}
+canvas.wfxIn{inset:0;width:100%;height:100%;z-index:1}
+canvas.wfxTop{z-index:4}
+.wfxCol{position:absolute;top:0;height:100%;z-index:3;pointer-events:none}
+.wfxCol canvas.wfx{inset:0;width:100%;height:100%}
+.wfxCol.seam{width:calc(var(--cell)*.6)!important;transform:translateX(-50%)}
+.ov.full.art::before{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;
+  box-shadow:inset 0 0 0 2px #FFE6F2,inset 0 0 0 4px #E0409A,inset 0 0 10px 4px #C42A7866}
+.ov.wfxOpen .wart{visibility:hidden}
