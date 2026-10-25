@@ -36,6 +36,30 @@ export function symLand(cell: HTMLElement) {
 	sym.querySelectorAll('canvas.fxLand').forEach((c) => c.remove());
 	play('sym_S', 'land', sym, { cls: 'fxFill symFx fxLand', onEnd: () => sym.querySelectorAll('canvas.fxLand').forEach((c) => c.remove()) });
 }
+/** Landing weight on reel stop: squash and stretch (~120 ms, WAAPI transform only); wilds and scatters hit harder. */
+export function landBump(cell: HTMLElement) {
+	const sym = symOf(cell); if (!sym) return;
+	const n = symName(cell), heavy = n === 'W' || n === 'S';
+	sym.animate(heavy
+		? [{ transform: 'scale(1.12,.84)' }, { transform: 'scale(.95,1.07)', offset: .45 }, { transform: 'none' }]
+		: [{ transform: 'scale(1.05,.93)' }, { transform: 'scale(.98,1.02)', offset: .5 }, { transform: 'none' }],
+		{ duration: heavy ? 190 : 120, easing: 'ease-out' });
+	if (heavy) burst(cell, 'land');
+}
+/** Win "lit" state: a glow behind the symbol (.lit, per-symbol via data-s so a lit sprite or an accent outline per
+ * symbol can replace the temporary radial glow without touching the win logic). */
+export function litOn(cell: HTMLElement) {
+	if (cell.querySelector(':scope > .lit, .olWin')) return; // frameless art carries its own lit outline layer
+	const i = document.createElement('i'); i.className = 'lit'; i.dataset.s = symName(cell); cell.prepend(i);
+}
+/** Impact bursts (fx_burst, glow baked; frame-shape independent): land 1.5x cell (wild / scatter landing),
+ * lock 1.9x (wild locks or merges), pop 0.9x (win-cell pop). Drawn above the symbol, centred on the host. */
+const BURST = { land: 1.5, lock: 1.9, pop: 0.9 } as const;
+export function burst(host: HTMLElement, kind: keyof typeof BURST, delay = 0) {
+	if (!hasSheet('fx_burst')) return;
+	const k = BURST[kind];
+	play('fx_burst', kind, host, { cls: 'bfx', delay, prepend: false, style: `width:calc(var(--cell)*${k});height:calc(var(--cell)*${k});margin:calc(var(--cell)*${-k / 2}) 0 0 calc(var(--cell)*${-k / 2})` });
+}
 export function clearSymWins() {
 	document.querySelectorAll('canvas.fxWin').forEach((c) => c.remove());
 	document.querySelectorAll('.cell.sprWin').forEach((c) => c.classList.remove('sprWin'));
@@ -62,6 +86,7 @@ export function lockFx(cell: HTMLElement) {
 		if (play(FX, 'lock', slot, { cls: 'fxFill', onEnd: () => setLockIcon(slot) })) slot.style.cssText = '';
 	}
 	play(FX, 'lockrim', cell, { cls: 'fxRim' });
+	burst(cell, 'lock'); // sparkle burst as the wild locks
 }
 export function setLockIcon(slot: HTMLElement) {
 	slot.style.cssText = frameCSS(FX, 'lock', -1);

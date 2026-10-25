@@ -7,7 +7,8 @@
 // nothing animates filter/shadow, and the canvas is cleared and idle between lines.
 import { LINES, REELS } from './config';
 import { S, $, bet, cellEl, setWinMeter } from './ui';
-import { symWin, clearSymWins } from './fx';
+import { symWin, clearSymWins, litOn, burst } from './fx';
+import { play } from './sprite';
 import { money } from './format';
 import type { LineWin } from './typesBookEvent';
 
@@ -68,10 +69,12 @@ export function tapLines() {
 }
 export const linesActive = () => active;
 
-function label(P: ReturnType<typeof path>, txt: string) {
-	const el = document.createElement('div'); el.className = 'wlAmt'; el.textContent = txt;
-	const end = P.pts[P.pts.length - 2], W = REELS * S.cell;
-	el.style.left = Math.min(W - S.cell * .5, end[0]) + 'px'; el.style.top = (end[1] > S.cell * 3 ? end[1] - S.cell * .62 : end[1] + S.cell * .3) + 'px'; // below the line end, above it on the bottom row
+/** Small floating amount over the middle of the line's winning cells (rises and fades in; transform/opacity only). */
+function label(pos: { reel: number; row: number }[], txt: string) {
+	const el = document.createElement('div'); el.className = 'wlAmt'; el.innerHTML = `<b></b>`; el.firstElementChild!.textContent = txt;
+	setTimeout(() => el.isConnected && play('fx_winplate_glint', 'glint', el, { cls: 'wlGlint', prepend: false }), 250);
+	const m = pos[Math.floor((pos.length - 1) / 2)], W = REELS * S.cell;
+	el.style.left = Math.max(S.cell * .6, Math.min(W - S.cell * .6, m.reel * S.cell + S.cell / 2)) + 'px'; el.style.top = (m.row * S.cell + S.cell * .5) + 'px';
 	$('#board').appendChild(el); return el;
 }
 export function clearRace() {
@@ -90,10 +93,10 @@ export async function playWins(wins: LineWin[], base: number) {
 	for (const w of wins) {
 		if (skipAll) break; skipLine = false;
 		clearSymWins(); document.querySelectorAll('.cell.win').forEach((c) => { c.classList.remove('win'); c.classList.add('dim'); });
-		w.positions.forEach((p) => { const c = cellEl(p.reel, p.row); c.classList.remove('dim'); c.classList.add('win'); symWin(c); });
+		w.positions.forEach((p) => { const c = cellEl(p.reel, p.row); c.classList.remove('dim'); const fresh = !c.classList.contains('win'); c.classList.add('win'); litOn(c); symWin(c); if (fresh && !turbo) burst(c, 'pop'); });
 		const P = path(w.lineIndex); sum += w.win / 100;
 		setWinMeter(base + sum);
-		const L = label(P, money(w.win / 100 * bet()));
+		const L = label(w.positions, money(w.win / 100 * bet()));
 		await run(race, (t) => draw(P, easeIO(t), 1));
 		await hold(keep);
 		await run(turbo ? 60 : 110, (t) => draw(P, 1, 1 - t));
@@ -102,7 +105,7 @@ export async function playWins(wins: LineWin[], base: number) {
 	skipLine = false;
 	// summary: every winning symbol highlighted, no line over the board
 	clearRace(); setWinMeter(base + wins.reduce((a, w) => a + w.win / 100, 0));
-	wins.forEach((w) => w.positions.forEach((p) => { const c = cellEl(p.reel, p.row); c.classList.remove('dim'); c.classList.add('win'); symWin(c); }));
+	wins.forEach((w) => w.positions.forEach((p) => { const c = cellEl(p.reel, p.row); c.classList.remove('dim'); c.classList.add('win'); litOn(c); symWin(c); }));
 	if (!skipAll) await hold(turbo ? 200 : 450);
 	active = false; skipAll = false;
 }

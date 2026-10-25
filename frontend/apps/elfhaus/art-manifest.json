@@ -204,5 +204,11 @@
   ],
   "fx_btn": [
     "assets/final/fx/fx_btn.webp"
+  ],
+  "fx_burst": [
+    "assets/final/fx/fx_burst.webp"
+  ],
+  "fx_winplate_glint": [
+    "assets/final/fx/fx_winplate_glint.webp"
   ]
 }

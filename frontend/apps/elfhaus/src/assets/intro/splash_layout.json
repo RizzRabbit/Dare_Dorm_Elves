@@ -1,0 +1,86 @@
+{
+ "land": {
+  "size": [
+   1920,
+   1080
+  ],
+  "bg": "splash_bg_land.webp",
+  "title": {
+   "img": "splash_title.webp",
+   "cx": 960,
+   "cy": 175,
+   "w": 520
+  },
+  "panels": [
+   {
+    "img": "panel_dare_land.webp",
+    "cx": 400,
+    "cy": 610,
+    "w": 472,
+    "delayMs": 250
+   },
+   {
+    "img": "panel_sticky_land.webp",
+    "cx": 960,
+    "cy": 610,
+    "w": 472,
+    "delayMs": 430
+   },
+   {
+    "img": "panel_stack_land.webp",
+    "cx": 1520,
+    "cy": 610,
+    "w": 472,
+    "delayMs": 610
+   }
+  ],
+  "tap": {
+   "atlas": "splash_tap.atlas.json",
+   "cx": 960,
+   "cy": 1000,
+   "w": 455.40000000000003
+  }
+ },
+ "port": {
+  "size": [
+   1080,
+   1920
+  ],
+  "bg": "splash_bg_port.webp",
+  "title": {
+   "img": "splash_title.webp",
+   "cx": 540,
+   "cy": 270,
+   "w": 820
+  },
+  "panels": [
+   {
+    "img": "panel_dare_port.webp",
+    "cx": 540,
+    "cy": 760,
+    "w": 996,
+    "delayMs": 250
+   },
+   {
+    "img": "panel_sticky_port.webp",
+    "cx": 540,
+    "cy": 1130,
+    "w": 996,
+    "delayMs": 430
+   },
+   {
+    "img": "panel_stack_port.webp",
+    "cx": 540,
+    "cy": 1500,
+    "w": 996,
+    "delayMs": 610
+   }
+  ],
+  "tap": {
+   "atlas": "splash_tap.atlas.json",
+   "cx": 540,
+   "cy": 1790,
+   "w": 506
+  }
+ }
+}

@@ -91,29 +91,14 @@
 <div id="msg" class="overlay hidden" role="alertdialog" aria-modal="true"><div class="modal"><h2 id="msgTitle">MESSAGE</h2><p id="msgBody"></p><button id="msgOk">OK</button></div></div>
 
 <div id="loader" role="dialog" aria-label="Loading Elfhaus">
-	<div class="lbg" style={art.background_fs ? `background-image:url(${art.background_fs})` : ''}></div>
-	{#if art.logo_full}<img id="lLogo" src={art.logo_full} alt="Elfhaus" draggable="false" />{:else}<div id="lLogo" class="txt">ELFHAUS</div>{/if}
-	<div class="lSide">
-		<div id="lCards" aria-roledescription="carousel">
-			<div id="lTrack">
-				<div class="lCard">
-					<div class="lArt wild">{#if art.W}<img src={art.W} alt="" draggable="false" />{/if}<span class="lLock">LOCKED</span><span class="lBadge">x8</span></div>
-					<h3>{LOADER_CARDS[0]}</h3>
-				</div>
-				<div class="lCard">
-					<div class="lArt">{#if art.WM3}<img src={art.WM3} alt="" draggable="false" />{/if}</div>
-					<h3>{LOADER_CARDS[1]}</h3>
-				</div>
-				<div class="lCard">
-					<div class="lArt max">{#if art.WM5}<img src={art.WM5} alt="" draggable="false" />{/if}<span class="lBig">50,000x</span></div>
-					<h3>{LOADER_CARDS[2]}</h3>
-				</div>
-			</div>
-		</div>
-		<div id="lDots">{#each LOADER_CARDS as c, i}<button aria-label={`Feature ${i + 1}`}></button>{/each}</div>
-		<div id="lBar" role="progressbar" aria-label="Loading"><i></i></div>
-		<button id="lGo">CLICK TO CONTINUE</button>
+	<div class="spBg"></div>
+	<div class="spStage">
+		<img class="spEl spTitle" alt="Elfhaus" draggable="false" />
+		{#each LOADER_CARDS as c, i}<img class="spEl spPanel" data-i={i} alt={c} draggable="false" />{/each}
+		<div class="spEl spBarWrap"><div id="lBar" role="progressbar" aria-label="Loading"><i></i></div></div>
+		<button id="lGo" class="spEl" aria-label="Tap to continue"><img alt="" draggable="false" /></button>
 	</div>
-	<div class="lCredit">Rizzin Games</div>
+	<label class="spSkip"><input id="spSkip" type="checkbox" /> Don't show this again</label>
+	<div id="sting" aria-hidden="true"><div class="stBox"><img class="stGlow" alt="" /><img class="stLogo" alt="Rizzin Games" /><div class="stGlint"></div></div></div>
 </div>
 </div>

@@ -5,9 +5,9 @@ import type { BookEvent, BookEventOf, BookEventType, Locked, Pos } from './types
 import { roxy, roxyState } from './roxy';
 import { maxWinCelebration } from './maxwin';
 import { showRespin, endRespin, hideRespin } from './respin';
-import { mxBurst, lockFx, clearSymWins, symLand, symWin } from './fx';
+import { mxBurst, lockFx, clearSymWins, symLand, symWin, landBump } from './fx';
 import { cardFlip } from './cardflip';
-import { timing, isSpinning, startSpin, markStopped, sinceStart, sleep, spinCells, stopReel } from './reels';
+import { timing, isSpinning, startSpin, markStopped, sinceStart, sleep, spinMini, stopMini, stopReel } from './reels';
 import { $, S, k, bet, wait, banner, toast, hideToast, bigWin, setWinMeter, clearLines, renderCell, renderOverlays, cellEl, setGem, ovMx, symHTML } from './ui';
 import { playWins } from './winlines';
 import { wildLand, stackForm, wfExpand, mergeFx } from './wildfx';
@@ -73,6 +73,7 @@ export const bookEventHandlerMap: Handlers = {
 					cellEl(r, row).classList.toggle('locked', locked);
 					if (!locked && !fullLocked.has(r) && S.sym[r][row] === 'W') wildLand(cellEl(r, row));
 					else if (S.sym[r][row] === 'S') symLand(cellEl(r, row));
+					if (!locked && !fullLocked.has(r)) landBump(cellEl(r, row));
 				}
 			}, slow, prev));
 		}
@@ -134,22 +135,21 @@ export const bookEventHandlerMap: Handlers = {
 		});
 		showRespin(ev.step, ev.remaining);
 		await wait(450);
-		spinCells(ev.replace);
+		spinMini(ev.replace);
 	},
 	async respinReveal(ev) {
 		const T = timing();
-		const reels = [...new Set(ev.newSymbols.map((s) => s.reel))].sort((a, b) => a - b);
 		ev.newSymbols.forEach((s) => {
 			S.sym[s.reel][s.row] = s.name;
 			if (s.wild) S.vals.set(k(s.reel, s.row), s.multiplier || 1); else S.vals.delete(k(s.reel, s.row));
 		});
-		let at = Math.max(T.resp, sinceStart() + 120);
-		await Promise.all(reels.map((r, i) => {
-			if (i) at += T.gap;
-			const rows = ev.newSymbols.filter((s) => s.reel === r).map((s) => s.row);
-			const finals = Array.from({ length: ROWS }, (_, row) => symHTML(S.sym[r][row], S.vals.get(k(r, row))));
-			return stopReel(r, at, finals, () => rows.forEach((row) => { renderCell(r, row, null); if (S.sym[r][row] === 'W') wildLand(cellEl(r, row)); else if (S.sym[r][row] === 'S') symLand(cellEl(r, row)); }));
-		}));
+		// each replaced cell lands on its own, left to right then top to bottom
+		const order = [...ev.newSymbols].sort((x, y) => x.reel - y.reel || x.row - y.row);
+		const at0 = Math.max(T.resp, sinceStart() + 120);
+		await Promise.all(order.map((s, i) => stopMini(s.reel, s.row, at0 + i * T.cell, () => {
+			renderCell(s.reel, s.row, null); const c = cellEl(s.reel, s.row);
+			if (S.sym[s.reel][s.row] === 'W') wildLand(c); else if (S.sym[s.reel][s.row] === 'S') symLand(c);
+		})));
 		markStopped();
 		await sleep(T.land);
 	},

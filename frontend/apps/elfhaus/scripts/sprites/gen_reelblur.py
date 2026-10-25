@@ -30,10 +30,20 @@ def strip(order):
     return s
 
 W = 144
+ROUND = False  # frameless cutouts: no porthole mask, only the art's own alpha (set True for round porthole tiles)
+from PIL import ImageDraw
+def disc(n):
+    """One porthole, blurred along the spin direction INSIDE its own round cut: transparent corners and gaps,
+    so the spinning column reads as round symbols (no square smear between tiles)."""
+    t = tile(n); pad = Image.new('RGBA', (F, F * 2), (0, 0, 0, 0)); pad.alpha_composite(t, (0, F // 2))
+    b = vblur(pad, 30).crop((0, F // 2, F, F + F // 2))
+    m = Image.new('L', (F * 4, F * 4), 0); r = int(F * 4 * .465); c = F * 2
+    ImageDraw.Draw(m).ellipse((c - r, c - r, c + r, c + r), fill=255); m = m.resize((F, F), Image.LANCZOS)
+    a = Image.composite(b.getchannel('A'), Image.new('L', (F, F), 0), m) if ROUND else b.getchannel('A')
+    a = a.point(lambda v: int(255 * min(1, (v / 255) ** .6 * 1.08))); b.putalpha(a); return b
 def save(name, order):
-    s = strip(order); cyc = F * len(order)
-    b = vblur(s, 72).crop((0, F, F, F + cyc))  # one seamless cycle
-    a = b.getchannel('A').point(lambda v: int(255 * min(1, (v / 255) ** .6 * 1.08))); b.putalpha(a)  # keep the moving strip readable over the translucent board
+    b = Image.new('RGBA', (F, F * len(order)), (0, 0, 0, 0))
+    for i, n in enumerate(order): b.alpha_composite(disc(n), (0, i * F))
     b = b.resize((W, W * len(order)), Image.LANCZOS)
     p = os.path.join(ROOT, 'assets/final/fx', name + '.webp'); b.save(p, 'WEBP', quality=72, alpha_quality=72, method=6)
     print(name, b.size, os.path.getsize(p) // 1024, 'KB')

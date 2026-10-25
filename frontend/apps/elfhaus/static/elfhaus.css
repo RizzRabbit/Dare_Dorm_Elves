@@ -67,7 +67,7 @@ button.small{padding:3px 10px;font-size:12px}
 /* translucent reel area (~25-36% dark plum) so the room shows through; no live backdrop blur (cost) */
 
 /* ---------- symbol tiles ---------- */
-.cell{position:absolute;width:var(--cell);height:var(--cell);transition:opacity .2s,filter .2s}
+.cell{position:absolute;width:var(--cell);height:var(--cell);transition:opacity .2s}
 /* gapless grid: every position is its own painted tile (respins independently) but tiles butt edge-to-edge,
    sharing a thin painted seam (1px inset each side = 2px shared line). Square corners, no gutters, no glow. */
 .sym{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;overflow:hidden;font-family:"Cinzel";font-weight:800;
@@ -95,8 +95,8 @@ button.small{padding:3px 10px;font-size:12px}
 .cell.locked .plate{display:none}
 .sym.W .plate{bottom:3px;left:4px;transform:none;font-size:max(8px,calc(var(--cell)*.09));padding:0 4px}
 .badge.b10{background:var(--grain),linear-gradient(#9B7CC9,#7E5BB0 60%,#5E4290)} .badge.b100{background:var(--grain),linear-gradient(#E4DDF2,#B9A2E0 60%,#8E7BB5);color:var(--ink)}
-.cell.win .sym{animation:winBob .7s ease-in-out 2}
-.cell.dim{opacity:.5;transition:opacity .15s}
+.cell.win{z-index:2} .cell.win .sym{transform:scale(1.08);transition:transform .18s cubic-bezier(.3,1.5,.5,1)}
+.cell.dim{opacity:.62;transition:opacity .15s}
 .cell.out{opacity:0}
 .cell.drop .sym{animation:drop .32s cubic-bezier(.3,1.3,.5,1) both}
 .grow{animation:grow .5s ease-out}
@@ -126,8 +126,8 @@ button.small{padding:3px 10px;font-size:12px}
 #lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:4}
 /* line-amount label near the end of the racing win line (small, no box) */
 .wlAmt{position:absolute;z-index:5;transform:translate(-50%,0);pointer-events:none;font:800 13px "Nunito";color:#FFF2F8;letter-spacing:.3px;
-  font-variant-numeric:tabular-nums;white-space:nowrap;text-shadow:0 0 6px #C42A78,0 1px 0 #2A2433;animation:wlIn .16s ease-out}
-@keyframes wlIn{from{opacity:0;transform:translate(-50%,4px)}to{opacity:1;transform:translate(-50%,0)}}
+  font-variant-numeric:tabular-nums;white-space:nowrap;text-shadow:0 0 6px #C42A78,0 1px 0 #2A2433;animation:wlIn .5s cubic-bezier(.2,.9,.3,1) forwards}
+@keyframes wlIn{from{opacity:0;transform:translate(-50%,-10%) scale(.7)}to{opacity:1;transform:translate(-50%,-85%) scale(1)}}
 body.portrait .wlAmt{font-size:11px}
 #stepToast,#banner,#fsBar,.modal,#intro .card{background:var(--glass2);border:1px solid var(--hair);color:#F2F0F7;box-shadow:0 10px 24px -8px #0009}
 #stepToast{position:relative;margin-top:8px;z-index:6;font-family:"Nunito";font-weight:900;color:#fff;min-height:38px;
@@ -692,3 +692,52 @@ html{background:#2A2533}
  background:linear-gradient(90deg,#E255A0b0,#E255A000 22%,#E255A000 78%,#E255A0b0),linear-gradient(#FFF6FA90,#FFF6FA00 18%,#FFF6FA00 82%,#FFF6FA90)}
 .strip.ant .antGlow{opacity:1;animation:antPulse .55s ease-in-out infinite alternate}
 @keyframes antPulse{from{opacity:.55}to{opacity:1}}
+/* win lit state (fx.ts litOn): glow BEHIND the symbol; temporary baked radial gradient, swap per symbol via .lit[data-s] */
+.cell .lit{position:absolute;inset:-16%;z-index:0;pointer-events:none;border-radius:50%;opacity:0;transform:scale(.7);
+  background:radial-gradient(closest-side,#FFF6FAee 0,#F9B6D9cc 38%,#E255A066 62%,#C42A7800 100%);transition:opacity .2s,transform .25s cubic-bezier(.3,1.5,.5,1)}
+.cell.win .lit{opacity:1;transform:scale(1);animation:litPulse .9s ease-in-out .25s infinite alternate}
+@keyframes litPulse{from{opacity:1}to{opacity:.6}}
+.cell .sym{z-index:1}
+/* per-cell respin mini-strips (reels.ts spinMini): mask shape via --cellMask (round porthole now; e.g. 12% for frameless cutouts) */
+#board{--cellMask:0}
+.mini{position:absolute;width:var(--cell);height:var(--cell);overflow:hidden;border-radius:var(--cellMask);contain:strict}
+.mini i{position:absolute;left:0;top:0;width:100%;height:calc(var(--cell)*12);background-repeat:repeat-y;background-size:100% calc(var(--cell)*6);will-change:transform;animation:miniRun .32s linear infinite}
+@keyframes miniRun{from{transform:translate3d(0,calc(var(--cell)*-6),0)}to{transform:translate3d(0,0,0)}}
+canvas.wfxMerge{position:absolute;left:-30%;top:calc(50% - 80%);width:160%;height:auto;aspect-ratio:1}
+/* impact bursts (fx.ts burst): centred on the host, above the symbol */
+canvas.bfx{position:absolute;left:50%;top:50%;z-index:4;pointer-events:none}
+.wfxCol.burstCol canvas.bfx{top:50%}
+/* floating win amount: 9-slice plate (36 px slices) + one glint pass; rises over the line's middle winning cell */
+.wlAmt{padding:0 18px;height:calc(var(--cell)*.42);min-width:calc(var(--cell)*.95);display:flex;align-items:center;justify-content:center;box-sizing:border-box;
+  border-image:url(ui/winplate_9s.webp) 36 fill / calc(var(--cell)*.2) stretch;text-shadow:none;font:900 calc(var(--cell)*.2) "Nunito";color:#FFF4FA;-webkit-text-stroke:2px #2A1830;paint-order:stroke fill}
+body.portrait .wlAmt{font-size:calc(var(--cell)*.2)}
+.wlAmt b{position:relative;z-index:1;font:inherit}
+canvas.wlGlint{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.sym .olWin{position:absolute;inset:0;width:100%;height:100%;opacity:0;transition:opacity .2s;pointer-events:none}
+.cell.win .sym .olWin{opacity:1}
+/* ---- intro (intro.ts): studio sting, then the feature splash on the loader ---- */
+#loader{padding:0;display:block;background:#120C18}
+#loader .spBg{position:absolute;inset:0;background-size:cover;background-position:center}
+#loader .spStage{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(var(--sps,1));transform-origin:50% 50%}
+#loader .spEl{position:absolute;translate:-50% -50%;margin:0}
+#loader .spTitle,#loader .spPanel{opacity:0}
+#loader.in .spTitle{animation:spTitle .4s ease-out forwards}
+#loader.in .spPanel{animation:spPanel .35s cubic-bezier(.2,.9,.3,1) var(--d) forwards}
+#loader.quick .spPanel,#loader.quick #lGo{display:none}
+@keyframes spTitle{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:none}}
+@keyframes spPanel{from{opacity:0;transform:translateY(30px) scale(.96)}to{opacity:1;transform:none}}
+#loader .spBarWrap{height:14px;display:flex;justify-content:center;align-items:center}
+#loader #lBar{width:100%;height:12px;border-radius:7px;background:#26122Ecc;border:2px solid #E77FB8;box-sizing:border-box}
+#loader #lBar i{background:linear-gradient(90deg,#B04A90,#F7A8D2)}
+#loader #lGo{display:none;padding:0;border:0;background:none;cursor:pointer;animation:tapPulse 1.3s ease-in-out infinite}
+#loader #lGo img{display:block;width:100%;pointer-events:none}
+#loader.ready.in #lGo{display:block} #loader.ready .spBarWrap{display:none}
+@keyframes tapPulse{0%,100%{opacity:.75;transform:scale(.97)}50%{opacity:1;transform:scale(1.03)}}
+.spSkip{position:absolute;left:0;right:0;bottom:max(10px,env(safe-area-inset-bottom));display:flex;justify-content:center;align-items:center;gap:6px;font:700 13px "Nunito";color:#D9C6E6;opacity:0;transition:opacity .3s}
+#loader.in .spSkip{opacity:.85}
+.spSkip input{accent-color:#E255A0;width:15px;height:15px;margin:0}
+#sting{position:absolute;inset:0;z-index:5;background:radial-gradient(circle at 50% 50%,rgba(60,30,80,.6),#120C18 70%),#120C18;display:flex;align-items:center;justify-content:center;cursor:pointer}
+#sting .stBox{position:relative;height:62vmin;aspect-ratio:640/636;opacity:0}
+#sting .stLogo,#sting .stGlint{position:absolute;inset:0;width:100%;height:100%}
+#sting .stGlint canvas{position:absolute;inset:0;width:100%;height:100%}
+#sting .stGlow{position:absolute;left:50%;top:50%;width:135%;translate:-50% -50%;opacity:0;pointer-events:none}

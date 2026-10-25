@@ -12,11 +12,11 @@ import { S, ART, symHTML, k } from './ui';
 import { ROWS, REELS } from './config';
 
 export const timing = () => (S.turbo
-	? { first: 440, gap: 60, ant: 450, antD: 420, resp: 400, land: 60 }
-	: { first: 1100, gap: 180, ant: 1150, antD: 1000, resp: 760, land: 140 });
+	? { first: 420, gap: 70, ant: 450, antD: 420, resp: 380, land: 60, cell: 35 }
+	: { first: 950, gap: 150, ant: 1150, antD: 1000, resp: 640, land: 140, cell: 70 });
 const P = () => (S.turbo
-	? { wu: 40, amp: 0.07, acc: 90, v: 44, D: 230, ov: 0.1, set: 70 }
-	: { wu: 90, amp: 0.12, acc: 220, v: 26, D: 420, ov: 0.16, set: 110 });
+	? { wu: 0, amp: 0, acc: 70, v: 44, D: 220, ov: 0.14, set: 150 }
+	: { wu: 0, amp: 0, acc: 120, v: 26, D: 380, ov: 0.2, set: 260 }); // instant start; elastic overshoot + settle
 
 type Slot = HTMLElement & { n?: number };
 type Reel = {
@@ -69,7 +69,7 @@ function setSlot(R: Reel, s: Slot, n: number) {
 // closed-form run motion: position (cells) and velocity (cells/s) at t ms after the reel started
 function run(R: Reel, t: number) {
 	const { wu, amp, acc, v } = R.p;
-	if (t < wu) { const a = (Math.PI / 2) * (t / wu); return { s: 3 - amp * Math.sin(a), v: -amp * Math.cos(a) * (Math.PI / 2) * (1000 / wu) }; }
+	if (wu && t < wu) { const a = (Math.PI / 2) * (t / wu); return { s: 3 - amp * Math.sin(a), v: -amp * Math.cos(a) * (Math.PI / 2) * (1000 / wu) }; }
 	if (t < wu + acc) { const u = (t - wu) / acc; return { s: 3 - amp + (v * acc / 1000) * u * u / 2, v: v * u }; }
 	return { s: 3 - amp + (v * acc) / 2000 + (v * (t - wu - acc)) / 1000, v };
 }
@@ -88,7 +88,7 @@ function frame(now: number) {
 			}
 			const td = now - st.tD;
 			if (td < st.D!) { const u = td / st.D!; s = st.s0 + st.dist! * (1 - (1 - u) * (1 - u)); v = (2 * st.dist! * (1 - u)) / (st.D! / 1000); }
-			else if (td < st.D! + p.set) { const u = (td - st.D!) / p.set; s = st.sEnd! + (p.ov * (1 + Math.cos(Math.PI * u))) / 2; v = 0; }
+			else if (td < st.D! + p.set) { const u = (td - st.D!) / p.set; s = st.sEnd! + p.ov * Math.exp(-3.2 * u) * Math.cos(2.6 * Math.PI * u) * (1 - u); v = 0; } // damped spring: overshoot, small rebound, settle
 			else { land(R); continue; }
 		} else ({ s, v } = run(R, now - R.t0));
 		const c = S.cell, base = Math.floor(s), used = new Set<number>();
@@ -164,4 +164,36 @@ export function abortSpin() {
 	reels.forEach((R) => { R.on = false; R.stop?.res(); R.stop = undefined; R.el.style.visibility = 'hidden'; });
 	document.querySelectorAll('#cells .cell.spinning').forEach((c) => c.classList.remove('spinning'));
 	spinning = false;
+}
+
+// ---------- respins: every replaced cell spins on its own (reels stay still) ----------
+// A masked mini-strip per cell (shape from CSS --cellMask, so a round porthole or a frameless cutout both work),
+// scrolled by one CSS transform animation (compositor only, no rAF). Stops are staggered left to right, top to
+// bottom; each cell lands with the squash-and-bounce (.cell.mLand).
+const minis = new Map<string, HTMLElement>();
+export function spinMini(cells: { reel: number; row: number }[]) {
+	const host = document.getElementById('strips'); if (!host) return;
+	t0 = performance.now(); spinning = true;
+	cells.forEach(({ reel, row }, i) => {
+		const c = document.getElementById(`c${reel}${row}`); if (!c) return;
+		c.classList.remove('win', 'dim', 'sprWin', 'replace', 'out', 'locked', 'mLand'); c.querySelectorAll('canvas').forEach((x) => x.remove());
+		c.classList.add('spinning');
+		const m = document.createElement('div'); m.className = 'mini';
+		m.style.cssText = `left:${reel * S.cell}px;top:${row * S.cell}px`;
+		const src = ART[(reel + row) % 2 ? 'reel_stripB' : 'reel_stripA'];
+		m.innerHTML = `<i style="${src ? `background-image:url(${src});` : ''}animation-delay:${-(i * 97) % 600}ms"></i>`;
+		host.appendChild(m); minis.set(`${reel}${row}`, m);
+	});
+}
+/** Land one mini-spinning cell at `at` ms after the respin started; onLand renders the final symbol. */
+export function stopMini(reel: number, row: number, at: number, onLand: () => void) {
+	const m = minis.get(`${reel}${row}`);
+	return new Promise<void>((res) => setTimeout(() => {
+		m?.remove(); minis.delete(`${reel}${row}`);
+		const c = document.getElementById(`c${reel}${row}`);
+		c?.classList.remove('spinning'); onLand();
+		const sym = c?.querySelector<HTMLElement>('.sym'); // drop-in + squash and bounce (WAAPI, transform only, no reflow)
+		sym?.animate([{ transform: 'translateY(-28%) scale(.94,1.06)' }, { transform: 'translateY(4%) scale(1.07,.92)', offset: .45 }, { transform: 'translateY(-2%) scale(.98,1.02)', offset: .75 }, { transform: 'none' }], { duration: S.turbo ? 160 : 260, easing: 'ease-out' });
+		res();
+	}, Math.max(0, t0 + at - performance.now())));
 }

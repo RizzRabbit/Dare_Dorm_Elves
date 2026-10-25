@@ -23,6 +23,8 @@ export const wait = (ms: number) => new Promise<void>((res) => setTimeout(res, m
 const pos = (r: number, row: number) => ({ x: r * S.cell, y: row * S.cell });
 
 const ph = (_key: string) => ''; // no visible placeholder labels in release builds
+// frameless set: the lit (win) outline is a second layer over the idle art, crossfaded by .cell.win (opacity only)
+const winLayer = (key: string) => (ART[key + '_win'] ? `<img class="olWin" src="${ART[key + '_win']}" alt="" draggable="false">` : '');
 const img = (key: string) => (ART[key] ? `<img src="${ART[key]}" alt="" draggable="false">` : '');
 // Multiplier lettering: text only, in a faceted pink "gemstone" fill (repeating diagonal hard-stop bands) with a
 // light-pink inner outline, a thin dark-plum outer stroke, a white specular band across the cap tops and a few
@@ -79,10 +81,10 @@ export function setGem(el: Element | null, v: number) {
 export function symHTML(name: string, v?: number) {
 	if (name === 'W') {
 		const val = v || 1;
-		return `<div class="sym W${ART.W ? ' art' : ''}">${ART.W ? img('W') : `<span class="nm">WILD</span>${ph('W')}`}<span class="plate">WILD</span></div>${gemHTML(val)}<div class="lock"><i class="lkI" style="${lockIconCSS()}"></i><span class="lkT">LOCKED</span>${DOTS}</div>`;
+		return `<div class="sym W${ART.W ? ' art' : ''}">${ART.W ? img('W') + winLayer('W') : `<span class="nm">WILD</span>${ph('W')}`}<span class="plate">WILD</span></div>${gemHTML(val)}<div class="lock"><i class="lkI" style="${lockIconCSS()}"></i><span class="lkT">LOCKED</span>${DOTS}</div>`;
 	}
 	const t = name[0];
-	if (ART[name]) return `<div class="sym ${t} ${name} art">${img(name)}</div>`;
+	if (ART[name]) return `<div class="sym ${t} ${name} art">${img(name)}${winLayer(name)}</div>`;
 	return `<div class="sym ${t} ${name}"><span class="nm">${(SYMBOL_NAMES[name] || name).toUpperCase()}</span>${ph(name)}</div>`;
 }
 export function buildCells() {

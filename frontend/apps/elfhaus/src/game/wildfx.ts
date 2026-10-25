@@ -8,6 +8,7 @@
 //                      frame (so each wild shimmers every few seconds), at most 2 at once, paused while the reels
 //                      spin, during win lines, or when the tab is hidden
 import { play, hasSheet } from './sprite';
+import { burst } from './fx';
 import { S, $ } from './ui';
 import { isSpinning } from './reels';
 import { linesActive } from './winlines';
@@ -42,6 +43,8 @@ export function mergeFx(reels: number[]) {
 	for (let r = lo + 1; r <= hi; r++) { const h = column(r); h.classList.add('seam'); play(ID, 'seam', h, { cls: 'wfx', onEnd: () => h.remove() }); }
 	const g = column(lo); g.style.width = (hi - lo + 1) * S.cell + 'px';
 	play(ID, 'msweep', g, { cls: 'wfx', delay: 180, onEnd: () => g.remove() });
+	// sparkle burst on every merged reel's centre
+	for (let r = lo; r <= hi; r++) { const h = column(r); h.classList.add('burstCol'); burst(h, 'lock', 120 + (r - lo) * 60); setTimeout(() => h.remove(), 900 + (r - lo) * 60); }
 }
 
 // ---- shared shimmer scheduler ----
