@@ -45,7 +45,7 @@ if (kind === 'symbols') {
 	const ids = new Set(), files = walk(src), force = flags.includes('--force');
 	// a 1-frame static (stacks_v2/dropin_static) never replaces an animated sheet (stacks_anim) with the same id: import order
 	// doesn't matter and re-running the static set after the anim set is harmless (--force overrides)
-	const frames = (j) => { try { return Object.values(JSON.parse(readFileSync(j, 'utf8')).anims || {}).reduce((a, x) => a + (x.frames?.length || 0), 0); } catch { return 0; } };
+	const frames = (/** @type {string} */ j) => { try { return Object.values(JSON.parse(readFileSync(j, 'utf8')).anims || {}).reduce((a, x) => a + (x.frames?.length || 0), 0); } catch { return 0; } };
 	const keep = new Set(), held = [];
 	for (const f of files) {
 		const m = basename(f).match(RE); if (!m || m[3] !== 'json') continue;

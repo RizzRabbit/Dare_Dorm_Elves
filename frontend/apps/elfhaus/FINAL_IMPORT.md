@@ -65,7 +65,7 @@ cmp frontend/apps/elfhaus/src/assets/maxwin/maxwin_title.webp /workspace/elfhaus
 ```
 cd $FE/frontend/apps/elfhaus
 pnpm test && pnpm build && du -sb build
-node $FE/frontend/node_modules/.pnpm/typescript@6.0.3/node_modules/typescript/bin/tsc --noEmit -p . --ignoreDeprecations 6.0 | grep -c "error TS"   # dry run: 256, identical to frontend-elfhaus 0b51f91 (pre-existing: JSON modules, config/fx/intro/ui)
+node $FE/frontend/node_modules/.pnpm/typescript@6.0.3/node_modules/typescript/bin/tsc --noEmit -p . --ignoreDeprecations 6.0 | grep -c "error TS"   # dry run: 256 (after 1a fix), identical to frontend-elfhaus 0b51f91 (pre-existing: JSON modules, config/fx/intro/ui)
 ```
 Dry run: build 53,356,494 B (was 27,480,845 B). Stacks are +27.7 MB of that, Roxy p3d atlases 8.2 MB.
 
