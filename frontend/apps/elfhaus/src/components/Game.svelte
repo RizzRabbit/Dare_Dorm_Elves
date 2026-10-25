@@ -2,7 +2,6 @@
 	import { onMount } from 'svelte';
 	import { initGame } from '../game/game';
 	import ART from '../game/art.generated.json';
-	import { LOADER_CARDS } from '../game/loader';
 	const art = ART as Record<string, string | null>;
 	onMount(() => { initGame(); });
 </script>
@@ -94,9 +93,8 @@
 	<div class="spBg"></div>
 	<div class="spStage">
 		<img class="spEl spTitle" alt="Elfhaus" draggable="false" />
-		{#each LOADER_CARDS as c, i}<img class="spEl spPanel" data-i={i} alt={c} draggable="false" />{/each}
 		<div class="spEl spBarWrap"><div id="lBar" role="progressbar" aria-label="Loading"><i></i></div></div>
-		<button id="lGo" class="spEl" aria-label="Tap to continue"><img alt="" draggable="false" /></button>
+		<button id="lGo" class="spEl" aria-label="Tap to party"><img alt="" draggable="false" /></button>
 	</div>
 	<label class="spSkip"><input id="spSkip" type="checkbox" /> Don't show this again</label>
 	<div id="sting" aria-hidden="true"><div class="stBox"><img class="stGlow" alt="" /><img class="stLogo" alt="Rizzin Games" /><div class="stGlint"></div></div></div>

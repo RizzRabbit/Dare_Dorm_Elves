@@ -1,8 +1,9 @@
-// Intro: Rizzin Games studio sting (2.3 s, tap skips), then the feature splash (title + 3 panels + TAP TO CONTINUE)
+// Intro: Rizzin Games studio sting (2.3 s, tap skips), then the feature splash (title + 2 panels + TAP TO PARTY)
 // over the loading screen while assets finish loading. Art: /workspace/elfhaus-polish (INTEGRATION.md §4-5).
 // "Don't show this again" (localStorage) skips the splash for returning players: after the sting the game opens as
 // soon as loading is done. Motion is transform/opacity only (WAAPI); glow is baked into the images.
 import { loadSheet, play, type Atlas } from './sprite';
+import { LOADER_CARDS } from './loader';
 import LAYOUT from '../assets/intro/splash_layout.json';
 import GLINT_ATLAS from '../assets/intro/sting_glint.atlas.json';
 const U = import.meta.glob('../assets/intro/*.webp', { eager: true, import: 'default', query: '?url' }) as Record<string, string>;
@@ -14,7 +15,7 @@ export const skipSplash = () => { try { return localStorage.getItem(KEY) === '1'
 let stingRes: () => void = () => {}; const sting = new Promise<void>((r) => (stingRes = r));
 export const stingDone = () => sting;
 
-type Lay = { size: number[]; bg: string; title: { img: string; cx: number; cy: number; w: number }; panels: { img: string; cx: number; cy: number; w: number; delayMs: number }[]; tap: { cx: number; cy: number; w: number } };
+type Lay = { size: number[]; bg: string; title: { img: string; cx: number; cy: number; w: number }; panels: { img: string; cx: number; cy: number; w: number; delayMs: number }[]; tap: { img: string; cx: number; cy: number; w: number } };
 const L = LAYOUT as unknown as Record<'land' | 'port', Lay>;
 const place = (el: HTMLElement, o: { cx: number; cy: number; w: number }) => { el.style.left = o.cx + 'px'; el.style.top = o.cy + 'px'; el.style.width = o.w + 'px'; };
 
@@ -27,7 +28,15 @@ function layout() {
 	st.style.setProperty('--sps', String(Math.min(innerWidth / d.size[0], innerHeight / d.size[1])));
 	R.querySelector<HTMLElement>('.spBg')!.style.backgroundImage = `url(${url(d.bg)})`;
 	const t = R.querySelector<HTMLImageElement>('.spTitle')!; if (!t.src.endsWith(d.title.img)) t.src = url(d.title.img); place(t, d.title);
-	R.querySelectorAll<HTMLImageElement>('.spPanel').forEach((p, i) => { const q = d.panels[i]; const src = url(q.img); if (p.getAttribute('src') !== src) p.src = src; place(p, q); p.style.setProperty('--d', q.delayMs + 'ms'); });
+	// panels come from the layout (count, art, position, stagger): 3 across in landscape, stacked in portrait
+	let ps = [...R.querySelectorAll<HTMLImageElement>('.spPanel')];
+	if (ps.length !== d.panels.length) {
+		ps.forEach((p) => p.remove());
+		ps = d.panels.map(() => { const p = document.createElement('img'); p.className = 'spEl spPanel'; p.draggable = false; st.insertBefore(p, st.querySelector('.spBarWrap')); return p; });
+	}
+	ps.forEach((p, i) => { const q = d.panels[i];
+		const key = /modes/.test(q.img) ? 0 : /sticky/.test(q.img) ? 1 : /egw/.test(q.img) ? 2 : -1; p.alt = key >= 0 ? LOADER_CARDS[key] : ''; const src = url(q.img); if (p.getAttribute('src') !== src) p.src = src; place(p, q); p.style.setProperty('--d', q.delayMs + 'ms'); });
+	const tp = R.querySelector<HTMLImageElement>('#lGo img')!; if (tp.getAttribute('src') !== url(d.tap.img)) tp.src = url(d.tap.img);
 	place(R.querySelector<HTMLElement>('#lGo')!, d.tap);
 	place(R.querySelector<HTMLElement>('.spBarWrap')!, { ...d.tap, w: d.tap.w * 0.9 });
 }
@@ -58,7 +67,6 @@ function runSting() {
 export function initSplash() {
 	const R = document.getElementById('loader'); if (!R) return;
 	R.classList.toggle('quick', skipSplash());
-	R.querySelector<HTMLImageElement>('#lGo img')!.src = url('splash_tap0.webp');
 	const cb = R.querySelector<HTMLInputElement>('#spSkip')!;
 	cb.checked = skipSplash();
 	cb.onchange = () => { try { cb.checked ? localStorage.setItem(KEY, '1') : localStorage.removeItem(KEY); } catch {} };

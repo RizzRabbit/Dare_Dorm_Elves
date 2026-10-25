@@ -4,10 +4,11 @@ import { $, ART } from './ui';
 import { initSplash, stingDone, skipSplash } from './intro';
 
 // Card titles (checked by the social-mode word scan in scripts/test-books.mjs).
+// Feature-panel alt text, keyed by the panel art (splash_layout.json decides which panels show and where).
 export const LOADER_CARDS = [
-	'Dare Cards: Dare, Double Dare, Triple Dare and Epic Feature Spins',
-	'Sticky Wilds, Respins and Growing Multipliers',
-	'Full-Reel Wilds Stack and Merge, up to 50,000x',
+	'4 Bonus Modes: Dare, Double Dare, Triple Dare and ???. Three dares… and one dirty little secret.',
+	'Sticky Wilds: x1, x2, x3. Once she’s in, she stays… and gets hotter every respin.',
+	'Elves Gone Wild Feature Spins: x2 × x3 = x6. Whole reels go WILD. Side by side? They multiply.',
 ] as const;
 
 let total = 0, done = 0;

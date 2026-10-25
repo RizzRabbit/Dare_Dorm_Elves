@@ -729,10 +729,10 @@ canvas.wlGlint{position:absolute;inset:0;width:100%;height:100%;pointer-events:n
 #loader .spBarWrap{height:14px;display:flex;justify-content:center;align-items:center}
 #loader #lBar{width:100%;height:12px;border-radius:7px;background:#26122Ecc;border:2px solid #E77FB8;box-sizing:border-box}
 #loader #lBar i{background:linear-gradient(90deg,#B04A90,#F7A8D2)}
-#loader #lGo{display:none;padding:0;border:0;background:none;cursor:pointer;animation:tapPulse 1.3s ease-in-out infinite}
+#loader #lGo{display:none;padding:0;border:0;background:none;cursor:pointer;animation:tapPulse 1.1s ease-in-out infinite alternate}
 #loader #lGo img{display:block;width:100%;pointer-events:none}
 #loader.ready.in #lGo{display:block} #loader.ready .spBarWrap{display:none}
-@keyframes tapPulse{0%,100%{opacity:.75;transform:scale(.97)}50%{opacity:1;transform:scale(1.03)}}
+@keyframes tapPulse{from{opacity:.6;transform:scale(.97)}to{opacity:1;transform:scale(1.03)}}
 .spSkip{position:absolute;left:0;right:0;bottom:max(10px,env(safe-area-inset-bottom));display:flex;justify-content:center;align-items:center;gap:6px;font:700 13px "Nunito";color:#D9C6E6;opacity:0;transition:opacity .3s}
 #loader.in .spSkip{opacity:.85}
 .spSkip input{accent-color:#E255A0;width:15px;height:15px;margin:0}
