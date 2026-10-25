@@ -93,12 +93,7 @@ export async function maxWinCelebration() {
 	await loadBg();                                                    // (orientation may have changed since the preload)
 	const bgEl = M.querySelector('.mwBg') as HTMLElement | null; if (bgEl) bgEl.style.backgroundImage = `url(${bgUrl()})`;
 	const crowd = document.createElement('div'); crowd.className = 'mwCrowd'; stage.appendChild(crowd);
-	const conf = document.createElement('div'); conf.className = 'mwConfetti'; stage.insertBefore(conf, crowd);
-	const portrait = document.body.classList.contains('portrait');
-	for (let i = 0; i < (portrait ? 3 : 1); i++) {                       // 16:9 confetti tiles, stacked in portrait
-		const t = document.createElement('div'); t.className = 'mwConfTile'; t.style.top = `calc(${i} * 100 * var(--vw) * 9 / 16)`; conf.appendChild(t);
-		run('maxwin_confetti', 'fall', t, { delay: 150 + i * 270 });
-	}
+	// calm screen: no falling paper confetti over the max win (turbo/skip unchanged)
 	const xEl = M.querySelector('.mwX') as HTMLElement, amtEl = M.querySelector('.mwAmt') as HTMLElement, hint = M.querySelector('.mwHint') as HTMLElement;
 	const tier = M.querySelector('.mwTier') as HTMLElement; tier.classList.add('spr');
 	const total = MAX_WIN_X * bet(); let skipped = false;
@@ -140,7 +135,7 @@ export async function maxWinCelebration() {
 	M.classList.add('out');                                            // fade + slide the row down (CSS, transform/opacity)
 	await new Promise<void>((r) => (rig ? rig.at(rig.ms + 600, r) : setTimeout(r, 600)));   // on the rig's rAF clock: the elves keep moving through the fade
 	timers.splice(0).forEach(clearTimeout); live.forEach((a) => stop(a)); live.clear(); rig?.destroy(); rig = null;
-	crowd.remove(); conf.remove(); if (bgEl) bgEl.style.backgroundImage = ''; tier.classList.remove('spr', 'pop');
+	crowd.remove(); if (bgEl) bgEl.style.backgroundImage = ''; tier.classList.remove('spr', 'pop');
 	M.classList.add('hidden'); M.classList.remove('on', 'landed', 'held', 'out');
 	releaseMaxWin();
 }
