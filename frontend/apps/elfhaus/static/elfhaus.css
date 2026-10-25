@@ -955,3 +955,6 @@ canvas.wfxRing{display:none}
 #anteRow .lbl{font-size:15px;letter-spacing:1.5px}
 #anteRow .lbl small{font-size:14px;opacity:1;color:#F3C6DE;margin-left:8px;letter-spacing:.5px}
 .bcard[data-m="dare"] .bArt img{object-fit:contain;transform:scale(1.3);transform-origin:50% 40%}
+/* ===== aifix: no lavender flash on load (audit 21): page, placeholder #bg and loader all start on deep plum */
+html,body{background:#120C18}
+#bg:not(.art){background:#120C18}
