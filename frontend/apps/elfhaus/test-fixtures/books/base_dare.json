@@ -1,0 +1,1390 @@
+{
+ "id": 1,
+ "payoutMultiplier": 15,
+ "events": [
+  {
+   "index": 0,
+   "type": "reveal",
+   "board": [
+    [
+     {
+      "name": "L3"
+     },
+     {
+      "name": "L1"
+     },
+     {
+      "name": "L3"
+     },
+     {
+      "name": "H3"
+     },
+     {
+      "name": "S"
+     },
+     {
+      "name": "L5"
+     }
+    ],
+    [
+     {
+      "name": "S"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L1"
+     },
+     {
+      "name": "S"
+     },
+     {
+      "name": "H1"
+     }
+    ],
+    [
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "L2"
+     },
+     {
+      "name": "H2"
+     },
+     {
+      "name": "H2"
+     },
+     {
+      "name": "L5"
+     }
+    ],
+    [
+     {
+      "name": "H3"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L3"
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "S"
+     }
+    ],
+    [
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "H2"
+     },
+     {
+      "name": "S"
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "H2"
+     },
+     {
+      "name": "H4"
+     }
+    ]
+   ],
+   "paddingPositions": [
+    4517,
+    31967,
+    7918,
+    9561,
+    34450
+   ],
+   "gameType": "basegame",
+   "anticipation": [
+    0,
+    0,
+    1,
+    1,
+    1
+   ],
+   "locked": {
+    "fullReels": [],
+    "singles": []
+   }
+  },
+  {
+   "index": 1,
+   "type": "setTotalWin",
+   "amount": 0
+  },
+  {
+   "index": 2,
+   "type": "freeSpinTrigger",
+   "tier": "dare",
+   "totalFs": 8,
+   "cap": 20,
+   "carried": {
+    "fullReels": [],
+    "singles": []
+   },
+   "source": "natural",
+   "scatters": [
+    {
+     "reel": 0,
+     "row": 3
+    },
+    {
+     "reel": 1,
+     "row": 3
+    },
+    {
+     "reel": 4,
+     "row": 1
+    }
+   ]
+  },
+  {
+   "index": 3,
+   "type": "updateFreeSpin",
+   "amount": 1,
+   "total": 8,
+   "cap": 20,
+   "tier": "dare"
+  },
+  {
+   "index": 4,
+   "type": "reveal",
+   "board": [
+    [
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L2"
+     },
+     {
+      "name": "L2"
+     },
+     {
+      "name": "L1"
+     },
+     {
+      "name": "L1"
+     }
+    ],
+    [
+     {
+      "name": "L3"
+     },
+     {
+      "name": "H1"
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "S"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L5"
+     }
+    ],
+    [
+     {
+      "name": "H1"
+     },
+     {
+      "name": "L1"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L3"
+     },
+     {
+      "name": "L1"
+     },
+     {
+      "name": "L2"
+     }
+    ],
+    [
+     {
+      "name": "L4"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "H1"
+     },
+     {
+      "name": "H2"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "H2"
+     }
+    ],
+    [
+     {
+      "name": "H4"
+     },
+     {
+      "name": "H4"
+     },
+     {
+      "name": "H1"
+     },
+     {
+      "name": "H4"
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "H2"
+     }
+    ]
+   ],
+   "paddingPositions": [
+    6286,
+    11210,
+    6170,
+    5578,
+    10318
+   ],
+   "gameType": "freegame",
+   "anticipation": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "locked": {
+    "fullReels": [],
+    "singles": []
+   }
+  },
+  {
+   "index": 5,
+   "type": "setTotalWin",
+   "amount": 0
+  },
+  {
+   "index": 6,
+   "type": "updateFreeSpin",
+   "amount": 2,
+   "total": 8,
+   "cap": 20,
+   "tier": "dare"
+  },
+  {
+   "index": 7,
+   "type": "reveal",
+   "board": [
+    [
+     {
+      "name": "H4"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "H4"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "H2"
+     }
+    ],
+    [
+     {
+      "name": "H3"
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "L3"
+     },
+     {
+      "name": "H3"
+     },
+     {
+      "name": "L3"
+     }
+    ],
+    [
+     {
+      "name": "H1"
+     },
+     {
+      "name": "H3"
+     },
+     {
+      "name": "L3"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L1"
+     },
+     {
+      "name": "L4"
+     }
+    ],
+    [
+     {
+      "name": "H3"
+     },
+     {
+      "name": "H3"
+     },
+     {
+      "name": "S"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     }
+    ],
+    [
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "H4"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     }
+    ]
+   ],
+   "paddingPositions": [
+    2621,
+    1596,
+    2504,
+    6550,
+    7367
+   ],
+   "gameType": "freegame",
+   "anticipation": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "locked": {
+    "fullReels": [],
+    "singles": []
+   }
+  },
+  {
+   "index": 8,
+   "type": "setTotalWin",
+   "amount": 0
+  },
+  {
+   "index": 9,
+   "type": "updateFreeSpin",
+   "amount": 3,
+   "total": 8,
+   "cap": 20,
+   "tier": "dare"
+  },
+  {
+   "index": 10,
+   "type": "reveal",
+   "board": [
+    [
+     {
+      "name": "H1"
+     },
+     {
+      "name": "L3"
+     },
+     {
+      "name": "L3"
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "L2"
+     }
+    ],
+    [
+     {
+      "name": "H1"
+     },
+     {
+      "name": "L1"
+     },
+     {
+      "name": "L2"
+     },
+     {
+      "name": "H4"
+     },
+     {
+      "name": "L3"
+     },
+     {
+      "name": "S"
+     }
+    ],
+    [
+     {
+      "name": "H2"
+     },
+     {
+      "name": "S"
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "H1"
+     },
+     {
+      "name": "H2"
+     },
+     {
+      "name": "H1"
+     }
+    ],
+    [
+     {
+      "name": "L3"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "L3"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "H2"
+     }
+    ],
+    [
+     {
+      "name": "H3"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "H4"
+     },
+     {
+      "name": "L4"
+     }
+    ]
+   ],
+   "paddingPositions": [
+    9742,
+    1165,
+    1278,
+    2604,
+    4189
+   ],
+   "gameType": "freegame",
+   "anticipation": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "locked": {
+    "fullReels": [],
+    "singles": []
+   }
+  },
+  {
+   "index": 11,
+   "type": "setTotalWin",
+   "amount": 0
+  },
+  {
+   "index": 12,
+   "type": "updateFreeSpin",
+   "amount": 4,
+   "total": 8,
+   "cap": 20,
+   "tier": "dare"
+  },
+  {
+   "index": 13,
+   "type": "reveal",
+   "board": [
+    [
+     {
+      "name": "L3"
+     },
+     {
+      "name": "L2"
+     },
+     {
+      "name": "S"
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L3"
+     }
+    ],
+    [
+     {
+      "name": "L5"
+     },
+     {
+      "name": "L2"
+     },
+     {
+      "name": "L1"
+     },
+     {
+      "name": "L3"
+     },
+     {
+      "name": "L2"
+     },
+     {
+      "name": "L1"
+     }
+    ],
+    [
+     {
+      "name": "L1"
+     },
+     {
+      "name": "H4"
+     },
+     {
+      "name": "H1"
+     },
+     {
+      "name": "H2"
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "L3"
+     }
+    ],
+    [
+     {
+      "name": "H1"
+     },
+     {
+      "name": "H2"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "H1"
+     },
+     {
+      "name": "H3"
+     }
+    ],
+    [
+     {
+      "name": "H2"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "H3"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "H2"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     }
+    ]
+   ],
+   "paddingPositions": [
+    3807,
+    2306,
+    1432,
+    8282,
+    3300
+   ],
+   "gameType": "freegame",
+   "anticipation": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "locked": {
+    "fullReels": [],
+    "singles": []
+   }
+  },
+  {
+   "index": 14,
+   "type": "setTotalWin",
+   "amount": 0
+  },
+  {
+   "index": 15,
+   "type": "updateFreeSpin",
+   "amount": 5,
+   "total": 8,
+   "cap": 20,
+   "tier": "dare"
+  },
+  {
+   "index": 16,
+   "type": "reveal",
+   "board": [
+    [
+     {
+      "name": "H1"
+     },
+     {
+      "name": "L2"
+     },
+     {
+      "name": "L3"
+     },
+     {
+      "name": "L1"
+     },
+     {
+      "name": "H1"
+     },
+     {
+      "name": "H4"
+     }
+    ],
+    [
+     {
+      "name": "L5"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L3"
+     },
+     {
+      "name": "L2"
+     },
+     {
+      "name": "H1"
+     },
+     {
+      "name": "H2"
+     }
+    ],
+    [
+     {
+      "name": "L4"
+     },
+     {
+      "name": "H4"
+     },
+     {
+      "name": "H2"
+     },
+     {
+      "name": "H2"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "H1"
+     }
+    ],
+    [
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "H4"
+     },
+     {
+      "name": "H3"
+     }
+    ],
+    [
+     {
+      "name": "H2"
+     },
+     {
+      "name": "H4"
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "H2"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "H2"
+     }
+    ]
+   ],
+   "paddingPositions": [
+    1363,
+    1269,
+    4061,
+    6426,
+    8052
+   ],
+   "gameType": "freegame",
+   "anticipation": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "locked": {
+    "fullReels": [],
+    "singles": []
+   }
+  },
+  {
+   "index": 17,
+   "type": "setTotalWin",
+   "amount": 0
+  },
+  {
+   "index": 18,
+   "type": "updateFreeSpin",
+   "amount": 6,
+   "total": 8,
+   "cap": 20,
+   "tier": "dare"
+  },
+  {
+   "index": 19,
+   "type": "reveal",
+   "board": [
+    [
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L3"
+     },
+     {
+      "name": "H2"
+     },
+     {
+      "name": "L2"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L5"
+     }
+    ],
+    [
+     {
+      "name": "L5"
+     },
+     {
+      "name": "H1"
+     },
+     {
+      "name": "H3"
+     },
+     {
+      "name": "L2"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L5"
+     }
+    ],
+    [
+     {
+      "name": "L5"
+     },
+     {
+      "name": "H2"
+     },
+     {
+      "name": "L2"
+     },
+     {
+      "name": "L3"
+     },
+     {
+      "name": "H2"
+     },
+     {
+      "name": "H3"
+     }
+    ],
+    [
+     {
+      "name": "L5"
+     },
+     {
+      "name": "L3"
+     },
+     {
+      "name": "H3"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L1"
+     }
+    ],
+    [
+     {
+      "name": "H1"
+     },
+     {
+      "name": "H1"
+     },
+     {
+      "name": "L2"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "H4"
+     },
+     {
+      "name": "H2"
+     }
+    ]
+   ],
+   "paddingPositions": [
+    126,
+    3837,
+    6132,
+    7007,
+    6129
+   ],
+   "gameType": "freegame",
+   "anticipation": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "locked": {
+    "fullReels": [],
+    "singles": []
+   }
+  },
+  {
+   "index": 20,
+   "type": "setTotalWin",
+   "amount": 0
+  },
+  {
+   "index": 21,
+   "type": "updateFreeSpin",
+   "amount": 7,
+   "total": 8,
+   "cap": 20,
+   "tier": "dare"
+  },
+  {
+   "index": 22,
+   "type": "reveal",
+   "board": [
+    [
+     {
+      "name": "L5"
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "H4"
+     },
+     {
+      "name": "L2"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "H4"
+     }
+    ],
+    [
+     {
+      "name": "L4"
+     },
+     {
+      "name": "H4"
+     },
+     {
+      "name": "L1"
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "L1"
+     }
+    ],
+    [
+     {
+      "name": "L2"
+     },
+     {
+      "name": "H2"
+     },
+     {
+      "name": "L2"
+     },
+     {
+      "name": "H1"
+     },
+     {
+      "name": "H2"
+     },
+     {
+      "name": "H1"
+     }
+    ],
+    [
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "H1"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "L1"
+     },
+     {
+      "name": "H3"
+     },
+     {
+      "name": "L3"
+     }
+    ],
+    [
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "H2"
+     },
+     {
+      "name": "H1"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "H4"
+     },
+     {
+      "name": "H2"
+     }
+    ]
+   ],
+   "paddingPositions": [
+    5769,
+    1794,
+    1415,
+    7428,
+    315
+   ],
+   "gameType": "freegame",
+   "anticipation": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "locked": {
+    "fullReels": [],
+    "singles": []
+   }
+  },
+  {
+   "index": 23,
+   "type": "setTotalWin",
+   "amount": 0
+  },
+  {
+   "index": 24,
+   "type": "updateFreeSpin",
+   "amount": 8,
+   "total": 8,
+   "cap": 20,
+   "tier": "dare"
+  },
+  {
+   "index": 25,
+   "type": "reveal",
+   "board": [
+    [
+     {
+      "name": "H1"
+     },
+     {
+      "name": "L2"
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L5"
+     }
+    ],
+    [
+     {
+      "name": "H3"
+     },
+     {
+      "name": "H1"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "H1"
+     },
+     {
+      "name": "H4"
+     },
+     {
+      "name": "L4"
+     }
+    ],
+    [
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "L2"
+     },
+     {
+      "name": "H2"
+     },
+     {
+      "name": "L5"
+     }
+    ],
+    [
+     {
+      "name": "H3"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "H2"
+     },
+     {
+      "name": "H3"
+     },
+     {
+      "name": "H3"
+     },
+     {
+      "name": "L1"
+     }
+    ],
+    [
+     {
+      "name": "H1"
+     },
+     {
+      "name": "H2"
+     },
+     {
+      "name": "H2"
+     },
+     {
+      "name": "H3"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "H3"
+     }
+    ]
+   ],
+   "paddingPositions": [
+    5760,
+    5269,
+    9551,
+    9826,
+    3313
+   ],
+   "gameType": "freegame",
+   "anticipation": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "locked": {
+    "fullReels": [],
+    "singles": []
+   }
+  },
+  {
+   "index": 26,
+   "type": "winInfo",
+   "step": 0,
+   "totalWin": 15,
+   "wins": [
+    {
+     "lineIndex": 20,
+     "symbol": "L4",
+     "count": 3,
+     "win": 15,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 2
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 3,
+      "lineMult": 1,
+      "connected": false,
+      "groups": []
+     }
+    }
+   ]
+  },
+  {
+   "index": 27,
+   "type": "updateStepWin",
+   "amount": 15
+  },
+  {
+   "index": 28,
+   "type": "respinEnd",
+   "step": 0,
+   "reason": "noConnection"
+  },
+  {
+   "index": 29,
+   "type": "setWin",
+   "amount": 15,
+   "winLevel": 2
+  },
+  {
+   "index": 30,
+   "type": "setTotalWin",
+   "amount": 15
+  },
+  {
+   "index": 31,
+   "type": "freeSpinEnd",
+   "amount": 15,
+   "winLevel": 1
+  },
+  {
+   "index": 32,
+   "type": "finalWin",
+   "amount": 15
+  }
+ ],
+ "criteria": "freegame",
+ "baseGameWins": 0.0,
+ "freeGameWins": 0.15,
+ "mode": "base"
+}

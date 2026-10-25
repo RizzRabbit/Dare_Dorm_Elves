@@ -1,0 +1,12940 @@
+{
+ "id": 1,
+ "payoutMultiplier": 5000000,
+ "events": [
+  {
+   "index": 0,
+   "type": "buyTriggerStart",
+   "tier": "double_dare"
+  },
+  {
+   "index": 1,
+   "type": "reveal",
+   "board": [
+    [
+     {
+      "name": "H2"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "H4"
+     },
+     {
+      "name": "S"
+     },
+     {
+      "name": "L1"
+     }
+    ],
+    [
+     {
+      "name": "H2"
+     },
+     {
+      "name": "S"
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "L2"
+     },
+     {
+      "name": "S"
+     }
+    ],
+    [
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L1"
+     },
+     {
+      "name": "L2"
+     },
+     {
+      "name": "S"
+     },
+     {
+      "name": "L2"
+     },
+     {
+      "name": "L5"
+     }
+    ],
+    [
+     {
+      "name": "H2"
+     },
+     {
+      "name": "S"
+     },
+     {
+      "name": "L1"
+     },
+     {
+      "name": "L3"
+     },
+     {
+      "name": "H1"
+     },
+     {
+      "name": "L3"
+     }
+    ],
+    [
+     {
+      "name": "S"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "H3"
+     },
+     {
+      "name": "L3"
+     },
+     {
+      "name": "S"
+     }
+    ]
+   ],
+   "paddingPositions": [
+    17979,
+    10989,
+    24593,
+    4316,
+    24487
+   ],
+   "gameType": "basegame",
+   "anticipation": [
+    0,
+    0,
+    1,
+    1,
+    1
+   ],
+   "locked": {
+    "fullReels": [],
+    "singles": []
+   }
+  },
+  {
+   "index": 2,
+   "type": "setTotalWin",
+   "amount": 0
+  },
+  {
+   "index": 3,
+   "type": "freeSpinTrigger",
+   "tier": "double_dare",
+   "totalFs": 10,
+   "cap": 20,
+   "carried": {
+    "fullReels": [],
+    "singles": [
+     {
+      "reel": 4,
+      "row": 0,
+      "value": 1
+     }
+    ]
+   },
+   "source": "buy",
+   "scatters": [
+    {
+     "reel": 0,
+     "row": 3
+    },
+    {
+     "reel": 1,
+     "row": 0
+    },
+    {
+     "reel": 2,
+     "row": 2
+    },
+    {
+     "reel": 3,
+     "row": 0
+    }
+   ]
+  },
+  {
+   "index": 4,
+   "type": "updateFreeSpin",
+   "amount": 1,
+   "total": 10,
+   "cap": 20,
+   "tier": "double_dare"
+  },
+  {
+   "index": 5,
+   "type": "reveal",
+   "board": [
+    [
+     {
+      "name": "L3"
+     },
+     {
+      "name": "L2"
+     },
+     {
+      "name": "H4"
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "L2"
+     },
+     {
+      "name": "L5"
+     }
+    ],
+    [
+     {
+      "name": "L1"
+     },
+     {
+      "name": "H2"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "H3"
+     },
+     {
+      "name": "L4"
+     }
+    ],
+    [
+     {
+      "name": "H3"
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "H2"
+     },
+     {
+      "name": "L5"
+     }
+    ],
+    [
+     {
+      "name": "H4"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "H2"
+     },
+     {
+      "name": "H3"
+     },
+     {
+      "name": "L1"
+     },
+     {
+      "name": "L2"
+     }
+    ],
+    [
+     {
+      "name": "L4"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "L1"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "H4"
+     },
+     {
+      "name": "L3"
+     }
+    ]
+   ],
+   "paddingPositions": [
+    11156,
+    5047,
+    9368,
+    14146,
+    8262
+   ],
+   "gameType": "freegame",
+   "anticipation": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "locked": {
+    "fullReels": [],
+    "singles": [
+     {
+      "reel": 4,
+      "row": 0,
+      "value": 1
+     }
+    ]
+   }
+  },
+  {
+   "index": 6,
+   "type": "setTotalWin",
+   "amount": 0
+  },
+  {
+   "index": 7,
+   "type": "updateFreeSpin",
+   "amount": 2,
+   "total": 10,
+   "cap": 20,
+   "tier": "double_dare"
+  },
+  {
+   "index": 8,
+   "type": "reveal",
+   "board": [
+    [
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "H2"
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "L1"
+     }
+    ],
+    [
+     {
+      "name": "H4"
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "L1"
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "H1"
+     },
+     {
+      "name": "L2"
+     }
+    ],
+    [
+     {
+      "name": "L3"
+     },
+     {
+      "name": "L2"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L2"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "H3"
+     }
+    ],
+    [
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "H1"
+     },
+     {
+      "name": "L1"
+     }
+    ],
+    [
+     {
+      "name": "L4"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "L3"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "L1"
+     }
+    ]
+   ],
+   "paddingPositions": [
+    18570,
+    2025,
+    17227,
+    8982,
+    21394
+   ],
+   "gameType": "freegame",
+   "anticipation": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "locked": {
+    "fullReels": [],
+    "singles": [
+     {
+      "reel": 4,
+      "row": 0,
+      "value": 1
+     },
+     {
+      "reel": 4,
+      "row": 2,
+      "value": 1
+     }
+    ]
+   }
+  },
+  {
+   "index": 9,
+   "type": "setTotalWin",
+   "amount": 0
+  },
+  {
+   "index": 10,
+   "type": "updateFreeSpin",
+   "amount": 3,
+   "total": 10,
+   "cap": 20,
+   "tier": "double_dare"
+  },
+  {
+   "index": 11,
+   "type": "reveal",
+   "board": [
+    [
+     {
+      "name": "H3"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "H4"
+     },
+     {
+      "name": "L3"
+     },
+     {
+      "name": "L4"
+     }
+    ],
+    [
+     {
+      "name": "L5"
+     },
+     {
+      "name": "H4"
+     },
+     {
+      "name": "H3"
+     },
+     {
+      "name": "L3"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L2"
+     }
+    ],
+    [
+     {
+      "name": "L2"
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "H4"
+     },
+     {
+      "name": "L1"
+     },
+     {
+      "name": "L4"
+     }
+    ],
+    [
+     {
+      "name": "H1"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "L3"
+     },
+     {
+      "name": "L3"
+     }
+    ],
+    [
+     {
+      "name": "L1"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     }
+    ]
+   ],
+   "paddingPositions": [
+    12013,
+    23505,
+    19179,
+    3169,
+    11937
+   ],
+   "gameType": "freegame",
+   "anticipation": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "locked": {
+    "fullReels": [],
+    "singles": [
+     {
+      "reel": 0,
+      "row": 0,
+      "value": 1
+     },
+     {
+      "reel": 0,
+      "row": 1,
+      "value": 1
+     },
+     {
+      "reel": 3,
+      "row": 0,
+      "value": 1
+     },
+     {
+      "reel": 3,
+      "row": 1,
+      "value": 1
+     },
+     {
+      "reel": 3,
+      "row": 2,
+      "value": 1
+     },
+     {
+      "reel": 4,
+      "row": 0,
+      "value": 1
+     },
+     {
+      "reel": 4,
+      "row": 2,
+      "value": 1
+     },
+     {
+      "reel": 4,
+      "row": 3,
+      "value": 1
+     }
+    ]
+   }
+  },
+  {
+   "index": 12,
+   "type": "stackComplete",
+   "step": 0,
+   "reel": 4,
+   "parts": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "value": 4,
+   "instant": false
+  },
+  {
+   "index": 13,
+   "type": "setTotalWin",
+   "amount": 0
+  },
+  {
+   "index": 14,
+   "type": "updateFreeSpin",
+   "amount": 4,
+   "total": 10,
+   "cap": 20,
+   "tier": "double_dare"
+  },
+  {
+   "index": 15,
+   "type": "reveal",
+   "board": [
+    [
+     {
+      "name": "L3"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "H4"
+     },
+     {
+      "name": "L5"
+     }
+    ],
+    [
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L2"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "L3"
+     },
+     {
+      "name": "L4"
+     }
+    ],
+    [
+     {
+      "name": "L1"
+     },
+     {
+      "name": "L3"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "H4"
+     },
+     {
+      "name": "L1"
+     }
+    ],
+    [
+     {
+      "name": "L2"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "L2"
+     },
+     {
+      "name": "L3"
+     }
+    ],
+    [
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 4
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 4
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 4
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 4
+     },
+     {
+      "name": "L1"
+     }
+    ]
+   ],
+   "paddingPositions": [
+    282,
+    16845,
+    369,
+    3167,
+    23648
+   ],
+   "gameType": "freegame",
+   "anticipation": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "locked": {
+    "fullReels": [
+     {
+      "reel": 4,
+      "value": 4
+     }
+    ],
+    "singles": [
+     {
+      "reel": 0,
+      "row": 0,
+      "value": 1
+     },
+     {
+      "reel": 0,
+      "row": 1,
+      "value": 1
+     },
+     {
+      "reel": 3,
+      "row": 0,
+      "value": 1
+     },
+     {
+      "reel": 3,
+      "row": 1,
+      "value": 1
+     },
+     {
+      "reel": 3,
+      "row": 2,
+      "value": 1
+     }
+    ]
+   }
+  },
+  {
+   "index": 16,
+   "type": "winInfo",
+   "step": 0,
+   "totalWin": 1800,
+   "wins": [
+    {
+     "lineIndex": 2,
+     "symbol": "L4",
+     "count": 5,
+     "win": 900,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 6,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 1
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 1
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 4
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 17,
+     "symbol": "L4",
+     "count": 5,
+     "win": 900,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 6,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 1
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 1
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 4
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "index": 17,
+   "type": "updateStepWin",
+   "amount": 1800
+  },
+  {
+   "index": 18,
+   "type": "wildGrow",
+   "step": 0,
+   "changes": [
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 0,
+     "from": 1,
+     "to": 2
+    },
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 1,
+     "from": 1,
+     "to": 2
+    },
+    {
+     "kind": "single",
+     "reel": 3,
+     "row": 1,
+     "from": 1,
+     "to": 2
+    },
+    {
+     "kind": "full",
+     "reel": 4,
+     "from": 4,
+     "to": 5
+    }
+   ]
+  },
+  {
+   "index": 19,
+   "type": "respinStart",
+   "step": 1,
+   "replace": [
+    {
+     "reel": 1,
+     "row": 1
+    },
+    {
+     "reel": 2,
+     "row": 1
+    }
+   ],
+   "locked": {
+    "fullReels": [
+     {
+      "reel": 4,
+      "value": 5
+     }
+    ],
+    "singles": [
+     {
+      "reel": 0,
+      "row": 0,
+      "value": 2
+     },
+     {
+      "reel": 0,
+      "row": 1,
+      "value": 2
+     },
+     {
+      "reel": 3,
+      "row": 0,
+      "value": 1
+     },
+     {
+      "reel": 3,
+      "row": 1,
+      "value": 2
+     },
+     {
+      "reel": 3,
+      "row": 2,
+      "value": 1
+     }
+    ]
+   },
+   "remaining": 2
+  },
+  {
+   "index": 20,
+   "type": "respinReveal",
+   "step": 1,
+   "newSymbols": [
+    {
+     "reel": 1,
+     "row": 1,
+     "name": "L5"
+    },
+    {
+     "reel": 2,
+     "row": 1,
+     "name": "H2"
+    }
+   ]
+  },
+  {
+   "index": 21,
+   "type": "winInfo",
+   "step": 1,
+   "totalWin": 1350,
+   "wins": [
+    {
+     "lineIndex": 5,
+     "symbol": "L5",
+     "count": 5,
+     "win": 1350,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 2
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 9,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 2
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 2
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 5
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "index": 22,
+   "type": "updateStepWin",
+   "amount": 3150
+  },
+  {
+   "index": 23,
+   "type": "wildGrow",
+   "step": 1,
+   "changes": [
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 0,
+     "from": 2,
+     "to": 3
+    },
+    {
+     "kind": "single",
+     "reel": 3,
+     "row": 1,
+     "from": 2,
+     "to": 3
+    },
+    {
+     "kind": "full",
+     "reel": 4,
+     "from": 5,
+     "to": 6
+    }
+   ]
+  },
+  {
+   "index": 24,
+   "type": "respinStart",
+   "step": 2,
+   "replace": [
+    {
+     "reel": 1,
+     "row": 1
+    },
+    {
+     "reel": 2,
+     "row": 2
+    }
+   ],
+   "locked": {
+    "fullReels": [
+     {
+      "reel": 4,
+      "value": 6
+     }
+    ],
+    "singles": [
+     {
+      "reel": 0,
+      "row": 0,
+      "value": 3
+     },
+     {
+      "reel": 0,
+      "row": 1,
+      "value": 2
+     },
+     {
+      "reel": 3,
+      "row": 0,
+      "value": 1
+     },
+     {
+      "reel": 3,
+      "row": 1,
+      "value": 3
+     },
+     {
+      "reel": 3,
+      "row": 2,
+      "value": 1
+     }
+    ]
+   },
+   "remaining": 1
+  },
+  {
+   "index": 25,
+   "type": "respinReveal",
+   "step": 2,
+   "newSymbols": [
+    {
+     "reel": 1,
+     "row": 1,
+     "name": "L5"
+    },
+    {
+     "reel": 2,
+     "row": 2,
+     "name": "L4"
+    }
+   ]
+  },
+  {
+   "index": 26,
+   "type": "respinEnd",
+   "step": 2,
+   "reason": "noConnection"
+  },
+  {
+   "index": 27,
+   "type": "setWin",
+   "amount": 3150,
+   "winLevel": 7
+  },
+  {
+   "index": 28,
+   "type": "setTotalWin",
+   "amount": 3150
+  },
+  {
+   "index": 29,
+   "type": "updateFreeSpin",
+   "amount": 5,
+   "total": 10,
+   "cap": 20,
+   "tier": "double_dare"
+  },
+  {
+   "index": 30,
+   "type": "reveal",
+   "board": [
+    [
+     {
+      "name": "L1"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 3
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 2
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "L1"
+     },
+     {
+      "name": "L2"
+     }
+    ],
+    [
+     {
+      "name": "L1"
+     },
+     {
+      "name": "L2"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L2"
+     }
+    ],
+    [
+     {
+      "name": "L1"
+     },
+     {
+      "name": "L3"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "H3"
+     },
+     {
+      "name": "L1"
+     },
+     {
+      "name": "L5"
+     }
+    ],
+    [
+     {
+      "name": "L3"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 3
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "L3"
+     },
+     {
+      "name": "L3"
+     }
+    ],
+    [
+     {
+      "name": "H4"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 6
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 6
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 6
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 6
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     }
+    ]
+   ],
+   "paddingPositions": [
+    11171,
+    22121,
+    16258,
+    1690,
+    765
+   ],
+   "gameType": "freegame",
+   "anticipation": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "locked": {
+    "fullReels": [
+     {
+      "reel": 4,
+      "value": 6
+     }
+    ],
+    "singles": [
+     {
+      "reel": 0,
+      "row": 0,
+      "value": 3
+     },
+     {
+      "reel": 0,
+      "row": 1,
+      "value": 2
+     },
+     {
+      "reel": 3,
+      "row": 0,
+      "value": 1
+     },
+     {
+      "reel": 3,
+      "row": 1,
+      "value": 3
+     },
+     {
+      "reel": 3,
+      "row": 2,
+      "value": 1
+     }
+    ]
+   }
+  },
+  {
+   "index": 31,
+   "type": "winInfo",
+   "step": 0,
+   "totalWin": 4800,
+   "wins": [
+    {
+     "lineIndex": 2,
+     "symbol": "L4",
+     "count": 5,
+     "win": 1650,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 11,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 2
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 3
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 6
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 11,
+     "symbol": "L4",
+     "count": 5,
+     "win": 1350,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 2
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 2
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 9,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 2
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 2,
+        "value": 1
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 6
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 17,
+     "symbol": "L4",
+     "count": 5,
+     "win": 1800,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 12,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 3
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 3
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 6
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "index": 32,
+   "type": "updateStepWin",
+   "amount": 4800
+  },
+  {
+   "index": 33,
+   "type": "wildGrow",
+   "step": 0,
+   "changes": [
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 0,
+     "from": 3,
+     "to": 4
+    },
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 1,
+     "from": 2,
+     "to": 3
+    },
+    {
+     "kind": "single",
+     "reel": 3,
+     "row": 1,
+     "from": 3,
+     "to": 4
+    },
+    {
+     "kind": "single",
+     "reel": 3,
+     "row": 2,
+     "from": 1,
+     "to": 2
+    },
+    {
+     "kind": "full",
+     "reel": 4,
+     "from": 6,
+     "to": 7
+    }
+   ]
+  },
+  {
+   "index": 34,
+   "type": "respinStart",
+   "step": 1,
+   "replace": [
+    {
+     "reel": 1,
+     "row": 1
+    },
+    {
+     "reel": 1,
+     "row": 2
+    },
+    {
+     "reel": 2,
+     "row": 1
+    }
+   ],
+   "locked": {
+    "fullReels": [
+     {
+      "reel": 4,
+      "value": 7
+     }
+    ],
+    "singles": [
+     {
+      "reel": 0,
+      "row": 0,
+      "value": 4
+     },
+     {
+      "reel": 0,
+      "row": 1,
+      "value": 3
+     },
+     {
+      "reel": 3,
+      "row": 0,
+      "value": 1
+     },
+     {
+      "reel": 3,
+      "row": 1,
+      "value": 4
+     },
+     {
+      "reel": 3,
+      "row": 2,
+      "value": 2
+     }
+    ]
+   },
+   "remaining": 2
+  },
+  {
+   "index": 35,
+   "type": "respinReveal",
+   "step": 1,
+   "newSymbols": [
+    {
+     "reel": 1,
+     "row": 1,
+     "name": "L2"
+    },
+    {
+     "reel": 1,
+     "row": 2,
+     "name": "H1"
+    },
+    {
+     "reel": 2,
+     "row": 1,
+     "name": "L3"
+    }
+   ]
+  },
+  {
+   "index": 36,
+   "type": "respinEnd",
+   "step": 1,
+   "reason": "noConnection"
+  },
+  {
+   "index": 37,
+   "type": "setWin",
+   "amount": 4800,
+   "winLevel": 7
+  },
+  {
+   "index": 38,
+   "type": "setTotalWin",
+   "amount": 7950
+  },
+  {
+   "index": 39,
+   "type": "updateFreeSpin",
+   "amount": 6,
+   "total": 10,
+   "cap": 20,
+   "tier": "double_dare"
+  },
+  {
+   "index": 40,
+   "type": "reveal",
+   "board": [
+    [
+     {
+      "name": "L1"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 4
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 3
+     },
+     {
+      "name": "L2"
+     },
+     {
+      "name": "L2"
+     },
+     {
+      "name": "H3"
+     }
+    ],
+    [
+     {
+      "name": "L5"
+     },
+     {
+      "name": "L2"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "H4"
+     },
+     {
+      "name": "L3"
+     },
+     {
+      "name": "S"
+     }
+    ],
+    [
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L2"
+     },
+     {
+      "name": "H4"
+     },
+     {
+      "name": "L3"
+     },
+     {
+      "name": "H4"
+     },
+     {
+      "name": "L3"
+     }
+    ],
+    [
+     {
+      "name": "L4"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 4
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 2
+     },
+     {
+      "name": "L3"
+     },
+     {
+      "name": "L4"
+     }
+    ],
+    [
+     {
+      "name": "H3"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 7
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 7
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 7
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 7
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     }
+    ]
+   ],
+   "paddingPositions": [
+    5146,
+    11166,
+    5378,
+    18519,
+    2412
+   ],
+   "gameType": "freegame",
+   "anticipation": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "locked": {
+    "fullReels": [
+     {
+      "reel": 4,
+      "value": 7
+     }
+    ],
+    "singles": [
+     {
+      "reel": 0,
+      "row": 0,
+      "value": 4
+     },
+     {
+      "reel": 0,
+      "row": 1,
+      "value": 3
+     },
+     {
+      "reel": 3,
+      "row": 0,
+      "value": 1
+     },
+     {
+      "reel": 3,
+      "row": 1,
+      "value": 4
+     },
+     {
+      "reel": 3,
+      "row": 2,
+      "value": 2
+     }
+    ]
+   }
+  },
+  {
+   "index": 41,
+   "type": "winInfo",
+   "step": 0,
+   "totalWin": 64250,
+   "wins": [
+    {
+     "lineIndex": 1,
+     "symbol": "L2",
+     "count": 5,
+     "win": 3600,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 0
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 0
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 60,
+      "lineMult": 12,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 4
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 0,
+        "value": 1
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 7
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 2,
+     "symbol": "H4",
+     "count": 5,
+     "win": 11250,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 150,
+      "lineMult": 15,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 3
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 1
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 4
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 7
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 5,
+     "symbol": "L3",
+     "count": 5,
+     "win": 3200,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 2
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 40,
+      "lineMult": 16,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 4
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 1
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 4
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 7
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 7,
+     "symbol": "L2",
+     "count": 5,
+     "win": 3300,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 0
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 0
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 60,
+      "lineMult": 11,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 3
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 0,
+        "value": 1
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 7
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 9,
+     "symbol": "L2",
+     "count": 5,
+     "win": 4800,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 60,
+      "lineMult": 16,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 4
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 1
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 4
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 7
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 11,
+     "symbol": "H4",
+     "count": 5,
+     "win": 9000,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 2
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 2
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 150,
+      "lineMult": 12,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 3
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 2,
+        "value": 2
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 7
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 15,
+     "symbol": "L2",
+     "count": 5,
+     "win": 4500,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 60,
+      "lineMult": 15,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 3
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 1
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 4
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 7
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 17,
+     "symbol": "H4",
+     "count": 5,
+     "win": 12000,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 150,
+      "lineMult": 16,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 4
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 1
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 4
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 7
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 19,
+     "symbol": "H4",
+     "count": 5,
+     "win": 9000,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 2
+      },
+      {
+       "reel": 2,
+       "row": 3
+      },
+      {
+       "reel": 3,
+       "row": 2
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 150,
+      "lineMult": 12,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 3
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 2,
+        "value": 2
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 7
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 20,
+     "symbol": "L2",
+     "count": 5,
+     "win": 3600,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 2
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 2
+      }
+     ],
+     "meta": {
+      "basePay": 60,
+      "lineMult": 12,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 1
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 4
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 7
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "index": 42,
+   "type": "updateStepWin",
+   "amount": 64250
+  },
+  {
+   "index": 43,
+   "type": "wildGrow",
+   "step": 0,
+   "changes": [
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 0,
+     "from": 4,
+     "to": 5
+    },
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 1,
+     "from": 3,
+     "to": 4
+    },
+    {
+     "kind": "single",
+     "reel": 1,
+     "row": 1,
+     "from": 1,
+     "to": 2
+    },
+    {
+     "kind": "single",
+     "reel": 3,
+     "row": 0,
+     "from": 1,
+     "to": 2
+    },
+    {
+     "kind": "single",
+     "reel": 3,
+     "row": 1,
+     "from": 4,
+     "to": 5
+    },
+    {
+     "kind": "single",
+     "reel": 3,
+     "row": 2,
+     "from": 2,
+     "to": 3
+    },
+    {
+     "kind": "full",
+     "reel": 4,
+     "from": 7,
+     "to": 8
+    }
+   ]
+  },
+  {
+   "index": 44,
+   "type": "respinStart",
+   "step": 1,
+   "replace": [
+    {
+     "reel": 0,
+     "row": 2
+    },
+    {
+     "reel": 1,
+     "row": 0
+    },
+    {
+     "reel": 1,
+     "row": 2
+    },
+    {
+     "reel": 2,
+     "row": 0
+    },
+    {
+     "reel": 2,
+     "row": 1
+    },
+    {
+     "reel": 2,
+     "row": 2
+    },
+    {
+     "reel": 2,
+     "row": 3
+    }
+   ],
+   "locked": {
+    "fullReels": [
+     {
+      "reel": 4,
+      "value": 8
+     }
+    ],
+    "singles": [
+     {
+      "reel": 0,
+      "row": 0,
+      "value": 5
+     },
+     {
+      "reel": 0,
+      "row": 1,
+      "value": 4
+     },
+     {
+      "reel": 1,
+      "row": 1,
+      "value": 2
+     },
+     {
+      "reel": 3,
+      "row": 0,
+      "value": 2
+     },
+     {
+      "reel": 3,
+      "row": 1,
+      "value": 5
+     },
+     {
+      "reel": 3,
+      "row": 2,
+      "value": 3
+     }
+    ]
+   },
+   "remaining": 2
+  },
+  {
+   "index": 45,
+   "type": "respinReveal",
+   "step": 1,
+   "newSymbols": [
+    {
+     "reel": 0,
+     "row": 2,
+     "name": "L5"
+    },
+    {
+     "reel": 1,
+     "row": 0,
+     "name": "L5"
+    },
+    {
+     "reel": 1,
+     "row": 2,
+     "name": "L1"
+    },
+    {
+     "reel": 2,
+     "row": 0,
+     "name": "L2"
+    },
+    {
+     "reel": 2,
+     "row": 1,
+     "name": "L4"
+    },
+    {
+     "reel": 2,
+     "row": 2,
+     "name": "H1"
+    },
+    {
+     "reel": 2,
+     "row": 3,
+     "name": "L3"
+    }
+   ]
+  },
+  {
+   "index": 46,
+   "type": "winInfo",
+   "step": 1,
+   "totalWin": 67550,
+   "wins": [
+    {
+     "lineIndex": 2,
+     "symbol": "L4",
+     "count": 5,
+     "win": 2850,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 19,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 4
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 2
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 5
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 8
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 5,
+     "symbol": "H1",
+     "count": 5,
+     "win": 50000,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 2
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 500,
+      "lineMult": 20,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 5
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 2
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 5
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 8
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 9,
+     "symbol": "L2",
+     "count": 5,
+     "win": 6000,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 60,
+      "lineMult": 20,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 5
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 2
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 5
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 8
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 15,
+     "symbol": "L2",
+     "count": 5,
+     "win": 5700,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 60,
+      "lineMult": 19,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 4
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 2
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 5
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 8
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 17,
+     "symbol": "L4",
+     "count": 5,
+     "win": 3000,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 20,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 5
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 2
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 5
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 8
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "index": 47,
+   "type": "updateStepWin",
+   "amount": 131800
+  },
+  {
+   "index": 48,
+   "type": "wildGrow",
+   "step": 1,
+   "changes": [
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 0,
+     "from": 5,
+     "to": 6
+    },
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 1,
+     "from": 4,
+     "to": 5
+    },
+    {
+     "kind": "single",
+     "reel": 1,
+     "row": 1,
+     "from": 2,
+     "to": 3
+    },
+    {
+     "kind": "single",
+     "reel": 3,
+     "row": 1,
+     "from": 5,
+     "to": 6
+    },
+    {
+     "kind": "full",
+     "reel": 4,
+     "from": 8,
+     "to": 9
+    }
+   ]
+  },
+  {
+   "index": 49,
+   "type": "respinStart",
+   "step": 2,
+   "replace": [
+    {
+     "reel": 2,
+     "row": 0
+    },
+    {
+     "reel": 2,
+     "row": 1
+    },
+    {
+     "reel": 2,
+     "row": 2
+    }
+   ],
+   "locked": {
+    "fullReels": [
+     {
+      "reel": 4,
+      "value": 9
+     }
+    ],
+    "singles": [
+     {
+      "reel": 0,
+      "row": 0,
+      "value": 6
+     },
+     {
+      "reel": 0,
+      "row": 1,
+      "value": 5
+     },
+     {
+      "reel": 1,
+      "row": 1,
+      "value": 3
+     },
+     {
+      "reel": 3,
+      "row": 0,
+      "value": 2
+     },
+     {
+      "reel": 3,
+      "row": 1,
+      "value": 6
+     },
+     {
+      "reel": 3,
+      "row": 2,
+      "value": 3
+     }
+    ]
+   },
+   "remaining": 1
+  },
+  {
+   "index": 50,
+   "type": "respinReveal",
+   "step": 2,
+   "newSymbols": [
+    {
+     "reel": 2,
+     "row": 0,
+     "name": "L4"
+    },
+    {
+     "reel": 2,
+     "row": 1,
+     "name": "L4"
+    },
+    {
+     "reel": 2,
+     "row": 2,
+     "name": "L1"
+    }
+   ]
+  },
+  {
+   "index": 51,
+   "type": "winInfo",
+   "step": 2,
+   "totalWin": 23700,
+   "wins": [
+    {
+     "lineIndex": 2,
+     "symbol": "L4",
+     "count": 5,
+     "win": 3450,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 23,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 5
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 3
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 6
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 9
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 5,
+     "symbol": "L1",
+     "count": 5,
+     "win": 9600,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 2
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 80,
+      "lineMult": 24,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 6
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 3
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 6
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 9
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 9,
+     "symbol": "L4",
+     "count": 5,
+     "win": 3600,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 24,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 6
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 3
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 6
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 9
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 15,
+     "symbol": "L4",
+     "count": 5,
+     "win": 3450,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 23,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 5
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 3
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 6
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 9
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 17,
+     "symbol": "L4",
+     "count": 5,
+     "win": 3600,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 24,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 6
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 3
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 6
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 9
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "index": 52,
+   "type": "updateStepWin",
+   "amount": 155500
+  },
+  {
+   "index": 53,
+   "type": "wildGrow",
+   "step": 2,
+   "changes": [
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 0,
+     "from": 6,
+     "to": 7
+    },
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 1,
+     "from": 5,
+     "to": 6
+    },
+    {
+     "kind": "single",
+     "reel": 1,
+     "row": 1,
+     "from": 3,
+     "to": 4
+    },
+    {
+     "kind": "single",
+     "reel": 3,
+     "row": 1,
+     "from": 6,
+     "to": 7
+    },
+    {
+     "kind": "full",
+     "reel": 4,
+     "from": 9,
+     "to": 10
+    }
+   ]
+  },
+  {
+   "index": 54,
+   "type": "respinStart",
+   "step": 3,
+   "replace": [
+    {
+     "reel": 2,
+     "row": 0
+    },
+    {
+     "reel": 2,
+     "row": 1
+    },
+    {
+     "reel": 2,
+     "row": 2
+    }
+   ],
+   "locked": {
+    "fullReels": [
+     {
+      "reel": 4,
+      "value": 10
+     }
+    ],
+    "singles": [
+     {
+      "reel": 0,
+      "row": 0,
+      "value": 7
+     },
+     {
+      "reel": 0,
+      "row": 1,
+      "value": 6
+     },
+     {
+      "reel": 1,
+      "row": 1,
+      "value": 4
+     },
+     {
+      "reel": 3,
+      "row": 0,
+      "value": 2
+     },
+     {
+      "reel": 3,
+      "row": 1,
+      "value": 7
+     },
+     {
+      "reel": 3,
+      "row": 2,
+      "value": 3
+     }
+    ]
+   },
+   "remaining": 0
+  },
+  {
+   "index": 55,
+   "type": "respinReveal",
+   "step": 3,
+   "newSymbols": [
+    {
+     "reel": 2,
+     "row": 0,
+     "name": "L4"
+    },
+    {
+     "reel": 2,
+     "row": 1,
+     "name": "L4"
+    },
+    {
+     "reel": 2,
+     "row": 2,
+     "name": "H4"
+    }
+   ]
+  },
+  {
+   "index": 56,
+   "type": "winInfo",
+   "step": 3,
+   "totalWin": 37500,
+   "wins": [
+    {
+     "lineIndex": 2,
+     "symbol": "L4",
+     "count": 5,
+     "win": 4050,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 27,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 6
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 4
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 7
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 10
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 5,
+     "symbol": "H4",
+     "count": 5,
+     "win": 21000,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 2
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 150,
+      "lineMult": 28,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 7
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 4
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 7
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 10
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 9,
+     "symbol": "L4",
+     "count": 5,
+     "win": 4200,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 28,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 7
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 4
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 7
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 10
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 15,
+     "symbol": "L4",
+     "count": 5,
+     "win": 4050,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 27,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 6
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 4
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 7
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 10
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 17,
+     "symbol": "L4",
+     "count": 5,
+     "win": 4200,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 28,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 7
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 4
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 7
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 10
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "index": 57,
+   "type": "updateStepWin",
+   "amount": 193000
+  },
+  {
+   "index": 58,
+   "type": "wildGrow",
+   "step": 3,
+   "changes": [
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 0,
+     "from": 7,
+     "to": 8
+    },
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 1,
+     "from": 6,
+     "to": 7
+    },
+    {
+     "kind": "single",
+     "reel": 1,
+     "row": 1,
+     "from": 4,
+     "to": 5
+    },
+    {
+     "kind": "single",
+     "reel": 3,
+     "row": 1,
+     "from": 7,
+     "to": 8
+    },
+    {
+     "kind": "full",
+     "reel": 4,
+     "from": 10,
+     "to": 11
+    }
+   ]
+  },
+  {
+   "index": 59,
+   "type": "respinEnd",
+   "step": 3,
+   "reason": "maxRespins"
+  },
+  {
+   "index": 60,
+   "type": "setWin",
+   "amount": 193000,
+   "winLevel": 9
+  },
+  {
+   "index": 61,
+   "type": "setTotalWin",
+   "amount": 200950
+  },
+  {
+   "index": 62,
+   "type": "updateFreeSpin",
+   "amount": 7,
+   "total": 10,
+   "cap": 20,
+   "tier": "double_dare"
+  },
+  {
+   "index": 63,
+   "type": "reveal",
+   "board": [
+    [
+     {
+      "name": "L2"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 8
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 7
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L3"
+     },
+     {
+      "name": "L1"
+     }
+    ],
+    [
+     {
+      "name": "L2"
+     },
+     {
+      "name": "L3"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 5
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "H2"
+     },
+     {
+      "name": "L1"
+     }
+    ],
+    [
+     {
+      "name": "H4"
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "H1"
+     },
+     {
+      "name": "H1"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L3"
+     }
+    ],
+    [
+     {
+      "name": "L5"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 2
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 8
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 3
+     },
+     {
+      "name": "H3"
+     },
+     {
+      "name": "L5"
+     }
+    ],
+    [
+     {
+      "name": "L4"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 11
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 11
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 11
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 11
+     },
+     {
+      "name": "H2"
+     }
+    ]
+   ],
+   "paddingPositions": [
+    10582,
+    12941,
+    20278,
+    12744,
+    1167
+   ],
+   "gameType": "freegame",
+   "anticipation": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "locked": {
+    "fullReels": [
+     {
+      "reel": 4,
+      "value": 11
+     }
+    ],
+    "singles": [
+     {
+      "reel": 0,
+      "row": 0,
+      "value": 8
+     },
+     {
+      "reel": 0,
+      "row": 1,
+      "value": 7
+     },
+     {
+      "reel": 1,
+      "row": 1,
+      "value": 5
+     },
+     {
+      "reel": 3,
+      "row": 0,
+      "value": 2
+     },
+     {
+      "reel": 3,
+      "row": 1,
+      "value": 8
+     },
+     {
+      "reel": 3,
+      "row": 2,
+      "value": 3
+     }
+    ]
+   }
+  },
+  {
+   "index": 64,
+   "type": "winInfo",
+   "step": 0,
+   "totalWin": 252200,
+   "wins": [
+    {
+     "lineIndex": 2,
+     "symbol": "H1",
+     "count": 5,
+     "win": 77500,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 500,
+      "lineMult": 31,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 7
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 5
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 8
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 11
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 5,
+     "symbol": "H1",
+     "count": 5,
+     "win": 80000,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 2
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 500,
+      "lineMult": 32,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 8
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 5
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 8
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 11
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 9,
+     "symbol": "L5",
+     "count": 5,
+     "win": 4800,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 32,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 8
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 5
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 8
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 11
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 15,
+     "symbol": "L5",
+     "count": 5,
+     "win": 4650,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 31,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 7
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 5
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 8
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 11
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 16,
+     "symbol": "L4",
+     "count": 5,
+     "win": 2100,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 2
+      },
+      {
+       "reel": 1,
+       "row": 2
+      },
+      {
+       "reel": 2,
+       "row": 3
+      },
+      {
+       "reel": 3,
+       "row": 2
+      },
+      {
+       "reel": 4,
+       "row": 2
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 14,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 2,
+        "value": 3
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 11
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 17,
+     "symbol": "H1",
+     "count": 5,
+     "win": 80000,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 500,
+      "lineMult": 32,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 8
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 5
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 8
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 11
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 19,
+     "symbol": "L4",
+     "count": 5,
+     "win": 3150,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 2
+      },
+      {
+       "reel": 2,
+       "row": 3
+      },
+      {
+       "reel": 3,
+       "row": 2
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 21,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 7
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 2,
+        "value": 3
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 11
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "index": 65,
+   "type": "updateStepWin",
+   "amount": 252200
+  },
+  {
+   "index": 66,
+   "type": "wildGrow",
+   "step": 0,
+   "changes": [
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 0,
+     "from": 8,
+     "to": 9
+    },
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 1,
+     "from": 7,
+     "to": 8
+    },
+    {
+     "kind": "single",
+     "reel": 1,
+     "row": 1,
+     "from": 5,
+     "to": 6
+    },
+    {
+     "kind": "single",
+     "reel": 3,
+     "row": 1,
+     "from": 8,
+     "to": 9
+    },
+    {
+     "kind": "single",
+     "reel": 3,
+     "row": 2,
+     "from": 3,
+     "to": 4
+    },
+    {
+     "kind": "full",
+     "reel": 4,
+     "from": 11,
+     "to": 12
+    }
+   ]
+  },
+  {
+   "index": 67,
+   "type": "respinStart",
+   "step": 1,
+   "replace": [
+    {
+     "reel": 0,
+     "row": 2
+    },
+    {
+     "reel": 1,
+     "row": 2
+    },
+    {
+     "reel": 2,
+     "row": 0
+    },
+    {
+     "reel": 2,
+     "row": 1
+    },
+    {
+     "reel": 2,
+     "row": 2
+    },
+    {
+     "reel": 2,
+     "row": 3
+    }
+   ],
+   "locked": {
+    "fullReels": [
+     {
+      "reel": 4,
+      "value": 12
+     }
+    ],
+    "singles": [
+     {
+      "reel": 0,
+      "row": 0,
+      "value": 9
+     },
+     {
+      "reel": 0,
+      "row": 1,
+      "value": 8
+     },
+     {
+      "reel": 1,
+      "row": 1,
+      "value": 6
+     },
+     {
+      "reel": 3,
+      "row": 0,
+      "value": 2
+     },
+     {
+      "reel": 3,
+      "row": 1,
+      "value": 9
+     },
+     {
+      "reel": 3,
+      "row": 2,
+      "value": 4
+     }
+    ]
+   },
+   "remaining": 2
+  },
+  {
+   "index": 68,
+   "type": "respinReveal",
+   "step": 1,
+   "newSymbols": [
+    {
+     "reel": 0,
+     "row": 2,
+     "name": "L5"
+    },
+    {
+     "reel": 1,
+     "row": 2,
+     "name": "H2"
+    },
+    {
+     "reel": 2,
+     "row": 0,
+     "name": "L4"
+    },
+    {
+     "reel": 2,
+     "row": 1,
+     "name": "H2"
+    },
+    {
+     "reel": 2,
+     "row": 2,
+     "name": "L2"
+    },
+    {
+     "reel": 2,
+     "row": 3,
+     "name": "H4"
+    }
+   ]
+  },
+  {
+   "index": 69,
+   "type": "winInfo",
+   "step": 1,
+   "totalWin": 163950,
+   "wins": [
+    {
+     "lineIndex": 2,
+     "symbol": "H2",
+     "count": 5,
+     "win": 52500,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 300,
+      "lineMult": 35,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 8
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 6
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 9
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 12
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 5,
+     "symbol": "L2",
+     "count": 5,
+     "win": 10800,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 2
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 60,
+      "lineMult": 36,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 9
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 6
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 9
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 12
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 9,
+     "symbol": "L4",
+     "count": 5,
+     "win": 5400,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 36,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 9
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 6
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 9
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 12
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 11,
+     "symbol": "H2",
+     "count": 5,
+     "win": 36000,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 2
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 2
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 300,
+      "lineMult": 24,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 8
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 2,
+        "value": 4
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 12
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 15,
+     "symbol": "L4",
+     "count": 5,
+     "win": 5250,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 35,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 8
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 6
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 9
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 12
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 17,
+     "symbol": "H2",
+     "count": 5,
+     "win": 54000,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 300,
+      "lineMult": 36,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 9
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 6
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 9
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 12
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "index": 70,
+   "type": "updateStepWin",
+   "amount": 416150
+  },
+  {
+   "index": 71,
+   "type": "wildGrow",
+   "step": 1,
+   "changes": [
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 0,
+     "from": 9,
+     "to": 10
+    },
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 1,
+     "from": 8,
+     "to": 9
+    },
+    {
+     "kind": "single",
+     "reel": 1,
+     "row": 1,
+     "from": 6,
+     "to": 7
+    },
+    {
+     "kind": "single",
+     "reel": 3,
+     "row": 1,
+     "from": 9,
+     "to": 10
+    },
+    {
+     "kind": "single",
+     "reel": 3,
+     "row": 2,
+     "from": 4,
+     "to": 5
+    },
+    {
+     "kind": "full",
+     "reel": 4,
+     "from": 12,
+     "to": 13
+    }
+   ]
+  },
+  {
+   "index": 72,
+   "type": "respinStart",
+   "step": 2,
+   "replace": [
+    {
+     "reel": 1,
+     "row": 2
+    },
+    {
+     "reel": 2,
+     "row": 0
+    },
+    {
+     "reel": 2,
+     "row": 1
+    },
+    {
+     "reel": 2,
+     "row": 2
+    }
+   ],
+   "locked": {
+    "fullReels": [
+     {
+      "reel": 4,
+      "value": 13
+     }
+    ],
+    "singles": [
+     {
+      "reel": 0,
+      "row": 0,
+      "value": 10
+     },
+     {
+      "reel": 0,
+      "row": 1,
+      "value": 9
+     },
+     {
+      "reel": 1,
+      "row": 1,
+      "value": 7
+     },
+     {
+      "reel": 3,
+      "row": 0,
+      "value": 2
+     },
+     {
+      "reel": 3,
+      "row": 1,
+      "value": 10
+     },
+     {
+      "reel": 3,
+      "row": 2,
+      "value": 5
+     }
+    ]
+   },
+   "remaining": 1
+  },
+  {
+   "index": 73,
+   "type": "respinReveal",
+   "step": 2,
+   "newSymbols": [
+    {
+     "reel": 1,
+     "row": 2,
+     "name": "L5"
+    },
+    {
+     "reel": 2,
+     "row": 0,
+     "name": "L4"
+    },
+    {
+     "reel": 2,
+     "row": 1,
+     "name": "L3"
+    },
+    {
+     "reel": 2,
+     "row": 2,
+     "name": "L3"
+    }
+   ]
+  },
+  {
+   "index": 74,
+   "type": "winInfo",
+   "step": 2,
+   "totalWin": 40650,
+   "wins": [
+    {
+     "lineIndex": 2,
+     "symbol": "L3",
+     "count": 5,
+     "win": 7800,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 40,
+      "lineMult": 39,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 9
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 7
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 10
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 13
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 5,
+     "symbol": "L3",
+     "count": 5,
+     "win": 8000,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 2
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 40,
+      "lineMult": 40,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 10
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 7
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 10
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 13
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 9,
+     "symbol": "L4",
+     "count": 5,
+     "win": 6000,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 40,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 10
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 7
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 10
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 13
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 13,
+     "symbol": "L3",
+     "count": 5,
+     "win": 5000,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 0
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 0
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 40,
+      "lineMult": 25,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 10
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 0,
+        "value": 2
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 13
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 15,
+     "symbol": "L4",
+     "count": 5,
+     "win": 5850,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 39,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 9
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 7
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 10
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 13
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 17,
+     "symbol": "L3",
+     "count": 5,
+     "win": 8000,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 40,
+      "lineMult": 40,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 10
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 7
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 10
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 13
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "index": 75,
+   "type": "updateStepWin",
+   "amount": 456800
+  },
+  {
+   "index": 76,
+   "type": "wildGrow",
+   "step": 2,
+   "changes": [
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 0,
+     "from": 10,
+     "to": 11
+    },
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 1,
+     "from": 9,
+     "to": 10
+    },
+    {
+     "kind": "single",
+     "reel": 1,
+     "row": 1,
+     "from": 7,
+     "to": 8
+    },
+    {
+     "kind": "single",
+     "reel": 3,
+     "row": 0,
+     "from": 2,
+     "to": 3
+    },
+    {
+     "kind": "single",
+     "reel": 3,
+     "row": 1,
+     "from": 10,
+     "to": 11
+    },
+    {
+     "kind": "full",
+     "reel": 4,
+     "from": 13,
+     "to": 14
+    }
+   ]
+  },
+  {
+   "index": 77,
+   "type": "respinStart",
+   "step": 3,
+   "replace": [
+    {
+     "reel": 1,
+     "row": 0
+    },
+    {
+     "reel": 2,
+     "row": 0
+    },
+    {
+     "reel": 2,
+     "row": 1
+    },
+    {
+     "reel": 2,
+     "row": 2
+    }
+   ],
+   "locked": {
+    "fullReels": [
+     {
+      "reel": 4,
+      "value": 14
+     }
+    ],
+    "singles": [
+     {
+      "reel": 0,
+      "row": 0,
+      "value": 11
+     },
+     {
+      "reel": 0,
+      "row": 1,
+      "value": 10
+     },
+     {
+      "reel": 1,
+      "row": 1,
+      "value": 8
+     },
+     {
+      "reel": 3,
+      "row": 0,
+      "value": 3
+     },
+     {
+      "reel": 3,
+      "row": 1,
+      "value": 11
+     },
+     {
+      "reel": 3,
+      "row": 2,
+      "value": 5
+     }
+    ]
+   },
+   "remaining": 0
+  },
+  {
+   "index": 78,
+   "type": "respinReveal",
+   "step": 3,
+   "newSymbols": [
+    {
+     "reel": 1,
+     "row": 0,
+     "name": "L4"
+    },
+    {
+     "reel": 2,
+     "row": 0,
+     "name": "L2"
+    },
+    {
+     "reel": 2,
+     "row": 1,
+     "name": "L5"
+    },
+    {
+     "reel": 2,
+     "row": 2,
+     "name": "L3"
+    }
+   ]
+  },
+  {
+   "index": 79,
+   "type": "winInfo",
+   "step": 3,
+   "totalWin": 52300,
+   "wins": [
+    {
+     "lineIndex": 2,
+     "symbol": "L5",
+     "count": 5,
+     "win": 6450,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 43,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 10
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 8
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 11
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 14
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 5,
+     "symbol": "L3",
+     "count": 5,
+     "win": 8800,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 2
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 40,
+      "lineMult": 44,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 11
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 8
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 11
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 14
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 9,
+     "symbol": "L2",
+     "count": 5,
+     "win": 13200,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 60,
+      "lineMult": 44,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 11
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 8
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 11
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 14
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 11,
+     "symbol": "L5",
+     "count": 5,
+     "win": 4350,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 2
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 2
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 29,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 10
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 2,
+        "value": 5
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 14
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 15,
+     "symbol": "L2",
+     "count": 5,
+     "win": 12900,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 60,
+      "lineMult": 43,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 10
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 8
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 11
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 14
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 17,
+     "symbol": "L5",
+     "count": 5,
+     "win": 6600,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 44,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 11
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 8
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 11
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 14
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "index": 80,
+   "type": "updateStepWin",
+   "amount": 509100
+  },
+  {
+   "index": 81,
+   "type": "wildGrow",
+   "step": 3,
+   "changes": [
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 0,
+     "from": 11,
+     "to": 12
+    },
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 1,
+     "from": 10,
+     "to": 11
+    },
+    {
+     "kind": "single",
+     "reel": 1,
+     "row": 1,
+     "from": 8,
+     "to": 9
+    },
+    {
+     "kind": "single",
+     "reel": 3,
+     "row": 1,
+     "from": 11,
+     "to": 12
+    },
+    {
+     "kind": "single",
+     "reel": 3,
+     "row": 2,
+     "from": 5,
+     "to": 6
+    },
+    {
+     "kind": "full",
+     "reel": 4,
+     "from": 14,
+     "to": 15
+    }
+   ]
+  },
+  {
+   "index": 82,
+   "type": "respinEnd",
+   "step": 3,
+   "reason": "maxRespins"
+  },
+  {
+   "index": 83,
+   "type": "setWin",
+   "amount": 509100,
+   "winLevel": 9
+  },
+  {
+   "index": 84,
+   "type": "setTotalWin",
+   "amount": 710050
+  },
+  {
+   "index": 85,
+   "type": "updateFreeSpin",
+   "amount": 8,
+   "total": 10,
+   "cap": 20,
+   "tier": "double_dare"
+  },
+  {
+   "index": 86,
+   "type": "reveal",
+   "board": [
+    [
+     {
+      "name": "L2"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 12
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 11
+     },
+     {
+      "name": "L3"
+     },
+     {
+      "name": "L1"
+     },
+     {
+      "name": "L5"
+     }
+    ],
+    [
+     {
+      "name": "L1"
+     },
+     {
+      "name": "L1"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 9
+     },
+     {
+      "name": "L3"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L1"
+     }
+    ],
+    [
+     {
+      "name": "H3"
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "L3"
+     },
+     {
+      "name": "H1"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L2"
+     }
+    ],
+    [
+     {
+      "name": "L4"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 3
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 12
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 6
+     },
+     {
+      "name": "H3"
+     },
+     {
+      "name": "L2"
+     }
+    ],
+    [
+     {
+      "name": "L1"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 15
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 15
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 15
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 15
+     },
+     {
+      "name": "H1"
+     }
+    ]
+   ],
+   "paddingPositions": [
+    13309,
+    6484,
+    14489,
+    12684,
+    22307
+   ],
+   "gameType": "freegame",
+   "anticipation": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "locked": {
+    "fullReels": [
+     {
+      "reel": 4,
+      "value": 15
+     }
+    ],
+    "singles": [
+     {
+      "reel": 0,
+      "row": 0,
+      "value": 12
+     },
+     {
+      "reel": 0,
+      "row": 1,
+      "value": 11
+     },
+     {
+      "reel": 1,
+      "row": 1,
+      "value": 9
+     },
+     {
+      "reel": 3,
+      "row": 0,
+      "value": 3
+     },
+     {
+      "reel": 3,
+      "row": 1,
+      "value": 12
+     },
+     {
+      "reel": 3,
+      "row": 2,
+      "value": 6
+     }
+    ]
+   }
+  },
+  {
+   "index": 87,
+   "type": "winInfo",
+   "step": 0,
+   "totalWin": 159650,
+   "wins": [
+    {
+     "lineIndex": 2,
+     "symbol": "L3",
+     "count": 5,
+     "win": 9400,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 40,
+      "lineMult": 47,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 11
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 9
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 12
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 15
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 5,
+     "symbol": "H1",
+     "count": 5,
+     "win": 120000,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 2
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 500,
+      "lineMult": 48,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 12
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 9
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 12
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 15
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 9,
+     "symbol": "L5",
+     "count": 5,
+     "win": 7200,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 48,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 12
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 9
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 12
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 15
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 11,
+     "symbol": "L3",
+     "count": 5,
+     "win": 6400,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 2
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 2
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 40,
+      "lineMult": 32,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 11
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 2,
+        "value": 6
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 15
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 15,
+     "symbol": "L5",
+     "count": 5,
+     "win": 7050,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 47,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 11
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 9
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 12
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 15
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 17,
+     "symbol": "L3",
+     "count": 5,
+     "win": 9600,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 40,
+      "lineMult": 48,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 12
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 9
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 12
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 15
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "index": 88,
+   "type": "updateStepWin",
+   "amount": 159650
+  },
+  {
+   "index": 89,
+   "type": "wildGrow",
+   "step": 0,
+   "changes": [
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 0,
+     "from": 12,
+     "to": 13
+    },
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 1,
+     "from": 11,
+     "to": 12
+    },
+    {
+     "kind": "single",
+     "reel": 1,
+     "row": 1,
+     "from": 9,
+     "to": 10
+    },
+    {
+     "kind": "single",
+     "reel": 3,
+     "row": 1,
+     "from": 12,
+     "to": 13
+    },
+    {
+     "kind": "single",
+     "reel": 3,
+     "row": 2,
+     "from": 6,
+     "to": 7
+    },
+    {
+     "kind": "full",
+     "reel": 4,
+     "from": 15,
+     "to": 16
+    }
+   ]
+  },
+  {
+   "index": 90,
+   "type": "respinStart",
+   "step": 1,
+   "replace": [
+    {
+     "reel": 1,
+     "row": 2
+    },
+    {
+     "reel": 2,
+     "row": 0
+    },
+    {
+     "reel": 2,
+     "row": 1
+    },
+    {
+     "reel": 2,
+     "row": 2
+    }
+   ],
+   "locked": {
+    "fullReels": [
+     {
+      "reel": 4,
+      "value": 16
+     }
+    ],
+    "singles": [
+     {
+      "reel": 0,
+      "row": 0,
+      "value": 13
+     },
+     {
+      "reel": 0,
+      "row": 1,
+      "value": 12
+     },
+     {
+      "reel": 1,
+      "row": 1,
+      "value": 10
+     },
+     {
+      "reel": 3,
+      "row": 0,
+      "value": 3
+     },
+     {
+      "reel": 3,
+      "row": 1,
+      "value": 13
+     },
+     {
+      "reel": 3,
+      "row": 2,
+      "value": 7
+     }
+    ]
+   },
+   "remaining": 2
+  },
+  {
+   "index": 91,
+   "type": "respinReveal",
+   "step": 1,
+   "newSymbols": [
+    {
+     "reel": 1,
+     "row": 2,
+     "name": "L2"
+    },
+    {
+     "reel": 2,
+     "row": 0,
+     "name": "H3"
+    },
+    {
+     "reel": 2,
+     "row": 1,
+     "name": "L4"
+    },
+    {
+     "reel": 2,
+     "row": 2,
+     "name": "L4"
+    }
+   ]
+  },
+  {
+   "index": 92,
+   "type": "winInfo",
+   "step": 1,
+   "totalWin": 126250,
+   "wins": [
+    {
+     "lineIndex": 2,
+     "symbol": "L4",
+     "count": 5,
+     "win": 7650,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 51,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 12
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 10
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 13
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 16
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 5,
+     "symbol": "L4",
+     "count": 5,
+     "win": 7800,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 2
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 52,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 13
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 10
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 13
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 16
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 9,
+     "symbol": "H3",
+     "count": 5,
+     "win": 52000,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 200,
+      "lineMult": 52,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 13
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 10
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 13
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 16
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 15,
+     "symbol": "H3",
+     "count": 5,
+     "win": 51000,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 200,
+      "lineMult": 51,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 12
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 10
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 13
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 16
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 17,
+     "symbol": "L4",
+     "count": 5,
+     "win": 7800,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 52,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 13
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 10
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 13
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 16
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "index": 93,
+   "type": "updateStepWin",
+   "amount": 285900
+  },
+  {
+   "index": 94,
+   "type": "wildGrow",
+   "step": 1,
+   "changes": [
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 0,
+     "from": 13,
+     "to": 14
+    },
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 1,
+     "from": 12,
+     "to": 13
+    },
+    {
+     "kind": "single",
+     "reel": 1,
+     "row": 1,
+     "from": 10,
+     "to": 11
+    },
+    {
+     "kind": "single",
+     "reel": 3,
+     "row": 1,
+     "from": 13,
+     "to": 14
+    },
+    {
+     "kind": "full",
+     "reel": 4,
+     "from": 16,
+     "to": 17
+    }
+   ]
+  },
+  {
+   "index": 95,
+   "type": "respinStart",
+   "step": 2,
+   "replace": [
+    {
+     "reel": 2,
+     "row": 0
+    },
+    {
+     "reel": 2,
+     "row": 1
+    },
+    {
+     "reel": 2,
+     "row": 2
+    }
+   ],
+   "locked": {
+    "fullReels": [
+     {
+      "reel": 4,
+      "value": 17
+     }
+    ],
+    "singles": [
+     {
+      "reel": 0,
+      "row": 0,
+      "value": 14
+     },
+     {
+      "reel": 0,
+      "row": 1,
+      "value": 13
+     },
+     {
+      "reel": 1,
+      "row": 1,
+      "value": 11
+     },
+     {
+      "reel": 3,
+      "row": 0,
+      "value": 3
+     },
+     {
+      "reel": 3,
+      "row": 1,
+      "value": 14
+     },
+     {
+      "reel": 3,
+      "row": 2,
+      "value": 7
+     }
+    ]
+   },
+   "remaining": 1
+  },
+  {
+   "index": 96,
+   "type": "respinReveal",
+   "step": 2,
+   "newSymbols": [
+    {
+     "reel": 2,
+     "row": 0,
+     "name": "L3"
+    },
+    {
+     "reel": 2,
+     "row": 1,
+     "name": "L5"
+    },
+    {
+     "reel": 2,
+     "row": 2,
+     "name": "H1"
+    }
+   ]
+  },
+  {
+   "index": 97,
+   "type": "winInfo",
+   "step": 2,
+   "totalWin": 187250,
+   "wins": [
+    {
+     "lineIndex": 2,
+     "symbol": "L5",
+     "count": 5,
+     "win": 8250,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 55,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 13
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 11
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 14
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 17
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 5,
+     "symbol": "H1",
+     "count": 5,
+     "win": 140000,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 2
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 500,
+      "lineMult": 56,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 14
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 11
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 14
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 17
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 9,
+     "symbol": "L3",
+     "count": 5,
+     "win": 11200,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 40,
+      "lineMult": 56,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 14
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 11
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 14
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 17
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 15,
+     "symbol": "L3",
+     "count": 5,
+     "win": 11000,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 40,
+      "lineMult": 55,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 13
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 11
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 14
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 17
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 17,
+     "symbol": "L5",
+     "count": 5,
+     "win": 8400,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 56,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 14
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 11
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 14
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 17
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 20,
+     "symbol": "L3",
+     "count": 5,
+     "win": 8400,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 2
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 2
+      }
+     ],
+     "meta": {
+      "basePay": 40,
+      "lineMult": 42,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 11
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 14
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 17
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "index": 98,
+   "type": "updateStepWin",
+   "amount": 473150
+  },
+  {
+   "index": 99,
+   "type": "wildGrow",
+   "step": 2,
+   "changes": [
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 0,
+     "from": 14,
+     "to": 15
+    },
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 1,
+     "from": 13,
+     "to": 14
+    },
+    {
+     "kind": "single",
+     "reel": 1,
+     "row": 1,
+     "from": 11,
+     "to": 12
+    },
+    {
+     "kind": "single",
+     "reel": 3,
+     "row": 1,
+     "from": 14,
+     "to": 15
+    },
+    {
+     "kind": "full",
+     "reel": 4,
+     "from": 17,
+     "to": 18
+    }
+   ]
+  },
+  {
+   "index": 100,
+   "type": "respinStart",
+   "step": 3,
+   "replace": [
+    {
+     "reel": 0,
+     "row": 2
+    },
+    {
+     "reel": 2,
+     "row": 0
+    },
+    {
+     "reel": 2,
+     "row": 1
+    },
+    {
+     "reel": 2,
+     "row": 2
+    }
+   ],
+   "locked": {
+    "fullReels": [
+     {
+      "reel": 4,
+      "value": 18
+     }
+    ],
+    "singles": [
+     {
+      "reel": 0,
+      "row": 0,
+      "value": 15
+     },
+     {
+      "reel": 0,
+      "row": 1,
+      "value": 14
+     },
+     {
+      "reel": 1,
+      "row": 1,
+      "value": 12
+     },
+     {
+      "reel": 3,
+      "row": 0,
+      "value": 3
+     },
+     {
+      "reel": 3,
+      "row": 1,
+      "value": 15
+     },
+     {
+      "reel": 3,
+      "row": 2,
+      "value": 7
+     }
+    ]
+   },
+   "remaining": 0
+  },
+  {
+   "index": 101,
+   "type": "respinReveal",
+   "step": 3,
+   "newSymbols": [
+    {
+     "reel": 0,
+     "row": 2,
+     "name": "L5"
+    },
+    {
+     "reel": 2,
+     "row": 0,
+     "name": "L5"
+    },
+    {
+     "reel": 2,
+     "row": 1,
+     "name": "H3"
+    },
+    {
+     "reel": 2,
+     "row": 2,
+     "name": "L1"
+    }
+   ]
+  },
+  {
+   "index": 102,
+   "type": "winInfo",
+   "step": 3,
+   "totalWin": 167600,
+   "wins": [
+    {
+     "lineIndex": 2,
+     "symbol": "H3",
+     "count": 5,
+     "win": 59000,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 200,
+      "lineMult": 59,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 14
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 12
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 15
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 18
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 5,
+     "symbol": "L1",
+     "count": 5,
+     "win": 24000,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 2
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 80,
+      "lineMult": 60,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 15
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 12
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 15
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 18
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 9,
+     "symbol": "L5",
+     "count": 5,
+     "win": 9000,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 60,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 15
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 12
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 15
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 18
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 15,
+     "symbol": "L5",
+     "count": 5,
+     "win": 8850,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 59,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 14
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 12
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 15
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 18
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 17,
+     "symbol": "H3",
+     "count": 5,
+     "win": 60000,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 200,
+      "lineMult": 60,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 15
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 12
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 15
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 18
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 20,
+     "symbol": "L5",
+     "count": 5,
+     "win": 6750,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 2
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 2
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 45,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 12
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 15
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 18
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "index": 103,
+   "type": "updateStepWin",
+   "amount": 640750
+  },
+  {
+   "index": 104,
+   "type": "wildGrow",
+   "step": 3,
+   "changes": [
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 0,
+     "from": 15,
+     "to": 16
+    },
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 1,
+     "from": 14,
+     "to": 15
+    },
+    {
+     "kind": "single",
+     "reel": 1,
+     "row": 1,
+     "from": 12,
+     "to": 13
+    },
+    {
+     "kind": "single",
+     "reel": 3,
+     "row": 1,
+     "from": 15,
+     "to": 16
+    },
+    {
+     "kind": "full",
+     "reel": 4,
+     "from": 18,
+     "to": 19
+    }
+   ]
+  },
+  {
+   "index": 105,
+   "type": "respinEnd",
+   "step": 3,
+   "reason": "maxRespins"
+  },
+  {
+   "index": 106,
+   "type": "setWin",
+   "amount": 640750,
+   "winLevel": 9
+  },
+  {
+   "index": 107,
+   "type": "setTotalWin",
+   "amount": 1350800
+  },
+  {
+   "index": 108,
+   "type": "updateFreeSpin",
+   "amount": 9,
+   "total": 10,
+   "cap": 20,
+   "tier": "double_dare"
+  },
+  {
+   "index": 109,
+   "type": "reveal",
+   "board": [
+    [
+     {
+      "name": "H3"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 16
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 15
+     },
+     {
+      "name": "S"
+     },
+     {
+      "name": "L2"
+     },
+     {
+      "name": "L3"
+     }
+    ],
+    [
+     {
+      "name": "L1"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 13
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "L3"
+     }
+    ],
+    [
+     {
+      "name": "H3"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L3"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L2"
+     },
+     {
+      "name": "L3"
+     }
+    ],
+    [
+     {
+      "name": "H3"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 3
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 16
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 7
+     },
+     {
+      "name": "L2"
+     },
+     {
+      "name": "H2"
+     }
+    ],
+    [
+     {
+      "name": "L3"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 19
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 19
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 19
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 19
+     },
+     {
+      "name": "H4"
+     }
+    ]
+   ],
+   "paddingPositions": [
+    3098,
+    3810,
+    22925,
+    5752,
+    796
+   ],
+   "gameType": "freegame",
+   "anticipation": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "locked": {
+    "fullReels": [
+     {
+      "reel": 4,
+      "value": 19
+     }
+    ],
+    "singles": [
+     {
+      "reel": 0,
+      "row": 0,
+      "value": 16
+     },
+     {
+      "reel": 0,
+      "row": 1,
+      "value": 15
+     },
+     {
+      "reel": 1,
+      "row": 1,
+      "value": 13
+     },
+     {
+      "reel": 3,
+      "row": 0,
+      "value": 3
+     },
+     {
+      "reel": 3,
+      "row": 1,
+      "value": 16
+     },
+     {
+      "reel": 3,
+      "row": 2,
+      "value": 7
+     }
+    ]
+   }
+  },
+  {
+   "index": 110,
+   "type": "winInfo",
+   "step": 0,
+   "totalWin": 65300,
+   "wins": [
+    {
+     "lineIndex": 1,
+     "symbol": "L4",
+     "count": 5,
+     "win": 5700,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 0
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 0
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 38,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 16
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 0,
+        "value": 3
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 19
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 2,
+     "symbol": "L3",
+     "count": 5,
+     "win": 12600,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 40,
+      "lineMult": 63,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 15
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 13
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 16
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 19
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 5,
+     "symbol": "L4",
+     "count": 5,
+     "win": 9600,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 2
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 64,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 16
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 13
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 16
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 19
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 7,
+     "symbol": "L4",
+     "count": 5,
+     "win": 5550,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 0
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 0
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 37,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 15
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 0,
+        "value": 3
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 19
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 9,
+     "symbol": "L4",
+     "count": 5,
+     "win": 9600,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 64,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 16
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 13
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 16
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 19
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 15,
+     "symbol": "L4",
+     "count": 5,
+     "win": 9450,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 63,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 15
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 13
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 16
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 19
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 17,
+     "symbol": "L3",
+     "count": 5,
+     "win": 12800,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 40,
+      "lineMult": 64,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 16
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 13
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 16
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 19
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "index": 111,
+   "type": "updateStepWin",
+   "amount": 65300
+  },
+  {
+   "index": 112,
+   "type": "wildGrow",
+   "step": 0,
+   "changes": [
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 0,
+     "from": 16,
+     "to": 17
+    },
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 1,
+     "from": 15,
+     "to": 16
+    },
+    {
+     "kind": "single",
+     "reel": 1,
+     "row": 1,
+     "from": 13,
+     "to": 14
+    },
+    {
+     "kind": "single",
+     "reel": 3,
+     "row": 0,
+     "from": 3,
+     "to": 4
+    },
+    {
+     "kind": "single",
+     "reel": 3,
+     "row": 1,
+     "from": 16,
+     "to": 17
+    },
+    {
+     "kind": "full",
+     "reel": 4,
+     "from": 19,
+     "to": 20
+    }
+   ]
+  },
+  {
+   "index": 113,
+   "type": "respinStart",
+   "step": 1,
+   "replace": [
+    {
+     "reel": 1,
+     "row": 0
+    },
+    {
+     "reel": 2,
+     "row": 0
+    },
+    {
+     "reel": 2,
+     "row": 1
+    },
+    {
+     "reel": 2,
+     "row": 2
+    }
+   ],
+   "locked": {
+    "fullReels": [
+     {
+      "reel": 4,
+      "value": 20
+     }
+    ],
+    "singles": [
+     {
+      "reel": 0,
+      "row": 0,
+      "value": 17
+     },
+     {
+      "reel": 0,
+      "row": 1,
+      "value": 16
+     },
+     {
+      "reel": 1,
+      "row": 1,
+      "value": 14
+     },
+     {
+      "reel": 3,
+      "row": 0,
+      "value": 4
+     },
+     {
+      "reel": 3,
+      "row": 1,
+      "value": 17
+     },
+     {
+      "reel": 3,
+      "row": 2,
+      "value": 7
+     }
+    ]
+   },
+   "remaining": 2
+  },
+  {
+   "index": 114,
+   "type": "respinReveal",
+   "step": 1,
+   "newSymbols": [
+    {
+     "reel": 1,
+     "row": 0,
+     "name": "L4"
+    },
+    {
+     "reel": 2,
+     "row": 0,
+     "name": "L5"
+    },
+    {
+     "reel": 2,
+     "row": 1,
+     "name": "L4"
+    },
+    {
+     "reel": 2,
+     "row": 2,
+     "name": "L4"
+    }
+   ]
+  },
+  {
+   "index": 115,
+   "type": "winInfo",
+   "step": 1,
+   "totalWin": 63300,
+   "wins": [
+    {
+     "lineIndex": 2,
+     "symbol": "L4",
+     "count": 5,
+     "win": 10050,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 67,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 16
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 14
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 17
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 20
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 5,
+     "symbol": "L4",
+     "count": 5,
+     "win": 10200,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 2
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 68,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 17
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 14
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 17
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 20
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 9,
+     "symbol": "L5",
+     "count": 5,
+     "win": 10200,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 68,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 17
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 14
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 17
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 20
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 11,
+     "symbol": "L4",
+     "count": 5,
+     "win": 6450,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 2
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 2
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 43,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 16
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 2,
+        "value": 7
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 20
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 13,
+     "symbol": "L4",
+     "count": 5,
+     "win": 6150,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 0
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 0
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 41,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 17
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 0,
+        "value": 4
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 20
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 15,
+     "symbol": "L5",
+     "count": 5,
+     "win": 10050,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 67,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 16
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 14
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 17
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 20
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 17,
+     "symbol": "L4",
+     "count": 5,
+     "win": 10200,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 68,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 17
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 14
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 17
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 20
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "index": 116,
+   "type": "updateStepWin",
+   "amount": 128600
+  },
+  {
+   "index": 117,
+   "type": "wildGrow",
+   "step": 1,
+   "changes": [
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 0,
+     "from": 17,
+     "to": 18
+    },
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 1,
+     "from": 16,
+     "to": 17
+    },
+    {
+     "kind": "single",
+     "reel": 1,
+     "row": 1,
+     "from": 14,
+     "to": 15
+    },
+    {
+     "kind": "single",
+     "reel": 3,
+     "row": 0,
+     "from": 4,
+     "to": 5
+    },
+    {
+     "kind": "single",
+     "reel": 3,
+     "row": 1,
+     "from": 17,
+     "to": 18
+    },
+    {
+     "kind": "single",
+     "reel": 3,
+     "row": 2,
+     "from": 7,
+     "to": 8
+    },
+    {
+     "kind": "full",
+     "reel": 4,
+     "from": 20,
+     "to": 21
+    }
+   ]
+  },
+  {
+   "index": 118,
+   "type": "respinStart",
+   "step": 2,
+   "replace": [
+    {
+     "reel": 1,
+     "row": 0
+    },
+    {
+     "reel": 1,
+     "row": 2
+    },
+    {
+     "reel": 2,
+     "row": 0
+    },
+    {
+     "reel": 2,
+     "row": 1
+    },
+    {
+     "reel": 2,
+     "row": 2
+    }
+   ],
+   "locked": {
+    "fullReels": [
+     {
+      "reel": 4,
+      "value": 21
+     }
+    ],
+    "singles": [
+     {
+      "reel": 0,
+      "row": 0,
+      "value": 18
+     },
+     {
+      "reel": 0,
+      "row": 1,
+      "value": 17
+     },
+     {
+      "reel": 1,
+      "row": 1,
+      "value": 15
+     },
+     {
+      "reel": 3,
+      "row": 0,
+      "value": 5
+     },
+     {
+      "reel": 3,
+      "row": 1,
+      "value": 18
+     },
+     {
+      "reel": 3,
+      "row": 2,
+      "value": 8
+     }
+    ]
+   },
+   "remaining": 1
+  },
+  {
+   "index": 119,
+   "type": "respinReveal",
+   "step": 2,
+   "newSymbols": [
+    {
+     "reel": 1,
+     "row": 0,
+     "name": "L5"
+    },
+    {
+     "reel": 1,
+     "row": 2,
+     "name": "L3"
+    },
+    {
+     "reel": 2,
+     "row": 0,
+     "name": "H4"
+    },
+    {
+     "reel": 2,
+     "row": 1,
+     "name": "L4"
+    },
+    {
+     "reel": 2,
+     "row": 2,
+     "name": "L3"
+    }
+   ]
+  },
+  {
+   "index": 120,
+   "type": "winInfo",
+   "step": 2,
+   "totalWin": 143100,
+   "wins": [
+    {
+     "lineIndex": 2,
+     "symbol": "L4",
+     "count": 5,
+     "win": 10650,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 71,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 17
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 15
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 18
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 21
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 5,
+     "symbol": "L3",
+     "count": 5,
+     "win": 14400,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 2
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 40,
+      "lineMult": 72,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 18
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 15
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 18
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 21
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 9,
+     "symbol": "H4",
+     "count": 5,
+     "win": 54000,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 150,
+      "lineMult": 72,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 18
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 15
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 18
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 21
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 15,
+     "symbol": "H4",
+     "count": 5,
+     "win": 53250,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 150,
+      "lineMult": 71,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 17
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 15
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 18
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 21
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 17,
+     "symbol": "L4",
+     "count": 5,
+     "win": 10800,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 72,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 18
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 15
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 18
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 21
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "index": 121,
+   "type": "updateStepWin",
+   "amount": 271700
+  },
+  {
+   "index": 122,
+   "type": "wildGrow",
+   "step": 2,
+   "changes": [
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 0,
+     "from": 18,
+     "to": 19
+    },
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 1,
+     "from": 17,
+     "to": 18
+    },
+    {
+     "kind": "single",
+     "reel": 1,
+     "row": 1,
+     "from": 15,
+     "to": 16
+    },
+    {
+     "kind": "single",
+     "reel": 3,
+     "row": 1,
+     "from": 18,
+     "to": 19
+    },
+    {
+     "kind": "full",
+     "reel": 4,
+     "from": 21,
+     "to": 22
+    }
+   ]
+  },
+  {
+   "index": 123,
+   "type": "respinStart",
+   "step": 3,
+   "replace": [
+    {
+     "reel": 2,
+     "row": 0
+    },
+    {
+     "reel": 2,
+     "row": 1
+    },
+    {
+     "reel": 2,
+     "row": 2
+    }
+   ],
+   "locked": {
+    "fullReels": [
+     {
+      "reel": 4,
+      "value": 22
+     }
+    ],
+    "singles": [
+     {
+      "reel": 0,
+      "row": 0,
+      "value": 19
+     },
+     {
+      "reel": 0,
+      "row": 1,
+      "value": 18
+     },
+     {
+      "reel": 1,
+      "row": 1,
+      "value": 16
+     },
+     {
+      "reel": 3,
+      "row": 0,
+      "value": 5
+     },
+     {
+      "reel": 3,
+      "row": 1,
+      "value": 19
+     },
+     {
+      "reel": 3,
+      "row": 2,
+      "value": 8
+     }
+    ]
+   },
+   "remaining": 0
+  },
+  {
+   "index": 124,
+   "type": "respinReveal",
+   "step": 3,
+   "newSymbols": [
+    {
+     "reel": 2,
+     "row": 0,
+     "name": "W",
+     "wild": true,
+     "multiplier": 1
+    },
+    {
+     "reel": 2,
+     "row": 1,
+     "name": "H4"
+    },
+    {
+     "reel": 2,
+     "row": 2,
+     "name": "L4"
+    }
+   ]
+  },
+  {
+   "index": 125,
+   "type": "winInfo",
+   "step": 3,
+   "totalWin": 521100,
+   "wins": [
+    {
+     "lineIndex": 1,
+     "symbol": "L5",
+     "count": 5,
+     "win": 7050,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 0
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 0
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 47,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 19
+       },
+       {
+        "type": "single",
+        "reel": 2,
+        "row": 0,
+        "value": 1
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 0,
+        "value": 5
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 22
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 2,
+     "symbol": "H4",
+     "count": 5,
+     "win": 56250,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 150,
+      "lineMult": 75,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 18
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 16
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 19
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 22
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 5,
+     "symbol": "L4",
+     "count": 5,
+     "win": 11400,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 2
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 76,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 19
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 16
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 19
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 22
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 7,
+     "symbol": "L5",
+     "count": 5,
+     "win": 6900,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 0
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 0
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 46,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 18
+       },
+       {
+        "type": "single",
+        "reel": 2,
+        "row": 0,
+        "value": 1
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 0,
+        "value": 5
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 22
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 9,
+     "symbol": "W",
+     "count": 5,
+     "win": 192500,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 500,
+      "lineMult": 77,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 19
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 16
+       },
+       {
+        "type": "single",
+        "reel": 2,
+        "row": 0,
+        "value": 1
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 19
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 22
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 15,
+     "symbol": "W",
+     "count": 5,
+     "win": 190000,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 500,
+      "lineMult": 76,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 18
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 16
+       },
+       {
+        "type": "single",
+        "reel": 2,
+        "row": 0,
+        "value": 1
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 19
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 22
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 17,
+     "symbol": "H4",
+     "count": 5,
+     "win": 57000,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 150,
+      "lineMult": 76,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 19
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 16
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 19
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 22
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "index": 126,
+   "type": "updateStepWin",
+   "amount": 792800
+  },
+  {
+   "index": 127,
+   "type": "wildGrow",
+   "step": 3,
+   "changes": [
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 0,
+     "from": 19,
+     "to": 20
+    },
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 1,
+     "from": 18,
+     "to": 19
+    },
+    {
+     "kind": "single",
+     "reel": 1,
+     "row": 1,
+     "from": 16,
+     "to": 17
+    },
+    {
+     "kind": "single",
+     "reel": 2,
+     "row": 0,
+     "from": 1,
+     "to": 2
+    },
+    {
+     "kind": "single",
+     "reel": 3,
+     "row": 0,
+     "from": 5,
+     "to": 6
+    },
+    {
+     "kind": "single",
+     "reel": 3,
+     "row": 1,
+     "from": 19,
+     "to": 20
+    },
+    {
+     "kind": "full",
+     "reel": 4,
+     "from": 22,
+     "to": 23
+    }
+   ]
+  },
+  {
+   "index": 128,
+   "type": "respinEnd",
+   "step": 3,
+   "reason": "maxRespins"
+  },
+  {
+   "index": 129,
+   "type": "setWin",
+   "amount": 792800,
+   "winLevel": 9
+  },
+  {
+   "index": 130,
+   "type": "setTotalWin",
+   "amount": 2143600
+  },
+  {
+   "index": 131,
+   "type": "updateFreeSpin",
+   "amount": 10,
+   "total": 10,
+   "cap": 20,
+   "tier": "double_dare"
+  },
+  {
+   "index": 132,
+   "type": "reveal",
+   "board": [
+    [
+     {
+      "name": "L1"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 20
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 19
+     },
+     {
+      "name": "H4"
+     },
+     {
+      "name": "L2"
+     },
+     {
+      "name": "L2"
+     }
+    ],
+    [
+     {
+      "name": "L4"
+     },
+     {
+      "name": "H2"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 17
+     },
+     {
+      "name": "L1"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L1"
+     }
+    ],
+    [
+     {
+      "name": "L4"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 2
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "L3"
+     },
+     {
+      "name": "L3"
+     },
+     {
+      "name": "L2"
+     }
+    ],
+    [
+     {
+      "name": "L1"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 6
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 20
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 8
+     },
+     {
+      "name": "H3"
+     },
+     {
+      "name": "L5"
+     }
+    ],
+    [
+     {
+      "name": "S"
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 23
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 23
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 23
+     },
+     {
+      "name": "W",
+      "wild": true,
+      "multiplier": 23
+     },
+     {
+      "name": "L3"
+     }
+    ]
+   ],
+   "paddingPositions": [
+    17897,
+    14482,
+    12965,
+    1757,
+    22844
+   ],
+   "gameType": "freegame",
+   "anticipation": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "locked": {
+    "fullReels": [
+     {
+      "reel": 4,
+      "value": 23
+     }
+    ],
+    "singles": [
+     {
+      "reel": 0,
+      "row": 0,
+      "value": 20
+     },
+     {
+      "reel": 0,
+      "row": 1,
+      "value": 19
+     },
+     {
+      "reel": 1,
+      "row": 1,
+      "value": 17
+     },
+     {
+      "reel": 2,
+      "row": 0,
+      "value": 2
+     },
+     {
+      "reel": 3,
+      "row": 0,
+      "value": 6
+     },
+     {
+      "reel": 3,
+      "row": 1,
+      "value": 20
+     },
+     {
+      "reel": 3,
+      "row": 2,
+      "value": 8
+     }
+    ]
+   }
+  },
+  {
+   "index": 133,
+   "type": "winInfo",
+   "step": 0,
+   "totalWin": 645350,
+   "wins": [
+    {
+     "lineIndex": 1,
+     "symbol": "H2",
+     "count": 5,
+     "win": 76500,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 0
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 0
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 300,
+      "lineMult": 51,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 20
+       },
+       {
+        "type": "single",
+        "reel": 2,
+        "row": 0,
+        "value": 2
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 0,
+        "value": 6
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 23
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 2,
+     "symbol": "L5",
+     "count": 5,
+     "win": 11850,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 79,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 19
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 17
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 20
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 23
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 5,
+     "symbol": "L3",
+     "count": 5,
+     "win": 16000,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 2
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 40,
+      "lineMult": 80,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 20
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 17
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 20
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 23
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 7,
+     "symbol": "H2",
+     "count": 5,
+     "win": 75000,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 0
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 0
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 300,
+      "lineMult": 50,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 19
+       },
+       {
+        "type": "single",
+        "reel": 2,
+        "row": 0,
+        "value": 2
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 0,
+        "value": 6
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 23
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 9,
+     "symbol": "W",
+     "count": 5,
+     "win": 205000,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 500,
+      "lineMult": 82,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 20
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 17
+       },
+       {
+        "type": "single",
+        "reel": 2,
+        "row": 0,
+        "value": 2
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 20
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 23
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 15,
+     "symbol": "W",
+     "count": 5,
+     "win": 202500,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 500,
+      "lineMult": 81,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 19
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 17
+       },
+       {
+        "type": "single",
+        "reel": 2,
+        "row": 0,
+        "value": 2
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 20
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 23
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 17,
+     "symbol": "L5",
+     "count": 5,
+     "win": 12000,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 80,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 20
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 17
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 20
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 23
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 20,
+     "symbol": "H4",
+     "count": 5,
+     "win": 46500,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 2
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 2
+      }
+     ],
+     "meta": {
+      "basePay": 150,
+      "lineMult": 62,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 17
+       },
+       {
+        "type": "single",
+        "reel": 2,
+        "row": 0,
+        "value": 2
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 20
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 23
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "index": 134,
+   "type": "updateStepWin",
+   "amount": 645350
+  },
+  {
+   "index": 135,
+   "type": "wildGrow",
+   "step": 0,
+   "changes": [
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 0,
+     "from": 20,
+     "to": 21
+    },
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 1,
+     "from": 19,
+     "to": 20
+    },
+    {
+     "kind": "single",
+     "reel": 1,
+     "row": 1,
+     "from": 17,
+     "to": 18
+    },
+    {
+     "kind": "single",
+     "reel": 2,
+     "row": 0,
+     "from": 2,
+     "to": 3
+    },
+    {
+     "kind": "single",
+     "reel": 3,
+     "row": 0,
+     "from": 6,
+     "to": 7
+    },
+    {
+     "kind": "single",
+     "reel": 3,
+     "row": 1,
+     "from": 20,
+     "to": 21
+    },
+    {
+     "kind": "full",
+     "reel": 4,
+     "from": 23,
+     "to": 24
+    }
+   ]
+  },
+  {
+   "index": 136,
+   "type": "respinStart",
+   "step": 1,
+   "replace": [
+    {
+     "reel": 0,
+     "row": 2
+    },
+    {
+     "reel": 1,
+     "row": 0
+    },
+    {
+     "reel": 2,
+     "row": 1
+    },
+    {
+     "reel": 2,
+     "row": 2
+    }
+   ],
+   "locked": {
+    "fullReels": [
+     {
+      "reel": 4,
+      "value": 24
+     }
+    ],
+    "singles": [
+     {
+      "reel": 0,
+      "row": 0,
+      "value": 21
+     },
+     {
+      "reel": 0,
+      "row": 1,
+      "value": 20
+     },
+     {
+      "reel": 1,
+      "row": 1,
+      "value": 18
+     },
+     {
+      "reel": 2,
+      "row": 0,
+      "value": 3
+     },
+     {
+      "reel": 3,
+      "row": 0,
+      "value": 7
+     },
+     {
+      "reel": 3,
+      "row": 1,
+      "value": 21
+     },
+     {
+      "reel": 3,
+      "row": 2,
+      "value": 8
+     }
+    ]
+   },
+   "remaining": 2
+  },
+  {
+   "index": 137,
+   "type": "respinReveal",
+   "step": 1,
+   "newSymbols": [
+    {
+     "reel": 0,
+     "row": 2,
+     "name": "H1"
+    },
+    {
+     "reel": 1,
+     "row": 0,
+     "name": "L4"
+    },
+    {
+     "reel": 2,
+     "row": 1,
+     "name": "H4"
+    },
+    {
+     "reel": 2,
+     "row": 2,
+     "name": "L5"
+    }
+   ]
+  },
+  {
+   "index": 138,
+   "type": "winInfo",
+   "step": 1,
+   "totalWin": 751700,
+   "wins": [
+    {
+     "lineIndex": 1,
+     "symbol": "L4",
+     "count": 5,
+     "win": 8250,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 0
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 0
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 55,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 21
+       },
+       {
+        "type": "single",
+        "reel": 2,
+        "row": 0,
+        "value": 3
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 0,
+        "value": 7
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 24
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 2,
+     "symbol": "H4",
+     "count": 5,
+     "win": 62250,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 150,
+      "lineMult": 83,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 20
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 18
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 21
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 24
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 5,
+     "symbol": "L5",
+     "count": 5,
+     "win": 12600,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 2
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 84,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 21
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 18
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 21
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 24
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 7,
+     "symbol": "L4",
+     "count": 5,
+     "win": 8100,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 0
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 0
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 54,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 20
+       },
+       {
+        "type": "single",
+        "reel": 2,
+        "row": 0,
+        "value": 3
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 0,
+        "value": 7
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 24
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 9,
+     "symbol": "W",
+     "count": 5,
+     "win": 217500,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 500,
+      "lineMult": 87,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 21
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 18
+       },
+       {
+        "type": "single",
+        "reel": 2,
+        "row": 0,
+        "value": 3
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 21
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 24
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 15,
+     "symbol": "W",
+     "count": 5,
+     "win": 215000,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 500,
+      "lineMult": 86,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 20
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 18
+       },
+       {
+        "type": "single",
+        "reel": 2,
+        "row": 0,
+        "value": 3
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 21
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 24
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 17,
+     "symbol": "H4",
+     "count": 5,
+     "win": 63000,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 150,
+      "lineMult": 84,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 21
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 18
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 21
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 24
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 20,
+     "symbol": "H1",
+     "count": 5,
+     "win": 165000,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 2
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 2
+      }
+     ],
+     "meta": {
+      "basePay": 500,
+      "lineMult": 66,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 18
+       },
+       {
+        "type": "single",
+        "reel": 2,
+        "row": 0,
+        "value": 3
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 21
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 24
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "index": 139,
+   "type": "updateStepWin",
+   "amount": 1397050
+  },
+  {
+   "index": 140,
+   "type": "wildGrow",
+   "step": 1,
+   "changes": [
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 0,
+     "from": 21,
+     "to": 22
+    },
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 1,
+     "from": 20,
+     "to": 21
+    },
+    {
+     "kind": "single",
+     "reel": 1,
+     "row": 1,
+     "from": 18,
+     "to": 19
+    },
+    {
+     "kind": "single",
+     "reel": 2,
+     "row": 0,
+     "from": 3,
+     "to": 4
+    },
+    {
+     "kind": "single",
+     "reel": 3,
+     "row": 0,
+     "from": 7,
+     "to": 8
+    },
+    {
+     "kind": "single",
+     "reel": 3,
+     "row": 1,
+     "from": 21,
+     "to": 22
+    },
+    {
+     "kind": "full",
+     "reel": 4,
+     "from": 24,
+     "to": 25
+    }
+   ]
+  },
+  {
+   "index": 141,
+   "type": "respinStart",
+   "step": 2,
+   "replace": [
+    {
+     "reel": 0,
+     "row": 2
+    },
+    {
+     "reel": 1,
+     "row": 0
+    },
+    {
+     "reel": 2,
+     "row": 1
+    },
+    {
+     "reel": 2,
+     "row": 2
+    }
+   ],
+   "locked": {
+    "fullReels": [
+     {
+      "reel": 4,
+      "value": 25
+     }
+    ],
+    "singles": [
+     {
+      "reel": 0,
+      "row": 0,
+      "value": 22
+     },
+     {
+      "reel": 0,
+      "row": 1,
+      "value": 21
+     },
+     {
+      "reel": 1,
+      "row": 1,
+      "value": 19
+     },
+     {
+      "reel": 2,
+      "row": 0,
+      "value": 4
+     },
+     {
+      "reel": 3,
+      "row": 0,
+      "value": 8
+     },
+     {
+      "reel": 3,
+      "row": 1,
+      "value": 22
+     },
+     {
+      "reel": 3,
+      "row": 2,
+      "value": 8
+     }
+    ]
+   },
+   "remaining": 1
+  },
+  {
+   "index": 142,
+   "type": "respinReveal",
+   "step": 2,
+   "newSymbols": [
+    {
+     "reel": 0,
+     "row": 2,
+     "name": "L1"
+    },
+    {
+     "reel": 1,
+     "row": 0,
+     "name": "L2"
+    },
+    {
+     "reel": 2,
+     "row": 1,
+     "name": "L4"
+    },
+    {
+     "reel": 2,
+     "row": 2,
+     "name": "H1"
+    }
+   ]
+  },
+  {
+   "index": 143,
+   "type": "winInfo",
+   "step": 2,
+   "totalWin": 766850,
+   "wins": [
+    {
+     "lineIndex": 1,
+     "symbol": "L2",
+     "count": 5,
+     "win": 17700,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 0
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 0
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 60,
+      "lineMult": 59,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 22
+       },
+       {
+        "type": "single",
+        "reel": 2,
+        "row": 0,
+        "value": 4
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 0,
+        "value": 8
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 25
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 2,
+     "symbol": "L4",
+     "count": 5,
+     "win": 13050,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 87,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 21
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 19
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 22
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 25
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 5,
+     "symbol": "H1",
+     "count": 5,
+     "win": 220000,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 2
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 500,
+      "lineMult": 88,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 22
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 19
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 22
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 25
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 7,
+     "symbol": "L2",
+     "count": 5,
+     "win": 17400,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 0
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 0
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 60,
+      "lineMult": 58,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 21
+       },
+       {
+        "type": "single",
+        "reel": 2,
+        "row": 0,
+        "value": 4
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 0,
+        "value": 8
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 25
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 9,
+     "symbol": "W",
+     "count": 5,
+     "win": 230000,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 500,
+      "lineMult": 92,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 22
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 19
+       },
+       {
+        "type": "single",
+        "reel": 2,
+        "row": 0,
+        "value": 4
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 22
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 25
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 15,
+     "symbol": "W",
+     "count": 5,
+     "win": 227500,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 500,
+      "lineMult": 91,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 21
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 19
+       },
+       {
+        "type": "single",
+        "reel": 2,
+        "row": 0,
+        "value": 4
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 22
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 25
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 17,
+     "symbol": "L4",
+     "count": 5,
+     "win": 13200,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 30,
+      "lineMult": 88,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 22
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 19
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 22
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 25
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 20,
+     "symbol": "L1",
+     "count": 5,
+     "win": 28000,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 2
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 2
+      }
+     ],
+     "meta": {
+      "basePay": 80,
+      "lineMult": 70,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 19
+       },
+       {
+        "type": "single",
+        "reel": 2,
+        "row": 0,
+        "value": 4
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 22
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 25
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "index": 144,
+   "type": "updateStepWin",
+   "amount": 2163900
+  },
+  {
+   "index": 145,
+   "type": "wildGrow",
+   "step": 2,
+   "changes": [
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 0,
+     "from": 22,
+     "to": 23
+    },
+    {
+     "kind": "single",
+     "reel": 0,
+     "row": 1,
+     "from": 21,
+     "to": 22
+    },
+    {
+     "kind": "single",
+     "reel": 1,
+     "row": 1,
+     "from": 19,
+     "to": 20
+    },
+    {
+     "kind": "single",
+     "reel": 2,
+     "row": 0,
+     "from": 4,
+     "to": 5
+    },
+    {
+     "kind": "single",
+     "reel": 3,
+     "row": 0,
+     "from": 8,
+     "to": 9
+    },
+    {
+     "kind": "single",
+     "reel": 3,
+     "row": 1,
+     "from": 22,
+     "to": 23
+    },
+    {
+     "kind": "full",
+     "reel": 4,
+     "from": 25,
+     "to": 26
+    }
+   ]
+  },
+  {
+   "index": 146,
+   "type": "respinStart",
+   "step": 3,
+   "replace": [
+    {
+     "reel": 0,
+     "row": 2
+    },
+    {
+     "reel": 1,
+     "row": 0
+    },
+    {
+     "reel": 2,
+     "row": 1
+    },
+    {
+     "reel": 2,
+     "row": 2
+    }
+   ],
+   "locked": {
+    "fullReels": [
+     {
+      "reel": 4,
+      "value": 26
+     }
+    ],
+    "singles": [
+     {
+      "reel": 0,
+      "row": 0,
+      "value": 23
+     },
+     {
+      "reel": 0,
+      "row": 1,
+      "value": 22
+     },
+     {
+      "reel": 1,
+      "row": 1,
+      "value": 20
+     },
+     {
+      "reel": 2,
+      "row": 0,
+      "value": 5
+     },
+     {
+      "reel": 3,
+      "row": 0,
+      "value": 9
+     },
+     {
+      "reel": 3,
+      "row": 1,
+      "value": 23
+     },
+     {
+      "reel": 3,
+      "row": 2,
+      "value": 8
+     }
+    ]
+   },
+   "remaining": 0
+  },
+  {
+   "index": 147,
+   "type": "respinReveal",
+   "step": 3,
+   "newSymbols": [
+    {
+     "reel": 0,
+     "row": 2,
+     "name": "H4"
+    },
+    {
+     "reel": 1,
+     "row": 0,
+     "name": "L2"
+    },
+    {
+     "reel": 2,
+     "row": 1,
+     "name": "H4"
+    },
+    {
+     "reel": 2,
+     "row": 2,
+     "name": "L1"
+    }
+   ]
+  },
+  {
+   "index": 148,
+   "type": "winInfo",
+   "step": 3,
+   "totalWin": 749550,
+   "wins": [
+    {
+     "lineIndex": 1,
+     "symbol": "L2",
+     "count": 5,
+     "win": 18900,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 0
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 0
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 60,
+      "lineMult": 63,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 23
+       },
+       {
+        "type": "single",
+        "reel": 2,
+        "row": 0,
+        "value": 5
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 0,
+        "value": 9
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 26
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 2,
+     "symbol": "H4",
+     "count": 5,
+     "win": 68250,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 150,
+      "lineMult": 91,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 22
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 20
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 23
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 26
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 5,
+     "symbol": "L1",
+     "count": 5,
+     "win": 36800,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 2
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 80,
+      "lineMult": 92,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 23
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 20
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 23
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 26
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 7,
+     "symbol": "L2",
+     "count": 5,
+     "win": 18600,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 0
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 0
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 60,
+      "lineMult": 62,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 22
+       },
+       {
+        "type": "single",
+        "reel": 2,
+        "row": 0,
+        "value": 5
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 0,
+        "value": 9
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 26
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 9,
+     "symbol": "W",
+     "count": 5,
+     "win": 242500,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 500,
+      "lineMult": 97,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 23
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 20
+       },
+       {
+        "type": "single",
+        "reel": 2,
+        "row": 0,
+        "value": 5
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 23
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 26
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 15,
+     "symbol": "W",
+     "count": 5,
+     "win": 240000,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 500,
+      "lineMult": 96,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 1,
+        "value": 22
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 20
+       },
+       {
+        "type": "single",
+        "reel": 2,
+        "row": 0,
+        "value": 5
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 23
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 26
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 17,
+     "symbol": "H4",
+     "count": 5,
+     "win": 69000,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 0
+      }
+     ],
+     "meta": {
+      "basePay": 150,
+      "lineMult": 92,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 0,
+        "row": 0,
+        "value": 23
+       },
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 20
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 23
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 26
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 20,
+     "symbol": "H4",
+     "count": 5,
+     "win": 55500,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 2
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 4,
+       "row": 2
+      }
+     ],
+     "meta": {
+      "basePay": 150,
+      "lineMult": 74,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 1,
+        "row": 1,
+        "value": 20
+       },
+       {
+        "type": "single",
+        "reel": 2,
+        "row": 0,
+        "value": 5
+       },
+       {
+        "type": "single",
+        "reel": 3,
+        "row": 1,
+        "value": 23
+       },
+       {
+        "type": "full",
+        "reel": 4,
+        "value": 26
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "index": 149,
+   "type": "updateStepWin",
+   "amount": 2913450
+  },
+  {
+   "index": 150,
+   "type": "respinEnd",
+   "step": 3,
+   "reason": "wincap"
+  },
+  {
+   "index": 151,
+   "type": "wincap",
+   "amount": 5000000
+  },
+  {
+   "index": 152,
+   "type": "setTotalWin",
+   "amount": 5000000
+  },
+  {
+   "index": 153,
+   "type": "freeSpinEnd",
+   "amount": 5000000,
+   "winLevel": 10
+  },
+  {
+   "index": 154,
+   "type": "finalWin",
+   "amount": 5000000
+  }
+ ],
+ "criteria": "wincap",
+ "baseGameWins": 0.0,
+ "freeGameWins": 50000.0,
+ "mode": "double_dare"
+}

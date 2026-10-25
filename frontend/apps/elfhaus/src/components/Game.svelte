@@ -62,6 +62,7 @@
 <div id="replayBar" class="hidden"><span>REPLAY · <b id="replayMode"></b></span><button id="replayPlay">PLAY</button></div>
 <div id="intro" class="overlay hidden"><div class="bwFx" aria-hidden="true"></div><div class="card"><div class="tierName"></div><div class="spins"></div><button class="cont">PRESS TO CONTINUE</button><span class="ph">intro art placeholder</span></div></div>
 <div id="maxwin" class="hidden" role="dialog" aria-label="Max win"><div class="mwStage"><div class="mwBg" style={art.background_fs ? `background-image:url(${art.background_fs})` : ''}></div><div class="mwShade"></div></div><div class="mwText"><div class="mwTier">MAX WIN</div><div class="mwX">0x</div><div class="mwAmt"></div><div class="mwHint">CLICK TO CONTINUE</div></div></div>
+<div id="cardFlip" class="overlay hidden" aria-live="polite"><div class="cfStage"><div class="cfCard"></div><div class="cfName"></div></div></div>
 <div id="outro" class="overlay hidden"><div class="bwFx" aria-hidden="true"></div><div class="card"><div class="tierName">TOTAL WIN</div><div class="otAmt"></div><div class="otHint">TAP TO CONTINUE</div></div></div>
 <div id="bigwin" class="overlay hidden"><div class="bwFx" aria-hidden="true"></div><div class="bw"><div class="bwTier">BIG WIN</div><div class="bwAmt"></div><div class="bwX"></div></div></div>
 <div id="buyMenu" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="buyTitle"><div class="modal bm">

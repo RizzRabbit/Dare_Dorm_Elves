@@ -680,3 +680,10 @@ body.portrait #bigwin .bwGroup { height: auto; width: calc(122*var(--vw)); botto
 html{background:#2A2533}
 #root{position:fixed;left:0;top:0;width:var(--dw,100vw);height:var(--dh,100vh);overflow:hidden;transform-origin:0 0;
   transform:translate(var(--ox,0),var(--oy,0)) scale(var(--s,1));contain:layout size}
+/* Dare Card flip (cardflip.ts): sprite card centred over the board, outcome name pops under it */
+#cardFlip{cursor:pointer;transition:opacity .25s} #cardFlip.out{opacity:0}
+#cardFlip .cfStage{position:relative;display:flex;flex-direction:column;align-items:center;gap:calc(var(--cell)*.12)}
+#cardFlip .cfCard{position:relative;width:calc(var(--cell)*2.4);aspect-ratio:240/320}
+#cardFlip .cfName{font-family:"Cinzel";font-weight:900;font-size:calc(var(--cell)*.42);color:#FFF6FA;letter-spacing:.04em;opacity:0;text-shadow:0 2px 0 #3A0A26,0 0 14px #E255A0aa}
+#cardFlip .cfName.pop{animation:cfPop .45s cubic-bezier(.3,1.6,.5,1) forwards}
+@keyframes cfPop{0%{opacity:0;transform:scale(.6)}100%{opacity:1;transform:scale(1)}}

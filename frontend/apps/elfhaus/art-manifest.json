@@ -177,6 +177,16 @@
   "sym_L5": [
     "assets/final/fx/sym_L5.webp"
   ],
+  "S": [
+    "assets/final/webp/symbol_S_scatter.webp",
+    "assets/final/symbol_S_scatter.png"
+  ],
+  "sym_S": [
+    "assets/final/fx/sym_S.webp"
+  ],
+  "card_flip": [
+    "assets/final/fx/card_flip.webp"
+  ],
   "sym_W": [
     "assets/final/fx/sym_W.webp"
   ],

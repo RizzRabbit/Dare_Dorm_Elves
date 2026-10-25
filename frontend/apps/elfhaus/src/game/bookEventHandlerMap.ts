@@ -1,11 +1,12 @@
 // One handler per design/EVENTS.md event (ported from prototype/app.js H). Handlers only display.
-import { MAX_WIN_X, ROWS, REELS, TIER_LABEL, type Tier } from './config';
+import { MAX_WIN_X, ROWS, REELS, TIER_LABEL, SPIN_CAP as MAX_FS, type Tier } from './config';
 import { money } from './format';
-import type { BookEvent, BookEventOf, BookEventType } from './typesBookEvent';
+import type { BookEvent, BookEventOf, BookEventType, Locked, Pos } from './typesBookEvent';
 import { roxy, roxyState } from './roxy';
 import { maxWinCelebration } from './maxwin';
 import { showRespin, endRespin, hideRespin } from './respin';
-import { mxBurst, lockFx, clearSymWins } from './fx';
+import { mxBurst, lockFx, clearSymWins, symLand, symWin } from './fx';
+import { cardFlip } from './cardflip';
 import { timing, isSpinning, startSpin, markStopped, sinceStart, sleep, spinCells, stopReel } from './reels';
 import { $, S, k, bet, wait, banner, toast, hideToast, bigWin, setWinMeter, clearLines, renderCell, renderOverlays, cellEl, setGem, ovMx, symHTML } from './ui';
 import { playWins } from './winlines';
@@ -14,9 +15,23 @@ import { featOpen, featPop, featClose } from './featfx';
 import { countTo, countMs, setAmount, skipCounts } from './countup';
 import { grab, combineInto } from './combine';
 
+const scattersOnBoard = (): Pos[] => S.sym.flatMap((col, reel) => col.map((n, row) => ({ reel, row, n }))).filter((c) => c.n === 'S').map(({ reel, row }) => ({ reel, row }));
 const TL = (t: Tier) => TIER_LABEL[t].toUpperCase();
 const setFsTotal = (n: number) => { const el = $('#fsCount'); el.textContent = el.textContent!.replace(/\/ \d+/, '/ ' + n); };
 const showFsBar = () => { S.inBonus = true; document.body.classList.add('inBonus'); $('#fsBar').classList.remove('hidden'); };
+/** Scatter highlight: the Dare Cards play their win loop, everything else dims. */
+async function showScatters(ps: Pos[], ms: number) {
+	if (!ps.length) return;
+	const on = new Set(ps.map((p) => k(p.reel, p.row)));
+	for (let r = 0; r < REELS; r++) for (let row = 0; row < ROWS; row++) cellEl(r, row).classList.toggle('dim', !on.has(k(r, row)));
+	ps.forEach((p) => { const c = cellEl(p.reel, p.row); c.classList.add('win'); symWin(c); });
+	await wait(S.turbo ? ms / 2 : ms);
+}
+const unScatter = () => { document.querySelectorAll('.cell').forEach((c) => c.classList.remove('win', 'dim')); clearSymWins(); };
+/** Wilds that stay for the bonus: lock them in place on the current board (no re-render, so nothing jumps). */
+function lockCarried(l: Locked) {
+	l.singles.forEach((s) => { const c = cellEl(s.reel, s.row); if (!c.classList.contains('locked')) { c.classList.add('locked'); lockFx(c); } });
+}
 export const endBonusUi = () => { document.body.classList.remove('inBonus'); $('#fsBar').classList.add('hidden'); $('#intro').classList.add('hidden'); S.inBonus = false; };
 
 type Handlers = { [T in BookEventType]: (ev: BookEventOf<T>) => Promise<void> };
@@ -53,6 +68,7 @@ export const bookEventHandlerMap: Handlers = {
 					renderCell(r, row, null);
 					cellEl(r, row).classList.toggle('locked', locked);
 					if (!locked && !fullLocked.has(r) && S.sym[r][row] === 'W') wildLand(cellEl(r, row));
+					else if (S.sym[r][row] === 'S') symLand(cellEl(r, row));
 				}
 			}));
 		}
@@ -128,7 +144,7 @@ export const bookEventHandlerMap: Handlers = {
 			if (i) at += T.gap;
 			const rows = ev.newSymbols.filter((s) => s.reel === r).map((s) => s.row);
 			const finals = Array.from({ length: ROWS }, (_, row) => symHTML(S.sym[r][row], S.vals.get(k(r, row))));
-			return stopReel(r, at, finals, () => rows.forEach((row) => { renderCell(r, row, null); if (S.sym[r][row] === 'W') wildLand(cellEl(r, row)); }));
+			return stopReel(r, at, finals, () => rows.forEach((row) => { renderCell(r, row, null); if (S.sym[r][row] === 'W') wildLand(cellEl(r, row)); else if (S.sym[r][row] === 'S') symLand(cellEl(r, row)); }));
 		}));
 		markStopped();
 		await sleep(T.land);
@@ -139,8 +155,17 @@ export const bookEventHandlerMap: Handlers = {
 	},
 	async setWin(ev) { const x = ev.amount / 100; if (x >= 10 && x < MAX_WIN_X) await bigWin(x); },
 	async setTotalWin(ev) { const x = Math.min(ev.amount / 100, MAX_WIN_X); setWinMeter(x); S.roundBase = x; },
+	async cardFlip(ev) {
+		await showScatters(scattersOnBoard(), 900);
+		unScatter(); roxy('excited');
+		await cardFlip(ev.result);
+	},
 	async freeSpinTrigger(ev) {
 		hideToast(); roxy('excited');
+		// the trigger scatters light up on the board, the wilds that stay lock in place (Dare carries nothing);
+		// the board itself is never cleared or re-rendered, so a Mystery bonus continues on the Mystery board
+		await showScatters(ev.scatters, 1100);
+		lockCarried(ev.carried);
 		const I = $('#intro');
 		(I.querySelector('.tierName') as HTMLElement).textContent = TL(ev.tier) + '!';
 		(I.querySelector('.spins') as HTMLElement).textContent = `${ev.totalFs} FREE SPINS`;
@@ -148,9 +173,22 @@ export const bookEventHandlerMap: Handlers = {
 		const fx = I.querySelector<HTMLElement>('.bwFx'); featOpen(fx); featPop(I.querySelector('.tierName'));
 		// brief and skippable: a tap anywhere on the overlay continues
 		await Promise.race([wait(S.turbo ? 1400 : 2600), new Promise<void>((res) => (I.onclick = () => res()))]);
-		I.onclick = null; I.classList.add('hidden'); featClose(fx);
+		I.onclick = null; I.classList.add('hidden'); featClose(fx); unScatter();
 		showFsBar();
 		$('#fsTier').textContent = TL(ev.tier); $('#fsCount').textContent = `FREE SPIN 0 / ${ev.totalFs}`;
+	},
+	async guaranteedStacks(ev) {
+		// Triple Dare / Epic: the missing full-reel wilds grow in on their reels; carried singles there fly into them
+		for (const st of ev.stacks) {
+			const flying = grab(st.absorbed.map((a) => cellEl(st.reel, a.row).querySelector<HTMLElement>('.mx')));
+			S.full.set(st.reel, st.value);
+			for (let row = 0; row < ROWS; row++) { S.vals.delete(k(st.reel, row)); cellEl(st.reel, row).style.visibility = 'hidden'; }
+			renderOverlays(st.reel);
+			wfExpand(document.querySelector<HTMLElement>(`.ov.full[data-reel="${st.reel}"]`));
+			await combineInto(flying, ovMx(st.reel));
+			await wait(S.turbo ? 150 : 350);
+		}
+		lockCarried(ev.locked);
 	},
 	async updateFreeSpin(ev) {
 		showFsBar();
@@ -159,13 +197,10 @@ export const bookEventHandlerMap: Handlers = {
 		await wait(250);
 	},
 	async freeSpinRetrigger(ev) {
-		if (ev.addedFs) banner(`+${ev.addedFs} SPINS`, 1300);
-		setFsTotal(ev.totalFs); await wait(ev.addedFs ? 900 : 200);
-	},
-	async bonusUpgrade(ev) {
-		hideToast();
-		banner(`${TL(ev.to)} +${ev.spinsAdded} SPINS`, 1800);
-		$('#fsTier').textContent = TL(ev.to); setFsTotal(ev.totalFs); await wait(1400);
+		// 2 Dare Cards = +2, 3+ = +5, up to the 20-spin cap
+		const hl = showScatters(ev.scatters, 900);
+		banner(ev.addedFs ? `+${ev.addedFs} SPINS` : `MAX ${MAX_FS} SPINS`, 1300);
+		setFsTotal(ev.totalFs); await hl; unScatter(); await wait(200);
 	},
 	async freeSpinEnd(ev) {
 		// outro: TOTAL WIN counts up over a burst + confetti; tap = jump to the amount, tap again (or wait) = close

@@ -17,7 +17,7 @@ export function loadAllFx(track: <T>(p: Promise<T>) => Promise<T>) {
 
 // ---------- symbols (scripts/sprites/gen_symbols.py: sheet sym_<S> with land / win / idle) ----------
 const symOf = (cell: Element) => cell.querySelector<HTMLElement>('.sym');
-const symName = (cell: Element) => [...(symOf(cell)?.classList || [])].find((c) => /^(H\d|L\d|W)$/.test(c)) || '';
+const symName = (cell: Element) => [...(symOf(cell)?.classList || [])].find((c) => /^(H\d|L\d|W|S)$/.test(c)) || '';
 /** Wild idle loop (random phase so neighbouring wilds don't breathe in sync). */
 export function symIdle(cell: HTMLElement) {
 	const sym = symOf(cell); if (!sym || symName(cell) !== 'W' || !hasSheet('sym_W') || sym.querySelector('canvas.fxIdle')) return;
@@ -29,6 +29,12 @@ export function symWin(cell: HTMLElement) {
 	play('sym_' + n, 'win', sym, { cls: 'fxFill symFx fxWin' });
 	cell.classList.add('sprWin');
 	return true;
+}
+/** Scatter land: the Dare Card's own land sheet (squash-pop + ring flash + sparkles); the only symbol with one. */
+export function symLand(cell: HTMLElement) {
+	const sym = symOf(cell); if (!sym || symName(cell) !== 'S' || !hasSheet('sym_S')) return;
+	sym.querySelectorAll('canvas.fxLand').forEach((c) => c.remove());
+	play('sym_S', 'land', sym, { cls: 'fxFill symFx fxLand', onEnd: () => sym.querySelectorAll('canvas.fxLand').forEach((c) => c.remove()) });
 }
 export function clearSymWins() {
 	document.querySelectorAll('canvas.fxWin').forEach((c) => c.remove());

@@ -32,14 +32,5 @@ if (set) {
 		break;
 	}
 }
-// Buy prices decided ahead of the math rebuild (price-override.json). Until the new publish files carry them, these win
-// over the index; the old RTP was measured at the old prices, so it is dropped for any mode repriced here.
-const PRICE_OVERRIDE = Object.fromEntries(Object.entries(JSON.parse(readFileSync(join(app, 'price-override.json'), 'utf8'))).filter(([k]) => !k.startsWith('_')));
-const repriced = [];
-for (const [k, cost] of Object.entries(PRICE_OVERRIDE)) {
-	if (!modes[k] || modes[k].cost === cost) continue;
-	modes[k].cost = cost; modes[k].rtp = null; repriced.push(k);
-}
-if (repriced.length) source += ` + PRICE_OVERRIDE (${repriced.join(', ')})`;
 writeFileSync(join(app, 'src/game/modes.generated.json'), JSON.stringify({ source, modes }, null, 1) + '\n');
 console.log('modes:', source);

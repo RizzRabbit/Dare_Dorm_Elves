@@ -20,10 +20,11 @@ export type BookEvent =
 	| B<'respinEnd', { step: number; reason: 'noConnection' | 'maxRespins' | 'wincap' }>
 	| B<'setWin', { amount: number; winLevel: number }>
 	| B<'setTotalWin', { amount: number }>
-	| B<'freeSpinTrigger', { tier: Tier; totalFs: number; cap: number; carried: Locked; source: 'natural' | 'buy' | 'mystery' }>
+	| B<'cardFlip', { odds: Record<string, number>; result: 'triple_dare' | 'hidden' }>
+	| B<'freeSpinTrigger', { tier: Tier; totalFs: number; cap: number; carried: Locked; scatters: Pos[]; source: 'natural' | 'buy' | 'mystery' }>
+	| B<'guaranteedStacks', { tier: Tier; stacks: { reel: number; value: number; absorbed: { row: number; value: number }[] }[]; locked: Locked }>
 	| B<'updateFreeSpin', { amount: number; total: number; cap: number; tier?: Tier }>
-	| B<'freeSpinRetrigger', { newStacks: number[]; addedFs: number; totalFs: number; capped: boolean }>
-	| B<'bonusUpgrade', { from: Tier; to: Tier; spinsAdded: number; totalFs: number; stackReel: number; locked: Locked }>
+	| B<'freeSpinRetrigger', { scatters: Pos[]; count: number; addedFs: number; totalFs: number; capped: boolean }>
 	| B<'freeSpinEnd', { amount: number; winLevel: number }>
 	| B<'mysteryStart', { odds: Record<string, number> }>
 	| B<'mysteryResult', { outcome: 'none' | Tier }>

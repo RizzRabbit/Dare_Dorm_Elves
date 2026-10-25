@@ -1,85 +1,59 @@
 {
- "id": "mystery_none",
- "mode": "mystery",
- "payoutMultiplier": 15,
+ "id": 1,
+ "payoutMultiplier": 80,
  "events": [
   {
+   "index": 0,
    "type": "mysteryStart",
    "odds": {
     "none": 50,
     "double_dare": 37,
     "triple_dare": 10,
     "hidden": 3
-   },
-   "index": 0
+   }
   },
   {
+   "index": 1,
    "type": "reveal",
    "board": [
     [
      {
+      "name": "L2"
+     },
+     {
       "name": "L5"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "S"
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "L5"
+     }
+    ],
+    [
+     {
+      "name": "L3"
+     },
+     {
+      "name": "L3"
+     },
+     {
+      "name": "L5"
+     },
+     {
+      "name": "S"
+     },
+     {
+      "name": "L2"
      },
      {
       "name": "H1"
-     },
-     {
-      "name": "W",
-      "wild": true,
-      "multiplier": 1
-     },
-     {
-      "name": "W",
-      "wild": true,
-      "multiplier": 1
-     },
-     {
-      "name": "W",
-      "wild": true,
-      "multiplier": 1
-     },
-     {
-      "name": "L2"
-     }
-    ],
-    [
-     {
-      "name": "L5"
-     },
-     {
-      "name": "L5"
-     },
-     {
-      "name": "L3"
-     },
-     {
-      "name": "L5"
-     },
-     {
-      "name": "H2"
-     },
-     {
-      "name": "H3"
-     }
-    ],
-    [
-     {
-      "name": "L3"
-     },
-     {
-      "name": "L5"
-     },
-     {
-      "name": "L2"
-     },
-     {
-      "name": "L2"
-     },
-     {
-      "name": "L1"
-     },
-     {
-      "name": "L4"
      }
     ],
     [
@@ -87,13 +61,13 @@
       "name": "L4"
      },
      {
-      "name": "L2"
-     },
-     {
-      "name": "L2"
+      "name": "L5"
      },
      {
       "name": "L5"
+     },
+     {
+      "name": "L4"
      },
      {
       "name": "H2"
@@ -104,185 +78,259 @@
     ],
     [
      {
+      "name": "H2"
+     },
+     {
       "name": "H3"
      },
      {
+      "name": "W",
+      "wild": true,
+      "multiplier": 1
+     },
+     {
+      "name": "H3"
+     },
+     {
+      "name": "L2"
+     },
+     {
+      "name": "L4"
+     }
+    ],
+    [
+     {
+      "name": "L2"
+     },
+     {
+      "name": "L2"
+     },
+     {
+      "name": "L2"
+     },
+     {
       "name": "H1"
      },
      {
-      "name": "L5"
+      "name": "H3"
      },
      {
-      "name": "H1"
-     },
-     {
-      "name": "L5"
-     },
-     {
-      "name": "L3"
+      "name": "H3"
      }
     ]
    ],
    "paddingPositions": [
-    7,
-    21,
-    2,
-    29,
-    31
+    1326,
+    8484,
+    16753,
+    15922,
+    13268
    ],
    "gameType": "basegame",
    "anticipation": [
+    0,
+    0,
     1,
-    0,
-    0,
-    0,
-    0
+    1,
+    1
    ],
    "locked": {
     "fullReels": [],
     "singles": []
-   },
-   "index": 1
+   }
   },
   {
+   "index": 2,
    "type": "winInfo",
    "step": 0,
-   "totalWin": 15,
+   "totalWin": 80,
    "wins": [
     {
-     "lineIndex": 7,
+     "lineIndex": 9,
      "symbol": "L5",
-     "count": 3,
-     "win": 15,
+     "count": 4,
+     "win": 40,
      "positions": [
       {
        "reel": 0,
-       "row": 1
+       "row": 0
       },
       {
        "reel": 1,
-       "row": 0
+       "row": 1
       },
       {
        "reel": 2,
        "row": 0
+      },
+      {
+       "reel": 3,
+       "row": 1
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 8,
       "lineMult": 1,
       "connected": true,
       "groups": [
        {
         "type": "single",
-        "reel": 0,
+        "reel": 3,
+        "row": 1,
+        "value": 1
+       }
+      ]
+     }
+    },
+    {
+     "lineIndex": 17,
+     "symbol": "L5",
+     "count": 4,
+     "win": 40,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 0
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 2,
+       "row": 1
+      },
+      {
+       "reel": 3,
+       "row": 1
+      }
+     ],
+     "meta": {
+      "basePay": 8,
+      "lineMult": 1,
+      "connected": true,
+      "groups": [
+       {
+        "type": "single",
+        "reel": 3,
         "row": 1,
         "value": 1
        }
       ]
      }
     }
-   ],
-   "index": 2
+   ]
   },
   {
+   "index": 3,
    "type": "updateStepWin",
-   "amount": 15,
-   "index": 3
+   "amount": 80
   },
   {
+   "index": 4,
    "type": "wildGrow",
    "step": 0,
    "changes": [
     {
      "kind": "single",
-     "reel": 0,
+     "reel": 3,
      "row": 1,
      "from": 1,
      "to": 2
     }
-   ],
-   "index": 4
+   ]
   },
   {
+   "index": 5,
    "type": "respinStart",
    "step": 1,
    "replace": [
     {
-     "reel": 1,
+     "reel": 0,
      "row": 0
+    },
+    {
+     "reel": 1,
+     "row": 1
     },
     {
      "reel": 2,
      "row": 0
+    },
+    {
+     "reel": 2,
+     "row": 1
     }
    ],
    "locked": {
     "fullReels": [],
     "singles": [
      {
-      "reel": 0,
+      "reel": 3,
       "row": 1,
       "value": 2
-     },
-     {
-      "reel": 0,
-      "row": 2,
-      "value": 1
-     },
-     {
-      "reel": 0,
-      "row": 3,
-      "value": 1
      }
     ]
    },
-   "remaining": 2,
-   "index": 5
+   "remaining": 2
   },
   {
+   "index": 6,
    "type": "respinReveal",
    "step": 1,
    "newSymbols": [
     {
-     "reel": 1,
+     "reel": 0,
      "row": 0,
-     "name": "L2"
+     "name": "L3"
+    },
+    {
+     "reel": 1,
+     "row": 1,
+     "name": "L5"
     },
     {
      "reel": 2,
      "row": 0,
-     "name": "L1"
+     "name": "L4"
+    },
+    {
+     "reel": 2,
+     "row": 1,
+     "name": "L4"
     }
-   ],
-   "index": 6
+   ]
   },
   {
+   "index": 7,
    "type": "respinEnd",
    "step": 1,
-   "reason": "noConnection",
-   "index": 7
+   "reason": "noConnection"
   },
   {
+   "index": 8,
    "type": "setWin",
-   "amount": 15,
-   "winLevel": 1,
-   "index": 8
+   "amount": 80,
+   "winLevel": 2
   },
   {
+   "index": 9,
    "type": "setTotalWin",
-   "amount": 15,
-   "index": 9
+   "amount": 80
   },
   {
+   "index": 10,
    "type": "mysteryResult",
-   "outcome": "none",
-   "index": 10
+   "outcome": "none"
   },
   {
+   "index": 11,
    "type": "finalWin",
-   "amount": 15,
-   "index": 11
+   "amount": 80
   }
- ]
+ ],
+ "criteria": "none",
+ "baseGameWins": 0.8,
+ "freeGameWins": 0.0,
+ "mode": "mystery"
 }

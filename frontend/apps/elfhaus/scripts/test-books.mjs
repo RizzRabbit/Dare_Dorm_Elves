@@ -141,11 +141,9 @@ let priceErrors = 0;
 	let idx = null;
 	for (const f of [live, join(appDir, 'math-snapshot/index.json')]) { try { idx = JSON.parse(readFileSync(f, 'utf8')); break; } catch {} }
 	console.log('\n=== Mode prices ===');
-	const ovr = JSON.parse(readFileSync(join(appDir, 'price-override.json'), 'utf8'));
 	for (const m of idx?.modes || []) {
 		const got = gen.modes?.[m.name]?.cost;
-		if (ovr[m.name] !== undefined && got === ovr[m.name] && got !== Number(m.cost)) console.log(`  OVERRIDE ${m.name} ${got}x (math index still ${m.cost}x; price-override.json)`);
-		else if (got !== Number(m.cost)) { console.error(`  MISMATCH ${m.name}: generated ${got} vs index ${m.cost}`); priceErrors++; }
+		if (got !== Number(m.cost)) { console.error(`  MISMATCH ${m.name}: generated ${got} vs index ${m.cost}`); priceErrors++; }
 		else console.log(`  OK ${m.name} ${got}x`);
 	}
 	if (!idx) { console.error('  no math index found'); priceErrors++; }
@@ -154,6 +152,21 @@ let priceErrors = 0;
 	}
 }
 
+// v2 event contract (math EVENTS.md): every book event type has a handler; no bonusUpgrade; triggers carry scatters + cap 20
+{
+	const src = readFileSync(join(appDir, 'src/game/bookEventHandlerMap.ts'), 'utf8');
+	const seen = new Set();
+	for (const f of bookFiles) {
+		const b = JSON.parse(readFileSync(join(booksDir, f), 'utf8'));
+		for (const e of b.events || b.state || []) {
+			if (!seen.has(e.type) && !new RegExp(`\\b(async )?${e.type}\\(`).test(src)) { console.error(`  no handler for ${e.type} (${f})`); failedBooks++; }
+			seen.add(e.type);
+			if (e.type === 'bonusUpgrade') { console.error(`  stale bonusUpgrade in ${f}`); failedBooks++; }
+			if (e.type === 'freeSpinTrigger' && (!Array.isArray(e.scatters) || e.cap !== 20)) { console.error(`  freeSpinTrigger without scatters/cap 20 in ${f}`); failedBooks++; }
+		}
+	}
+	console.log(`\n=== Event handlers === ${seen.size} event types covered`);
+}
 console.log(`\n=== Summary ===`);
 console.log(`Books: ${bookFiles.length - failedBooks}/${bookFiles.length} passed`);
 console.log(`Social scan: ${violations === 0 ? 'CLEAN (0 violations)' : `${violations} violations`}`);
