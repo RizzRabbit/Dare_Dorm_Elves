@@ -8,7 +8,7 @@ import { requestAuthenticate, requestBet, requestEndRound, requestReplay } from 
 // it), so every mock branch and its dynamic import are dropped from the bundle.
 import { API_AMOUNT_MULTIPLIER } from 'constants-shared/bet';
 import {
-	ANTE_COST, fmtX, BUY_MODES, CONFIRM_ABOVE_X, GAME_ID, LINES, MAX_WIN_X, MODES, MODE_DESC, MODE_LABEL, MYSTERY_ODDS, PAYTABLE,
+	ANTE_COST, fmtX, BUY_MODES, GAME_ID, LINES, MAX_WIN_X, MODES, MODE_DESC, MODE_LABEL, PAYTABLE,
 	SPIN_CAP, START_FS, SYMBOL_NAMES, VERSION, isProvisional, type ModeKey,
 } from './config';
 import { money, mult, setCurrency, setLocale, isSocialCurrency, amountStr } from './format';
@@ -275,12 +275,11 @@ function buildBuy() {
 		const m = b.dataset.m as ModeKey;
 		if (b.classList.contains('off')) return;
 		if (armed === m) { setArm(null); return; } // tap the active card again to turn it off
-		const go = () => { show('#buyConfirm', false); setArm(m); show('#buyMenu', false); };
-		if (modeCost(m) <= CONFIRM_ABOVE_X) return go();
-		$('#buyConfirmText').textContent = `${MODE_LABEL[m]} · ${money(modeCost(m) * bet())} ${isSocial() ? 'per play' : 'per spin'}`;
-		$('#buyConfirmNote').textContent = m === 'mystery' ? `Every Mystery Spin shows a 3-wild tease; the result is decided before the reveal. Odds: No bonus ${MYSTERY_ODDS.none}% · Double Dare ${MYSTERY_ODDS.double_dare}% · Triple Dare ${MYSTERY_ODDS.triple_dare}% · Hidden ${MYSTERY_ODDS.hidden}%.` : '';
-		$('#buyYes').onclick = go;
-		show('#buyConfirm', true);
+		// One tap turns a bet mode on (user, live v3): no ACTIVATE / CANCEL step. Nothing is charged here - the mode is
+		// armed for the next spin and the spin button (price shown on the strip / armTag) is the one tap that spends.
+		// Tap the armed card again, or the armTag on the spin button, to go back to base.
+		show('#buyConfirm', false); setArm(m); show('#buyMenu', false);
+		banner(`${MODE_LABEL[m].toUpperCase()} ON · ${money(modeCost(m) * bet())} ${isSocial() ? 'PER PLAY' : 'PER SPIN'}`, 1600);
 	}));
 	paintBuy();
 }
