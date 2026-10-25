@@ -105,9 +105,11 @@
     "assets/final/reel_frame.png"
   ],
   "buy_icon": [
-    "assets/final/ui/buy_icon_rizzin.svg",
-    "assets/final/ui/buy_icon_rizzin.png",
+    "assets/final/ui/buy_icon_rizzin_256.png",
     "assets/final/buy_icon.png"
+  ],
+  "buy_icon_128": [
+    "assets/final/ui/buy_icon_rizzin_128.png"
   ],
   "intro_dare": [
     "assets/final/intro_dare.jpg",

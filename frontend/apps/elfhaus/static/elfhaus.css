@@ -314,9 +314,10 @@ body.portrait #logo.art{height:clamp(40px,8vh,92px);max-width:78vw}
 }
 
 /* ---- Rizzin Games rabbit as the bonus-button icon (white solid, like the other icons) ---- */
-#buyBtn.emblem img{display:block;width:auto;height:38px;max-width:44px;object-fit:contain;margin:0 auto;pointer-events:none}
-body.portrait #buyBtn.emblem img{height:32px;max-width:36px}
-body.short #buyBtn.emblem img{height:28px;max-width:30px}
+/* user rabbit-in-chip emblem (square PNG, 128/256) */
+#buyBtn.emblem img{display:block;width:42px;height:42px;object-fit:contain;margin:0 auto;pointer-events:none}
+body.portrait #buyBtn.emblem img{width:36px;height:36px}
+body.short #buyBtn.emblem img{width:30px;height:30px}
 
 /* ---- centering / balance pass: one vertical axis, board centered between title and controls ---- */
 #stage{display:grid;grid-template-rows:minmax(0,1fr) auto minmax(0,1fr);grid-template-columns:100%;justify-items:center;align-items:center}

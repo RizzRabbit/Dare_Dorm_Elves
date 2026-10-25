@@ -40,7 +40,7 @@
 				<button id="anteBtn" class="ico toggle" aria-pressed="false" aria-label="Ante (higher bonus chance)" title="Ante"><svg viewBox="0 0 24 24"><path d="M6 13l6-6 6 6M6 19l6-6 6 6" /></svg></button>
 			</div>
 			<button id="buyBtn" class="ico emblem" aria-label="Get bonus" title="Get bonus">
-				{#if art.buy_icon}<img src={art.buy_icon} alt="" />{:else}<svg viewBox="0 0 40 40"><path class="g" d="M9 31C9 19 18 9 31 6c-2 11-8 20-18 26Z" /><path class="g" d="M13.5 26.5C17 20 22 15 27.5 11" /><path class="gf" d="M30 22l1.3 3.2 3.2 1.3-3.2 1.3L30 31l-1.3-3.2-3.2-1.3 3.2-1.3Z" /></svg>{/if}
+				{#if art.buy_icon}<img src={art.buy_icon} srcset={art.buy_icon_128 ? `${art.buy_icon_128} 128w, ${art.buy_icon} 256w` : undefined} sizes="42px" alt="" />{:else}<svg viewBox="0 0 40 40"><path class="g" d="M9 31C9 19 18 9 31 6c-2 11-8 20-18 26Z" /><path class="g" d="M13.5 26.5C17 20 22 15 27.5 11" /><path class="gf" d="M30 22l1.3 3.2 3.2 1.3-3.2 1.3L30 31l-1.3-3.2-3.2-1.3 3.2-1.3Z" /></svg>{/if}
 			</button>
 		</div>
 		<div id="bar">
