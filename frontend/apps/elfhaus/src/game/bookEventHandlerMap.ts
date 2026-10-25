@@ -10,8 +10,8 @@ import { cardFlip } from './cardflip';
 import { timing, isSpinning, startSpin, markStopped, sinceStart, sleep, spinMini, stopMini, stopReel } from './reels';
 import { $, S, k, bet, wait, banner, toast, hideToast, bigWin, setWinMeter, clearLines, renderCell, renderOverlays, cellEl, setGem, ovMx, symHTML } from './ui';
 import { playWins } from './winlines';
-import { wildLand, growGroup, wfExpand } from './wildfx';
-import { stackIn, mergeIn, clearOvWins } from './mergefx';
+import { wildLand, wfExpand } from './wildfx';
+import { stackIn, mergeIn, growIn, clearOvWins } from './mergefx';
 import { featOpen, featPop, featClose } from './featfx';
 import { countTo, countMs, setAmount, skipCounts } from './countup';
 import { grab, combineInto } from './combine';
@@ -96,8 +96,8 @@ export const bookEventHandlerMap: Handlers = {
 	},
 	async mergeGroups(ev) {
 		// adjacent stacks MULTIPLY into one number per group (SPEC: product within a group)
-		// each fresh group: anticipation → lean → hit (shockwave, burst, shake) → letters ignite → badges arc into
-		// the combined "x7 × x6 = x42" count (mergefx.ts); tap / turbo snaps to the end state
+		// each fresh group: anticipation → lean → hit (shockwave, burst, shake) → letters ignite →
+		// the per-reel corner gems recombine into the group's one gem (mergefx.ts); tap / turbo snaps to the end state
 		const fresh = ev.groups.filter((g) => !S.groups.find((o) => o.reels.join() === g.reels.join()));
 		const apply = () => { S.groups = ev.groups.map((g) => ({ reels: [...g.reels], values: [...g.values], product: g.product })); renderOverlays(false); };
 		if (!fresh.length) { apply(); return; }
@@ -124,13 +124,13 @@ export const bookEventHandlerMap: Handlers = {
 			const el = cellEl(c.reel, c.row);
 			setGem(el.querySelector('.mx'), c.to);
 		});
-		// a lone full reel bursts on its own multiplier; a merged group shows each reel's +1 then the product formula
+		// a lone full reel ticks +1 on its own corner gem (pop); a merged group splits into per-reel gems, ticks, recombines
 		const grouped = new Set<number>(); S.groups.forEach((g) => g.reels.forEach((r) => grouped.add(r)));
-		new Set(ev.changes.filter((c) => c.kind === 'full' && !grouped.has(c.reel)).map((c) => ovMx(c.reel))).forEach((mx) => mx && mxBurst(mx));
+		ev.changes.forEach((c) => { if (c.kind === 'full' && !grouped.has(c.reel)) setGem(ovMx(c.reel), c.to); });
 		const grows = S.groups.map((g) => {
 			const old = before.find((o) => o.reels === g.reels.join()); if (!old || old.product === g.product) return null;
 			const ov = [...document.querySelectorAll<HTMLElement>('.ov.merge')].find((o) => o.dataset.reels === g.reels.join());
-			return ov ? growGroup(ov, old.values, g.values, old.product, g.product) : null;
+			return ov ? growIn(ov, old.values, g.values, old.product, g.product) : null;
 		}).filter(Boolean);
 		if (grows.length) await Promise.all(grows); else await wait(650);
 	},

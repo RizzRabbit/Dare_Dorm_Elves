@@ -741,13 +741,6 @@ canvas.wlGlint{position:absolute;inset:0;width:100%;height:100%;pointer-events:n
 #sting .stLogo,#sting .stGlint{position:absolute;inset:0;width:100%;height:100%}
 #sting .stGlint canvas{position:absolute;inset:0;width:100%;height:100%}
 #sting .stGlow{position:absolute;left:50%;top:50%;width:135%;translate:-50% -50%;opacity:0;pointer-events:none}
-/* merged-group growth (wildfx.growGroup): per-reel value badges, then the product formula */
-.ov .rGrow,.ov .rGrowSum{position:absolute;z-index:6;transform:translate(-50%,-50%);opacity:0;pointer-events:none;white-space:nowrap;
-  font:900 calc(var(--cell)*.26) "Nunito";color:#FFF4FA;-webkit-text-stroke:3px #2A1830;paint-order:stroke fill;
-  background:#2A1830cc;border:2px solid #E77FB8;border-radius:calc(var(--cell)*.2);padding:.05em .4em}
-.ov .rGrow{top:40%}
-.ov .rGrow.up{border-color:#FFD2EA;color:#FFE3F2}
-.ov .rGrowSum{top:58%;left:50%;font-size:calc(var(--cell)*.3);border-color:#F7A8D2}
 /* frameless symbol set (MANIFEST 2026-10-25): clean cutouts, contain-fit, darker reel panel so the room doesn't show through */
 .sym.art{overflow:visible} .sym.art img{object-fit:contain}
 .cell.win .sym.art{border-radius:0}
@@ -765,9 +758,43 @@ canvas.wlGlint{position:absolute;inset:0;width:100%;height:100%;pointer-events:n
 .ov .ovWinO{position:absolute;inset:2px;z-index:4;pointer-events:none;opacity:0;transition:opacity .2s;border-radius:8px;
   border:3px solid #FFD2EA;box-shadow:inset 0 0 0 2px #FF5FAE,inset 0 0 18px #FF5FAEaa,0 0 0 2px #E255A0}
 .ov.win .ovWinO{opacity:1}
-.ov .rGrowSum.mSum{top:16%}
 /* win: 3D tilt toward the camera (6-8°) eased with the 1.08 pop, and a separate soft shadow that shifts with it */
 .cell.win .sym{transform:perspective(calc(var(--cell)*5)) scale(1.08) rotateX(var(--tX,6deg)) rotateY(var(--tY,0deg));transition:transform .26s cubic-bezier(.3,1.5,.5,1)}
 .cell .symSh{position:absolute;left:12%;right:12%;bottom:4%;height:22%;z-index:0;pointer-events:none;border-radius:50%;opacity:0;
   background:radial-gradient(closest-side,#1A0F20aa,#1A0F2000);transform:none;transition:opacity .22s,transform .26s cubic-bezier(.3,1.5,.5,1)}
 .cell.win .symSh{opacity:.75;transform:translate(var(--shX,0%),calc(var(--cell)*.06)) scale(1.12,1.2)}
+/* ---- legible text floor (stage.ts --tb): only on small landscape screens (phone landscape) where the single stage
+   scale shrinks text below legibility. --tb boosts HUD / win / banner text, --tbs (<=1.5) the in-cell badges,
+   --tbm (<=1.6) zooms modals. Desktop and portrait never get body.tb, so they are unchanged. ---- */
+body.tb #app #strip label{font-size:calc(13px*var(--tb))}
+body.tb #app #strip span{font-size:calc(20px*var(--tb))}
+body.tb #app #strip .m{gap:calc(6px*var(--tb))}
+body.tb .lock{font-size:calc(var(--cell)*.085*var(--tbs))}
+body.tb .wlAmt{font-size:calc(13px*var(--tb))}
+body.tb #app #stepToast{font-size:calc(22px*var(--tb));min-height:calc(32px*var(--tb))}
+body.tb:not(.portrait) #app #banner{font-size:calc(20px*var(--tb))}
+body.tb:not(.portrait) #app #fsBar{font-size:calc(20px*var(--tb))} body.tb #fsCap{font-size:calc(13px*var(--tb))}
+body.tb #autoBtn[data-n]:not([data-n=""])::after{font-size:calc(11px*var(--tb))}
+body.tb #armTag{font-size:calc(var(--sp)*.13*var(--tbs))} body.tb #autoN{font-size:calc(var(--sp)*.15*var(--tbs))}
+body.tb .spins{font-size:calc(30px*var(--tbs))} body.tb .cont{font-size:calc(15px*var(--tb));padding:calc(12px*var(--tbs)) calc(28px*var(--tbs))}
+body.tb .carried{font-size:calc(15px*var(--tb))} body.tb .otHint{font-size:calc(12px*var(--tb))}
+body.tb .bwX{font-size:calc(16px*var(--tb))} body.tb .bwAmt{font-size:calc(62px*var(--tbs))}
+body.tb .mwHint{font-size:calc(16px*var(--tb))} body.tb .mwAmt{font-size:calc(44px*var(--tbs))}
+body.tb .modal{zoom:var(--tbm);max-height:calc(90*var(--vh)/var(--tbm));max-width:calc(94*var(--vw)/var(--tbm))}
+body.tb .modal.bm{width:min(860px,calc(94*var(--vw)/var(--tbm)))}
+
+/* stack / merge sheets (stacks.ts): each canvas covers the overlay; the placeholder it replaces hides only while it is there */
+.ov canvas.stk{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+.ov canvas.stk_letters{z-index:4} .ov canvas.stk_win{z-index:2}
+.ov:has(>canvas.stk_body) .wart,.ov:has(>canvas.stk_win) .wart{visibility:hidden}
+.ov:has(>canvas.stk_letters) .mLets{display:none}
+.ov:has(>canvas.stk_win)>canvas.stk_body{opacity:0}
+
+/* ---- wild multipliers: ONE pink gem in each wild's top-left corner (cell, full reel, merged group = product).
+   --mxdx / --mxdy (ui.MX_NUDGE, cells) move it off a face if an art set needs it. A soft dark halo behind the
+   lettering keeps it readable on busy art (static; only transform / opacity animate). ---- */
+.mx{right:auto;left:calc(2px + var(--mxdx,0)*var(--cell));top:calc(2px + var(--mxdy,0)*var(--cell));transform-origin:14% 45%}
+.ov .mx{top:calc(3px + var(--mxdy,0)*var(--cell))}
+.mx::before{content:"";position:absolute;left:-10%;top:-28%;width:62%;height:156%;z-index:-2;pointer-events:none;
+  background:radial-gradient(closest-side,#2A0F24a6 30%,#2A0F2400)}
+.ov .mx.rGem{z-index:6}

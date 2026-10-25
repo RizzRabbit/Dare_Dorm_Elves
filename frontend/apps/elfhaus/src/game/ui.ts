@@ -48,41 +48,46 @@ function ensureMxDefs() {
 		`</defs></svg>`;
 	document.body.appendChild(d.firstChild!);
 }
-function mxSVG(t: string, w: number, anchor: 'end' | 'middle') {
-	const x = anchor === 'end' ? w - 5 : w / 2;
+type Anchor = 'start' | 'end' | 'middle';
+const ax = (anchor: Anchor, w: number) => (anchor === 'end' ? w - 5 : anchor === 'start' ? 5 : w / 2);
+function mxSVG(t: string, w: number, anchor: Anchor) {
+	const x = ax(anchor, w);
 	const txt = (cls: string) => `<text class="${cls}" x="${x}" y="${MX_BASE}" text-anchor="${anchor}" font-size="${MX_FS}">${t}</text>`;
 	return `<svg viewBox="0 0 ${w} ${MX_H}" aria-hidden="true">${txt('o')}${txt('i')}${txt('f')}${txt('h')}</svg>`;
 }
 /** Text span of the lettering as % of its box (data-tl / data-tr / data-cx), used to place glints and bursts. */
-function mxSpan(t: string, w: number, anchor: 'end' | 'middle') {
-	const tw = t.length * CHAR_W, x = anchor === 'end' ? w - 5 : w / 2, l = anchor === 'end' ? x - tw : x - tw / 2;
+function mxSpan(t: string, w: number, anchor: Anchor) {
+	const tw = t.length * CHAR_W, x = ax(anchor, w), l = anchor === 'end' ? x - tw : anchor === 'start' ? x : x - tw / 2;
 	const pc = (v: number) => ((v / w) * 100).toFixed(1);
 	return `data-tl="${pc(l)}" data-tr="${pc(l + tw)}" data-cx="${pc(l + tw / 2)}"`;
 }
-const CORNER_W = 150; // fits "x100" (and "x1000") right-aligned
+// Every wild's multiplier is ONE pink gem in the wild's top-left corner (single wild cell, full reel, merged group =
+// the product). Left-aligned in a 150-wide box so "x4" .. "x1000" all start at the corner. MX_NUDGE moves it per
+// art key (fractions of a cell, +x right, +y down) if an art set ever puts a face there; the current set's corners
+// are hair / ceiling / props, so all zero.
+const CORNER_W = 150;
+export const MX_NUDGE: Record<string, [number, number]> = { W: [0, 0], WF: [0, 0], WM2: [0, 0], WM3: [0, 0], WM4: [0, 0], WM5: [0, 0] };
+export const nudgeCSS = (key: string) => { const [x, y] = MX_NUDGE[key] || [0, 0]; return x || y ? `--mxdx:${x};--mxdy:${y};` : ''; };
 export function gemHTML(v: number, extra = '', style = '') {
 	ensureMxDefs();
-	return `<div class="mx${extra ? ' ' + extra : ''}" style="${style}" data-v="${v}" ${mxSpan('x' + v, CORNER_W, 'end')}>${mxSVG('x' + v, CORNER_W, 'end')}</div>`;
+	return `<div class="mx${extra ? ' ' + extra : ''}" style="${style}" data-v="${v}" ${mxSpan('x' + v, CORNER_W, 'start')}>${mxSVG('x' + v, CORNER_W, 'start')}</div>`;
 }
-/** Merged-wild total in the same lettering (smaller), e.g. "x6 × x6 = x36". */
-export function mxTotalHTML(t: string) {
-	ensureMxDefs();
-	const w = Math.round(t.length * CHAR_W * 0.92 + 16);
-	return `<div class="mx total" style="aspect-ratio:${w}/${MX_H}" ${mxSpan(t, w, 'middle')}>${mxSVG(t, w, 'middle')}</div>`;
-}
-/** Update a multiplier in place and play the burst sprite behind it. */
-export function setGem(el: Element | null, v: number) {
+/** Update a multiplier in place; by default it pops (transform only) over its burst sprite. fx=false: text only. */
+export function setGem(el: Element | null, v: number, fx = true) {
 	if (!el) return;
 	const g = el as HTMLElement, t = 'x' + v;
-	g.innerHTML = mxSVG(t, CORNER_W, 'end');
+	if (g.dataset.v === String(v) && !fx) return;
+	g.innerHTML = mxSVG(t, CORNER_W, 'start');
 	const tw = t.length * CHAR_W, pc = (n: number) => ((n / CORNER_W) * 100).toFixed(1);
-	g.dataset.v = String(v); g.dataset.tl = pc(CORNER_W - 5 - tw); g.dataset.tr = pc(CORNER_W - 5); g.dataset.cx = pc(CORNER_W - 5 - tw / 2);
+	g.dataset.v = String(v); g.dataset.tl = pc(5); g.dataset.tr = pc(5 + tw); g.dataset.cx = pc(5 + tw / 2);
+	if (!fx) return;
 	mxBurst(g);
+	g.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.32)', offset: .35 }, { transform: 'scale(1)' }], { duration: 320, easing: 'cubic-bezier(.3,1.6,.5,1)' });
 }
 export function symHTML(name: string, v?: number) {
 	if (name === 'W') {
 		const val = v || 1;
-		return `<div class="sym W${ART.W ? ' art' : ''}">${ART.W ? img('W') + winLayer('W') : `<span class="nm">WILD</span>${ph('W')}<span class="plate">WILD</span>`}</div>${gemHTML(val)}<div class="lock"><i class="lkI" style="${lockIconCSS()}"></i><span class="lkT">LOCKED</span>${DOTS}</div>`;
+		return `<div class="sym W${ART.W ? ' art' : ''}">${ART.W ? img('W') + winLayer('W') : `<span class="nm">WILD</span>${ph('W')}<span class="plate">WILD</span>`}</div>${gemHTML(val, '', nudgeCSS('W'))}<div class="lock"><i class="lkI" style="${lockIconCSS()}"></i><span class="lkT">LOCKED</span>${DOTS}</div>`;
 	}
 	const t = name[0];
 	if (ART[name]) return `<div class="sym ${t} ${name} art">${img(name)}${winLayer(name)}</div>`;
@@ -108,6 +113,9 @@ export function renderCell(r: number, row: number, cls?: string | null, delayMs 
 		if (delayMs) (d.querySelector('.sym') as HTMLElement | null)?.style.setProperty('animation-delay', delayMs + 'ms');
 	}
 }
+let ovHook: ((ov: HTMLElement) => void) | null = null;
+/** Called for every overlay after each render (stacks.ts starts the merge_idle / letters sheets there). */
+export function setOverlayHook(f: (ov: HTMLElement) => void) { ovHook = f; }
 export function renderOverlays(anim: boolean | number = false) {
 	const o = $('#overlays'); o.innerHTML = '';
 	const inGroup = new Set<number>(); S.groups.forEach((g) => g.reels.forEach((r) => inGroup.add(r)));
@@ -120,7 +128,7 @@ export function renderOverlays(anim: boolean | number = false) {
 		if (ART[key]) d.classList.add('art');
 		d.innerHTML = (ART[key] ? `<div class="wart">${img(key)}</div>`
 			: g.reels.map((_, i) => `<div class="wfph" style="left:${i * S.cell}px;width:${S.cell}px"><span>ELF ${i + 1}</span></div>`).join('') + `<div class="plate">WILD</div>`) +
-			lettersHTML(n) + `<i class="ovWinO"></i>` + gemHTML(g.product, 'stack') + `<div class="ovrd">${DOTS}</div>`;
+			lettersHTML(n) + `<i class="ovWinO"></i>` + gemHTML(g.product, 'stack', nudgeCSS(key)) + `<div class="ovrd">${DOTS}</div>`;
 		d.dataset.reels = g.reels.join(',');
 		if (!anim) d.style.animation = 'none';
 		o.appendChild(d);
@@ -131,11 +139,12 @@ export function renderOverlays(anim: boolean | number = false) {
 		d.style.left = pos(r, 0).x + 'px'; d.style.width = S.cell + 'px';
 		if (ART.WF) d.classList.add('art');
 		d.innerHTML = (ART.WF ? `<div class="wart">${img('WF')}</div>` : `<div class="wfph" style="left:0;width:100%"><span>FULL-REEL<br>WILD</span></div><div class="plate">WILD</div>`) +
-			`<i class="ovWinO"></i>` + gemHTML(v, 'stack') + `<div class="ovrd">${DOTS}</div>`;
+			`<i class="ovWinO"></i>` + gemHTML(v, 'stack', nudgeCSS('WF')) + `<div class="ovrd">${DOTS}</div>`;
 		d.dataset.reel = String(r);
 		if (anim !== r) d.style.animation = 'none';
 		o.appendChild(d);
 	});
+	if (ovHook) o.querySelectorAll<HTMLElement>('.ov').forEach((d) => ovHook!(d));
 }
 /** The multiplier shown for reel r's stack (its own full-reel wild, or the merged group it belongs to). */
 export const ovMx = (r: number) => (document.querySelector<HTMLElement>(`.ov.full[data-reel="${r}"] .mx`) ||

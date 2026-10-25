@@ -20,9 +20,10 @@ import { featOpen, featPop, featClose } from './featfx';
 import { preloadBigWinElves, bigWinElvesStart, bigWinElvesEnd } from './bigwinElves';
 import { setBigWinFx } from './ui';
 import { setSocial, isSocial, t } from './strings';
-import { $, S, ART, bet, buildCells, renderAll, renderOverlays, resetWinMeter, setWinMeter, banner, wait } from './ui';
+import { $, S, ART, bet, buildCells, renderAll, renderOverlays, setOverlayHook, resetWinMeter, setWinMeter, banner, wait } from './ui';
 import { playBookEvents, endBonusUi } from './bookEventHandlerMap';
 import { initRoxy, placeRoxy } from './roxy';
+import { initStacks, stackIdle } from './stacks';
 import { initLoader, preloadArt, track, loaderReady, hideLoader } from './loader';
 import { preloadMaxWin } from './maxwin';
 import { fitStage, toStage } from './stage';
@@ -427,6 +428,7 @@ export async function initGame() {
 	document.addEventListener('pointerdown', (e) => { if (!(e.target as Element)?.closest?.('#bigwin,#outro')) { skipCounts(); tapLines(); skipMerge(); if (!(e.target as Element)?.closest?.('#menu,#buyMenu,#autoMenu,#msg')) hurry(); } }, { capture: true, passive: true });
 	track(initRoxy(layout));
 	loadAllFx(track).then(() => renderAll());
+	setOverlayHook(stackIdle); initStacks().then(() => renderOverlays(false)); // optional stack sheets (placeholders until imported)
 	track(document.fonts?.ready ?? Promise.resolve());
 	buildCells(); S.sym = IDLE.map((c) => [...c]); S.vals = new Map([[2 * 4 + 2, 1]]);
 	wire(); layout(); setBusy(true);
