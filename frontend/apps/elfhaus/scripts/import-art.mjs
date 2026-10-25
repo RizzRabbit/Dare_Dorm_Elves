@@ -23,7 +23,7 @@ import { readdirSync, statSync, mkdirSync, copyFileSync, existsSync, rmSync, wri
 import { join, resolve, relative, dirname, basename } from 'node:path';
 const app = resolve(import.meta.dirname, '..'), repo = resolve(app, '../../..');
 const [kind, src, ...flags] = process.argv.slice(2), dry = flags.includes('--dry');
-if (!kind || !src || !existsSync(src)) { console.error('usage: import-art.mjs symbols|splash|stacks|fx|wilds|roxy|frame <dir> [--dry]'); process.exit(1); }
+if (!kind || !src || !existsSync(src)) { console.error('usage: import-art.mjs symbols|splash|stacks|fx|wilds|roxy|frame <dir> [--dry] [--force]'); process.exit(1); }
 const walk = (d) => readdirSync(d).flatMap((f) => { const p = join(d, f); return statSync(p).isDirectory() ? walk(p) : [p]; });
 let n = 0;
 const cp = (from, to) => { n++; console.log(`${dry ? '[dry] ' : ''}${relative(src, from)} -> ${relative(repo, to)}`); if (!dry) { mkdirSync(dirname(to), { recursive: true }); copyFileSync(from, to); } };
@@ -42,11 +42,22 @@ if (kind === 'symbols') {
 	for (const f of walk(src)) { const b = basename(f); if (/^(panel_|splash_|sting_).*\.(webp|json)$/.test(b)) cp(f, join(dest, b)); }
 } else if (kind === 'stacks') {
 	const dest = join(app, 'static/assets/stacks'), RE = /^(stack_form|merge_join|letters_ignite|merge_idle|merge_win)_((?:WF|WM[2-5])(?:_R[1-5](?:-[1-5])?)?)(?:\.atlas)?\.(webp|json)$/;
-	const ids = new Set();
-	for (const f of walk(src)) {
+	const ids = new Set(), files = walk(src), force = flags.includes('--force');
+	// a 1-frame static (stacks_v2/dropin_static) never replaces an animated sheet (stacks_anim) with the same id: import order
+	// doesn't matter and re-running the static set after the anim set is harmless (--force overrides)
+	const frames = (j) => { try { return Object.values(JSON.parse(readFileSync(j, 'utf8')).anims || {}).reduce((a, x) => a + (x.frames?.length || 0), 0); } catch { return 0; } };
+	const keep = new Set(), held = [];
+	for (const f of files) {
+		const m = basename(f).match(RE); if (!m || m[3] !== 'json') continue;
+		const id = `${m[1]}_${m[2]}`, cur = join(dest, id + '.json');
+		if (!force && existsSync(cur) && frames(f) <= 1 && frames(cur) > 1) held.push(id); else keep.add(id);
+	}
+	if (held.length) console.log(`kept ${held.length} animated sheet(s), skipped their 1-frame statics (--force to overwrite): ${held.join(', ')}`);
+	for (const f of files) {
 		const b = basename(f), m = b.match(RE);
 		if (!m) { if (IMG.test(b)) console.log(`skip (name not in the stacks convention): ${b}`); continue; }
-		const id = `${m[1]}_${m[2]}`; cp(f, join(dest, m[3] === 'json' ? `${id}.json` : `${id}.webp`)); ids.add(id);
+		const id = `${m[1]}_${m[2]}`; if (!keep.has(id)) continue;
+		cp(f, join(dest, m[3] === 'json' ? `${id}.json` : `${id}.webp`)); ids.add(id);
 	}
 	const have = [...ids].filter((id) => dry || (existsSync(join(dest, id + '.json')) && existsSync(join(dest, id + '.webp')))).sort();
 	if (!dry) {
