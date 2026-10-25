@@ -50,6 +50,30 @@ node scripts/import-art.mjs stacks <dir>
 * **Any missing sheet keeps today's placeholder**, so sheets can land one at a time.
   Today `index.json` is `{"sheets": []}`, so everything is placeholder.
 
+## Per-reel wild expand (fx_wfexpand_R1..R5)
+```
+node scripts/import-art.mjs fx /workspace/elfhaus-restyle/out/static/art
+```
+* The `wfexpand` row of `fx_wild` bakes ONE elf (reel 1, Roxy). Per-reel sheets `fx_wfexpand_R<n>.{webp,json}` (n = 1-based reel;
+  anim `wfexpand`, sym atlas schema) are copied to `static/assets/fx/` and listed in `static/assets/fx/index.json` (`{"sheets": []}` = none).
+  The same command copies a new `fx_wild.webp` (same atlas) to its manifest source `assets/final/fx/fx_wild.webp`.
+* Runtime (`wildfx.ts`): `wfExpand(ov)` plays the overlay's reel sheet. Only the compressed bytes are fetched at start; a sheet
+  decodes on demand (`warmExpand(reel)` runs at the stack squash / before guaranteed stacks) and is freed 4 s after use, like
+  Roxy's states. If a sheet isn't decoded within 220 ms the elf frame is skipped (the shine still plays).
+  With no per-reel sheet: the elf frame is skipped when that reel's stack sheets (`merge_idle` / `stack_form`) are loaded,
+  otherwise the old `fx_wild` row plays (placeholder art only).
+
+## Wild statics: overlay placeholder + bonus-buy cards (WF, WM2..WM5)
+```
+node scripts/import-art.mjs wilds /workspace/elfhaus-restyle/out/proposed_wild_statics
+```
+* Names in: `WF.webp`, `WM2.webp`, `WM3.webp`, `WM4.webp`, `WM5.webp` (transparent is fine, same sizes: 384 x 1536 per reel).
+* `static/art/` is generated (`sync-art.mjs` copies the `art-manifest.json` sources on dev/build), so they are written to:
+  `assets/final/webp/wild_WF_fullreel.webp`, `wild_WM2_two_elves.webp`, `wild_WM3_three_elves.webp`, `wild_WM4_four_elves.webp`,
+  `wild_WM5_five_elves.webp`.
+* Cards (`game.ts` CARD_ART): Double Dare = WM2, Triple Dare = WM3, Elves Gone Wild = WF (`.bArt` cover crop on #2A2433, EGW
+  biased to the top). WM2..WM5 / WF are also the merged / full-reel overlay art while no stack sheet is loaded.
+
 ## Roxy (full-body character)
 ```
 node scripts/import-art.mjs roxy /workspace/elfhaus-roxy-p3d/out

@@ -14,7 +14,7 @@ import {
 import { money, mult, setCurrency, setLocale, isSocialCurrency, amountStr } from './format';
 import { skipCounts } from './countup';
 import { tapLines } from './winlines';
-import { startShimmer } from './wildfx';
+import { startShimmer, initWfExpand } from './wildfx';
 import { setArmedGlow, wireTapFx } from './uifx';
 import { featOpen, featPop, featClose } from './featfx';
 import { preloadBigWinElves, bigWinElvesStart, bigWinElvesEnd } from './bigwinElves';
@@ -428,7 +428,7 @@ export async function initGame() {
 	document.addEventListener('pointerdown', (e) => { if (!(e.target as Element)?.closest?.('#bigwin,#outro')) { skipCounts(); tapLines(); skipMerge(); if (!(e.target as Element)?.closest?.('#menu,#buyMenu,#autoMenu,#msg')) hurry(); } }, { capture: true, passive: true });
 	track(initRoxy(layout));
 	loadAllFx(track).then(() => renderAll());
-	setOverlayHook(stackIdle); initStacks().then(() => renderOverlays(false)); // optional stack sheets (placeholders until imported)
+	setOverlayHook(stackIdle); initStacks().then(() => renderOverlays(false)); void initWfExpand(); // optional stack / per-reel expand sheets (placeholders until imported)
 	track(document.fonts?.ready ?? Promise.resolve());
 	buildCells(); S.sym = IDLE.map((c) => [...c]); S.vals = new Map([[2 * 4 + 2, 1]]);
 	wire(); layout(); setBusy(true);

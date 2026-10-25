@@ -10,7 +10,7 @@ import { cardFlip } from './cardflip';
 import { timing, isSpinning, startSpin, markStopped, sinceStart, sleep, spinMini, stopMini, stopReel } from './reels';
 import { $, S, k, bet, wait, banner, toast, hideToast, bigWin, setWinMeter, clearLines, renderCell, renderOverlays, cellEl, setGem, ovMx, symHTML } from './ui';
 import { playWins } from './winlines';
-import { wildLand, wfExpand } from './wildfx';
+import { wildLand, wfExpand, warmExpand } from './wildfx';
 import { stackIn, mergeIn, growIn, clearOvWins } from './mergefx';
 import { featOpen, featPop, featClose } from './featfx';
 import { countTo, countMs, setAmount, skipCounts } from './countup';
@@ -193,6 +193,7 @@ export const bookEventHandlerMap: Handlers = {
 	},
 	async guaranteedStacks(ev) {
 		// Triple Dare / Epic: the missing full-reel wilds grow in on their reels; carried singles there fly into them
+		ev.stacks.forEach((st) => void warmExpand(st.reel)); // per-reel expand sheets decode while the first ones play
 		for (const st of ev.stacks) {
 			const flying = grab(st.absorbed.map((a) => cellEl(st.reel, a.row).querySelector<HTMLElement>('.mx')));
 			S.full.set(st.reel, st.value);

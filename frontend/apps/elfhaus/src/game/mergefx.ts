@@ -15,7 +15,7 @@
 // letters_ignite / merge_win play at these same beats and merge_idle loops; any sheet not there keeps its placeholder.
 import { S, $, setGem, gemHTML, ovMx, cellEl, pos } from './ui';
 import { burst } from './fx';
-import { mergeFx, stackForm, wfExpand } from './wildfx';
+import { mergeFx, stackForm, wfExpand, warmExpand } from './wildfx';
 import { grab } from './combine';
 import { toStage } from './stage';
 import { hasStack, stackOnce, stackLetters, stackWin, stackWinOff } from './stacks';
@@ -61,6 +61,7 @@ export async function stackIn(reel: number, render: () => void) {
 	try {
 		const cells = cellsOf(reel), c = S.cell;
 		const probe = document.createElement('div'); probe.className = 'ov full'; probe.dataset.reel = String(reel);
+		void warmExpand(reel); // per-reel expand sheet decodes during the squash
 		if (hasStack('stack_form', probe)) { // the sheet does the flash + build-up itself
 			render(); const ov = ovOf(reel); if (ov) { ov.style.animation = 'none'; await Promise.race([stackOnce('stack_form', ov), sw(700)]); }
 			return;
