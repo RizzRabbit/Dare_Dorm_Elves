@@ -13,8 +13,8 @@ Budget: about 10 minutes (anim build ~1 min, imports seconds, test + build ~1 mi
 
 ## 1. Pipeline fixes (once): cherry-pick from `dryrun-final`
 ```
-cd $FE && git cherry-pick 2c88dba fd709ea 477db47 <this runbook's commit>
-# 2c88dba import-art stacks guard | fd709ea dev server PORT | 477db47 egw_wm5 QA book | runbook: `git log -1 dryrun-final -- frontend/apps/elfhaus/FINAL_IMPORT.md`
+cd $FE && git cherry-pick 2c88dba fd709ea 477db47 576e609 0f992c6
+# 2c88dba import-art stacks guard | fd709ea dev server PORT | 477db47 egw_wm5 QA book | 576e609 this runbook | 0f992c6 tsc fixes for 2c88dba/fd709ea (+ runbook)
 ```
 Never cherry-pick the `DRYRUN ART` / `DRYRUN PATCHES` commits.
 
@@ -65,7 +65,7 @@ cmp frontend/apps/elfhaus/src/assets/maxwin/maxwin_title.webp /workspace/elfhaus
 ```
 cd $FE/frontend/apps/elfhaus
 pnpm test && pnpm build && du -sb build
-node $FE/frontend/node_modules/.pnpm/typescript@6.0.3/node_modules/typescript/bin/tsc --noEmit -p . --ignoreDeprecations 6.0 | grep -c "error TS"   # dry run: 256 (after 1a fix), identical to frontend-elfhaus 0b51f91 (pre-existing: JSON modules, config/fx/intro/ui)
+node $FE/frontend/node_modules/.pnpm/typescript@6.0.3/node_modules/typescript/bin/tsc --noEmit -p . --ignoreDeprecations 6.0 | grep -c "error TS"   # dry run: 256 (with 0f992c6), identical to frontend-elfhaus 0b51f91 (pre-existing: JSON modules, config/fx/intro/ui)
 ```
 Dry run: build 53,356,494 B (was 27,480,845 B). Stacks are +27.7 MB of that, Roxy p3d atlases 8.2 MB.
 
