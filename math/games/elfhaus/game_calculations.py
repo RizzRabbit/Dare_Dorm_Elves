@@ -11,12 +11,17 @@ import random
 
 ROWS, REELS = 4, 5
 CAP_C = 5_000_000            # 50,000x in centi-x
-SPIN_CAP = 18
+SPIN_CAP = 20                # free spins played per round (SPEC v2 §6)
 MAX_RESPINS = 3
-START_FS = {"dare": 8, "double_dare": 10, "triple_dare": 10, "hidden": 10}
+START_FS = {"dare": 8, "double_dare": 10, "triple_dare": 10, "hidden": 12}
+SC = "S"                     # Dare Card scatter (SPEC v2 §2): no pay, max 1 per reel, triggers by count
+SCATTER_TIER = {3: "dare", 4: "double_dare", 5: "flip"}
+FLIP_ODDS = {"triple_dare": 75, "hidden": 25}   # 5-scatter card flip (base / ante / Mystery); TD buy skips it
+GUARANTEE = {"triple_dare": 1, "hidden": 2}     # full-reel wilds guaranteed at bonus start (animated in)
+GUAR_WEIGHTS = [1, 0.3, 0.6, 3, 4]
+GUAR_ADJ = 0.1                                  # weight factor for a placed stack next to an existing stack              # default reel weights for placed guarantee stacks (per mode in reel_params)
 TIERS = ("dare", "double_dare", "triple_dare", "hidden")
 MYSTERY_ODDS = {"none": 50, "double_dare": 37, "triple_dare": 10, "hidden": 3}
-MYSTERY_START_WEIGHTS = [0.03, 0.01, 0.02, 0.5, 10]   # reel weights for the fresh bonus start board, order 2<3<1<4<5
 LINES = [[0,0,0,0,0],[1,1,1,1,1],[2,2,2,2,2],[3,3,3,3,3],[0,1,2,1,0],[3,2,1,2,3],[1,0,0,0,1],[2,3,3,3,2],
          [0,1,0,1,0],[3,2,3,2,3],[1,2,1,2,1],[2,1,2,1,2],[0,0,1,0,0],[3,3,2,3,3],[1,1,0,1,1],[2,2,3,2,2],
          [0,1,1,1,0],[3,2,2,2,3],[1,2,3,2,1],[2,1,0,1,2]]
@@ -73,10 +78,12 @@ def evaluate(sym, sv, full, detail=False):
             else: break
         if n < 3 and wn < 3:
             continue
-        ps = PAY[base][n-3] if n >= 3 else 0
+        ps = PAY[base][n-3] if n >= 3 and base != SC else 0
         pw = PAY[W][wn-3] if wn >= 3 else 0
         if ps >= pw: k, s_, p = n, base, ps
         else: k, s_, p = wn, W, pw
+        if p == 0:
+            continue
         run = [(r, ln[r]) for r in range(k)]
         m, groups = line_mult(run, sym, sv, full)
         lb += p * m
@@ -94,13 +101,22 @@ def evaluate(sym, sv, full, detail=False):
     return lb, conw, resp, wins
 
 
-def tier_of(full, sv):
-    """SPEC §5 precedence Hidden > Triple > Double > Dare on a final board (sv = single wilds only)."""
-    nf, ns = len(full), len(sv)
-    if nf >= 2: return "hidden"
-    if nf == 1: return "triple_dare" if ns >= 2 else "double_dare"
-    if ns >= 4: return "dare"
-    return None
+def scatters(sym):
+    return [(r, row) for r in range(REELS) for row in range(ROWS) if sym[r][row] == SC]
+
+
+def scatter_tier(n):
+    """SPEC v2 §2: 3 = Dare, 4 = Double Dare, 5 = card flip (Triple Dare / Epic). Returns None, a tier or 'flip'."""
+    return SCATTER_TIER.get(min(n, 5))
+
+
+def anticipation_of(sym):
+    """Slow-spin every reel after the 2nd landed scatter (a 3rd scatter would trigger)."""
+    out, seen = [0] * REELS, 0
+    for r in range(REELS):
+        if seen >= 2: out[r] = 1
+        if any(sym[r][row] == SC for row in range(ROWS)): seen += 1
+    return out
 
 
 def merge_groups(full):
@@ -276,6 +292,8 @@ def play_sequence(rnd, sym, sv, full, respin_strip, gametype, landed=None, pad=N
         new = []
         for (r, row) in repl:
             name = respin_strip.cell_at(r, row, step) if hasattr(respin_strip, "cell_at") else respin_strip.cell(r)
+            while name == SC and any(sym[r][x] == SC for x in range(ROWS)):
+                name = respin_strip.cell(r)         # max 1 scatter per reel
             if respin_filter is not None and not respin_filter((r, row), name):
                 return spin_win, new_stacks, False
             sym[r][row] = name
@@ -309,27 +327,73 @@ def track_max(rnd, full, sv):
     if m > rnd.stats["max_mult"]: rnd.stats["max_mult"] = m
 
 
-# ---------------------------------------------------------------- base-type spin (base / ante / buy trigger)
-def base_spin(rnd, land_strip, respin_strip, anticipation=None):
-    """Lands a board and plays the full respin sequence. Returns (spin_win, sym, sv, full)."""
+# ---------------------------------------------------------------- base-type spin (base / ante / buy trigger / Mystery)
+def base_spin(rnd, land_strip, respin_strip):
+    """Lands a board and plays the full respin sequence. Returns (spin_win, sym, sv, full).
+    Reels after the 2nd landed scatter carry `anticipation` (slow spin)."""
     sym, pad, stops = land_strip.land()
     full = {}
     sv = wilds_from_board(sym, full)
     win, _, _ = play_sequence(rnd, sym, sv, full, respin_strip, "basegame", pad=pad, stops=stops,
-                              anticipation=anticipation)
+                              anticipation=anticipation_of(sym))
     track_max(rnd, full, sv)
     return win, sym, sv, full
 
 
-# ---------------------------------------------------------------- free spins (SPEC §6)
-def play_bonus(rnd, tier, full, sv, fs_strips, source):
-    """fs_strips: {tier: Strip} for this mode (natural or buy). Plays in the same book (D4/A5)."""
+def _pick(weights, k, exclude=()):
+    pool = [r for r in range(REELS) if r not in exclude]; out = []
+    for _ in range(k):
+        if not pool: break
+        r = random.choices(pool, weights=[weights[x] for x in pool])[0]
+        out.append(r); pool.remove(r)
+    return out
+
+
+def place_guarantee(rnd, tier, full, sv, weights):
+    """SPEC v2 §6: Triple Dare starts with >= 1 and Epic (hidden) with >= 2 full-reel wilds. Stacks already carried
+    in count; missing ones are placed on weighted reels. A placed stack absorbs any carried singles on its reel:
+    value = max(4, sum of those singles + 1 per empty cell)."""
+    need = GUARANTEE.get(tier, 0) - len(full)
+    if need <= 0:
+        return
+    placed = []
+    picks = []
+    for _ in range(need):                # Epic pairs mostly non-adjacent (like EGW D9): reels next to a stack x0.1
+        w = [weights[x] * (GUAR_ADJ if (x - 1 in full or x + 1 in full or x - 1 in picks or x + 1 in picks) else 1)
+             for x in range(REELS)]
+        picks += _pick(w, 1, exclude=set(full) | set(picks))
+    for r in picks:
+        absorbed = [{"row": row, "value": sv.pop((r, row))} for row in range(ROWS) if (r, row) in sv]
+        val = max(4, sum(x["value"] for x in absorbed) + (ROWS - len(absorbed)))
+        full[r] = val
+        placed.append({"reel": r, "value": val, "absorbed": absorbed})
+    rnd.emit("guaranteedStacks", tier=tier, stacks=placed, locked=locked_obj(full, sv))
+    if rnd.emit.on:
+        g = merge_groups(full)
+        if g: rnd.emit("mergeGroups", step=0, groups=g)
+
+
+def retrigger_spins(n):
+    """SPEC v2 §6 (user 2026-10-25): in a free spin, 2 scatters = +2 spins, 3 or more = +5."""
+    return 5 if n >= 3 else 2 if n == 2 else 0
+
+
+# ---------------------------------------------------------------- free spins (SPEC v2 §6)
+def play_bonus(rnd, tier, full, sv, fs_strips, source, guar_weights=GUAR_WEIGHTS, trigger_scatters=()):
+    """fs_strips: {tier: Strip} for this mode. Plays in the same book. Dare: nothing sticks (carry ignored).
+    Double/Triple/Epic: trigger wilds carry in place and every wild stays locked for the whole bonus."""
     emit = rnd.emit
     rnd.stats["tier"] = tier
     budget = START_FS[tier]
-    emit("freeSpinTrigger", tier=tier, totalFs=budget, cap=SPIN_CAP, carried=locked_obj(full, sv), source=source)
-    lock_full, lock_sv = dict(full), dict(sv)
-    upgraded = False
+    if tier == "dare":
+        full, sv = {}, {}
+    else:
+        full, sv = dict(full), dict(sv)
+    emit("freeSpinTrigger", tier=tier, totalFs=budget, cap=SPIN_CAP, carried=locked_obj(full, sv), source=source,
+         scatters=[{"reel": r, "row": row} for r, row in trigger_scatters])
+    place_guarantee(rnd, tier, full, sv, guar_weights)
+    track_max(rnd, full, sv)
+    lock_full, lock_sv = full, sv
     fs_total = 0
     spin_no = 0
     while spin_no < budget and not rnd.capped:
@@ -340,8 +404,8 @@ def play_bonus(rnd, tier, full, sv, fs_strips, source):
         sym, pad, stops = strip.land()
         cur_full, cur_sv = dict(lock_full), dict(lock_sv)
         for r in cur_full:
-            for row in range(ROWS): sym[r][row] = W
-        for (r, row) in cur_sv: sym[r][row] = W
+            for row in range(ROWS): sym[r][row] = W; pad[r][row + 1] = W
+        for (r, row) in cur_sv: sym[r][row] = W; pad[r][row + 1] = W
         landed = set()
         for r in range(REELS):
             if r in cur_full: continue
@@ -358,22 +422,17 @@ def play_bonus(rnd, tier, full, sv, fs_strips, source):
         if rnd.capped:
             break
         end_spin_events(rnd, win)
-        ns = list(new_stacks)
         if tier == "dare":
-            if ns and not upgraded:
-                upgraded = True; rnd.stats["upgrade"] = True
-                nb = min(budget + 2, SPIN_CAP)
-                emit("bonusUpgrade", **{"from": "dare"}, to="double_dare", spinsAdded=nb - budget, totalFs=nb,
-                     stackReel=ns[0], locked=locked_obj(cur_full, cur_sv))
-                budget = nb; tier = "double_dare"; ns = ns[1:]
-                lock_full, lock_sv = dict(cur_full), dict(cur_sv)
-            else:
-                lock_full, lock_sv = {}, {}       # Dare: nothing carries between spins (D10)
+            lock_full, lock_sv = {}, {}          # Dare: plain free spins, nothing sticks
         else:
-            lock_full, lock_sv = dict(cur_full), dict(cur_sv)   # Double/Triple/Hidden: everything locks
-        if ns:
-            nb = min(budget + 2 * len(ns), SPIN_CAP)
-            emit("freeSpinRetrigger", newStacks=ns, addedFs=nb - budget, totalFs=nb, capped=nb >= SPIN_CAP)
+            lock_full, lock_sv = dict(cur_full), dict(cur_sv)
+        sc = scatters(sym)
+        add = retrigger_spins(len(sc))
+        if add:
+            nb = min(budget + add, SPIN_CAP)
+            rnd.stats["retriggers"] = rnd.stats.get("retriggers", 0) + 1
+            emit("freeSpinRetrigger", scatters=[{"reel": r, "row": row} for r, row in sc], count=len(sc),
+                 addedFs=nb - budget, totalFs=nb, capped=nb >= SPIN_CAP)
             budget = nb
     if rnd.capped:
         emit("wincap", amount=CAP_C)
@@ -387,112 +446,88 @@ def finish(rnd, wincap_emitted=False):
     return rnd.total
 
 
-def _base_round_tail(rnd, win, sv, full, fs_strips, source, allow_bonus=True):
-    """After a base-type spin: wincap / setWin / setTotalWin / trigger."""
+def _tail(rnd, win):
+    """After a base-type spin: wincap or setWin/setTotalWin. Returns True if the round is over (capped)."""
     if rnd.capped:
         rnd.emit("wincap", amount=CAP_C)
         rnd.emit("setTotalWin", amount=rnd.total)
-        return None
+        return True
     end_spin_events(rnd, win)
-    if not allow_bonus:
-        return None
-    t = tier_of(full, sv)
-    return t
+    return False
+
+
+def card_flip(rnd, result=None):
+    """5 scatters (base / ante / Mystery): the Dare Card flips to Triple Dare or Epic (hidden), FLIP_ODDS."""
+    if result is None:
+        result = random.choices(list(FLIP_ODDS), weights=list(FLIP_ODDS.values()))[0]
+    rnd.emit("cardFlip", odds=dict(FLIP_ODDS), result=result)
+    rnd.stats["flip"] = result
+    return result
 
 
 # ---------------------------------------------------------------- whole rounds per mode
 def round_base(rnd, S):
-    """base / ante. S = mode strip dict: spin, respin, fs_<tier>."""
+    """base / ante. S = mode strip dict: spin, respin, fs {tier: Strip}, guar (weights)."""
     win, sym, sv, full = base_spin(rnd, S["spin"], S["respin"])
-    t = _base_round_tail(rnd, win, sv, full, None, "natural")
+    if _tail(rnd, win):
+        return finish(rnd)
+    sc = scatters(sym)
+    t = scatter_tier(len(sc))
+    if t == "flip":
+        t = card_flip(rnd)
     if t:
-        play_bonus(rnd, t, full, sv, S["fs"], "natural")
+        play_bonus(rnd, t, full, sv, S["fs"], "natural", S.get("guar", GUAR_WEIGHTS), sc)
     return finish(rnd)
 
 
-def round_buy(rnd, S, tier, max_tries=100000):
-    """dare / double_dare / triple_dare buy: real trigger spin redrawn until the final tier == bought tier (A5)."""
+BUY_SCATTERS = {"dare": 3, "double_dare": 4, "triple_dare": 5, "hidden": 5}   # hidden: tuning harness only
+
+
+def round_buy(rnd, S, tier, max_tries=200000):
+    """dare / double_dare / triple_dare buy: a real trigger spin on the mode's buy-trigger strips (dense scatters),
+    redrawn until its final board shows exactly the bought scatter count. Triple Dare buys skip the card flip."""
+    need = BUY_SCATTERS[tier]
     for _ in range(max_tries):
         rnd.__init__(Emitter(rnd.emit.on))
         rnd.emit("buyTriggerStart", tier=tier)
         win, sym, sv, full = base_spin(rnd, S["spin"], S["respin"])
-        if rnd.capped:
-            t = tier_of(full, sv)
-            if t != tier:
-                continue
-            _base_round_tail(rnd, win, sv, full, None, "buy")
-            return finish(rnd)
-        if tier_of(full, sv) != tier:
+        sc = scatters(sym)
+        if len(sc) != need:
             continue
-        _base_round_tail(rnd, win, sv, full, None, "buy")
-        play_bonus(rnd, tier, full, sv, S["fs"], "buy")
+        if _tail(rnd, win):
+            rnd.stats["tier"] = tier
+            return finish(rnd)
+        play_bonus(rnd, tier, full, sv, S["fs"], "buy", S.get("guar", GUAR_WEIGHTS), sc)
         return finish(rnd)
     raise RuntimeError("buy trigger rejection exhausted for " + tier)
 
 
-def _pick(weights, k, exclude=()):
-    pool = [r for r in range(REELS) if r not in exclude]; out = []
-    for _ in range(k):
-        r = random.choices(pool, weights=[weights[x] for x in pool])[0]
-        out.append(r); pool.remove(r)
-    return out
+MYSTERY_SCATTERS = {"none": 2, "double_dare": 4, "triple_dare": 5, "hidden": 5}
 
 
-def mystery_start_board(tier, reel_weights):
-    """User rule 2026-10-24: the Mystery bonus starts fresh with the board that normally defines its tier,
-    at starting values: Double = 1 full stack, Triple = 1 stack + 2 singles, Hidden = 2 stacks (stack 4, single 1)."""
-    stacks = {"double_dare": 1, "triple_dare": 1, "hidden": 2}[tier]
-    full = {r: 4 for r in _pick(reel_weights, stacks)}
-    sv = {}
-    if tier == "triple_dare":
-        for r in _pick(reel_weights, 2, exclude=full):
-            sv[(r, random.randrange(ROWS))] = 1
-    return full, sv
-
-
-def _wild_cells(full, sv):
-    return 4 * len(full) + len(sv)
-
-
-def round_mystery(rnd, S, bucket, reel_weights, max_tries=400000):
-    """SPEC \u00a78 (Coordinator/user rules 2026-10-24). bucket drawn upstream at exact 50/37/10/3.
-    Tease = one normal spin on Mystery's own trigger reels with >=1 wild in a connected win (guarantees respins).
-    Respins are the reveal (standard rules): none = no new wilds land; otherwise new wilds land until the board
-    shows the drawn tier. The reveal only decides the tier: nothing carries; the bonus starts fresh."""
+def round_mystery(rnd, S, bucket, max_tries=400000):
+    """SPEC v2 §8. bucket drawn upstream at exact 50/37/10/3. One normal paid spin on Mystery's strips: reels 1-2
+    always show a scatter (the 2-scatter tease), reels 3-5 slow-spin and decide: none = 2 scatters in total,
+    Double Dare = 4, Triple Dare / Epic = 5 + card flip showing the bucket. Respins run as usual; the count is taken
+    on the final board (redrawn until it matches the bucket). The bonus starts from THIS board's wilds (carried,
+    sticky) plus the tier's guaranteed stacks."""
+    need = MYSTERY_SCATTERS[bucket]
     for _ in range(max_tries):
         rnd.__init__(Emitter(rnd.emit.on))
-        emit = rnd.emit
-        emit("mysteryStart", odds=dict(MYSTERY_ODDS))
-        sym, pad, stops = S["spin"].land()
-        full = {}
-        sv = wilds_from_board(sym, full)
-        if full or tier_of(full, sv):
-            continue                              # the tease itself must not already show a tier
-        lb, conw, _, _ = evaluate(sym, sv, full)
-        if not conw:
-            continue
-        before = _wild_cells(full, sv)
-        respin = S["respin_" + bucket]
-        win, _, ok = play_sequence(rnd, sym, sv, full, respin, "basegame", pad=pad, stops=stops)
-        if not ok:
-            continue
-        t = tier_of(full, sv)
-        if bucket == "none":
-            if _wild_cells(full, sv) != before:
-                continue
-        elif t != bucket:
-            continue
-        track_max(rnd, full, sv)
-        if rnd.capped:
-            emit("wincap", amount=CAP_C); emit("setTotalWin", amount=rnd.total)
-            emit("mysteryResult", outcome=bucket)
+        rnd.emit("mysteryStart", odds=dict(MYSTERY_ODDS))
+        win, sym, sv, full = base_spin(rnd, S["spin"], S["respin"])
+        sc = scatters(sym)
+        if len(sc) != need or not {0, 1} <= {r for r, _ in sc}:
+            continue                       # the tease: reels 1 and 2 always show the Dare Card
+        if _tail(rnd, win):
+            rnd.emit("mysteryResult", outcome=bucket)
             rnd.stats["tier"] = None if bucket == "none" else bucket
             return finish(rnd)
-        end_spin_events(rnd, win)
-        emit("mysteryResult", outcome=bucket)
+        if need == 5:
+            card_flip(rnd, bucket)
+        rnd.emit("mysteryResult", outcome=bucket)
         if bucket != "none":
-            f0, s0 = mystery_start_board(bucket, MYSTERY_START_WEIGHTS)
-            play_bonus(rnd, bucket, f0, s0, S["fs"], "mystery")
+            play_bonus(rnd, bucket, full, sv, S["fs"], "mystery", S.get("guar", GUAR_WEIGHTS), sc)
         return finish(rnd)
     raise RuntimeError("mystery rejection exhausted for " + bucket)
 
@@ -519,5 +554,5 @@ def round_egw(rnd, S, patterns=EGW_PATTERNS, pattern=None):
                               reveal_locked=locked_obj(full, {}), fs_reveal_groups=True)
     rnd.stats["egw_pattern"] = pattern
     track_max(rnd, full, sv)
-    _base_round_tail(rnd, win, sv, full, None, "egw", allow_bonus=False)
+    _tail(rnd, win)
     return finish(rnd)

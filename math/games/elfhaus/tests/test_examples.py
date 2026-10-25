@@ -58,7 +58,6 @@ L2 L3 L2 L4 L2
 H3 L5 L3 L1 H4""", [{(0,0):'L3',(0,1):'H4',(0,2):'H1',(1,0):'L5',(2,2):'W',(3,1):'H3',(4,2):'L4'},
  {(0,0):'L4',(0,1):'L1',(0,2):'W'}, {(0,0):'L2',(0,1):'L5',(1,2):'H1',(2,3):'W',(3,1):'L4'}])
     assert w == 17910 and full == {2: 13} and sv == {(1,1): 5, (0,2): 3}
-    assert gc.tier_of(full, sv) == 'triple_dare'
     sc = [e for e in rnd.emit.events if e['type'] == 'stackComplete'][0]
     assert sc['value'] == 12 and sc['parts'] == [4, 4, 3, 1] and sc['instant'] is False
 
@@ -67,7 +66,7 @@ def test_E4():
 W H3 W L1 L3
 W L4 W H3 L5
 W L1 W L2 L4""", [{(1,0):'L3',(1,1):'L5',(1,2):'L4',(1,3):'L5'}, {(1,0):'H4',(1,1):'L1',(1,2):'L2',(1,3):'H1'}, 'AUTO'])
-    assert w == 35010 and full == {0: 8, 2: 8} and gc.tier_of(full, sv) == 'hidden'
+    assert w == 35010 and full == {0: 8, 2: 8}
 
 def test_E5():
     c, wins = first_eval("""W W H2 W L3
@@ -88,7 +87,7 @@ def test_E7():
 H4 H4 W  L1 L5
 L1 L3 W  H2 L4
 L3 L5 L2 L4 H1""", [{(0,1):'L5',(0,3):'H1',(1,0):'L1',(1,1):'L2',(1,2):'H3'}, {(0,0):'H3',(1,1):'L4'}])
-    assert w == 340 and not full and sv == {(2,0): 3, (2,1): 3, (2,2): 3} and gc.tier_of(full, sv) is None
+    assert w == 340 and not full and sv == {(2,0): 3, (2,1): 3, (2,2): 3}
 
 def test_E8_E13():
     w, full, sv, rnd = run("""L2 H4 W  L3 L1
@@ -96,7 +95,7 @@ H4 H4 W  L1 L5
 H2 H2 W  H2 L4
 L3 L5 L3 L4 H1""", [{(0,1):'L5',(0,2):'H3',(1,0):'L1',(1,1):'H1',(1,2):'W',(3,2):'L4'},
  {(0,1):'L4',(0,2):'L1',(0,3):'H2',(2,3):'W'}, 'AUTO'])
-    assert w == 9240 and full == {2: 11} and sv == {(1,2): 4} and gc.tier_of(full, sv) == 'double_dare'
+    assert w == 9240 and full == {2: 11} and sv == {(1,2): 4}
 
 def test_E9():
     w, full, sv, rnd = run("""W L2 W H4 W

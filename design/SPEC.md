@@ -1,6 +1,6 @@
-# Elfhaus: final mechanics SPEC (v2)
+# Elfhaus: final mechanics SPEC (v2, scatter route)
 Studio: **Rizzin Games**. Platform: **Stake Engine** (math-sdk + web-sdk).
-Status: **FINAL for build.** Written 2026-10-23 CDT. It merges Slot Expert's v1 spec (`design/source/SPEC_v1_slot_expert.md`) with every user answer in `design/DECISIONS.md`. **Where they differ, DECISIONS.md wins.** The old §13 "Decisions for the user" is gone; the answers are in the **Locked decisions log (§0)**.
+Status: **FINAL for build.** Written 2026-10-23 CDT; **scatter-route revision 2026-10-25 CDT** (user-approved draft `SPEC_v2_SCATTER_DRAFT.md`, decisions S1–S12 in §0; they override any older row they conflict with). It merges Slot Expert's v1 spec (`design/source/SPEC_v1_slot_expert.md`) with every user answer in `design/DECISIONS.md`. **Where they differ, DECISIONS.md wins.** The old §13 "Decisions for the user" is gone; the answers are in the **Locked decisions log (§0)**.
 
 Tags: **[LOCKED]** = the user decided; the build agent must not change it. **[DEFAULT]** = a design default the build may tune within the stated bounds. **[ASSUMED – user to confirm]** = a reasonable reading still to confirm. **(tune)** = a placeholder number the math-sdk optimizer sets; it is not a promise.
 
@@ -14,18 +14,18 @@ The executable reference for §3–§4 is `design/prototypes/reference_rules.py`
 | D1 | **20 fixed lines** (§2). |
 | D2 | All 4 premium symbols are **4 different sexy adult elf women**. The single-cell wild is **two sexy elves holding each other, posing**. Party objects become the low tier (proposal in §2). |
 | D3 | A wild **connects** when it is **inside the winning run** of a paying line. |
-| D4 | Trigger precedence **Hidden > Triple > Double > Dare**. The trigger spin **pays its own line wins**. |
-| D5 | **Ante costs 1.25x** for about **2x** natural trigger rates. |
-| D6 | **The optimizer sets all buy prices** at target RTP. |
+| D4 | ~~Trigger precedence by wild count~~ **superseded by S2**. The trigger spin **pays its own line wins** (still true). |
+| D5 | **Ante costs 3x** (user, 3-star retune 2026-10-24; was 1.25x); higher scatter density, same rules. |
+| D6 | ~~Optimizer sets buy prices~~ **superseded by S9: fixed prices**; reels and weights are tuned to them. |
 | D7 | **Hidden is a freegame type**, reachable from base, Ante and Mystery only. **7 bet modes** (also settles C-a). |
-| D8 | A new stack in a bonus gives **+2 spins** (cap 18). **The only tier upgrade is Dare → Double Dare on a stack** (once). Double, Triple and Hidden never upgrade. (User, 2026-10-23; partly overrides the earlier "no upgrades".) |
-| D10 | **Bonus stickiness [LOCKED, user 2026-10-23; replaces the A3 "sticky in every tier" assumption]:** **Double Dare, Triple Dare, Hidden:** all wilds (singles and full-reel stacks) stay locked for the rest of the bonus, keeping their values and growth. **Dare:** wilds are **not** sticky; they clear after each free spin's respin sequence. If a full 4-high stack completes during a Dare free spin, the bonus **immediately upgrades to Double Dare and adds +2 spins**; from then on Double Dare rules apply (wilds lock; that stack stays locked with its value). The upgrade happens **once**; any later stack gives **+2 only** [LOCKED, user-confirmed]. Reason: the tiers differ only by starting stacks and spins, and a new stack adds both anyway. **Details [LOCKED, user-confirmed 2026-10-23]:** in Dare, the wilds carried in from the trigger appear on free spin 1 only, then clear; on the upgrade spin, every wild on the final board locks (singles and the stack). |
+| D8 | **Superseded by S6/S7** (no +2 per stack, no upgrade, cap 20). Old text: A new stack in a bonus gives **+2 spins** (cap 18). **The only tier upgrade is Dare → Double Dare on a stack** (once). Double, Triple and Hidden never upgrade. (User, 2026-10-23; partly overrides the earlier "no upgrades".) |
+| D10 | **Dare part superseded by S5** (Dare: nothing sticky, no carry, no upgrade); Double/Triple/Epic unchanged. Old text: **Bonus stickiness [LOCKED, user 2026-10-23; replaces the A3 "sticky in every tier" assumption]:** **Double Dare, Triple Dare, Hidden:** all wilds (singles and full-reel stacks) stay locked for the rest of the bonus, keeping their values and growth. **Dare:** wilds are **not** sticky; they clear after each free spin's respin sequence. If a full 4-high stack completes during a Dare free spin, the bonus **immediately upgrades to Double Dare and adds +2 spins**; from then on Double Dare rules apply (wilds lock; that stack stays locked with its value). The upgrade happens **once**; any later stack gives **+2 only** [LOCKED, user-confirmed]. Reason: the tiers differ only by starting stacks and spins, and a new stack adds both anyway. **Details [LOCKED, user-confirmed 2026-10-23]:** in Dare, the wilds carried in from the trigger appear on free spin 1 only, then clear; on the upgrade spin, every wild on the final board locks (singles and the stack). |
 | D9 | EGW stack placement is **weighted**: patterns with **4+ adjacent stacks ≤ 1 in 10,000** buys; mostly non-adjacent pairs and triples. |
 | R1 | A new wild starts at **x1**. |
 | R2 | At most **3 respins** per spin; **stop early when nothing new connects**. |
 | R3 | When a respin occurs, the **non-wild symbols of EVERY winning line are replaced** (respun), **whether or not that line contains a wild** (user, 2026-10-23). **Wilds lock in place.** Non-winning symbols **stay put**; if a stayed symbol joins a later win, it is replaced then. Respins are still **triggered only by a wild connection** (R2). |
 | R4 | Respins run **everywhere**: base, Ante, every bonus spin, EGW **and the Mystery spin**. Respins never use up a free spin. |
-| R4-Mystery | On the Mystery spin, the respins **are** the reveal: **no more wilds land = no bonus; more wilds land = the bonus triggers**. Tier odds stay **50/37/10/3**. |
+| R4-Mystery | **Superseded by S10:** the Mystery reveal is a scatter tease. Tier odds stay **50/37/10/3**. |
 | R5 | **Every step pays every winning line on that step's board** (2026-10-23 correction). There is **no** "must include a newly landed cell" filter. Every non-wild symbol of every winning line is replaced on the respin and only the wilds stay (R3), so a repeat pay always comes from a newly formed line, and an **all-wild line pays again at every respin step** at its grown value. |
 | R6 | Wild growth is **+1 per respin step in which the wild connects, everywhere** (base, Ante, bonuses, EGW, Mystery). The math tail is controlled by **stack and wild odds**, **not by restricting pays**; the build must report if the limits can't hold. **Primary tuning lever (user, 2026-10-23, LOCKED): weigh the wilds and stacks down HEAVILY, rarity order REEL 2 (rarest) < REEL 3 < REEL 1 < reels 4–5 (least restricted)**; the optimizer then fits each mode to 96.65–96.69%. Mechanics unchanged. |
 | A1 | **3 or more adjacent full-reel wilds all multiply together.** |
@@ -34,6 +34,18 @@ The executable reference for §3–§4 is `design/prototypes/reference_rules.py`
 | A4 | A full-reel wild grows **+1 per connection** (as one wild). |
 | A5 | A stack that **lands complete at once is x4** (four x1 wilds). A stack **built over respins is the sum of its grown values**. **Bought bonuses play a real trigger spin with respins**: no forced x4, no forced reels 1/3/5. Adjacency on buy triggers is controlled by reel/stack odds. |
 | A6 | Adjacent merged stacks render as **one wide wild scene that adds elves**: 2-wide = 2 elves together, 3-wide = 3, 4-wide = 4, 5-wide = 5 (full-board party). Each width is sexier and more crowded, college dorm style, within the content ceiling, with the **combined badge** (e.g. "x6 × x5 = x30"). |
+| S1 | **Scatter route (user 2026-10-25).** New symbol **S = "Dare Card"** (glossy pink playing card, lipstick kiss, "DARE"); re-skin L1 to an unlabeled neon bottle. All 5 reels, **max 1 per reel**, **does not pay**, never substitutes, not a wild. Counted on the **final board** of a spin's respin sequence. |
+| S2 | Triggers (base, ante): **3 S = Dare, 4 S = Double Dare, 5 S = card flip**. Wild counts and stacks no longer trigger anything. |
+| S3 | **Card flip:** every 5-scatter trigger (base, ante, Mystery) flips the Dare Card: **Triple Dare 75% / Epic 25%** (fixed, stated in the rules). A bought Triple Dare skips the flip. |
+| S4 | **Epic** = the UI name of the `hidden` freegame type; not buyable. |
+| S5 | **Carry-in:** from **Double Dare up**, every wild on the trigger's final board carries in place, sticky, at its end-of-sequence value. **Dare carries nothing and has no sticky wilds at all.** |
+| S6 | **Retrigger:** in a free spin, **2 S = +2 spins, 3+ S = +5**, all tiers; **cap 20 spins played**. New stacks add no spins. |
+| S7 | **No tier upgrades** (Dare → Double Dare removed). |
+| S8 | **Guaranteed stacks:** Triple Dare starts with **≥ 1** full-reel wild, Epic with **≥ 2**, animated in after the intro. Carried stacks count toward it. |
+| S9 | **Fixed prices:** Dare **100x**, Double Dare **250x**, Triple Dare **600x**, Mystery **600x**, EGW **450x**, Ante **3x**. |
+| S10 | **Mystery:** a 2-scatter tease on its own board; its wilds carry into the bonus (fixes the "reels in a new spot" swap). |
+| S11 | Start spins **Dare 8 / Double Dare 10 / Triple Dare 10 / Epic 12**. Respins unchanged (max 3, no refill). |
+| S12 | Stake **3-star** in every mode: std/cost ≤ 60, CVaR(0.1%)/cost ≤ 700, ETL40 ≤ 0.9; plus the §10 2-Star limits. |
 | C-a/C-b | 7 bet modes; 96.65–96.69% target. |
 | C-c | Keep the name **"Elves Gone Wild"** (user's call; trademark risk noted in CONTENT_RULES.md). |
 | Art | **"Sexy college elves, not strippers"** (2026-10-23): casual flirty college wear, natural makeup, early-20s clearly adult, dorm props; full-reel stack = **one sexy elf, as revealing as the ceiling allows** (covering pose OK); merged wilds **add elves** (2/3/4/5). See ART_BIBLE.md. |
@@ -43,11 +55,11 @@ The executable reference for §3–§4 is `design/prototypes/reference_rules.py`
 
 ## 1. Game at a glance
 - 5×4 grid, 20 lines, left to right from reel 1, 3+ of a kind on consecutive reels. Best win per line only.
-- One special symbol: the **Elf Wild (W)**. No scatter. Bonuses trigger from wild counts and full-reel stacks.
+- Two special symbols: the **Elf Wild (W)** and the **Dare Card scatter (S)**. Bonuses trigger from **3/4/5 scatters** (S2); 5 scatters flip the card to Triple Dare or Epic (S3).
 - Every wild carries its own multiplier: starts x1, **+1 every respin step it connects**. Four wilds filling a reel merge into a **full-reel wild** worth the **sum** of the four. Adjacent full-reel wilds **multiply**; non-adjacent ones **add**.
 - **Respins**: triggered by any win that runs through a wild; the non-wild symbols of **every** winning line are replaced, wilds stay locked, non-winning symbols stay; up to 3 respins; every step pays.
-- Bonuses: **Dare 8 / Double Dare 10 / Triple Dare 10 / Hidden 10** free spins, +2 per newly completed stack, max **18** spins played.
-- Buys: Dare, Double Dare, Triple Dare, **Mystery Spin** (50/37/10/3), **Elves Gone Wild** (one supercharged paid spin). Plus **Ante** (1.25x).
+- Bonuses: **Dare 8 / Double Dare 10 / Triple Dare 10 / Epic 12** free spins; in a free spin 2 scatters +2, 3+ scatters +5; max **20** spins played.
+- Buys: Dare, Double Dare, Triple Dare, **Mystery Spin** (50/37/10/3), **Elves Gone Wild** (one supercharged paid spin). Plus **Ante** (3x). Fixed prices in §10.
 
 ## 2. Grid, lines, symbols, paytable
 Row 0 is the top row; reels R1–R5 left to right (0-based reel 0–4 in code).
@@ -66,14 +78,15 @@ Pays are in **line-bet units (lb)**; total bet = 20 lb, so `x bet = lb / 20`. Re
 | Premium 2 | H2 | **Elf "Jade"** – teal hair, oversized varsity jersey off one shoulder, knee socks | 20 | 75 | 300 |
 | Premium 3 | H3 | **Elf "Vi"** – violet bob, tied-up flannel over a crop top, cutoffs, blowing a kiss | 15 | 50 | 200 |
 | Premium 4 | H4 | **Elf "Coco"** – auburn messy bun, pajama-party shorts set, paper party crown | 10 | 40 | 150 |
-| Low 1 | L1 | **DARE bottle** (unbranded neon bottle) | 5 | 20 | 80 |
+| Scatter | S | **Dare Card**: glossy pink playing card, lipstick kiss, "DARE" (S1). Max 1 per reel. **No pay**, no substitution | – | – | – |
+| Low 1 | L1 | **Neon bottle** (unbranded, no DARE label: S1) | 5 | 20 | 80 |
 | Low 2 | L2 | **Lips** (glossy pink kiss) | 5 | 15 | 60 |
 | Low 3 | L3 | **"GOOD VIBES" neon sign** | 4 | 10 | 40 |
 | Low 4 | L4 | **Red party cup** | 3 | 8 | 30 |
 | Low 5 | L5 | **Cannabis leaf** (lowest; kept by user decision) | 3 | 8 | 30 |
 
 - **D2 lows:** bottle, lips, GOOD VIBES neon, red cup, cannabis leaf (leaf lowest; leaf and alcohol kept by the user). Dropped to keep the reels readable: lingerie (now worn by the elves), crown (moved onto elf H4), phone-with-heart, pizza. Any of them can be swapped back in 1:1 with zero math change if the user asks.
-- The wild substitutes for all symbols. A line pays the **larger** of the pure-wild run and the first-non-wild-symbol run (math-sdk `LinesWins` convention).
+- The wild substitutes for all symbols **except S**; a line run stops at S. A line pays the **larger** of the pure-wild run and the first-non-wild-symbol run (math-sdk `LinesWins` convention).
 - Max board before multipliers: 20 × 500 lb / 20 = **500x**.
 - SDK units: enter `config.paytable` in the unit the math-sdk lines sample (`games/0_0_lines`) uses. If it pays in total-bet units, divide these lb values by 20. Verify against the sample before coding (BUILD_PROMPT A2).
 
@@ -99,40 +112,40 @@ Pays are in **line-bet units (lb)**; total bet = 20 lb, so `x bet = lb / 20`. Re
 5. In the new step, land the replacement cells (a replacement can be a wild, which starts x1), complete stacks, evaluate the whole board (4.3), pay, grow.
 6. **Stop (R2):** after the step where no paid line contains a wild, or after **respin 3** (step 3), whichever comes first.
 7. **Where (R4):** base, Ante, every free spin, EGW and the Mystery spin. Respins never use a free spin.
-8. Wilds landed on respins **count toward triggers** (checked on the final board) and toward new stacks (+2 spins in bonuses).
+8. Scatters never sit in a winning line, so landed scatters stay put through the respins; a respin draw can land a scatter (never a 2nd one on a reel). **Triggers and retriggers count scatters on the final board.**
 9. **Win cap check** after every step (§9).
 
 > Note for the math build: `reference_rules.py` is the executable form of 4.2–4.4 (wild-triggered respins; every winning line pays each step; every winning line's non-wild cells are replaced).
 
 ## 5. Base game and Ante
-- Trigger check on the **final board** of the spin's sequence, precedence **D4**:
+- Trigger check on the **final board** of the spin's sequence (S2):
 
-| Priority | Final-board condition | Award |
-|---|---|---|
-| 1 | ≥ 2 full-reel wilds | **Hidden**, 10 FS |
-| 2 | 1 full-reel wild + ≥ 2 other wilds | **Triple Dare**, 10 FS |
-| 3 | 1 full-reel wild + ≤ 1 other wild | **Double Dare**, 10 FS |
-| 4 | ≥ 4 single wilds, no full-reel wild | **Dare**, 8 FS |
+| Scatters on final board | Award |
+|---|---|
+| 3 | **Dare**, 8 FS |
+| 4 | **Double Dare**, 10 FS |
+| 5 | **Card flip** (S3): **Triple Dare** 10 FS (75%) or **Epic** 12 FS (25%) |
 
+- At most 1 S per reel, so 0–5 per board. Reels after the 2nd landed scatter slow-spin (`reveal.anticipation`).
 - The trigger spin **pays its own wins** (all steps), then the bonus plays inside the same book.
-- **Carry-in [LOCKED by A5]:** every wild on the trigger's final board carries in at its **end-of-sequence value**: full-reel wilds stay locked, single wilds stay sticky. **In Dare the carried-in wilds are on free spin 1 only and clear after its respin sequence (D10).** (Instant stack = x4 before growth; respin-built = grown sum.)
-- **Ante (D5):** cost **1.25x**, same paytable and rules; reel strips weighted so natural trigger rates are about **2x** base for all four tiers (tune). Mode name `ante`.
+- **Carry-in (S5):** Double Dare, Triple Dare, Epic: every wild on the trigger's final board carries in place at its **end-of-sequence value** (full reels locked, singles sticky). **Dare: nothing carries.**
+- **Ante (D5):** cost **3x**, same paytable and rules; higher scatter density (about 3x the base bonus rate, §10 table). Mode name `ante`.
 - Base hit rate target ~20–28% (C11).
 
 ## 6. Bonus tiers [LOCKED except odds]
-| Tier | Start spins | Start stacks / wilds | Stack-completion odds (tune) |
+| Tier (`id`) | Start spins | Start board | Stickiness |
 |---|---|---|---|
-| Dare | 8 | ≥ 4 single wilds from the trigger (free spin 1 only; **not sticky**, D10) | lowest |
-| Double Dare | 10 | 1 locked full-reel wild (+ ≤ 1 sticky single) | low |
-| Triple Dare | 10 | 1 locked full-reel wild + ≥ 2 sticky singles | medium |
-| Hidden | 10 | ≥ 2 locked full-reel wilds (+ any sticky singles) | medium |
+| Dare (`dare`) | 8 | empty (nothing carries) | **none**: wilds clear after every free spin |
+| Double Dare (`double_dare`) | 10 | carried trigger wilds | all wilds locked for the bonus |
+| Triple Dare (`triple_dare`) | 10 | carried wilds + **≥ 1** full-reel wild (S8) | all wilds locked |
+| Epic (`hidden`) | 12 | carried wilds + **≥ 2** full-reel wilds (S8) | all wilds locked |
 
-- **A3:** these (plus D10 stickiness) are the only differences. Every other rule is identical across tiers.
-- **Stickiness [LOCKED, D10, user 2026-10-23]:** **Double Dare / Triple Dare / Hidden:** all wilds (carried-in and newly landed, singles and full-reel stacks) stay locked for the rest of the round with their values and keep growing. **Dare:** wilds clear after every free spin's respin sequence (nothing carries between Dare spins). **Dare → Double Dare upgrade:** the first stack completed in any step of a Dare free spin upgrades the bonus to Double Dare at the end of that spin's sequence, **+2 spins** (`bonusUpgrade` event); all wilds on that spin's final board (the stack at its grown value plus any singles) lock, and the remaining spins use Double Dare rules and strips. The upgrade happens **once**; further stacks (same spin or later) give **+2 only**. Double, Triple, Hidden never upgrade. Reason: the tiers differ only by starting stacks and spins, and a new stack adds both anyway.
-- **Spins:** each **newly completed** stack (in any step of any free spin) adds **+2 spins** (D8). A locked stack never re-awards. The round plays at most **18 free spins** (cap counts spins played, not respins). Once at 18, further stacks still lock and multiply but add no spins.
-- The only tier change is Dare → Double Dare on a stack (D8/D10); no other upgrades or retriggers.
-- Each free spin: load locked and sticky wilds → land the other cells → full respin sequence (§4) with growth → add the spin's wins → +2 per new stack (capped) → wincap check.
-- **Bought bonuses (A5):** the book starts with a **real trigger spin** on dedicated buy-trigger reel strips, with respins and growth, paying its wins. The math redraws (rejection) until the final board's tier **equals the bought tier**. Its stacks may be instant (x4) or respin-built (grown sums), on **any** reels. No forced x4, no forced reels 1/3/5. Adjacency at the start is controlled by the buy-trigger strip odds (tune). Then the bonus plays from that board.
+- **Guaranteed stacks (S8):** after the `freeSpinTrigger` intro, carried stacks count toward the guarantee; each missing stack is placed on a reel drawn by weight (per mode, favoring reels 4–5; a reel next to an existing stack gets ×0.1, so Epic pairs are mostly non-adjacent, like D9). The placed stack absorbs any carried singles on that reel: value = **max(x4, carried cell values + x1 per empty cell)**. Animated in (`guaranteedStacks`).
+- **Retrigger (S6):** after each free spin's sequence, count scatters on its final board: **2 = +2 spins, 3+ = +5**. The round plays at most **20 free spins**; retriggers past the cap add nothing. New stacks still lock and multiply but add no spins.
+- **No upgrades** (S7). Tiers differ only by start spins, start board, stickiness and per-tier strips (A3).
+- Each free spin: load locked wilds (none in Dare) → land the other cells → full respin sequence (§4) with growth → add the spin's wins → wincap check → retrigger.
+- **Bought bonuses (A5):** the book starts with a **real trigger spin** on the mode's buy-trigger strips, with respins and growth, paying its wins, redrawn (rejection) until its final board shows exactly **3 / 4 / 5 scatters** for Dare / Double Dare / Triple Dare. **No card flip** on a Triple Dare buy. Its wilds carry in per S5 (Dare: none), then the guarantee (S8) applies.
+- Free-spin strips carry scatters (≈ 5% visible per reel) for the retriggers.
 
 ## 7. EGW – Elves Gone Wild (single-spin buy) [LOCKED]
 - One paid spin, **no bonus ever** (even with 2+ stacks or 4+ wilds on the final board).
@@ -150,45 +163,42 @@ Pays are in **line-bet units (lb)**; total bet = 20 lb, so `x bet = lb / 20`. Re
 | 2,3,4,5 | 0.005 | | 1,2,3,4 | 0.003 |
 | 1,2,3,4,5 | 0.002 | | | |
 
-- Price: optimizer (D6), toy range 150–250x (pre-R6; see §11).
+- Price: **450x** fixed (S9). EGW strips carry **no scatters**; EGW never triggers a bonus.
 
-## 8. Mystery Spin (buy) [LOCKED]
-1. The outcome bucket is drawn with weights fixed at exactly **50 / 37 / 10 / 3** (no bonus / Double Dare / Triple Dare / Hidden). The optimizer may reshape weights **within** a bucket only (C20). CI check: bucket weight drift ≤ 0.001%.
-2. **Tease spin (rev. 2026-10-24, user + Coordinator):** one normal-looking paid spin on Mystery's own trigger reels with **at least one wild in a connected win**, so respins always run. Wilds can land on any reel (by strip weight, rarity 2<3<1<4–5); the tease never already shows a tier (no instant full stack, fewer than 4 singles). The old "exactly 3 wilds as a 3-high stack" rule is dropped.
-3. **The respins are the reveal (R4-Mystery):** standard respin rules (connected cells respin, wilds lock and grow, max 3, stop early when nothing new connects). All tease and respin steps pay.
-   - **No bonus:** no new wild lands on any respin. The round ends.
-   - **Double Dare / Triple Dare / Hidden:** new wilds land on the respins until the final board meets that tier's condition (§5 table).
-   - Dare is never a Mystery outcome.
-4. **The reveal only decides the tier. Nothing carries into the bonus** (no locked wilds, no grown values). The bonus starts fresh on Mystery's own free-spin reels with the board that defines its tier at starting values: Double Dare = 1 full stack (x4), Triple Dare = 1 full stack (x4) + 2 single wilds (x1), Hidden = 2 full stacks (x4 each). Start reels are drawn with weights 0.03 / 0.01 / 0.02 / 0.5 / 10 (reels 1–5). Starting spins and all other bonus mechanics follow §6 (10 spins for every Mystery tier, +2 per new stack, cap 18, 50,000x cap).
-5. Generation: per bucket, rejection-sample tease + respin sequences on Mystery strips until the final board matches the bucket.
-6. The rules and buy dialog state: "Each Mystery Spin is a paid spin with respins. Bonus odds: no bonus 50%, Double Dare 37%, Triple Dare 10%, Hidden 3%. The result is decided before the reveal. A won bonus starts fresh."
-7. Price: **600x** (tuned 2026-10-24).
+## 8. Mystery Spin (buy) [LOCKED, scatter revision S10]
+1. The outcome bucket is drawn with weights fixed at exactly **50 / 37 / 10 / 3** (no bonus / Double Dare / Triple Dare / Epic). The optimizer may reshape weights **within** a bucket only (C20). CI check: bucket weight drift ≤ 0.001%.
+2. **Tease:** one normal paid spin on Mystery's own strips that always shows **scatters on reels 1 and 2**; reels 3–5 slow-spin (anticipation). Wilds, respins and pays play as normal (§4).
+3. **Reveal by final-board scatter count** (rejection-sampled per bucket): **none** = exactly 2 scatters; **Double Dare** = 4; **Triple Dare / Epic** = 5, then the **card flip** shows the bucket's tier (`cardFlip`, forced to the bucket; displayed odds 75/25). Dare is never a Mystery outcome.
+4. **The bonus starts from the Mystery board's wilds** (S5 carry-in, in place, at their grown values), then the Triple Dare / Epic guarantee (S8). No board swap. Spins 10 / 10 / 12; all §6 rules.
+5. Rules / buy dialog: "Each Mystery Spin is a paid spin with respins. Bonus odds: no bonus 50%, Double Dare 37%, Triple Dare 10%, Epic 3%. The result is decided before the reveal. The wilds on the Mystery board carry into the bonus."
+6. Price: **600x** (S9).
 
 ## 9. Order of resolution (one spin)
-1. Load locked/sticky wilds (bonus) or placed stacks (EGW). 2. Land cells. 3. Complete stacks (sum values). 4. Evaluate every line on the current board (§3 groups, §4.3). 5. Add the step win to the round total. 6. **If the round total ≥ 50,000x: set it to exactly 50,000x, emit `wincap`, end the round** (no more steps, spins or bonus). 7. Grow connected wilds +1. 8. Respin decision (§4.2/4.6); if yes, replace cells and go to 2. 9. Bonus spins: +2 per newly completed stack, capped at 18. 10. Base/Ante/Mystery: check the trigger (§5 / §8) and play the bonus in the same book. EGW: never.
+1. Load locked/sticky wilds (bonus) or placed stacks (EGW). 2. Land cells. 3. Complete stacks (sum values). 4. Evaluate every line on the current board (§3 groups, §4.3). 5. Add the step win to the round total. 6. **If the round total ≥ 50,000x: set it to exactly 50,000x, emit `wincap`, end the round** (no more steps, spins or bonus). 7. Grow connected wilds +1. 8. Respin decision (§4.2/4.6); if yes, replace cells and go to 2. 9. Bonus spins: count scatters on the final board, +2 / +5 spins (cap 20). 10. Base/Ante/Mystery: count scatters (§5 / §8); 5 → card flip; `freeSpinTrigger` with the carry-in (none for Dare); guaranteed stacks; play the bonus in the same book. EGW: never.
 
-## 10. Bet modes (math-sdk) [LOCKED list, prices tune]
-| Mode (`index.json` name) | Player label | Cost | Toy range (pre-R6) | Notes |
-|---|---|---|---|---|
-| `base` | Spin | 1.0 | – | std ≥ 0.6 |
-| `ante` | Ante | 1.25 | – | no confirm needed (≤ 2x) |
-| `dare` | Dare | optimizer | 25–50x | buy-trigger spin then Dare |
-| `double_dare` | Double Dare | optimizer | 180–240x | |
-| `triple_dare` | Triple Dare | optimizer | ~1,000x | **must be ≤ 1,000x** (2-Star) |
-| `mystery` | Mystery Spin | 600x | ~245x | 50/37/10/3, fresh-start bonus |
-| `egw` | Elves Gone Wild | optimizer | 150–250x | one spin |
+## 10. Bet modes (math-sdk) [LOCKED list, fixed prices S9]
+| Mode (`index.json` name) | Player label | Cost | Notes |
+|---|---|---|---|
+| `base` | Spin | 1 | 3/4/5 scatters |
+| `ante` | Ante | 3 | higher scatter rate |
+| `dare` | Dare | 100 | buy-trigger spin with 3 S, then Dare (nothing sticky) |
+| `double_dare` | Double Dare | 250 | buy-trigger spin with 4 S |
+| `triple_dare` | Triple Dare | 600 | buy-trigger spin with 5 S, no flip, ≥ 1 stack |
+| `mystery` | Mystery Spin | 600 | 50/37/10/3, 2-scatter tease, board carries |
+| `egw` | Elves Gone Wild | 450 | one spin, no scatters |
 
-- **Hidden is a freegame type, not a mode (D7).**
-- **Price method (D6):** simulate the mode, measure the mean win, set `cost ≈ mean / 0.9667` rounded to a clean value, then let the optimizer reshape weights to land RTP in **96.65–96.69%**. Report the final costs.
+- **Hidden (Epic) is a freegame type, not a mode (D7, S4).**
+- **Price method (S9):** prices are fixed; reel strips (wild/stack/scatter densities) are tuned so the raw mean is near the price, then the optimizer reshapes book weights to **96.67%**. **3-star (S12):** std/cost ≤ 60, CVaR(0.1%)/cost ≤ 700, ETL40 ≤ 0.9.
 - **Limits in every mode (2-Star, C6–C13):** RTP 96.65–96.69%; `max_win = 50000`; a `wincap` Distribution with `force_wincap: True` so 50,000x books **exist in every mode** (C13); P(win ≥ 5,000x) ≤ **1%** (raw, per round); mode cost ≤ **1,000x**; CVaR(0.1%) ≤ **20,000**; base std ≥ 0.6; hit rate no rarer than 1 in 50; max win realistically reachable (more often than ~1 in 10M); ≤ 20 modes; ≤ 10M events per mode.
 
 ## 11. Tail control and the R6 risk note
 - **R6 risk:** growth **every step everywhere** plus pay-at-every-step (including all-wild lines re-paying at grown values) fattens the tail. Two non-adjacent instant stacks (R1+R3) guarantee a pay on every respin, because any replaced R2 symbol completes a 3-of-a-kind: E4 is 350x on one base spin (it was 62x under the old pay-once rule); E9 (EGW R1/R3/R5) is 374x. Adjacent groups multiply grown values, so 3 adjacent at x5 each = x125.
 - **Per-mode reel sets [LOCKED, user 2026-10-23]:** every bet mode (base, ante, dare, double_dare, triple_dare, mystery, egw) produces its OWN books from its OWN reel sets, and inside each mode every stage has its own strips: the base/trigger spin, the respins, and the freegame strips for each bonus tier (Dare, Double Dare, Triple Dare, Hidden). These can be VASTLY different from each other (e.g. Mystery and Triple Dare buys can use far rarer wild/stack strips than base). Tune each mode independently against its own target; never share one strip set across modes just for convenience. Rarity order (reel 2 < 3 < 1 < 4–5) applies within every set. **Natural vs bought bonuses [LOCKED, user 2026-10-23]:** a bonus triggered naturally in base or ante is generated entirely inside that mode's own book (trigger spin + every free spin in one book); it never draws from the dare/double_dare/triple_dare/mystery buy books. Naturally triggered bonuses use their OWN per-tier freegame strips, tuned separately from the matching buy mode's strips (a natural trigger is free, a buy is paid upfront, so wild odds differ). Mechanics are identical; only strips/weights differ.
-- **The math controls it with stack and wild odds, never by restricting pays or changing rules:** (1) **PRIMARY (user, LOCKED): very low wild and stack weights, rarity order REEL 2 (rarest) < REEL 3 < REEL 1 < reels 4–5 (least restricted)**. Reel 2 is in every run and every adjacent pair from the left; reel 3 completes most 3-of-a-kinds; reel 1 starts every line. Prototype toy v2 (`prototype/engine.js` P) gives base ≈ 106% raw with base q = [0.00015, 0.00004, 0.00008, 0.0006, 0.0006], w = [0.005, 0.002, 0.003, 0.022, 0.026] (sanity only, not tuning); (2) buy-trigger strip odds; (3) EGW pattern weights (D9); (4) bonus stack odds per tier (A3); (5) the 18-spin cap; (6) the paytable scale. **The build agent must not change a locked rule to make the numbers work. If the limits in §10 cannot all hold, stop and report the best achievable figures per mode.**
+- **The math controls it with stack and wild odds, never by restricting pays or changing rules:** (1) **PRIMARY (user, LOCKED): very low wild and stack weights, rarity order REEL 2 (rarest) < REEL 3 < REEL 1 < reels 4–5 (least restricted)**. Reel 2 is in every run and every adjacent pair from the left; reel 3 completes most 3-of-a-kinds; reel 1 starts every line. Prototype toy v2 (`prototype/engine.js` P) gives base ≈ 106% raw with base q = [0.00015, 0.00004, 0.00008, 0.0006, 0.0006], w = [0.005, 0.002, 0.003, 0.022, 0.026] (sanity only, not tuning); (2) buy-trigger strip odds; (3) EGW pattern weights (D9); (4) bonus stack odds per tier (A3); (5) the 20-spin cap and the free-spin scatter density; (6) the paytable scale. **The build agent must not change a locked rule to make the numbers work. If the limits in §10 cannot all hold, stop and report the best achievable figures per mode.**
 - 50,000x is reached mainly through adjacent groups (4 adjacent ≈ always; 3 adjacent with growth). Toy figures from v1 (`toy_sim3.py`) predate R3/R5/R6 and are indicative only.
 
 ## 12. Worked examples (all recomputed by `prototypes/worked_examples.py`)
+> Scatter revision: these examples illustrate §3–§4 (unchanged). Any mention of wild-count triggers, +2 spins per stack, the 18 cap or the Dare upgrade is v1 and superseded by §5/§6.
 Rows top to bottom; R1..R5 left to right. `RnrK` = reel n, row K. Full step-by-step traces are in `prototypes/worked_examples_output.txt`. "AUTO" filler symbols in the script are illustrative replacement draws.
 
 **E1 – base line win, no wild.**
@@ -198,7 +208,7 @@ L4 H2 L1 H3 L5
 L1 L3 H4 L4 L2
 H3 L5 L2 L1 H4
 ```
-L1 3×H1 = 25 lb × 1. **Win 1.25x.** No wild connected → no respin. (Ante: same board, same 1.25x win at 1.25x cost.)
+L1 3×H1 = 25 lb × 1. **Win 1.25x.** No wild connected → no respin. (Ante: same board, same 1.25x win at 3x cost.)
 
 **E2 – base respin (R3/R5/R6).**
 ```
@@ -307,7 +317,7 @@ L4 H3 W  H3 L2
 ```
 Step 0: L1/L13 3×H3, L6/L10/L18 3×L4 = 39 lb × 13 = 25.35x. Respins pay at x14, x15, x16. **Spin total 72.3x**; R3 ends at x17. No new stack → spin count unchanged.
 
-**E11 – bonus spin count.** Dare starts at 8. Free spin 3 completes a stack → **upgrade to Double Dare, +2 → 10** (D10). Two stacks in one Dare spin → upgrade +2 and +2 → 12. Free spin 6 completes two stacks in one sequence (+4 → 14). Hidden starting at 14 + 2 new stacks = 18; a third new stack locks and multiplies but adds nothing (cap 18).
+**E11 – bonus spin count (scatter revision).** Dare starts at 8. Free spin 3 shows 2 S → **+2 → 10**. Free spin 6 shows 3 S → **+5 → 15**. A stack completing adds nothing. Epic starting at 12 with retriggers +5, +2 → 19, then +5 → **20** (cap; `capped: true`, 1 added).
 
 **E13 – Dare free spin 3 of 8: a stack upgrades the bonus to Double Dare (D10).** Same board and respins as E8, now played as a Dare free spin (no carried wilds; these landed fresh).
 ```
@@ -338,3 +348,14 @@ Step 0: every line 4-of-a-kind of its R1 symbol × 504 = 335,160 lb = 16,758x. 3
 | §6 per-tier levers (Dare sticky only, reels 2/4 at 1/10 except Hidden) | Tiers differ by start stacks/wilds, spins, stack odds and stickiness: Double/Triple/Hidden all wilds locked; **Dare not sticky, first stack upgrades once to Double Dare +2** | A3, D10 (LOCKED) |
 | §2 H1 bottle / H2 lips / H3 lingerie / H4 crown | Premiums = 4 elves; objects are lows; cannabis leaf stays L5 | D2 |
 | §12 E7 62.4x, E9 89.2x | 350.1x / 374.5x (respins now pay) | R5/R6 |
+
+## 14. Scatter revision (2026-10-25) – what changed
+| Before | Now | Source |
+|---|---|---|
+| Triggers from wild counts / stacks (D4) | 3/4/5 Dare Card scatters; 5 = card flip TD 75 / Epic 25 | S1–S3 |
+| Dare: carried wilds on spin 1, stack upgrades to DD | Dare: nothing carries, nothing sticky, no upgrade | S5, S7 |
+| +2 spins per new stack, cap 18 | 2 S +2, 3+ S +5, cap 20 | S6 |
+| Hidden 10 spins | Epic 12 spins | S11 |
+| Mystery: wild tease, fresh start board (the reel swap) | 2-scatter tease, Mystery board's wilds carry in + guarantee | S10 |
+| Optimizer-set prices (Dare 50, DD 225, TD 700) | Fixed: 100 / 250 / 600 / Mystery 600 / EGW 450 / Ante 3 | S9 |
+| TD/Hidden start boards from wild conditions | TD ≥ 1 / Epic ≥ 2 guaranteed stacks, animated in | S8 |

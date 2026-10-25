@@ -74,6 +74,11 @@ def simulate(mode, n, procs=os.cpu_count() or 8):
         jobs += [("hidden", True)] * WCAP_BOOKS
     else:
         jobs = [(None, False)] * n + [(None, True)] * WCAP_BOOKS
+    # spread the (slow, rejection-sampled) wincap jobs over the chunks instead of leaving them all in the last one
+    wc = [j for j in jobs if j[1]]; jobs = [j for j in jobs if not j[1]]
+    step = max(1, len(jobs) // max(1, len(wc)))
+    for i, j in enumerate(wc):
+        jobs.insert(min(len(jobs), i * (step + 1)), j)
     k = max(1, -(-len(jobs) // (procs * 4)))
     chunks = [(mode, 1 + s, jobs[s:s + k], SEED + modes.MODES.index(mode) * 100000 + s // k)
               for s in range(0, len(jobs), k)]

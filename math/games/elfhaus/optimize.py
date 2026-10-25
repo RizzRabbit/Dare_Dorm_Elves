@@ -22,8 +22,8 @@ TOTAL = 10 ** 17
 DEFAULT_WCAP_P = {"base": 2e-7, "ante": 2e-7}
 # Stake 3-star limits: base std/cost <= 60, CVaR(0.1%)/cost <= 700, ETL(>40x cost) <= 0.9 (0.8 for 2-star).
 # Targets carry margin; etl40 (optional) also caps ETL(>40x cost). bonus_rate = natural feature trigger probability per round (None = left free).
-THREE_STAR = {"base": {"cvar_cost": 540.0, "std_cost": 52.0, "bonus_rate": None},
-              "ante": {"cvar_cost": 540.0, "std_cost": 52.0, "bonus_rate": 1 / 70}}
+THREE_STAR = {"base": {"cvar_cost": 540.0, "std_cost": 52.0, "bonus_rate": None, "etl40": 0.85},
+              "ante": {"cvar_cost": 540.0, "std_cost": 52.0, "bonus_rate": None, "etl40": 0.85}}
 from game_calculations import MYSTERY_ODDS
 SHARES = {k: v / 100 for k, v in MYSTERY_ODDS.items()}
 
@@ -77,22 +77,24 @@ def weigh(mode, res, cost, pcap, opt):
             p = _probs(x, groups, gshare, cap, pcap, a, b, d)
             return a, p, float(p[x >= 5000].sum())
         a, p, v = p5(0.0, 0.0)
-        if v > P5K_MAX:
-            lo, hi = -20.0, 0.0
-            for _ in range(40):
-                b = (lo + hi) / 2
-                a, p, v = p5(b, d)
-                if v > P5K_MAX: hi = b
-                else: lo = b
-            b = lo; a, p, v = p5(b, d)
-        if cvar(x, p) > CVAR_MAX:
-            lo, hi = -20.0, 0.0
-            for _ in range(40):
-                d = (lo + hi) / 2
-                a, p, v = p5(b, d)
-                if cvar(x, p) > CVAR_MAX: hi = d
-                else: lo = d
-            d = lo
+        for _ in range(6):                 # P5K and CVaR interact through the RTP solve, so alternate until both hold
+            a, p, v = p5(b, d)
+            if v > P5K_MAX:
+                lo, hi = -20.0, b
+                for _ in range(40):
+                    bm = (lo + hi) / 2
+                    if p5(bm, d)[2] > P5K_MAX: hi = bm
+                    else: lo = bm
+                b = lo; a, p, v = p5(b, d)
+            if cvar(x, p) > CVAR_MAX:
+                lo, hi = -20.0, d
+                for _ in range(40):
+                    dm = (lo + hi) / 2
+                    if cvar(x, p5(b, dm)[1]) > CVAR_MAX: hi = dm
+                    else: lo = dm
+                d = lo; a, p, v = p5(b, d)
+            if v <= P5K_MAX and cvar(x, p) <= CVAR_MAX:
+                break
         a = _solve_a(x, groups, gshare, cap, pcap, b, d, target)
     p = _probs(x, groups, gshare, cap, pcap, a, b, d)
     w = np.maximum(1, np.round(p * TOTAL)).astype(np.uint64)

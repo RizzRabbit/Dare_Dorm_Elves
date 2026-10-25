@@ -26,12 +26,15 @@ def build_strip(name, p, seed):
         w = [x * k for x in w]; q = [x * k for x in q]
         dens = [x * k for x in dens]
     L = p.get("L") or int(min(60000, max(1000, math.ceil(max(4 / d for d in dens)) if dens else 1000)))
+    sc = p.get("s", [0] * 5)
     reels = []
     for r in range(5):
         nq = int(round(q[r] * L)); nw = int(round(w[r] * L))
         if q[r] > 0 and nq == 0: nq = 1
         if w[r] > 0 and nw == 0: nw = 1
-        n_plain = L - 4 * nq - nw
+        ns = int(round(sc[r] * L))
+        ns = min(ns, L // 4)
+        n_plain = L - 4 * nq - nw - ns
         # place blocks/singles as tokens between plain symbols, never touching each other
         tokens = ["Q"] * nq + ["S"] * nw
         rng.shuffle(tokens)
@@ -44,14 +47,45 @@ def build_strip(name, p, seed):
         # dense respin strips (single-cell draws only) may need tokens next to each other
         slots = sorted(rng.sample(range(n_plain), len(tokens)) if n_plain >= len(tokens)
                        else rng.choices(range(n_plain), k=len(tokens)))
-        out, ti, si = [], 0, 0
-        for i, s in enumerate(plain):
-            out.append(s)
+        items, ti = [], 0
+        for i, s_ in enumerate(plain):
+            items.append([s_])
             while ti < len(slots) and slots[ti] == i:
-                out += ["W"] * (4 if tokens[ti] == "Q" else 1); ti += 1
+                items.append(["W"] * (4 if tokens[ti] == "Q" else 1)); ti += 1
+        out = scatter_insert(items, ns, rng) if ns else [c for it in items for c in it]
         assert len(out) == L, (name, len(out), L)
         reels.append(out)
     return reels
+
+
+def scatter_insert(items, ns, rng):
+    """Inserts ns Dare Card scatters ("S") between items (never inside a WWWW block) so that any two scatters are
+    >= 4 stops apart (circular): at most one scatter is ever visible on a reel. Gaps are 3 + geometric, re-aimed
+    after every insert at the stops still left, so dense strips with many WWWW blocks still get their count; any
+    shortfall (only possible on near-saturated strips) is padded with low symbols."""
+    out, since, gi, left = ["S"], 0, 1, sum(len(it) for it in items)
+    n = left
+    for it in items:
+        if gi < ns and since >= 3:
+            avg = (left + since) / (ns - gi + 1)          # mean gap still needed per remaining scatter
+            if avg <= 3.5 or rng.random() < 1.0 / max(1.0, avg - 2.5):
+                out.append("S"); since = 0; gi += 1
+        out += it; since += len(it); left -= len(it)
+    if since < 3 and gi > 1:                              # wrap-around gap to the scatter at stop 0 too short
+        j = len(out) - 1 - out[::-1].index("S")
+        del out[j]
+    while len(out) < n + ns:
+        out.append(rng.choice(["L4", "L5"]))
+    return out
+
+
+def scatter_freq(reels):
+    """Chance per reel that a scatter is visible in the 4-row window."""
+    out = []
+    for col in reels:
+        L = len(col)
+        out.append(sum(1 for s in range(L) if any(col[(s + k) % L] == "S" for k in range(4))) / L)
+    return out
 
 
 def wild_freq(reels):
@@ -76,12 +110,15 @@ def wcap_strips(params):
     for mode, f in params.get("wcap_scale", {}).items():
         for nm, p in params["strips"].items():
             if nm.startswith(mode + "_") and "_wcap_" not in nm:
-                if mode == "dare" and nm.startswith("double_"): continue
-                fe = min([f] + [0.25 / x for x in p["w"] if x] + [0.05 / x for x in p.get("q", []) if x])
+                fw = min([f] + [0.25 / x for x in p["w"] if x])       # w and q scaled separately (each keeps its
+                fq = min([f] + [0.05 / x for x in p.get("q", []) if x])  # own rarity order), each capped
                 if mode == "mystery" and "_fs_" not in nm:
-                    fe = 1.0   # Mystery tease/reveal strips stay as-is; only its fresh-start bonus reels run hot
-                q = dict(p); q["w"] = [x * fe for x in p["w"]]
-                if "q" in p: q["q"] = [x * fe for x in p["q"]]
+                    fw = fq = 1.0   # Mystery tease strips stay as-is; only its bonus reels run hot
+                q = dict(p); q["w"] = [x * fw for x in p["w"]]
+                if "q" in p: q["q"] = [x * fq for x in p["q"]]
+                if "s" in p and nm.endswith(("_spin", "_respin")):
+                    fs_ = params.get("wcap_s", {}).get(mode, 1)
+                    q["s"] = [min(0.24, x * fs_) for x in p["s"]]   # hotter scatters: bonuses (and caps) come more often
                 out[mode + "_wcap_" + nm[len(mode) + 1:]] = q
     return out
 

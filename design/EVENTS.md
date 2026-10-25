@@ -5,15 +5,16 @@ The contract between the math (`math/games/elfhaus/game_events.py`) and the fron
 - Every event: `{"index": n, "type": "<name>", ...}`, `index` 0-based within the book.
 - **Amounts** (`amount`, `win`, `totalWin`) are integers = bet multiplier × 100 (`150` = 1.5x). Round line wins to 0.01x before summing; the book's `payoutMultiplier` must equal `finalWin.amount` and the lookup-table row.
 - **Coordinates:** `reveal.board` uses the math-sdk padded layout (`include_padding = True`): `board[reel][row]`, 6 rows per reel, visible rows **1–4**. **Every other event uses visible 0-based coordinates `{reel: 0-4, row: 0-3}`.** (Vault Breakers mixed two systems in its win events; we don't.)
-- Symbol objects: `{"name": "H1"}`; wilds `{"name": "W", "wild": true, "multiplier": 1}`.
+- Symbol objects: `{"name": "H1"}`; wilds `{"name": "W", "wild": true, "multiplier": 1}`; **scatter (Dare Card) `{"name": "S"}`** (scatter revision 2026-10-25: max 1 per reel, never pays, never in `winInfo`, may land in `reveal` and `respinReveal`).
+- Bonus tier ids: `dare`, `double_dare`, `triple_dare`, `hidden` (**UI name "Epic"**).
 - `step`: 0 = the spin itself, 1–3 = respins.
 - `gameType`: `"basegame"` (base, ante, the buy-trigger spin, the Mystery spin, EGW) or `"freegame"`.
 
 ## Events
 ### reveal
 New board at the start of each base/buy/Mystery/EGW spin and each free spin (respins use `respinReveal`, not `reveal`).
-- `board`, `paddingPositions` (5 ints), `gameType`, `anticipation` (5 ints; >0 = slow-spin that reel, e.g. a 3-wild partial stack's reel).
-- `locked`: `{fullReels: [{reel, value}], singles: [{reel, row, value}]}`: wilds carried in (free spins) or placed (EGW) **before** the cells landed.
+- `board`, `paddingPositions` (5 ints), `gameType`, `anticipation` (5 ints; 1 = slow-spin that reel: every reel after the **2nd landed scatter**; Mystery: reels 3–5).
+- `locked`: `{fullReels: [{reel, value}], singles: [{reel, row, value}]}`: wilds carried in / locked (free spins) or placed (EGW) **before** the cells landed. Free spin 1's `locked` = the trigger board's carried wilds + the guaranteed stacks, **in the same cells as the trigger board** (no swap). Dare: always empty.
 
 ### stackComplete
 A reel became a full-reel wild in this step.
@@ -51,35 +52,45 @@ Spin win (all steps), only if > 0. `amount`, `winLevel` (1–10, standard scale 
 ### setTotalWin
 Round running total after each spin (base + all free spins so far). `amount`.
 
+### cardFlip
+**New.** 5 scatters on a base, ante or Mystery final board, right after that spin's `setTotalWin` (Mystery: before `mysteryResult`). Never on a Triple Dare buy. `odds`: `{"triple_dare": 75, "hidden": 25}`, `result`: `"triple_dare"` | `"hidden"`. The frontend flips the Dare Card to the result.
+
 ### freeSpinTrigger
 - `tier`: `"dare"` | `"double_dare"` | `"triple_dare"` | `"hidden"`
-- `totalFs` (8/10/12/14), `cap`: 18
-- `carried`: `{fullReels: [{reel, value}], singles: [{reel, row, value}]}`
+- `totalFs` (8 / 10 / 10 / 12), `cap`: **20**
+- `carried`: `{fullReels: [{reel, value}], singles: [{reel, row, value}]}`: the trigger board's wilds that stay, **in place** at their end values (**empty for Dare**; for the others every wild on the final trigger board). Guaranteed stacks are not in it (see `guaranteedStacks`).
+- `scatters`: `[{reel, row}]` the trigger scatters (3/4/5; highlight them)
 - `source`: `"natural"` | `"buy"` | `"mystery"`
 
+### guaranteedStacks
+**New.** Triple Dare and Epic only, right after `freeSpinTrigger`, only if stacks are missing (TD needs ≥ 1 full reel, Epic ≥ 2; carried stacks count). Animate the new full-reel wilds in.
+- `tier`, `stacks`: `[{reel, value, absorbed: [{row, value}]}]`: each placed stack; `absorbed` = carried singles on that reel merged into it (value = max(4, their sum + 1 per empty cell)).
+- `locked`: the full `{fullReels, singles}` after placement (= free spin 1's `reveal.locked`).
+- Followed by `mergeGroups` (step 0) if adjacent full reels now exist.
+
 ### updateFreeSpin
-Before each free spin's `reveal`. `amount` (1-based spin number), `total`, `cap`: 18.
+Before each free spin's `reveal`. `amount` (1-based spin number), `total`, `cap`: **20**, `tier`.
 
 ### freeSpinRetrigger
-A free spin completed new stacks. `newStacks`: reels, `addedFs` (2 × new stacks, after cap), `totalFs`, `capped` (bool).
+**Changed.** After a free spin's `setTotalWin` when its final board shows 2+ scatters. `scatters`: `[{reel, row}]`, `count`, `addedFs` (2 for 2 S, 5 for 3+, after the cap; can be 0), `totalFs`, `capped` (bool, total hit 20). Replaces the old `newStacks` field; new stacks no longer add spins.
 
-### bonusUpgrade
-Dare only, at most once per round (SPEC §6, D10). After a Dare free spin's `setTotalWin` when that spin completed a stack: `from`: `"dare"`, `to`: `"double_dare"`, `spinsAdded` (2, after the 18 cap), `totalFs` (new budget), `stackReel` (reel of the upgrading stack), `locked` (`{fullReels, singles}` that stay locked from now on, same shape as `carried`). Any other new stacks in the same spin follow as `freeSpinRetrigger`. Later `updateFreeSpin` events carry `tier: "double_dare"`.
+### ~~bonusUpgrade~~
+**Removed** (no Dare → Double Dare upgrade).
 
 ### freeSpinEnd
 `amount` (free-spins win), `winLevel` (endFeature scale).
 
 ### mysteryStart
-First event of a Mystery book, before the reveal: `odds`: `{"none": 50, "double_dare": 37, "triple_dare": 10, "hidden": 3}`. **Never reveals the outcome.**
+First event of a Mystery book, before the reveal: `odds`: `{"none": 50, "double_dare": 37, "triple_dare": 10, "hidden": 3}`. **Never reveals the outcome.** The following `reveal` always shows scatters on reels 1 and 2 (anticipation on 3–5).
 
 ### mysteryResult
-After the Mystery spin's last `respinEnd`: `outcome` (`"none"` | tier). If not `"none"`, a `freeSpinTrigger` with `source: "mystery"` follows. With `source: "mystery"` the bonus starts fresh: `carried` is the tier's fresh start board (DD 1 stack x4, TD 1 stack x4 + 2 singles x1, Hidden 2 stacks x4), not the reveal board, so the frontend clears the reveal wilds and places these (SPEC §8.4).
+After the Mystery spin's `setTotalWin` (and after `cardFlip` on 5 scatters): `outcome` (`"none"` | tier). Final-board scatters: none = 2, double_dare = 4, triple_dare / hidden = 5. If not `"none"`, `freeSpinTrigger{source: "mystery"}` follows with `carried` = **the Mystery board's own wilds in place** (no fresh board; do not clear the reveal wilds), then `guaranteedStacks` for TD/Epic.
 
 ### egwStart
 First event of an EGW book: `reels`: the placed pattern (e.g. `[0,2,4]`), `value`: 4.
 
 ### buyTriggerStart
-First event of a `dare`/`double_dare`/`triple_dare` book: `tier`. Tells the frontend the next spin is the bought trigger spin.
+First event of a `dare`/`double_dare`/`triple_dare` book: `tier`. Tells the frontend the next spin is the bought trigger spin (its final board shows exactly 3 / 4 / 5 scatters; no `cardFlip`).
 
 ### wincap
 Round reached 50,000x: `amount` = 5000000. Play stops at once (no further events except `setTotalWin`, `freeSpinEnd` if in FS, and `finalWin`).
@@ -88,18 +99,18 @@ Round reached 50,000x: `amount` = 5000000. Play stops at once (no further events
 Last event of every book. `amount` = `payoutMultiplier`.
 
 ## Sequences
-**Base / Ante spin:** `reveal` → [`stackComplete`?/`mergeGroups`?] → `winInfo` → `updateStepWin` → `wildGrow` → (`respinStart` → `respinReveal` → [`stackComplete`/`mergeGroups`] → `winInfo`? → `updateStepWin` → `wildGrow`)×≤3 → `respinEnd` → `setWin`? → `setTotalWin` → (`freeSpinTrigger` → free spins) → `finalWin`.
+**Base / Ante spin:** `reveal` → [`stackComplete`?/`mergeGroups`?] → `winInfo` → `updateStepWin` → `wildGrow` → (`respinStart` → `respinReveal` → [`stackComplete`/`mergeGroups`] → `winInfo`? → `updateStepWin` → `wildGrow`)×≤3 → `respinEnd` → `setWin`? → `setTotalWin` → (`cardFlip`? (5 S) → `freeSpinTrigger` → `guaranteedStacks`? → `mergeGroups`? → free spins) → `finalWin`.
 A losing spin: `reveal` → `setTotalWin` → `finalWin`.
 
-**Free spin:** `updateFreeSpin` → `reveal` (with `locked`) → `mergeGroups`? → same step loop → `respinEnd` → `setWin`? → `setTotalWin` → `bonusUpgrade`? (Dare only, once) → `freeSpinRetrigger`? … → `freeSpinEnd` → `finalWin`.
+**Free spin:** `updateFreeSpin` → `reveal` (with `locked`) → `mergeGroups`? → same step loop → `respinEnd` → `setWin`? → `setTotalWin` → `freeSpinRetrigger`? … → `freeSpinEnd` → `finalWin`.
 
-**Bought bonus:** `buyTriggerStart` → base-spin sequence (real trigger spin) → `freeSpinTrigger{source:"buy"}` → free spins → `finalWin`.
+**Bought bonus:** `buyTriggerStart` → base-spin sequence (real trigger spin) → `freeSpinTrigger{source:"buy"}` → `guaranteedStacks`? (TD) → free spins → `finalWin`.
 
-**Mystery:** `mysteryStart` → base-spin sequence (≥ 1 respin always) → `mysteryResult` → (`freeSpinTrigger{source:"mystery"}` → free spins) → `finalWin`.
+**Mystery:** `mysteryStart` → base-spin sequence → `cardFlip`? → `mysteryResult` → (`freeSpinTrigger{source:"mystery"}` → `guaranteedStacks`? → free spins) → `finalWin`.
 
 **EGW:** `egwStart` → `reveal` (with `locked.fullReels`) → `mergeGroups`? → step loop → `setWin`? → `setTotalWin` → `finalWin`. Never `freeSpinTrigger`.
 
 **Wincap anywhere:** … `winInfo` → `updateStepWin` → `respinEnd{reason:"wincap"}` → `wincap` → `setTotalWin` → (`freeSpinEnd`) → `finalWin`.
 
 ## Sample books
-Phase B writes one real book per case to `math/samples/` (JSON, pretty): `base_zero`, `base_win`, `base_respin3`, `base_dare`, `base_double`, `base_triple`, `base_hidden`, `ante_trigger`, `dare_buy`, `double_buy`, `triple_buy`, `mystery_none`, `mystery_double`, `mystery_triple`, `mystery_hidden`, `egw_nonadjacent`, `egw_adjacent`, `<mode>_wincap` for all 7 modes. The frontend mock uses these (VB pattern: `src/mock/books/`).
+Phase B writes one real book per case to `math/samples/` (JSON, pretty): `base_zero`, `base_win`, `base_respin3`, `base_dare`, `base_dare_retrigger`, `base_double`, `base_triple`, `base_hidden`, `ante_trigger`, `dare_buy`, `double_buy`, `double_buy_retrigger`, `triple_buy`, `mystery_none`, `mystery_double`, `mystery_triple`, `mystery_hidden`, `egw_nonadjacent`, `egw_adjacent`, `<mode>_wincap` for all 7 modes. `base_hidden` and `mystery_triple` show `cardFlip` + `guaranteedStacks`; `triple_buy` shows `guaranteedStacks` without a flip. The old `base_dare_upgrade` is gone. The frontend mock uses these (VB pattern: `src/mock/books/`).
