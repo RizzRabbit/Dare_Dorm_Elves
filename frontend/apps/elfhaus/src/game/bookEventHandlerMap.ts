@@ -10,7 +10,7 @@ import { cardFlip } from './cardflip';
 import { timing, isSpinning, startSpin, markStopped, sinceStart, sleep, spinMini, stopMini, stopReel } from './reels';
 import { $, S, k, bet, wait, banner, toast, hideToast, bigWin, setWinMeter, clearLines, renderCell, renderOverlays, cellEl, setGem, ovMx, symHTML } from './ui';
 import { playWins } from './winlines';
-import { wildLand, stackForm, wfExpand, mergeFx } from './wildfx';
+import { wildLand, stackForm, wfExpand, mergeFx, growGroup } from './wildfx';
 import { featOpen, featPop, featClose } from './featfx';
 import { countTo, countMs, setAmount, skipCounts } from './countup';
 import { grab, combineInto } from './combine';
@@ -108,6 +108,7 @@ export const bookEventHandlerMap: Handlers = {
 	},
 	async updateStepWin(ev) { setWinMeter(S.roundBase + ev.amount / 100); },
 	async wildGrow(ev) {
+		const before = S.groups.map((g) => ({ reels: g.reels.join(), values: [...g.values], product: g.product }));
 		ev.changes.forEach((c) => {
 			if (c.kind === 'full') {
 				S.full.set(c.reel, c.to);
@@ -120,9 +121,15 @@ export const bookEventHandlerMap: Handlers = {
 			const el = cellEl(c.reel, c.row);
 			setGem(el.querySelector('.mx'), c.to);
 		});
-		// burst only where a value changed: that full reel's multiplier, or a merged group's total
-		new Set(ev.changes.filter((c) => c.kind === 'full').map((c) => ovMx(c.reel))).forEach((mx) => mx && mxBurst(mx));
-		await wait(650);
+		// a lone full reel bursts on its own multiplier; a merged group shows each reel's +1 then the product formula
+		const grouped = new Set<number>(); S.groups.forEach((g) => g.reels.forEach((r) => grouped.add(r)));
+		new Set(ev.changes.filter((c) => c.kind === 'full' && !grouped.has(c.reel)).map((c) => ovMx(c.reel))).forEach((mx) => mx && mxBurst(mx));
+		const grows = S.groups.map((g) => {
+			const old = before.find((o) => o.reels === g.reels.join()); if (!old || old.product === g.product) return null;
+			const ov = [...document.querySelectorAll<HTMLElement>('.ov.merge')].find((o) => o.dataset.reels === g.reels.join());
+			return ov ? growGroup(ov, old.values, g.values, old.product, g.product) : null;
+		}).filter(Boolean);
+		if (grows.length) await Promise.all(grows); else await wait(650);
 	},
 	// Respin: the cells being replaced go straight back to spinning (no marker text) and stop reel by reel.
 	async respinStart(ev) {
