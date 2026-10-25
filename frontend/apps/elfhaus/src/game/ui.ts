@@ -21,11 +21,35 @@ const pos = (r: number, row: number) => ({ x: r * S.cell, y: row * S.cell });
 
 const ph = (key: string) => `<span class="ph">${key} placeholder</span>`;
 const img = (key: string) => (ART[key] ? `<img src="${ART[key]}" alt="" draggable="false">` : '');
-const badgeCls = (v: number) => (v >= 100 ? 'badge b100' : v >= 10 ? 'badge b10' : 'badge');
+// Pink gem multiplier badge (matte SVG, no glow). Text sits inside the SVG so its dark stroke renders the
+// same everywhere; the size steps down for 4-character labels ("x100") so 3 digits always fit.
+const GEM_FACETS =
+	'<polygon points="25,3 75,3 63,22 37,22" fill="#F7A6CB"/>' + // crown top
+	'<polygon points="75,3 97,43 77,43 63,22" fill="#E86BA8"/>' + // upper right
+	'<polygon points="25,3 37,22 23,43 3,43" fill="#F28CBE"/>' + // upper left
+	'<polygon points="3,43 23,43 37,64 25,83" fill="#B83279"/>' + // lower left
+	'<polygon points="97,43 75,83 63,64 77,43" fill="#9E2467"/>' + // lower right
+	'<polygon points="25,83 37,64 63,64 75,83" fill="#7D1A52"/>' + // pavilion bottom
+	'<polygon points="37,22 63,22 77,43 63,64 37,64 23,43" fill="#D9458F"/>' + // table
+	'<polygon points="37,22 63,22 50,43" fill="#E2579C" opacity=".9"/><polygon points="37,64 63,64 50,43" fill="#C23A82" opacity=".9"/>' +
+	'<polygon points="30,7 46,7 38,17 31,17" fill="#fff" opacity=".8"/>' + // small white highlight
+	'<polygon points="25,3 75,3 97,43 75,83 25,83 3,43" fill="none" stroke="#2A1022" stroke-width="3.2" stroke-linejoin="round"/>';
+export function gemHTML(v: number, extra = '', style = '') {
+	const t = 'x' + v, fs = t.length >= 5 ? 23 : t.length === 4 ? 28 : 34;
+	return `<div class="gem${extra ? ' ' + extra : ''}"${style ? ` style="${style}"` : ''} data-v="${v}"><svg viewBox="0 0 100 86" aria-hidden="true">${GEM_FACETS}` +
+		`<text x="50" y="44" font-size="${fs}">${t}</text></svg><i class="sw"></i></div>`;
+}
+/** Update a gem in place and play the gentle pop + facet sweep. */
+export function setGem(el: Element | null, v: number) {
+	if (!el) return;
+	const g = el as HTMLElement, t = 'x' + v, tx = g.querySelector('text');
+	if (tx) { tx.textContent = t; tx.setAttribute('font-size', String(t.length >= 5 ? 23 : t.length === 4 ? 28 : 34)); }
+	g.dataset.v = String(v); g.classList.remove('grow'); void g.offsetWidth; g.classList.add('grow');
+}
 export function symHTML(name: string, v?: number) {
 	if (name === 'W') {
 		const val = v || 1;
-		return `<div class="sym W">${ART.W ? img('W') : `<span class="nm">WILD</span>${ph('W')}`}<span class="plate">WILD</span></div><div class="${badgeCls(val)}">x${val}</div><div class="lock">LOCKED</div>`;
+		return `<div class="sym W">${ART.W ? img('W') : `<span class="nm">WILD</span>${ph('W')}`}<span class="plate">WILD</span></div>${gemHTML(val)}<div class="lock">LOCKED</div>`;
 	}
 	const t = name[0];
 	if (ART[name]) return `<div class="sym ${t} ${name}">${img(name)}</div>`;
@@ -57,7 +81,8 @@ export function renderOverlays(anim: boolean | number = false) {
 		if (ART[key]) d.classList.add('art');
 		d.innerHTML = (ART[key] ? `<div class="wart">${img(key)}</div>`
 			: g.reels.map((_, i) => `<div class="wfph" style="left:${i * S.cell}px;width:${S.cell}px"><span>ELF ${i + 1}</span></div>`).join('') + `<div class="mlabel">${key} placeholder · ${n} elves</div><div class="plate">WILD</div>`) +
-			`<div class="${badgeCls(g.product)}">${g.values.map((v) => 'x' + v).join(' × ')} = x${g.product}</div>`;
+			g.values.map((v, i) => gemHTML(v, '', `right:calc(${(n - 1 - i) * S.cell}px + 4px)`)).join('') +
+			`<div class="formula">${g.values.map((v) => 'x' + v).join(' × ')} = x${g.product}</div>`;
 		if (!anim) d.style.animation = 'none';
 		o.appendChild(d);
 	});
@@ -67,7 +92,7 @@ export function renderOverlays(anim: boolean | number = false) {
 		d.style.left = pos(r, 0).x + 'px'; d.style.width = S.cell + 'px';
 		if (ART.WF) d.classList.add('art');
 		d.innerHTML = (ART.WF ? `<div class="wart">${img('WF')}</div>` : `<div class="wfph" style="left:0;width:100%"><span>FULL-REEL<br>WILD</span></div><div class="tag">WF placeholder</div><div class="plate">WILD</div>`) +
-			`<div class="${badgeCls(v)}">x${v}</div>`;
+			gemHTML(v);
 		if (anim !== r) d.style.animation = 'none';
 		o.appendChild(d);
 	});

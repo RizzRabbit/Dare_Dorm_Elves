@@ -453,3 +453,20 @@ body.portrait #app #stage{grid-template-rows:minmax(0,1fr) auto auto}
 body.short:not(.portrait) #top{display:flex;position:fixed;top:6px;right:0;left:auto;width:var(--gutR,200px);height:auto;padding:0;justify-content:center}
 body.short:not(.portrait) #logo.art{display:block;--lw:min(180px,calc(var(--gutR,200px) - 20px));width:var(--lw);height:calc(var(--lw) / 2.9);max-width:none}
 body.short:not(.portrait) #logo.art img{width:100%;height:100%}
+
+/* ---- pink gem multiplier badge: upper-right of each wild cell / each wild reel. Matte, no glow. ---- */
+.gem{position:absolute;top:3px;right:3px;z-index:3;width:clamp(34px,calc(var(--cell)*.36),64px);aspect-ratio:100/86;pointer-events:none;transform-origin:60% 40%}
+.gem svg{display:block;width:100%;height:100%;overflow:visible}
+.gem text{font-family:"Nunito",sans-serif;font-weight:900;fill:#fff;stroke:#2A1022;stroke-width:6;paint-order:stroke fill;stroke-linejoin:round;
+  text-anchor:middle;dominant-baseline:central;letter-spacing:-.5px}
+.gem .sw{position:absolute;inset:0;overflow:hidden;clip-path:polygon(25% 3.5%,75% 3.5%,97% 50%,75% 96.5%,25% 96.5%,3% 50%)}
+.gem .sw::before{content:"";position:absolute;top:-10%;bottom:-10%;left:-60%;width:38%;transform:skewX(-20deg);opacity:0;
+  background:linear-gradient(90deg,#fff0,#ffffff8c 50%,#fff0)}
+.gem.grow{animation:gemPop .48s ease-out}
+.gem.grow .sw::before{animation:gemSweep .62s ease-out .08s}
+@keyframes gemPop{0%{transform:scale(1)}45%{transform:scale(1.2)}100%{transform:scale(1)}}
+@keyframes gemSweep{0%{left:-60%;opacity:1}100%{left:130%;opacity:1}}
+.ov .gem{top:4px}
+/* merged-wild product (x2 × x3 = x6): neutral matte plate at the bottom, replaces the old red tag */
+.ov .formula{position:absolute;left:50%;bottom:6px;translate:-50% 0;z-index:3;white-space:nowrap;font-family:"Nunito";font-weight:900;
+  font-size:max(11px,calc(var(--cell)*.11));color:#fff;background:#2A2433e0;border:2px solid #1C1722;border-radius:5px;padding:0 8px}

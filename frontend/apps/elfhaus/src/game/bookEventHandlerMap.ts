@@ -5,7 +5,7 @@ import type { BookEvent, BookEventOf, BookEventType } from './typesBookEvent';
 import { roxy, roxyState } from './roxy';
 import { maxWinCelebration } from './maxwin';
 import { showRespin, endRespin, hideRespin } from './respin';
-import { $, S, k, bet, wait, banner, toast, hideToast, bigWin, setWinMeter, clearLines, drawWins, renderCell, renderOverlays, cellEl } from './ui';
+import { $, S, k, bet, wait, banner, toast, hideToast, bigWin, setWinMeter, clearLines, drawWins, renderCell, renderOverlays, cellEl, setGem } from './ui';
 
 const TL = (t: Tier) => TIER_LABEL[t].toUpperCase();
 const lockedText = (c: BookEventOf<'freeSpinTrigger'>['carried']) =>
@@ -69,11 +69,11 @@ export const bookEventHandlerMap: Handlers = {
 		renderOverlays(false);
 		ev.changes.forEach((c) => {
 			if (c.kind !== 'single') return;
-			const el = cellEl(c.reel, c.row), b = el.querySelector('.badge') as HTMLElement | null;
-			if (b) { b.textContent = 'x' + c.to; b.className = (c.to >= 100 ? 'badge b100' : c.to >= 10 ? 'badge b10' : 'badge') + ' grow'; }
+			const el = cellEl(c.reel, c.row);
+			setGem(el.querySelector('.gem'), c.to);
 			const p = document.createElement('div'); p.className = 'plus'; p.textContent = '+1'; el.appendChild(p);
 		});
-		document.querySelectorAll('.ov .badge').forEach((b) => b.classList.add('grow'));
+		document.querySelectorAll('.ov .gem').forEach((b) => b.classList.add('grow'));
 		await wait(650);
 	},
 	async respinStart(ev) {
