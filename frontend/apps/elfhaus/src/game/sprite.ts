@@ -4,11 +4,14 @@
 // front of DOM content via CSS classes) and advances it on one shared rAF ticker. Options: loop / once, hold
 // the last frame, reverse, fps override, delay. Static frames can be shown without a canvas via frameCSS()
 // (CSS background-position into the same sheet), which survives innerHTML re-renders.
+// Tempo: on the board every sheet plays at fps / ANIM_TEMPO (tempo.ts spriteRate; turbo = 1), and its delay stretches
+// with it; `rate` overrides that per play (1 = the sheet's own pace, e.g. the reel-stop land flashes).
 // Trimmed frames (optional): an anim may set canvas:[W,H] and give frames as [x,y,w,h,ox,oy]; each frame is then drawn
 // 1:1 at (ox,oy) on a W x H canvas (e.g. the stack letters band, so mostly-empty frames cost no sheet memory).
+import { spriteRate } from './tempo';
 export type Atlas = { size: [number, number]; anims: Record<string, { fps: number; loop: boolean; frames: number[][]; canvas?: [number, number] }> };
 type Sheet = { img: CanvasImageSource; atlas: Atlas; src: string };
-export type PlayOpts = { cls?: string; style?: string; loop?: boolean; hold?: boolean; reverse?: boolean; fps?: number; delay?: number; prepend?: boolean; onEnd?: () => void };
+export type PlayOpts = { cls?: string; style?: string; loop?: boolean; hold?: boolean; reverse?: boolean; fps?: number; delay?: number; prepend?: boolean; rate?: number; onEnd?: () => void };
 export type Anim = { cv: HTMLCanvasElement; sheet: Sheet; frames: number[][]; fps: number; loop: boolean; hold: boolean; t0: number; last: number; done: boolean; onEnd?: () => void };
 
 const sheets = new Map<string, Sheet>();
@@ -93,7 +96,8 @@ export function play(id: string, name: string, host: Element, o: PlayOpts = {}):
 	if (o.cls) cv.className += ' ' + o.cls;
 	if (o.style) cv.setAttribute('style', o.style);
 	o.prepend ? host.prepend(cv) : host.appendChild(cv);
-	const a: Anim = { cv, sheet, frames, fps: o.fps || def.fps, loop: o.loop ?? def.loop, hold: !!o.hold, t0: performance.now() + (o.delay || 0), last: -1, done: false, onEnd: o.onEnd };
+	const rate = o.rate ?? spriteRate(host);
+	const a: Anim = { cv, sheet, frames, fps: (o.fps || def.fps) / rate, loop: o.loop ?? def.loop, hold: !!o.hold, t0: performance.now() + (o.delay || 0) * rate, last: -1, done: false, onEnd: o.onEnd };
 	if (o.delay) cv.getContext('2d')!.clearRect(0, 0, cv.width, cv.height);
 	else { a.last = 0; draw(a, 0); } // first frame now: a hand-off (one-shot -> loop) never shows an empty canvas for a frame
 	live.add(a);

@@ -2,7 +2,7 @@
 // (canvas overlay, rAF, time-based). While a line plays only its winning symbols run the win sprite, its amount
 // ticks into the WIN field and a small amount label shows near the line's end. After the last line a short summary
 // highlights every winning symbol with no line over the board. Tap = finish this line now and go to the next one;
-// a second quick tap = skip to the summary. Turbo plays a fast version.
+// a second quick tap = skip to the summary. Turbo plays a fast version. Normal pace = the old one x ANIM_TEMPO (tempo.ts).
 // Cost: one canvas, three strokes per frame (wide faint glow, mid glow, bright core) plus a pre-rendered head stamp;
 // nothing animates filter/shadow, and the canvas is cleared and idle between lines.
 import { LINES, REELS } from './config';
@@ -12,6 +12,7 @@ import { ovWin, clearOvWins } from './mergefx';
 import { play } from './sprite';
 import { money } from './format';
 import type { LineWin } from './typesBookEvent';
+import { T } from './tempo';
 
 let cv: HTMLCanvasElement | null = null, ctx: CanvasRenderingContext2D | null = null, dpr = 1;
 let head: HTMLCanvasElement | null = null;
@@ -73,7 +74,7 @@ export const linesActive = () => active;
 /** Small floating amount over the middle of the line's winning cells (rises and fades in; transform/opacity only). */
 function label(pos: { reel: number; row: number }[], txt: string) {
 	const el = document.createElement('div'); el.className = 'wlAmt'; el.innerHTML = `<b></b>`; el.firstElementChild!.textContent = txt;
-	setTimeout(() => el.isConnected && play('fx_winplate_glint', 'glint', el, { cls: 'wlGlint', prepend: false }), 250);
+	setTimeout(() => el.isConnected && play('fx_winplate_glint', 'glint', el, { cls: 'wlGlint', prepend: false }), T(250));
 	const m = pos[Math.floor((pos.length - 1) / 2)], W = REELS * S.cell;
 	el.style.left = Math.max(S.cell * .6, Math.min(W - S.cell * .6, m.reel * S.cell + S.cell / 2)) + 'px'; el.style.top = (m.row * S.cell + S.cell * .5) + 'px';
 	$('#board').appendChild(el); return el;
@@ -88,8 +89,8 @@ export async function playWins(wins: LineWin[], base: number) {
 	ensure(); active = true; skipAll = false; lastTap = 0;
 	const cells = document.querySelectorAll('.cell'); cells.forEach((c) => c.classList.add('dim'));
 	const n = wins.length, turbo = S.turbo;
-	// per line: race + hold; long lists get faster so a step never drags (normal ~0.55 s/line, min ~0.3 s)
-	const race = turbo ? 150 : Math.max(220, Math.min(380, 2600 / n - 180)), keep = turbo ? 90 : Math.max(100, Math.min(260, race * .7));
+	// per line: race + hold; long lists get faster so a step never drags (old pace ~0.55 s/line, min ~0.3 s; x ANIM_TEMPO)
+	const race = turbo ? 150 : T(Math.max(220, Math.min(380, 2600 / n - 180))), keep = turbo ? 90 : Math.max(T(100), Math.min(T(260), race * .7));
 	let sum = 0;
 	for (const w of wins) {
 		if (skipAll) break; skipLine = false;
@@ -100,13 +101,13 @@ export async function playWins(wins: LineWin[], base: number) {
 		const L = label(w.positions, money(w.win / 100 * bet()));
 		await run(race, (t) => draw(P, easeIO(t), 1));
 		await hold(keep);
-		await run(turbo ? 60 : 110, (t) => draw(P, 1, 1 - t));
+		await run(turbo ? 60 : T(110), (t) => draw(P, 1, 1 - t));
 		L.remove();
 	}
 	skipLine = false;
 	// summary: every winning symbol highlighted, no line over the board
 	clearRace(); setWinMeter(base + wins.reduce((a, w) => a + w.win / 100, 0));
 	wins.forEach((w) => w.positions.forEach((p) => { ovWin(p.reel); const c = cellEl(p.reel, p.row); c.classList.remove('dim'); c.classList.add('win'); litOn(c); symWin(c); }));
-	if (!skipAll) await hold(turbo ? 200 : 450);
+	if (!skipAll) await hold(turbo ? 200 : T(450));
 	active = false; skipAll = false;
 }

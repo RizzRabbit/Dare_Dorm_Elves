@@ -16,14 +16,15 @@ import { burst } from './fx';
 import { S, $ } from './ui';
 import { isSpinning } from './reels';
 import { linesActive } from './winlines';
+import { T } from './tempo';
 const ID = 'fx_wild';
 const ok = () => hasSheet(ID);
 
 export function wildLand(cell: HTMLElement) {
 	if (!ok()) return;
 	cell.classList.remove('wLand'); void cell.offsetWidth; cell.classList.add('wLand');
-	play(ID, 'wflash', cell, { cls: 'wfx wfxRing' });
-	play(ID, 'wland', cell, { cls: 'wfx wfxBurst', onEnd: () => cell.classList.remove('wLand') });
+	play(ID, 'wflash', cell, { cls: 'wfx wfxRing', rate: 1 }); // a landing is part of the reel stop: own pace (tempo.ts)
+	play(ID, 'wland', cell, { cls: 'wfx wfxBurst', rate: 1, onEnd: () => cell.classList.remove('wLand') });
 }
 function column(r: number) {
 	const d = document.createElement('div'); d.className = 'wfxCol';
@@ -92,7 +93,7 @@ export function mergeFx(reels: number[], seams = true) {
 	const g = column(lo); g.style.width = (hi - lo + 1) * S.cell + 'px';
 	play(ID, 'msweep', g, { cls: 'wfx', delay: 180, onEnd: () => g.remove() });
 	// sparkle burst on every merged reel's centre
-	for (let r = lo; r <= hi; r++) { const h = column(r); h.classList.add('burstCol'); burst(h, 'lock', 120 + (r - lo) * 60); setTimeout(() => h.remove(), 900 + (r - lo) * 60); }
+	for (let r = lo; r <= hi; r++) { const h = column(r); h.classList.add('burstCol'); burst(h, 'lock', 120 + (r - lo) * 60); setTimeout(() => h.remove(), T(900 + (r - lo) * 60)); } // sprite delays stretch in play()
 }
 
 // ---- shared shimmer scheduler ----

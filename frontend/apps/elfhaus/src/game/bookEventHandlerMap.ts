@@ -20,6 +20,8 @@ const warmStacks = () => stackPrefetch(S.sym.flatMap((c, r) => (!S.full.has(r) &
 import { featOpen, featPop, featClose } from './featfx';
 import { countTo, countMs, setAmount, skipCounts } from './countup';
 import { grab, combineInto } from './combine';
+import { tempo } from './tempo';
+// Pauses here use ui.wait: the old pace x ANIM_TEMPO, skippable by tap / Space (tempo.ts); turbo keeps its short values.
 
 const scattersOnBoard = (): Pos[] => S.sym.flatMap((col, reel) => col.map((n, row) => ({ reel, row, n }))).filter((c) => c.n === 'S').map(({ reel, row }) => ({ reel, row }));
 const TL = (t: Tier) => TIER_LABEL[t].toUpperCase();
@@ -236,7 +238,7 @@ export const bookEventHandlerMap: Handlers = {
 		setAmount(amt, 0); O.classList.remove('hidden'); featOpen(fx); featPop(O.querySelector('.tierName'));
 		let close = () => {}; const closed = new Promise<void>((r) => (close = r)); let landed = false;
 		O.onclick = () => (landed ? close() : skipCounts());
-		await countTo(amt, total, countMs(total / Math.max(bet(), 1e-9), S.turbo));
+		await countTo(amt, total, countMs(total / Math.max(bet(), 1e-9), S.turbo) * tempo());
 		landed = true;
 		await Promise.race([wait(S.turbo ? 900 : 1800), closed]);
 		O.onclick = null; O.classList.add('hidden'); featClose(fx); endBonusUi();

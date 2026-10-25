@@ -34,7 +34,7 @@ export function symWin(cell: HTMLElement) {
 export function symLand(cell: HTMLElement) {
 	const sym = symOf(cell); if (!sym || symName(cell) !== 'S' || !hasSheet('sym_S')) return;
 	sym.querySelectorAll('canvas.fxLand').forEach((c) => c.remove());
-	play('sym_S', 'land', sym, { cls: 'fxFill symFx fxLand', onEnd: () => sym.querySelectorAll('canvas.fxLand').forEach((c) => c.remove()) });
+	play('sym_S', 'land', sym, { cls: 'fxFill symFx fxLand', rate: 1, onEnd: () => sym.querySelectorAll('canvas.fxLand').forEach((c) => c.remove()) });
 }
 /** Landing weight on reel stop: squash and stretch (~120 ms, WAAPI transform only); wilds and scatters hit harder. */
 export function landBump(cell: HTMLElement) {
@@ -63,7 +63,8 @@ const BURST = { land: 1.5, lock: 1.9, pop: 0.9, big: 3.2 } as const; // big = th
 export function burst(host: HTMLElement, kind: keyof typeof BURST, delay = 0) {
 	if (!hasSheet('fx_burst')) return;
 	const k = BURST[kind];
-	play('fx_burst', kind === 'big' ? 'lock' : kind, host, { cls: 'bfx', delay, prepend: false, style: `width:calc(var(--cell)*${k});height:calc(var(--cell)*${k});margin:calc(var(--cell)*${-k / 2}) 0 0 calc(var(--cell)*${-k / 2})` });
+	play('fx_burst', kind === 'big' ? 'lock' : kind, host, { cls: 'bfx', delay, prepend: false, rate: kind === 'land' ? 1 : undefined, // the reel-stop impact keeps its snap (tempo.ts)
+		 style: `width:calc(var(--cell)*${k});height:calc(var(--cell)*${k});margin:calc(var(--cell)*${-k / 2}) 0 0 calc(var(--cell)*${-k / 2})` });
 }
 export function clearSymWins() {
 	document.querySelectorAll('canvas.fxWin').forEach((c) => c.remove());

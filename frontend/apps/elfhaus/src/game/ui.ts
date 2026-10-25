@@ -8,6 +8,7 @@ import type { Group, LineWin } from './typesBookEvent';
 import { DOTS } from './respin';
 import { mxBurst, lockIconCSS, symWin, clearSymWins } from './fx';
 import { countTo, countMs, setAmount, skipCounts, countTiers, BIG_TIERS } from './countup';
+import { hold, tempo } from './tempo';
 
 export const ART = ART_JSON as Record<string, string | null>;
 export const $ = <T extends HTMLElement = HTMLElement>(s: string) => document.querySelector(s) as T;
@@ -21,7 +22,10 @@ export const S = {
 };
 export const k = (r: number, row: number) => r * ROWS + row;
 export const bet = () => (S.replay ? S.replayBet : S.levels[S.betIdx] ?? 0);
-export const wait = (ms: number) => new Promise<void>((res) => setTimeout(res, ms * (S.turbo ? 0.35 : 1)));
+/** Board pause at the old pace: stretched by ANIM_TEMPO and skippable by tap / Space (tempo.ts hold); turbo = 0.35x as before. */
+export const wait = (ms: number) => (S.turbo ? waitRaw(ms * 0.35) : hold(ms));
+/** Plain timer (win screens / resume: their pace is their own). */
+export const waitRaw = (ms: number) => new Promise<void>((res) => setTimeout(res, ms));
 export const pos = (r: number, row: number) => ({ x: r * S.cell, y: row * S.cell });
 
 const ph = (_key: string) => ''; // no visible placeholder labels in release builds
@@ -166,14 +170,14 @@ export const hideToast = () => $('#stepToast').classList.add('hidden');
 let bannerT: any;
 export function banner(txt: string, ms = 1400) {
 	const b = $('#banner'); b.textContent = txt; b.classList.remove('hidden'); clearTimeout(bannerT);
-	if (ms) bannerT = setTimeout(() => b.classList.add('hidden'), ms * (S.turbo ? 0.5 : 1));
+	if (ms) bannerT = setTimeout(() => b.classList.add('hidden'), ms * (S.turbo ? 0.5 : tempo()));
 }
 // C17: the round's win meter only counts up and never exceeds the 50,000x cap.
 /** WIN field: counts up smoothly from what it shows to the new total (duration scaled by the step's size). */
 export function setWinMeter(x: number) {
 	const nx = Math.min(MAX_WIN_X, Math.max(S.meterX, x)), dx = nx - S.meterX;
 	S.meterX = nx;
-	if (dx > 0) countTo($('#win'), nx * bet(), countMs(dx, S.turbo));
+	if (dx > 0) countTo($('#win'), nx * bet(), countMs(dx, S.turbo) * tempo()); // x ANIM_TEMPO (turbo: 1)
 	else setAmount($('#win'), nx * bet());
 }
 export function resetWinMeter() { S.meterX = 0; setAmount($('#win'), 0); }
@@ -197,7 +201,7 @@ export async function bigWin(x: number, label?: string) {
 		onX: (v) => { if (!chars && v >= 1000) { chars = true; B.classList.add('chars'); fxHooks.chars?.(B); } },
 	});
 	landed = true;
-	await Promise.race([wait(S.turbo ? 700 : x >= 1000 ? 2200 : 1500), closed]);
+	await Promise.race([waitRaw(S.turbo ? 700 * 0.35 : x >= 1000 ? 2200 : 1500), closed]);
 	B.removeEventListener('pointerdown', tap); B.classList.add('hidden'); B.classList.remove('chars'); fxHooks.end?.(B);
 }
 type BwHooks = { start?: (B: HTMLElement, x: number) => void; tier?: (B: HTMLElement, i: number) => void; chars?: (B: HTMLElement) => void; end?: (B: HTMLElement) => void };

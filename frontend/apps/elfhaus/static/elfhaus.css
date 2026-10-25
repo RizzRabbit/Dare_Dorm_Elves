@@ -868,3 +868,20 @@ body.alcove.portrait #app #fsBar{position:relative;z-index:4}
 /* the corner gem and the respin dots stay on top of the frame */
 .ov>.mx,.ov>.ovrd{z-index:6}
 /* ===== end wild frame ===== */
+/* ===== board tempo (src/game/tempo.ts): --at = ANIM_TEMPO (2) on <body>, 1 in turbo (body.turbo). The board's CSS
+   motion keeps its old values above and is stretched here. Not stretched: the reel-stop pops (wPop, .cell.drop) and the
+   anticipation pulse (antPulse), the wild frame's 3.6 s breath, HUD / loader / big-win / max-win screens. ===== */
+body{--at:2} body.turbo{--at:1}
+.grow{animation-duration:calc(.5s*var(--at))}
+.plus{animation-duration:calc(.8s*var(--at))}
+.ov{animation-duration:calc(.5s*var(--at))}
+.wlAmt{animation-duration:calc(.5s*var(--at))}
+.cell.win .lit{animation-duration:calc(.9s*var(--at));animation-delay:calc(.25s*var(--at))}
+#intro .card,#outro .card{animation-duration:calc(.45s*var(--at))}
+.cell{transition-duration:calc(.2s*var(--at))}
+.cell.dim{transition-duration:calc(.15s*var(--at))}
+.cell.win .sym{transition-duration:calc(.26s*var(--at))}
+.cell .lit{transition-duration:calc(.2s*var(--at)),calc(.25s*var(--at))}
+.cell .symSh{transition-duration:calc(.22s*var(--at)),calc(.26s*var(--at))}
+.sym .olWin,.ov .ovWinO{transition-duration:calc(.2s*var(--at))}
+/* ===== end board tempo ===== */

@@ -20,7 +20,8 @@ import { featOpen, featPop, featClose } from './featfx';
 import { preloadBigWinElves, bigWinElvesStart, bigWinElvesEnd } from './bigwinElves';
 import { setBigWinFx } from './ui';
 import { setSocial, isSocial, t } from './strings';
-import { $, S, ART, bet, buildCells, renderAll, renderOverlays, setOverlayHook, resetWinMeter, setWinMeter, banner, wait } from './ui';
+import { $, S, ART, bet, buildCells, renderAll, renderOverlays, setOverlayHook, resetWinMeter, setWinMeter, banner, wait, waitRaw } from './ui';
+import { skipHolds, syncTempo } from './tempo';
 import { playBookEvents, endBonusUi } from './bookEventHandlerMap';
 import { initRoxy, placeRoxy } from './roxy';
 import { initStacks, stackIdle } from './stacks';
@@ -145,6 +146,10 @@ function autoStopReason(roundWin: number) {
 	return '';
 }
 
+/** Tap / Space during a round: finish the count-ups, the current win line, a merge / stack, every board pause
+ *  (tempo.ts holds) and, unless a menu was tapped, land the reels now. */
+function skipBoard(reels = true) { skipCounts(); tapLines(); skipMerge(); skipHolds(); if (reels) hurry(); }
+
 // ---------- RGS round ----------
 async function finishRound(round: any) {
 	if (round?.active || (round?.payoutMultiplier ?? 0) > 0 || (round?.payout ?? 0) > 0) {
@@ -220,7 +225,7 @@ async function resume(rd: any) {
 	setArm(null, rd.mode === 'ante');
 	setStrip(); banner('RESUMING YOUR LAST ROUND', 1600);
 	setBusy(true);
-	try { await wait(600); await playBookEvents(rd.state); await finishRound({ ...rd, active: true }); }
+	try { await waitRaw(600); await playBookEvents(rd.state); await finishRound({ ...rd, active: true }); }
 	catch (e) { showError(e); } finally { setBusy(false); }
 }
 async function loadReplay() {
@@ -370,7 +375,8 @@ function wire() {
 	$('#bmDown').onclick = () => betStep(-1);
 	$('#anteSw').onclick = () => { setArm(null, !S.ante); paintBuy(); };
 	$('#armTag').onclick = () => { if (!S.busy) setArm(null); };
-	$('#turboBtn').onclick = () => { S.turbo = !S.turbo; $('#turboBtn').classList.toggle('on', S.turbo); };
+	$('#turboBtn').onclick = () => { S.turbo = !S.turbo; $('#turboBtn').classList.toggle('on', S.turbo); syncTempo(); };
+	syncTempo();
 	$('#autoBtn').onclick = () => { if (S.auto) return stopAuto(); if (S.busy) return; buildAuto(); show('#autoMenu', true); };
 	$('#autoClose').onclick = () => show('#autoMenu', false);
 	$('#autoStart').onclick = startAuto;
@@ -393,7 +399,8 @@ function wire() {
 		if (modal) return;
 		e.preventDefault();
 		if (S.auto) { stopAuto(); return; }
-		if (e.repeat || S.busy) return;
+		if (S.busy) { if (!e.repeat) skipBoard(); return; } // Space mid-round = the same skip as a tap on the board
+		if (e.repeat) return;
 		if (!$('#intro').classList.contains('hidden')) { ($('#intro .cont') as HTMLElement).click(); return; }
 		S.replay ? playReplay() : round(spinMode());
 	});
@@ -427,7 +434,7 @@ export async function initGame() {
 	});
 	const ric = (window as any).requestIdleCallback as ((f: () => void, o?: object) => void) | undefined;
 	setTimeout(() => (ric ? ric(() => preloadBigWinElves(), { timeout: 5000 }) : preloadBigWinElves()), 2500);
-	document.addEventListener('pointerdown', (e) => { if (!(e.target as Element)?.closest?.('#bigwin,#outro')) { skipCounts(); tapLines(); skipMerge(); if (!(e.target as Element)?.closest?.('#menu,#buyMenu,#autoMenu,#msg')) hurry(); } }, { capture: true, passive: true });
+	document.addEventListener('pointerdown', (e) => { if (!(e.target as Element)?.closest?.('#bigwin,#outro')) { skipBoard(false); if (!(e.target as Element)?.closest?.('#menu,#buyMenu,#autoMenu,#msg')) hurry(); } }, { capture: true, passive: true });
 	track(initRoxy(layout));
 	loadAllFx(track).then(() => renderAll());
 	setOverlayHook(stackIdle); initStacks().then(() => renderOverlays(false)); void initWfExpand(); // optional stack / per-reel expand sheets (placeholders until imported)

@@ -6,6 +6,7 @@
 import { S } from './ui';
 import { mxBurst } from './fx';
 import { toStage } from './stage';
+import { T } from './tempo';
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 function layer() {
 	let l = document.getElementById('flyLayer');
@@ -25,7 +26,7 @@ export function grab(mxs: (HTMLElement | null)[]) {
 }
 export async function combineInto(clones: HTMLElement[], target: HTMLElement | null) {
 	if (!target || !clones.length) { clones.forEach((c) => c.remove()); return; }
-	const fast = S.turbo, dur = fast ? 300 : 600, stag = fast ? 25 : 70;
+	const fast = S.turbo, dur = fast ? 300 : T(600), stag = fast ? 25 : T(70); // T: tempo.ts (turbo keeps the old fast values)
 	target.style.visibility = 'hidden';
 	const t = toStage(target.getBoundingClientRect()), tx = t.left + t.width * 0.62, ty = t.top + t.height / 2;
 	await Promise.all(clones.map((c, i) => {
@@ -39,6 +40,6 @@ export async function combineInto(clones: HTMLElement[], target: HTMLElement | n
 	clones.forEach((c) => c.remove());
 	target.style.visibility = '';
 	mxBurst(target);
-	target.animate([{ transform: 'scale(.55)' }, { transform: 'scale(1.16)', offset: 0.6 }, { transform: 'scale(1)' }], { duration: fast ? 160 : 320, easing: 'ease-out' });
-	await sleep(fast ? 140 : 300);
+	target.animate([{ transform: 'scale(.55)' }, { transform: 'scale(1.16)', offset: 0.6 }, { transform: 'scale(1)' }], { duration: fast ? 160 : T(320), easing: 'ease-out' });
+	await sleep(fast ? 140 : T(300));
 }

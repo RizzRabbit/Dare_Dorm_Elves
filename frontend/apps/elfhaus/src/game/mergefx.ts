@@ -13,6 +13,8 @@
 //                          which counts up (x5, x30). ~1.3 s.
 //   ovWin(reel)          : a merged / full-reel wild that is part of a winning line bounces and shows its win outline.
 // Tap or turbo snaps to the end state (skipMerge finishes every running animation). Transform/opacity only.
+// Tempo (tempo.ts): every duration / delay / pause below is written at the old pace and stretched by ANIM_TEMPO in A() and
+// sw() (turbo = 1); the stacks sheets slow with it (sprite.ts), so the sheet beats and these beats stay in step.
 // Art swap (stacks.ts): when the stacks_v1 sheets (MERGE_ANIM.md) are imported, stack_form / merge_join /
 // letters_ignite / merge_win play at these same beats and merge_idle loops; any sheet not there keeps its placeholder.
 import { S, $, setGem, gemHTML, ovMx, cellEl, pos } from './ui';
@@ -21,15 +23,17 @@ import { mergeFx, stackForm, wfExpand, warmExpand } from './wildfx';
 import { grab } from './combine';
 import { toStage } from './stage';
 import { hasStack, stackOnce, stackLetters, stackWin, stackWinOff, stackPrepare, stackRelease } from './stacks';
+import { T } from './tempo';
 
 let skipping = false, running = 0;
 const anims = new Set<Animation>();
 function A(el: Element, kf: Keyframe[], o: KeyframeAnimationOptions) {
-	const a = el.animate(kf, o); anims.add(a); a.finished.catch(() => {}).finally(() => anims.delete(a));
+	const a = el.animate(kf, { ...o, duration: T(Number(o.duration) || 0), delay: T(o.delay || 0) }); anims.add(a); a.finished.catch(() => {}).finally(() => anims.delete(a));
 	if (skipping) a.finish();
 	return a;
 }
-const sw = (ms: number) => (skipping ? Promise.resolve() : new Promise<void>((r) => { const t = setTimeout(r, ms); waiters.add(() => { clearTimeout(t); r(); }); }));
+/** A pause at the old pace, stretched by the tempo (`raw`: a plain cap, e.g. a decode wait, not stretched). */
+const sw = (ms: number, raw = false) => (skipping ? Promise.resolve() : new Promise<void>((r) => { const t = setTimeout(r, raw ? ms : T(ms)); waiters.add(() => { clearTimeout(t); r(); }); }));
 const waiters = new Set<() => void>();
 /** Tap: snap whatever merge/stack is playing to its end state. */
 export function skipMerge() {
@@ -71,7 +75,7 @@ export async function stackIn(reel: number, render: () => void) {
 		stackForm(reel); // light column sprite (flash)
 		cells.forEach((el, row) => { const s = el.querySelector('.sym') || el; A(s, [{ transform: 'none', opacity: 1 }, { transform: `translateY(${(1.5 - row) * c * 0.42}px) scale(.72,.6)`, opacity: 0.35 }], { duration: 230, easing: 'cubic-bezier(.5,0,.9,.4)', fill: 'forwards' }); });
 		await sw(230);
-		const h = col(pos(reel, 0).x, S.cell); burst(h, 'lock'); setTimeout(() => h.remove(), 900);
+		const h = col(pos(reel, 0).x, S.cell); burst(h, 'lock'); setTimeout(() => h.remove(), T(900));
 		render();
 		cells.forEach((el) => (el.querySelector('.sym') || el).getAnimations().forEach((a) => a.cancel()));
 		const ov = ovOf(reel);
@@ -117,7 +121,7 @@ export async function mergeIn(reels: number[], values: number[], product: number
 		const bloom = bloomOver(stage.el);
 		A(bloom, [{ opacity: 0 }, { opacity: 1 }], { duration: SQUASH, easing: 'cubic-bezier(.5,0,.9,.6)', fill: 'forwards' });
 		await sw(SQUASH);
-		await Promise.race([warm, sw(400)]); // (rarely waits: the bloom just holds a moment longer)
+		await Promise.race([warm, sw(400, true)]); // (rarely waits: the bloom just holds a moment longer)
 		// 3) HARD cut under the opaque bloom: the merged overlay replaces the stage in the same frame, the group scales up
 		//    from about the singles' size (merge_join sheet, or a transform on the placeholder art); shockwave + burst per seam
 		stage.el.remove(); stage = null;
@@ -216,7 +220,7 @@ async function recombine(gems: HTMLElement[], target: HTMLElement | null, values
 			const last = i === gems.length - 1, v = last ? product : prodTo(values, i);
 			if (!last) { target.style.opacity = ''; setGem(target, v, false); A(target, [{ transform: 'scale(1)' }, { transform: 'scale(1.18)', offset: .4 }, { transform: 'scale(1)' }], { duration: 200 }); return; }
 			// the last one lands: count up from the running product to the total, then pop
-			const from = gems.length > 1 ? prodTo(values, i - 1) : values[0], dur = 260, t0 = performance.now();
+			const from = gems.length > 1 ? prodTo(values, i - 1) : values[0], dur = T(260), t0 = performance.now();
 			target.style.opacity = '';
 			await new Promise<void>((res) => {
 				const tick = (t: number) => {
@@ -249,7 +253,7 @@ export async function growIn(ov: HTMLElement, from: number[], to: number[], from
 		await sw(200 + n * 30);
 		// 2) each changed reel ticks +1 with a pop (burst sprite + scale)
 		let k = 0;
-		for (let i = 0; i < n; i++) if (to[i] !== from[i]) { const g = gems[i], v = to[i]; setTimeout(() => setGem(g, v), skipping ? 0 : k++ * 90); }
+		for (let i = 0; i < n; i++) if (to[i] !== from[i]) { const g = gems[i], v = to[i]; setTimeout(() => setGem(g, v), skipping ? 0 : T(k++ * 90)); }
 		if (skipping) gems.forEach((g, i) => setGem(g, to[i], false));
 		await sw(k * 90 + 260);
 		gems.forEach((g, i) => setGem(g, to[i], false));
@@ -268,6 +272,6 @@ export async function growIn(ov: HTMLElement, from: number[], to: number[], from
 export function ovWin(reel: number) {
 	const ov = ovOf(reel); if (!ov || ov.classList.contains('win')) return;
 	ov.classList.add('win'); stackWin(ov);
-	ov.animate([{ transform: 'none' }, { transform: 'translateY(-3%) scale(1.03)', offset: .4 }, { transform: 'translateY(.6%) scale(.995)', offset: .75 }, { transform: 'none' }], { duration: 460, easing: 'ease-out' });
+	ov.animate([{ transform: 'none' }, { transform: 'translateY(-3%) scale(1.03)', offset: .4 }, { transform: 'translateY(.6%) scale(.995)', offset: .75 }, { transform: 'none' }], { duration: T(460), easing: 'ease-out' });
 }
 export const clearOvWins = () => document.querySelectorAll<HTMLElement>('.ov.win').forEach((o) => { o.classList.remove('win'); stackWinOff(o); });

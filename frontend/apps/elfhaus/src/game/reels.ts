@@ -10,13 +10,18 @@
 // strip is hidden in the same frame, so no swap is visible. Locked cells sit above the strip and never move.
 import { S, ART, symHTML, k } from './ui';
 import { ROWS, REELS } from './config';
+import { SPIN_TEMPO, STOP_TEMPO } from './tempo';
 
+// Normal pace (tempo.ts): the spin schedule (first stop, gaps, anticipation, respin cells) x SPIN_TEMPO 1.25, the
+// brake / settle only x STOP_TEMPO 1.1 and the run speed / STOP_TEMPO, so it is calmer but a stop still snaps.
+// Turbo / quick spin keeps the old fast values.
+const sp = (ms: number) => Math.round(ms * SPIN_TEMPO), st = (ms: number) => Math.round(ms * STOP_TEMPO);
 export const timing = () => (S.turbo
 	? { first: 420, gap: 70, ant: 450, antD: 420, resp: 380, land: 60, cell: 35 }
-	: { first: 950, gap: 150, ant: 1150, antD: 1000, resp: 640, land: 140, cell: 70 });
+	: { first: sp(950), gap: sp(150), ant: sp(1150), antD: sp(1000), resp: sp(640), land: sp(140), cell: sp(70) });
 const P = () => (S.turbo
 	? { wu: 0, amp: 0, acc: 70, v: 44, D: 220, ov: 0.14, set: 150 }
-	: { wu: 0, amp: 0, acc: 120, v: 26, D: 380, ov: 0.2, set: 260 }); // instant start; elastic overshoot + settle
+	: { wu: 0, amp: 0, acc: sp(120), v: 26 / STOP_TEMPO, D: st(380), ov: 0.2, set: st(260) }); // instant start; elastic overshoot + settle
 
 type Slot = HTMLElement & { n?: number };
 type Reel = {
@@ -193,7 +198,7 @@ export function stopMini(reel: number, row: number, at: number, onLand: () => vo
 		const c = document.getElementById(`c${reel}${row}`);
 		c?.classList.remove('spinning'); onLand();
 		const sym = c?.querySelector<HTMLElement>('.sym'); // drop-in + squash and bounce (WAAPI, transform only, no reflow)
-		sym?.animate([{ transform: 'translateY(-28%) scale(.94,1.06)' }, { transform: 'translateY(4%) scale(1.07,.92)', offset: .45 }, { transform: 'translateY(-2%) scale(.98,1.02)', offset: .75 }, { transform: 'none' }], { duration: S.turbo ? 160 : 260, easing: 'ease-out' });
+		sym?.animate([{ transform: 'translateY(-28%) scale(.94,1.06)' }, { transform: 'translateY(4%) scale(1.07,.92)', offset: .45 }, { transform: 'translateY(-2%) scale(.98,1.02)', offset: .75 }, { transform: 'none' }], { duration: S.turbo ? 160 : Math.round(260 * STOP_TEMPO), easing: 'ease-out' });
 		res();
 	}, Math.max(0, t0 + at - performance.now())));
 }

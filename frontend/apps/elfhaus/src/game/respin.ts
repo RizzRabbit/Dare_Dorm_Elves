@@ -8,6 +8,7 @@
 // State lives on <body> (class .respinning, data-rl = lit count) so freshly rendered cells/overlays pick it up.
 import { FX, rcFill, rcFlash } from './fx';
 import { hasSheet } from './sprite';
+import { T } from './tempo'; // the dots' beats x ANIM_TEMPO (their fill sheet slows in sprite.ts)
 const MAX = 3;
 let dimT = 0, hideT = 0;
 const B = () => document.body;
@@ -32,16 +33,16 @@ export function showRespin(_step: number, remaining: number) {
 	const avail = Math.min(MAX, remaining + 1);
 	if (!B().classList.contains('respinning')) {
 		setLit(avail, null);
-		dimT = window.setTimeout(() => setLit(remaining, 'dim'), 380);
+		dimT = window.setTimeout(() => setLit(remaining, 'dim'), T(380));
 	} else if (avail > lit()) {
 		setLit(avail, 'refill');
-		dimT = window.setTimeout(() => setLit(remaining, 'dim'), 520);
+		dimT = window.setTimeout(() => setLit(remaining, 'dim'), T(520));
 	} else setLit(remaining, 'dim');
 }
 /** Sequence over: hold the final state briefly, then hide. */
 export function endRespin(delay = 700) {
 	clearTimeout(hideT);
-	hideT = window.setTimeout(hideRespin, delay);
+	hideT = window.setTimeout(hideRespin, T(delay));
 }
 export function hideRespin() {
 	clearTimeout(dimT); clearTimeout(hideT);
