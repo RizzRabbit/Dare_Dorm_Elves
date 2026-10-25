@@ -34,19 +34,19 @@ Branch `final` is the integration branch. It holds **only** work the user has ap
 | Splash backdrop re-made from the brand-v3 Lounge (aifix 6 had used the older `elfhaus-bg/final_lounge` plate) | `src/assets/intro/splash_bg_land.webp` 1920x1080 / `splash_bg_port.webp` 1080x1920 from `assets/final/webp/bg_base_noroxy_1920x1080.webp` / `bg_base_mobile_noroxy_1080x1920.webp` (brand-v3): LANCZOS resize, GaussianBlur 9, then aifix 6's own darken + vignette re-applied as a smooth per-pixel gain map fitted against the old splash (MSE 8.4 / 12.6), webp q85. Status: **in** | 2026-10-25 ~5:50 PM (closes audit 3) |
 | Vi (H3) symbol iris matched to the lavender used by her stacks, reactions and cast (audit 20 drift). Local edit only: iris-coloured pixels inside the open eye (512 box 172,140-198,166; x2 on the 1024 PNG), hue +2 (OpenCV) toward the stack iris, saturation x0.62, value x1.06, feathered mask; hair, skin and everything else untouched. Unused `fx/sym_H3` win strip (SYM_STRIPS off) and the 192 px motion-blur reel strips not regenerated (iris not visible there) | `assets/final/webp/symbol_H3.webp`, `assets/final/symbol_H3.png`. Status: **in** | 2026-10-25 ~5:55 PM (user: match Vi's eyes to the majority) |
 | House-rule pass: loader bar animates `transform: scaleX` (was width), big-win title lift uses `translate` (was `top`, now on the board tempo), buy-card hover no longer transitions border/box-shadow, duplicate `<i>` switch knob hidden (Ante / Stop on feature showed two dots; the knob is `.sw::after` translateX). Retired working title scrubbed from ART_BIBLE.md / DECISIONS.md / this file (left only in README.md's GitHub repo URL, which is the repo's real name, not shipped). Checked: no nipples/genitals in symbols, wilds, stacks, win-screen cast, reactions, buy cards; Lounge is plum/neon, not brown; turbo = tempo 1 and tap/Space skip unchanged | `static/elfhaus.css` (end block), `src/game/loader.ts`, `assets/ART_BIBLE.md`, `design/DECISIONS.md`. Status: **in** | 2026-10-25 ~6:00 PM (standing rules) |
-| Side Roxy = one painted still + face overlays (replaces the `roxy_full_*` frame sheets, which are deleted): base still (cand3, painted3d_v2) + faces blink / eager / excited / wink_eye / disappointed (new, used on a miss). Motion is code-side, transform/opacity only: idle sway 0.6° / 6.5 s + breath scaleY 0.006 / 4 s about her feet, random blinks 3.5-6 s, 300 ms face crossfades; bonus anticipation = excited bounce (0.75 s cycle, 2.5% of height, light squash at contact, 1.2 s ease-in; turbo 0.5 s / 1.5%; Calm motion / reduced motion: no bounce); hit = one small hop at the next contact, then excited held 2.2 s; miss = bounce settles over 0.6 s, disappointed face 2 s, then idle. Resident ~6 MB decoded (was ~30-70 MB), download ~0.24 MB (was ~8 MB) | `/workspace/elfhaus-roxy-still` (`game/roxy_base_2x.webp`, `faces/2x/*.png` -> lossless webp, `faces/offset.json` -> `roxy.json`) -> `static/assets/roxy/`; `src/game/roxy.ts` rewritten; hook in `bookEventHandlerMap.ts` reveal (tease resolves as the reels stop); `import-art.mjs roxy` now imports the still set; notes `elfhaus-roxy-still/INTEGRATION.md`, preview `review/roxy_anticipation.mp4`. Status: **in** | 2026-10-25 still approved ("they look good"); import ~5:30 PM ("Just finish Roxy and then build") |
+| Side Roxy = the ORIGINAL v2 animation, as uploaded to Stake Engine (frontend-elfhaus @ 689a965, elfhaus-frontend-v2.zip); user decision 2026-10-25 (the painted still can't do the original's turn-to-camera, crouch and jump). The `roxy_full_{idle,anticipation,excited,disappointed}_*` sheets (28 files, byte-identical to v2) and `roxy.ts` as before 4ecd70c: v2 behaviour plus the later non-art fixes (lazy decode/free, portrait clip at board top, aifix contact shadow). No added bounce or face overlays | `static/assets/atlases/roxy_full_*`, `src/game/roxy.ts` (4ecd70c reverted). Status: **in** | 2026-10-25 |
 | Coco (H4) symbol hair matched to the copper of her wild, stacks and max-win cast (drift audit). Local edit only: saturated red hair pixels (hue <=12 / >=352 deg, S>0.65), face, hand and lower body masked out; hue +12 deg, S x0.97, V x0.96, feathered; skin, lips, eyes, sweater untouched. Reel blur strips regenerated (`gen_reelblur.py`) | `assets/final/webp/symbol_H4.webp`, `assets/final/symbol_H4.png`, `assets/final/fx/reel_strip{A,B}.webp`. Status: **in** | 2026-10-25 ~5:40 PM |
 | Pipeline/QA commits | 2c88dba fd709ea 477db47 576e609 0f992c6 9b509d6 11b3200 (import guard, dev PORT, egw_wm5 book, runbook, tsc fixes) | n/a (tooling) |
 
 ## Approved but held (do not import yet)
 | Item | Source | Rule |
 |---|---|---|
-| Painted-3D Roxy | `/workspace/elfhaus-roxy-p3d/out` (out_v2 fixes in progress) | Import with `node scripts/import-art.mjs roxy …` only when ALL her animations are done, incl. the max-win group and stack/merge. The side Roxy now uses the still + face overlays (row above) and `import-art.mjs roxy` imports that set; a p3d import would need its own decision. |
+| (none) | | |
 
 ## In progress / awaiting user approval (not in the build)
 | Item | Where |
 |---|---|
-| Roxy out_v2 fixes (incl. the mouth hole) | `/workspace/elfhaus-roxy-p3d` |
+| (none) | |
 
 ## Rejected / do not use
 | Item | Why |
@@ -56,6 +56,8 @@ Branch `final` is the integration branch. It holds **only** work the user has ap
 | Dorm background | gone; fallback PNG only, never shown |
 | `layout.patch` | obsolete, superseded by motion.patch |
 | f16cc93, 3211a0a, 6b4034b | dry-run-only commits (3211a0a carries Roxy p3d, fx_wfexpand, wild statics; 6b4034b the r4 motion.patch) |
+| Painted-still side Roxy (still + face overlays, commit 4ecd70c) | shelved by user decision 2026-10-25 (user likes her look, but she can't reproduce the original animation). Kept at `/workspace/elfhaus-roxy-still`; removed from the build (4ecd70c reverted) |
+| Painted-3D Roxy and its out_v2 fixes `/workspace/elfhaus-roxy-p3d` | not used; the side Roxy is the original v2 animation |
 | Logo redesign, incl. hand-inked logo `/workspace/elfhaus-logo-r2` | user keeps the stone ELFHAUS title |
 | Lounge retouch `/workspace/elfhaus-bg/lounge_r2` | tones down the neon; user said keep the neon |
 | Pink rings/circles on wilds and symbols | "remnants of the circle symbols"; removal is in aifix |

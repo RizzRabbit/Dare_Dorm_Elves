@@ -88,8 +88,6 @@ export const bookEventHandlerMap: Handlers = {
 		}
 		await Promise.all(stops);
 		markStopped();
-		// Roxy: the tease resolves as the reels stop (hit = small happy hop, miss = disappointed; a mystery decides later)
-		if (roxyState() === 'anticipation') { if (roxyAhead === 'hit') roxy('excited'); else if (roxyAhead === 'miss') roxy('disappointed'); }
 		await sleep(T.land);
 	},
 	async stackComplete(ev) {
@@ -260,7 +258,6 @@ export const bookEventHandlerMap: Handlers = {
 	async finalWin(ev) { setWinMeter(Math.min(ev.amount / 100, MAX_WIN_X)); },
 };
 
-let roxyAhead: '' | 'hit' | 'miss' = '';
 export async function playBookEvents(events: BookEvent[]) {
 	S.roundBase = 0;
 	// celebration sheets are lazy: start decoding them only once this round's book shows they're needed (the reels spin
@@ -268,7 +265,6 @@ export async function playBookEvents(events: BookEvent[]) {
 	if (events.some((e) => e.type === 'wincap')) void preloadMaxWin();
 	else if (events.some((e) => e.type === 'setWin' && (e as { amount?: number }).amount! / 100 >= BIGWIN_ELVES_MIN_X)) void preloadBigWinElves();
 	if (roxyState() === 'anticipation') roxy('idle');
-	roxyAhead = events.some((e) => e.type === 'freeSpinTrigger' || e.type === 'cardFlip') ? 'hit' : events.some((e) => e.type === 'mysteryStart') ? '' : 'miss';
 	for (const ev of events) {
 		const h = (bookEventHandlerMap as any)[ev.type];
 		if (!h) { if (import.meta.env.DEV) throw new Error(`Unknown book event: ${ev.type}`); console.warn('skipped unknown book event', ev.type); continue; }

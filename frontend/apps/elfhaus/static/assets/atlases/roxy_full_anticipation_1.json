@@ -1,0 +1,275 @@
+{
+ "frames": {
+  "roxy_full_anticipation_14": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 300,
+    "h": 806
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 17,
+    "y": 47,
+    "w": 300,
+    "h": 806
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_anticipation_15": {
+   "frame": {
+    "x": 302,
+    "y": 0,
+    "w": 308,
+    "h": 804
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 13,
+    "y": 47,
+    "w": 308,
+    "h": 804
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_anticipation_16": {
+   "frame": {
+    "x": 612,
+    "y": 0,
+    "w": 312,
+    "h": 810
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 10,
+    "y": 35,
+    "w": 312,
+    "h": 810
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_anticipation_17": {
+   "frame": {
+    "x": 926,
+    "y": 0,
+    "w": 310,
+    "h": 800
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 11,
+    "y": 47,
+    "w": 310,
+    "h": 800
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_anticipation_18": {
+   "frame": {
+    "x": 1238,
+    "y": 0,
+    "w": 307,
+    "h": 779
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 14,
+    "y": 69,
+    "w": 307,
+    "h": 779
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_anticipation_19": {
+   "frame": {
+    "x": 1547,
+    "y": 0,
+    "w": 308,
+    "h": 776
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 14,
+    "y": 73,
+    "w": 308,
+    "h": 776
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_anticipation_20": {
+   "frame": {
+    "x": 0,
+    "y": 812,
+    "w": 314,
+    "h": 798
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 11,
+    "y": 50,
+    "w": 314,
+    "h": 798
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_anticipation_21": {
+   "frame": {
+    "x": 316,
+    "y": 812,
+    "w": 316,
+    "h": 808
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 10,
+    "y": 36,
+    "w": 316,
+    "h": 808
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_anticipation_22": {
+   "frame": {
+    "x": 634,
+    "y": 812,
+    "w": 315,
+    "h": 803
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 11,
+    "y": 47,
+    "w": 315,
+    "h": 803
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_anticipation_23": {
+   "frame": {
+    "x": 951,
+    "y": 812,
+    "w": 312,
+    "h": 784
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 13,
+    "y": 67,
+    "w": 312,
+    "h": 784
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_anticipation_24": {
+   "frame": {
+    "x": 1265,
+    "y": 812,
+    "w": 312,
+    "h": 778
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 12,
+    "y": 73,
+    "w": 312,
+    "h": 778
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_anticipation_25": {
+   "frame": {
+    "x": 1579,
+    "y": 812,
+    "w": 318,
+    "h": 796
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 7,
+    "y": 54,
+    "w": 318,
+    "h": 796
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  }
+ },
+ "meta": {
+  "app": "elfhaus pack-atlases.py",
+  "image": "roxy_full_anticipation_1.webp",
+  "format": "RGBA8888",
+  "size": {
+   "w": 1897,
+   "h": 1620
+  },
+  "scale": "1",
+  "related_multi_packs": [
+   "roxy_full_anticipation_0.json",
+   "roxy_full_anticipation_2.json",
+   "roxy_full_anticipation_3.json"
+  ]
+ },
+ "animations": {
+  "roxy_full_anticipation": [
+   "roxy_full_anticipation_14",
+   "roxy_full_anticipation_15",
+   "roxy_full_anticipation_16",
+   "roxy_full_anticipation_17",
+   "roxy_full_anticipation_18",
+   "roxy_full_anticipation_19",
+   "roxy_full_anticipation_20",
+   "roxy_full_anticipation_21",
+   "roxy_full_anticipation_22",
+   "roxy_full_anticipation_23",
+   "roxy_full_anticipation_24",
+   "roxy_full_anticipation_25"
+  ]
+ }
+}

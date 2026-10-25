@@ -1,0 +1,274 @@
+{
+ "frames": {
+  "roxy_full_excited_00": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 279,
+    "h": 829
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 48,
+    "y": 21,
+    "w": 279,
+    "h": 829
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_excited_01": {
+   "frame": {
+    "x": 281,
+    "y": 0,
+    "w": 279,
+    "h": 829
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 48,
+    "y": 21,
+    "w": 279,
+    "h": 829
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_excited_02": {
+   "frame": {
+    "x": 562,
+    "y": 0,
+    "w": 280,
+    "h": 829
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 47,
+    "y": 21,
+    "w": 280,
+    "h": 829
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_excited_03": {
+   "frame": {
+    "x": 844,
+    "y": 0,
+    "w": 283,
+    "h": 827
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 44,
+    "y": 23,
+    "w": 283,
+    "h": 827
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_excited_04": {
+   "frame": {
+    "x": 1129,
+    "y": 0,
+    "w": 286,
+    "h": 823
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 41,
+    "y": 27,
+    "w": 286,
+    "h": 823
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_excited_05": {
+   "frame": {
+    "x": 1417,
+    "y": 0,
+    "w": 292,
+    "h": 819
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 35,
+    "y": 30,
+    "w": 292,
+    "h": 819
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_excited_06": {
+   "frame": {
+    "x": 1711,
+    "y": 0,
+    "w": 298,
+    "h": 812
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 30,
+    "y": 36,
+    "w": 298,
+    "h": 812
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_excited_07": {
+   "frame": {
+    "x": 0,
+    "y": 831,
+    "w": 304,
+    "h": 805
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 23,
+    "y": 41,
+    "w": 304,
+    "h": 805
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_excited_08": {
+   "frame": {
+    "x": 306,
+    "y": 831,
+    "w": 307,
+    "h": 800
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 20,
+    "y": 46,
+    "w": 307,
+    "h": 800
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_excited_09": {
+   "frame": {
+    "x": 615,
+    "y": 831,
+    "w": 311,
+    "h": 791
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 17,
+    "y": 52,
+    "w": 311,
+    "h": 791
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_excited_10": {
+   "frame": {
+    "x": 928,
+    "y": 831,
+    "w": 324,
+    "h": 815
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 16,
+    "y": 20,
+    "w": 324,
+    "h": 815
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_excited_11": {
+   "frame": {
+    "x": 1254,
+    "y": 831,
+    "w": 382,
+    "h": 789
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 13,
+    "y": 0,
+    "w": 382,
+    "h": 789
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  }
+ },
+ "meta": {
+  "app": "elfhaus pack-atlases.py",
+  "image": "roxy_full_excited_0.webp",
+  "format": "RGBA8888",
+  "size": {
+   "w": 2009,
+   "h": 1646
+  },
+  "scale": "1",
+  "related_multi_packs": [
+   "roxy_full_excited_1.json",
+   "roxy_full_excited_2.json"
+  ]
+ },
+ "animations": {
+  "roxy_full_excited": [
+   "roxy_full_excited_00",
+   "roxy_full_excited_01",
+   "roxy_full_excited_02",
+   "roxy_full_excited_03",
+   "roxy_full_excited_04",
+   "roxy_full_excited_05",
+   "roxy_full_excited_06",
+   "roxy_full_excited_07",
+   "roxy_full_excited_08",
+   "roxy_full_excited_09",
+   "roxy_full_excited_10",
+   "roxy_full_excited_11"
+  ]
+ }
+}

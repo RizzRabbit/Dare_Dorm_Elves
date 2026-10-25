@@ -1,0 +1,317 @@
+{
+ "frames": {
+  "roxy_full_idle_00": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 279,
+    "h": 829
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 48,
+    "y": 21,
+    "w": 279,
+    "h": 829
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_idle_01": {
+   "frame": {
+    "x": 281,
+    "y": 0,
+    "w": 279,
+    "h": 829
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 48,
+    "y": 21,
+    "w": 279,
+    "h": 829
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_idle_02": {
+   "frame": {
+    "x": 562,
+    "y": 0,
+    "w": 279,
+    "h": 829
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 48,
+    "y": 21,
+    "w": 279,
+    "h": 829
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_idle_03": {
+   "frame": {
+    "x": 843,
+    "y": 0,
+    "w": 281,
+    "h": 829
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 48,
+    "y": 21,
+    "w": 281,
+    "h": 829
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_idle_04": {
+   "frame": {
+    "x": 1126,
+    "y": 0,
+    "w": 279,
+    "h": 827
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 48,
+    "y": 23,
+    "w": 279,
+    "h": 827
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_idle_05": {
+   "frame": {
+    "x": 1407,
+    "y": 0,
+    "w": 279,
+    "h": 827
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 48,
+    "y": 23,
+    "w": 279,
+    "h": 827
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_idle_06": {
+   "frame": {
+    "x": 1688,
+    "y": 0,
+    "w": 278,
+    "h": 827
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 49,
+    "y": 23,
+    "w": 278,
+    "h": 827
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_idle_07": {
+   "frame": {
+    "x": 0,
+    "y": 831,
+    "w": 277,
+    "h": 829
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 50,
+    "y": 21,
+    "w": 277,
+    "h": 829
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_idle_08": {
+   "frame": {
+    "x": 279,
+    "y": 831,
+    "w": 276,
+    "h": 829
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 51,
+    "y": 21,
+    "w": 276,
+    "h": 829
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_idle_09": {
+   "frame": {
+    "x": 557,
+    "y": 831,
+    "w": 276,
+    "h": 829
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 52,
+    "y": 21,
+    "w": 276,
+    "h": 829
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_idle_10": {
+   "frame": {
+    "x": 835,
+    "y": 831,
+    "w": 275,
+    "h": 826
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 53,
+    "y": 24,
+    "w": 275,
+    "h": 826
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_idle_11": {
+   "frame": {
+    "x": 1112,
+    "y": 831,
+    "w": 274,
+    "h": 825
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 54,
+    "y": 29,
+    "w": 274,
+    "h": 825
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_idle_12": {
+   "frame": {
+    "x": 1388,
+    "y": 831,
+    "w": 274,
+    "h": 820
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 54,
+    "y": 30,
+    "w": 274,
+    "h": 820
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  },
+  "roxy_full_idle_13": {
+   "frame": {
+    "x": 1664,
+    "y": 831,
+    "w": 275,
+    "h": 820
+   },
+   "rotated": false,
+   "trimmed": true,
+   "spriteSourceSize": {
+    "x": 53,
+    "y": 29,
+    "w": 275,
+    "h": 820
+   },
+   "sourceSize": {
+    "w": 426,
+    "h": 864
+   }
+  }
+ },
+ "meta": {
+  "app": "elfhaus pack-atlases.py",
+  "image": "roxy_full_idle_0.webp",
+  "format": "RGBA8888",
+  "size": {
+   "w": 1966,
+   "h": 1660
+  },
+  "scale": "1",
+  "related_multi_packs": [
+   "roxy_full_idle_1.json",
+   "roxy_full_idle_2.json",
+   "roxy_full_idle_3.json"
+  ]
+ },
+ "animations": {
+  "roxy_full_idle": [
+   "roxy_full_idle_00",
+   "roxy_full_idle_01",
+   "roxy_full_idle_02",
+   "roxy_full_idle_03",
+   "roxy_full_idle_04",
+   "roxy_full_idle_05",
+   "roxy_full_idle_06",
+   "roxy_full_idle_07",
+   "roxy_full_idle_08",
+   "roxy_full_idle_09",
+   "roxy_full_idle_10",
+   "roxy_full_idle_11",
+   "roxy_full_idle_12",
+   "roxy_full_idle_13"
+  ]
+ }
+}
