@@ -915,3 +915,15 @@ body{--at:2} body.turbo{--at:1}
 .mRing{display:none}
 .cell.wild::before{content:none;display:none}
 canvas.wfxRing{display:none}
+/* ===== aifix: win glow = the symbol's own outline (<KEY>_glow sprite, same size/registration, behind the art; no disc).
+   Fade in, then a slow calm opacity pulse with a hair of scale, fade out when .win clears. Opacity/transform only, no
+   animated filters; every duration scales with the board tempo (--at: 2 normal, 1 turbo), so turbo halves it and a
+   skip (which clears .win) just fades it out. */
+.sym .symGlow{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:0;transform-origin:50% 80%;transition:opacity calc(.3s*var(--at)) ease-out}
+.sym .symGlow img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;transform-origin:50% 55%}
+.sym.art>img:not(.olWin){z-index:1}
+.cell.win .sym .symGlow{opacity:1;transition-duration:calc(.35s*var(--at))}
+.cell.win .sym .symGlow img{animation:aiGlowPulse calc(1.1s*var(--at)) ease-in-out calc(.35s*var(--at)) infinite alternate}
+.cell.win .sym.art>.symGlow{animation:aiSymBob calc(1.3s*var(--at)) ease-in-out infinite alternate}
+@keyframes aiGlowPulse{from{opacity:1;transform:none}to{opacity:.55;transform:scale(1.015)}}
+@media (prefers-reduced-motion:reduce){.cell.win .sym .symGlow img,.cell.win .sym.art>.symGlow{animation:none}}

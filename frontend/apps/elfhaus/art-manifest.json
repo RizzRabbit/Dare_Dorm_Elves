@@ -100,6 +100,70 @@
   "W_R5": [
     "assets/final/webp/wild_W_R5.webp"
   ],
+  "H1_glow": [
+    "assets/final/webp/glow_final/H1_glow.webp",
+    "assets/final/webp/glow/H1_glow.webp"
+  ],
+  "H2_glow": [
+    "assets/final/webp/glow_final/H2_glow.webp",
+    "assets/final/webp/glow/H2_glow.webp"
+  ],
+  "H3_glow": [
+    "assets/final/webp/glow_final/H3_glow.webp",
+    "assets/final/webp/glow/H3_glow.webp"
+  ],
+  "H4_glow": [
+    "assets/final/webp/glow_final/H4_glow.webp",
+    "assets/final/webp/glow/H4_glow.webp"
+  ],
+  "L1_glow": [
+    "assets/final/webp/glow_final/L1_glow.webp",
+    "assets/final/webp/glow/L1_glow.webp"
+  ],
+  "L2_glow": [
+    "assets/final/webp/glow_final/L2_glow.webp",
+    "assets/final/webp/glow/L2_glow.webp"
+  ],
+  "L3_glow": [
+    "assets/final/webp/glow_final/L3_glow.webp",
+    "assets/final/webp/glow/L3_glow.webp"
+  ],
+  "L4_glow": [
+    "assets/final/webp/glow_final/L4_glow.webp",
+    "assets/final/webp/glow/L4_glow.webp"
+  ],
+  "L5_glow": [
+    "assets/final/webp/glow_final/L5_glow.webp",
+    "assets/final/webp/glow/L5_glow.webp"
+  ],
+  "S_glow": [
+    "assets/final/webp/glow_final/S_glow.webp",
+    "assets/final/webp/glow/S_glow.webp"
+  ],
+  "W_glow": [
+    "assets/final/webp/glow_final/W_glow.webp",
+    "assets/final/webp/glow/W_glow.webp"
+  ],
+  "W_R1_glow": [
+    "assets/final/webp/glow_final/W_R1_glow.webp",
+    "assets/final/webp/glow/W_R1_glow.webp"
+  ],
+  "W_R2_glow": [
+    "assets/final/webp/glow_final/W_R2_glow.webp",
+    "assets/final/webp/glow/W_R2_glow.webp"
+  ],
+  "W_R3_glow": [
+    "assets/final/webp/glow_final/W_R3_glow.webp",
+    "assets/final/webp/glow/W_R3_glow.webp"
+  ],
+  "W_R4_glow": [
+    "assets/final/webp/glow_final/W_R4_glow.webp",
+    "assets/final/webp/glow/W_R4_glow.webp"
+  ],
+  "W_R5_glow": [
+    "assets/final/webp/glow_final/W_R5_glow.webp",
+    "assets/final/webp/glow/W_R5_glow.webp"
+  ],
   "WF": [
     "assets/final/webp/wild_WF_fullreel.webp",
     "assets/final/wild_WF_fullreel.png",
