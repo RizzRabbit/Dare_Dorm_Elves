@@ -131,3 +131,18 @@ node scripts/import-art.mjs roxy /workspace/elfhaus-roxy-p3d/out
   * `--tbm = min(tb, 1.6)` for modal zoom
 * The rules are in the "Legible text floor" block at the end of `static/elfhaus.css`.
   Desktop (s ≥ 0.66) and portrait are untouched.
+
+## Max-win / big-win cast (round 6 art)
+* Cast (painted3d_v2, no face shadows): max win Coco | Jade | Delilah | Roxy | Vi, Delilah centre-front; big win (and legendary,
+  1000x+) Vi | Roxy | Coco. Each elf has her own pose, face and accent-colour outfit. Roxy's art is mirrored so her raised cup
+  points into the group.
+* Sheets `src/assets/{maxwin,bigwin}/*_elf_{name}.webp` + `src/game/{maxwin,bigwin}/*.json`. The atlas schema is unchanged,
+  but a state frame can now be a face patch `[x, y, w, h, ox, oy]`: `elfrig.draw()` draws the full base frame, clears the
+  patch rect and draws the patch 1:1 at (ox, oy). Plain `[x, y, w, h]` full frames still work.
+* Group frames (CSS aspect-ratio): `.mwGroup` 1467/796 (portrait width 132vw), `.bwGroup` 778/564.
+* Background: `maxwin_bg_land.webp` / `maxwin_bg_port.webp` are pre-blurred Lounge plates (no CSS filter). `maxwin.ts`
+  decodes the plate with the sheets (`preloadMaxWin`), waits for it before the entrance and drops it in `releaseMaxWin`.
+* Removed: the four-point sparkles (`maxwin_sparkle` sheet + `.mwSpark`), the star glint (`featPop`) on the big-win tier titles
+  and on the TOTAL WIN outro. The free-spins intro banner keeps `featPop`.
+* Decoded memory: max-win sheets 8.5 MB (+ about 6 MB of per-elf canvases); big-win sheets 3.2 MB. All are lazy-loaded and
+  released after the screen closes. Motion is unchanged (`SLOW = 2`, `TEMPO = 1.8`, the PEAK timeline, the per-elf rigs).

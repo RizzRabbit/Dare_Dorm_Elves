@@ -16,7 +16,7 @@ import { skipCounts } from './countup';
 import { tapLines } from './winlines';
 import { startShimmer, initWfExpand } from './wildfx';
 import { setArmedGlow, wireTapFx } from './uifx';
-import { featOpen, featPop, featClose } from './featfx';
+import { featOpen, featClose } from './featfx';
 import { BIGWIN_ELVES_MIN_X, preloadBigWinElves, bigWinElvesStart, bigWinElvesEnd } from './bigwinElves';
 import { setBigWinFx } from './ui';
 import { setSocial, isSocial, t } from './strings';
@@ -423,11 +423,11 @@ export async function initGame() {
 	initLoader(); preloadArt();
 	// any tap lands a running count-up on its final value (the big-win banner handles its own taps)
 	startShimmer(); wireTapFx();
-	// big-win banner moments: burst + confetti on open, a star pop on each tier title, the character layer from 1000x
+	// big-win banner moments: burst + confetti on open (no star glints on the tier titles), the character layer from 1000x
 	setBigWinFx({
 		// backup trigger for the lazy elf sheets (playBookEvents normally started the decode when the book arrived)
 		start: (B, x) => { featOpen(B.querySelector('.bwFx')); if (x >= BIGWIN_ELVES_MIN_X) void preloadBigWinElves(); },
-		tier: (B) => featPop(B.querySelector('.bwTier')),
+		tier: () => {},                                                // round 6: no star glints on the win screens
 		// the Vi / Roxy / Coco group (bigwinElves.ts, BIGWIN_ELVES_MIN_X = 1000) rises in as the count crosses 1000x
 		chars: (B) => bigWinElvesStart(B, 1000),
 		end: (B) => { featClose(B.querySelector('.bwFx')); bigWinElvesEnd(); },

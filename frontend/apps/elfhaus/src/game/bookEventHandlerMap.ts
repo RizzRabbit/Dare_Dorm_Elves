@@ -236,7 +236,7 @@ export const bookEventHandlerMap: Handlers = {
 		// outro: TOTAL WIN counts up over a burst + confetti; tap = jump to the amount, tap again (or wait) = close
 		const O = $('#outro'), fx = O.querySelector<HTMLElement>('.bwFx'), amt = O.querySelector<HTMLElement>('.otAmt')!;
 		const total = Math.min(ev.amount / 100, MAX_WIN_X) * bet();
-		setAmount(amt, 0); O.classList.remove('hidden'); featOpen(fx); featPop(O.querySelector('.tierName'));
+		setAmount(amt, 0); O.classList.remove('hidden'); featOpen(fx);   // no star glints on the total-win screen (round 6)
 		let close = () => {}; const closed = new Promise<void>((r) => (close = r)); let landed = false;
 		O.onclick = () => (landed ? close() : skipCounts());
 		await countTo(amt, total, countMs(total / Math.max(bet(), 1e-9), S.turbo) * tempo());

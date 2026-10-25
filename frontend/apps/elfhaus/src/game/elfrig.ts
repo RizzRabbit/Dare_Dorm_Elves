@@ -1,5 +1,5 @@
 // ElfRig: per-elf puppet layers for the win screens (max win: Coco | Jade | Delilah | Roxy | Vi; big win: Vi | Roxy | Coco).
-// Each elf is her OWN sprite sheet (one frame per drawn expression + blush / heart overlays) on her own canvas, and gets
+// Each elf is her OWN sprite sheet (full base frame + one face patch per drawn expression + blush / heart overlays) on her own canvas, and gets
 // transform/opacity-only secondary motion here: idle bob + sway (own period/phase), squash-and-stretch + head tilt on every
 // expression change, a hop on the peak, shoulder-giggle shakes on laughs, a staggered ease-out-back rise-in.
 // Expressions step on a fixed 30 fps clock (even frame durations; every change runs through 1-4 drawn in-between frames
@@ -73,9 +73,15 @@ class Elf {
 	canvas(w: number, h: number, cls: string) {
 		const cv = document.createElement('canvas'); cv.width = w; cv.height = h; cv.className = cls; cv.setAttribute('aria-hidden', 'true'); this.el.appendChild(cv); return cv;
 	}
+	/** Expression frames are either a full frame [x,y,w,h] or (round 6) a face PATCH [x,y,w,h,ox,oy]: the base frame is
+	 *  drawn, then the patch rect is cleared and the patch drawn 1:1 at (ox,oy) - only the changed face rect is in the sheet. */
 	draw(s: string, force = false) {
-		if (s === this.shown && !force) return; const a = this.m.anims[s] || this.m.anims[this.c.base];
-		const [x, y, w, h] = a.frames[0]; this.ctx.clearRect(0, 0, w, h); this.ctx.drawImage(this.img, x, y, w, h, 0, 0, w, h); this.shown = s; this.el.dataset.s = s;
+		if (s === this.shown && !force) return; const b = this.m.anims[this.c.base], a = this.m.anims[s] || b;
+		const [x, y, w, h] = b.frames[0]; this.ctx.clearRect(0, 0, this.cv.width, this.cv.height);
+		const f = a.frames[0];
+		if (f.length < 6) this.ctx.drawImage(this.img, f[0], f[1], f[2], f[3], 0, 0, f[2], f[3]);
+		else { this.ctx.drawImage(this.img, x, y, w, h, 0, 0, w, h); const [px, py, pw, ph, ox, oy] = f; this.ctx.clearRect(ox, oy, pw, ph); this.ctx.drawImage(this.img, px, py, pw, ph, ox, oy, pw, ph); }
+		this.shown = s; this.el.dataset.s = s;
 	}
 	/** target state at time t (ms): expands the in-between steps onto the 30 fps frame grid */
 	set(s: string, t: number, fx?: Fx[]) {

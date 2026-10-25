@@ -5,7 +5,9 @@
 // 30 fps expression steps with drawn in-betweens, transform-only bob/sway/squash/tilt/hop/giggle, staggered rise-in.
 // Sheets are lazy: nothing is decoded at idle. preloadMaxWin() starts the decode the moment a max win is known (playBookEvents
 // sees a wincap in the round's book, i.e. before the reels even spin); maxWinCelebration() awaits it before the entrance, so
-// nothing pops in, and releaseMaxWin() closes the ImageBitmaps after the screen closes (~13.4 MB decoded for the five elves).
+// nothing pops in, and releaseMaxWin() closes the ImageBitmaps after the screen closes (~8.5 MB decoded for the five elf sheets).
+// Round 6 (anti-AI-look art pass): new cast art (distinct poses / faces / outfits per elf, full figures; expression frames are
+// face patches over one base frame), a blurred Lounge plate replaces the black backdrop, no four-point star glints.
 import { $, bet } from './ui';
 import { MAX_WIN_X } from './config';
 import { money } from './format';
@@ -19,16 +21,24 @@ const ids = Object.keys(ATL).map((p) => p.split('/').pop()!.replace('.json', '')
 const src = (id: string) => Object.entries(IMG).find(([p]) => p.endsWith('/' + id + '.webp'))?.[1] || '';
 
 const RISE = 150;                     // ms: first elf starts rising (staggered, centre out)
-const SPARK = [[30, 16], [70, 14], [22, 32], [78, 30], [42, 8], [58, 36], [36, 40], [64, 6]];
+// Round 6: the backdrop is a pre-blurred, dimmed Lounge plate (same room + light as the base game), loaded with the sheets
+const BG = { land: src('maxwin_bg_land'), port: src('maxwin_bg_port') };
+let bgImg: HTMLImageElement | null = null;
+const bgUrl = () => (document.body.classList.contains('portrait') ? BG.port : BG.land);
+function loadBg(): Promise<unknown> {
+	const u = bgUrl(); if (!u) return Promise.resolve();
+	if (bgImg?.dataset.u === u) return bgImg.decode().catch(() => {});
+	bgImg = new Image(); bgImg.dataset.u = u; bgImg.src = u; return bgImg.decode().catch(() => {});
+}
 const COUNT_MS = 4200, COUNT_AT = 600;
 
 let loading: Promise<void> | null = null;
 /** Start decoding the max-win sheets (idempotent; returns the pending decode). Call as soon as a max win is determined. */
 export function preloadMaxWin(): Promise<void> {
-	return (loading ??= Promise.all(ids.map((id) => hasSheet(id) ? 0 : loadSheet(id, src(id), ATL['./maxwin/' + id + '.json']).catch((e) => console.warn('maxwin sheet', id, e)))).then(() => {}));
+	return (loading ??= Promise.all([loadBg(), ...ids.map((id) => hasSheet(id) ? 0 : loadSheet(id, src(id), ATL['./maxwin/' + id + '.json']).catch((e) => console.warn('maxwin sheet', id, e)))]).then(() => {}));
 }
 /** Free the decoded textures after the show (ImageBitmap.close via unloadSheet; they reload on the next max win). */
-export function releaseMaxWin() { ids.forEach((id) => unloadSheet(id)); loading = null; }
+export function releaseMaxWin() { ids.forEach((id) => unloadSheet(id)); if (bgImg) bgImg.src = ''; bgImg = null; loading = null; }
 
 const live = new Set<Anim>(); const timers: number[] = []; let rig: ElfRig | null = null;
 const later = (ms: number, f: () => void) => timers.push(window.setTimeout(f, ms));
@@ -76,21 +86,12 @@ function groupShow(host: HTMLElement, landAt: number) {
 	for (const [i, s, t] of PEAK) rig.set(i, s, landAt + Math.round(t * TEMPO));   // same irregular order, stretched (elfrig TEMPO)
 	return rig;
 }
-function sparkle(stage: HTMLElement, i: number) {
-	const h = document.createElement('div'); h.className = 'mwSpark'; stage.appendChild(h);
-	const again = () => {
-		const [x, y] = SPARK[(Math.random() * SPARK.length) | 0];
-		h.style.left = x + (Math.random() * 6 - 3) + '%'; h.style.top = y + (Math.random() * 6 - 3) + '%';
-		h.style.setProperty('--s', String(0.6 + Math.random() * 0.8));
-		run('maxwin_sparkle', 'twinkle', h, { onEnd: () => later(250 + Math.random() * 900, again) });
-	};
-	later(500 + i * 260, again);
-}
-
 const ease = (t: number) => 1 - Math.pow(1 - t, 3);
 export async function maxWinCelebration() {
 	const M = $('#maxwin'); const stage = M.querySelector('.mwStage') as HTMLElement;
 	await preloadMaxWin();                                             // fallback: wait for the decode before the entrance (instant if already preloaded)
+	await loadBg();                                                    // (orientation may have changed since the preload)
+	const bgEl = M.querySelector('.mwBg') as HTMLElement | null; if (bgEl) bgEl.style.backgroundImage = `url(${bgUrl()})`;
 	const crowd = document.createElement('div'); crowd.className = 'mwCrowd'; stage.appendChild(crowd);
 	const conf = document.createElement('div'); conf.className = 'mwConfetti'; stage.insertBefore(conf, crowd);
 	const portrait = document.body.classList.contains('portrait');
@@ -111,7 +112,6 @@ export async function maxWinCelebration() {
 		tier.classList.add('pop');
 		const a = run('maxwin_title', 'intro', tier, { hold: true, onEnd: () => { swap(a, 'maxwin_title', 'shine', tier); } });
 	});
-	SPARK.slice(0, 5).forEach((_, i) => sparkle(stage, i));
 	// count-up (live text); a tap during the show skips straight to the final amount
 	const skip = () => { skipped = true; };
 	M.addEventListener('pointerdown', skip, { once: true });
@@ -140,7 +140,7 @@ export async function maxWinCelebration() {
 	M.classList.add('out');                                            // fade + slide the row down (CSS, transform/opacity)
 	await new Promise<void>((r) => (rig ? rig.at(rig.ms + 600, r) : setTimeout(r, 600)));   // on the rig's rAF clock: the elves keep moving through the fade
 	timers.splice(0).forEach(clearTimeout); live.forEach((a) => stop(a)); live.clear(); rig?.destroy(); rig = null;
-	crowd.remove(); conf.remove(); stage.querySelectorAll('.mwSpark').forEach((n) => n.remove()); tier.classList.remove('spr', 'pop');
+	crowd.remove(); conf.remove(); if (bgEl) bgEl.style.backgroundImage = ''; tier.classList.remove('spr', 'pop');
 	M.classList.add('hidden'); M.classList.remove('on', 'landed', 'held', 'out');
 	releaseMaxWin();
 }
