@@ -1021,3 +1021,25 @@ body.calm .cell.win .sym.art>img,body.calm .cell.win .sym .symGlow img,body.calm
 body.calm #alcove .tw,body.calm #intro .card,body.calm #outro .card{animation:none}
 body.calm #alcove .tw{opacity:.45}
 body.calm #loader #lGo{animation:none}
+
+/* ---------- aifix polish: static paper grain (~2.5%) over background + HUD; no animation ---------- */
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:45;background:url(ui/grain.webp) 0 0/256px 256px repeat;
+  opacity:.025;mix-blend-mode:overlay}
+
+/* ---------- aifix polish: glow budget (one glow source per screen state) ----------
+   idle: no UI glows (the room lights are the light). win: the symbol outline glow (.symGlow) only; everything else
+   that used to glow (win line, line amounts, wild chips, respin dots, locked cells, full-reel frames, merge letters)
+   becomes a flat plum ink line. big/max win + feature titles: the title neon only (kept). */
+.pl polyline{filter:none}
+.wlAmt{text-shadow:0 1px 0 #2A1433,0 0 0 #0000;-webkit-text-stroke:3px #2A1433;paint-order:stroke fill}
+.rd i{box-shadow:0 0 0 1px #3A0F2C}
+#app #spinBtn.armed{box-shadow:0 0 0 2px #3A0F2C}
+.cell.locked::after{box-shadow:0 0 0 1px #1A1420}
+.ov.full.art::before{box-shadow:inset 0 0 0 2px #6E4A7E}
+.ov .ovWinO{box-shadow:inset 0 0 0 2px #FF5FAE,0 0 0 2px #2A1433}
+.ov .mLets b{text-shadow:none}
+.sw.on{box-shadow:none}
+#buyCards .bcard.armed{box-shadow:0 0 0 1px #F06AAE}
+.chip.on{box-shadow:0 0 0 1px #F06AAE}
+.lock{box-shadow:inset 0 0 0 1px #C9B3EC66}
+.ov .ovGlow{display:none} /* radial pink ellipse = old circle highlight; the outline glow replaces it */
