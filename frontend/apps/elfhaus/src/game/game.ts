@@ -16,7 +16,7 @@ import { tapLines } from './winlines';
 import { startShimmer } from './wildfx';
 import { setArmedGlow, wireTapFx } from './uifx';
 import { featOpen, featPop, featClose } from './featfx';
-import { showChars, hideChars } from './bigwinChars';
+import { preloadBigWinElves, bigWinElvesStart, bigWinElvesEnd } from './bigwinElves';
 import { setBigWinFx } from './ui';
 import { setSocial, isSocial, t } from './strings';
 import { $, S, ART, bet, buildCells, renderAll, renderOverlays, resetWinMeter, setWinMeter, banner, wait } from './ui';
@@ -410,9 +410,12 @@ export async function initGame() {
 	setBigWinFx({
 		start: (B) => featOpen(B.querySelector('.bwFx')),
 		tier: (B) => featPop(B.querySelector('.bwTier')),
-		chars: (B) => showChars(B),
-		end: (B) => { featClose(B.querySelector('.bwFx')); hideChars(); },
+		// the Vi / Roxy / Coco group (bigwinElves.ts, BIGWIN_ELVES_MIN_X = 1000) rises in as the count crosses 1000x
+		chars: (B) => bigWinElvesStart(B, 1000),
+		end: (B) => { featClose(B.querySelector('.bwFx')); bigWinElvesEnd(); },
 	});
+	const ric = (window as any).requestIdleCallback as ((f: () => void, o?: object) => void) | undefined;
+	setTimeout(() => (ric ? ric(() => preloadBigWinElves(), { timeout: 5000 }) : preloadBigWinElves()), 2500);
 	document.addEventListener('pointerdown', (e) => { if (!(e.target as Element)?.closest?.('#bigwin,#outro')) { skipCounts(); tapLines(); } }, { capture: true, passive: true });
 	track(initRoxy(layout));
 	loadAllFx(track).then(() => renderAll());

@@ -28,6 +28,14 @@ export function loadSheet(id: string, src: string, atlas: Atlas) {
 let warmCv: HTMLCanvasElement | null = null;
 function warm(img: CanvasImageSource) { try { warmCv ||= document.createElement('canvas'); warmCv.width = warmCv.height = 1; warmCv.getContext('2d')!.drawImage(img, 0, 0, 1, 1); } catch { /* ignore */ } }
 export const hasSheet = (id: string) => sheets.has(id);
+/** Drop a sheet's decoded texture (lazy celebration sheets after their show); it reloads on the next loadSheet(). */
+export function unloadSheet(id: string) {
+	const s = sheets.get(id); if (!s) return;
+	for (const a of [...live]) if (a.sheet === s) stop(a);
+	if (typeof ImageBitmap !== 'undefined' && s.img instanceof ImageBitmap) s.img.close();
+	else if (s.img instanceof HTMLImageElement) s.img.src = '';
+	sheets.delete(id);
+}
 
 /** Inline CSS that shows one frame of `anim` as a background, scaled to the element's box. */
 export function frameCSS(id: string, anim: string, idx: number) {

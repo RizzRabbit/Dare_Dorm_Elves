@@ -184,19 +184,14 @@ body:not(.portrait) #fsBar:not(.hidden) ~ #banner{top:calc(50% - var(--cell)*2 -
 .note{font-size:14px;opacity:.7;margin-bottom:16px}
 .cont{padding:12px 28px;font-size:15px}
 .bw{position:relative;text-align:center;animation:settle .45s ease-out}
-/* big-win layers, back to front: .bwFx (burst + confetti canvases) < .bwChars (Roxy/Vi/Coco, from 1000x) < amount < title */
+/* big-win layers, back to front: .bwElves (Vi/Roxy/Coco group, from 1000x; bigwinElves.ts) < .bwFx (burst + confetti) < amount < title */
 #bigwin{cursor:pointer} .bwFx{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 .bwTier{position:relative;z-index:3;opacity:0;transform:scale(.9);will-change:transform,opacity}
 .bwTier.on{opacity:1;transform:none;transition:opacity .12s,transform .25s cubic-bezier(.3,1.6,.5,1)}
 .bwTier.pop{animation:tierPop .32s cubic-bezier(.3,1.6,.5,1)}
 @keyframes tierPop{0%{transform:scale(.82);opacity:.4}100%{transform:none;opacity:1}}
 .bwAmt,.bwX{position:relative;z-index:2}
-.bwChars{position:absolute;z-index:1;left:50%;top:var(--bwTierH,104px);width:min(94vw,760px);aspect-ratio:16/9;transform:translate(-50%,-6%) scale(.96);
-  opacity:0;pointer-events:none;display:flex;align-items:center;justify-content:center;will-change:transform,opacity}
-#bigwin.chars .bwChars{opacity:1;transform:translate(-50%,-6%);transition:opacity .45s ease-out,transform .6s ease-out}
-.bwChars canvas{position:absolute;inset:0;width:100%;height:100%}
-.bwcPh{font:800 12px "Nunito";letter-spacing:2px;color:#F1F0F5aa;border:1px dashed #F1F0F566;border-radius:8px;padding:30% 24px 8px;width:70%;text-align:center}
-.bwChars:has(canvas) .bwcPh{display:none}
+
 .bwTier{font-family:"Cinzel";font-weight:900;font-size:96px;letter-spacing:3px;background-image:linear-gradient(#FFFFFF,#DCD3F0 42%,#8E7BB5 54%,#CFC3EA 80%,#F2EEFA);
   -webkit-background-clip:text;background-clip:text;color:transparent;
   filter:drop-shadow(3px 0 0 #1E1A26) drop-shadow(-3px 0 0 #1E1A26) drop-shadow(0 3px 0 #1E1A26) drop-shadow(0 -3px 0 #1E1A26) drop-shadow(0 6px 0 #120F18) drop-shadow(0 10px 12px #0009)}
@@ -235,7 +230,7 @@ body.portrait #strip{padding:6px 12px 7px;margin-top:22px} body.portrait #strip 
 body.portrait #fsBar{font-size:14px;gap:10px;padding:3px 14px}
 body.portrait #banner{font-size:13px;padding:4px 12px;white-space:normal;width:max-content;max-width:94vw;text-align:center}
 body.portrait .tierName{font-size:38px} body.portrait .spins{font-size:22px} body.portrait #intro .card{padding:22px 20px}
-body.portrait .bwTier{font-size:52px} body.portrait .bwAmt{font-size:38px} body.portrait .bwChars{--bwTierH:58px}
+body.portrait .bwTier{font-size:52px} body.portrait .bwAmt{font-size:38px}
 body.portrait #buyCards{grid-template-columns:1fr 1fr} body.portrait .bcard:last-child{grid-column:span 2}
 
 /* ---------- production additions ---------- */
@@ -372,10 +367,7 @@ body.short #strip{margin-top:3px;padding:2px 10px}
 #maxwin.on{opacity:1} #maxwin.out{opacity:0}
 #maxwin .mwStage{position:absolute;inset:0}
 #maxwin .mwBg{position:absolute;inset:-40px;background-size:cover;background-position:center;filter:blur(22px) saturate(.55) brightness(.34)}
-#maxwin .mwVid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:saturate(.92)}
-#maxwin.noVid .mwVid{display:none}
 #maxwin .mwShade{position:absolute;inset:0;background:linear-gradient(180deg,#1C192200 45%,#1C1922b0 78%,#1C1922e6)}
-#maxwin .mwConf{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 #maxwin .mwText{position:absolute;left:0;right:0;bottom:5vh;display:flex;flex-direction:column;align-items:center;text-align:center;pointer-events:none}
 .mwTier{font-family:"Cinzel";font-weight:900;font-size:clamp(44px,9vw,128px);line-height:1;letter-spacing:4px;
   background-image:linear-gradient(#FFFFFF,#E6E0F2 40%,#9C8CC0 52%,#D3C8EC 78%,#F4F1FA);-webkit-background-clip:text;background-clip:text;color:transparent;
@@ -393,12 +385,10 @@ body.short #strip{margin-top:3px;padding:2px 10px}
 #maxwin.held .mwHint{opacity:1;animation:mwPulse 1.6s ease-in-out infinite}
 #maxwin.held{cursor:pointer}
 @keyframes mwPulse{50%{opacity:.55}}
-body.portrait #maxwin .mwVid{object-fit:contain;top:12vh;height:auto;aspect-ratio:16/9}
 body.portrait #maxwin .mwShade{background:linear-gradient(180deg,#1C192200 52%,#1C1922c0 70%,#1C1922f0)}
 body.portrait #maxwin .mwText{bottom:12vh}
 body.short #maxwin .mwText{bottom:3vh} body.short .mwTier{font-size:40px} body.short .mwX{font-size:30px} body.short .mwAmt{font-size:18px} body.short .mwHint{margin-top:4px;font-size:11px}
-#maxwin .mwBg{z-index:0} #maxwin .mwVid{z-index:1} #maxwin .mwShade{z-index:2} #maxwin .mwConf{z-index:3} #maxwin .mwText{z-index:4}
-body.portrait #maxwin .mwVid{top:17vh;-webkit-mask-image:linear-gradient(#0000,#000 9%,#000 88%,#0000);mask-image:linear-gradient(#0000,#000 9%,#000 88%,#0000)}
+#maxwin .mwBg{z-index:0} #maxwin .mwShade{z-index:1} #maxwin .mwText{z-index:4}
 body.portrait #maxwin .mwText{bottom:16vh}
 
 
@@ -651,3 +641,37 @@ canvas.uiFill{position:absolute;inset:0;width:100%;height:100%}
 #hud button:active:not(#spinBtn){transform:scale(.94)}
 @keyframes btnPress{0%{transform:scale(.9)}100%{transform:none}}
 #app #spinBtn.armed{box-shadow:0 0 0 2px #3A0F2C}
+
+/* MAX WIN sprite layout. One POV group sprite (frame 716x417): Coco | Jade | WF | Roxy | Vi, cropped at the waist. */
+#maxwin .mwCrowd{position:absolute;inset:0;z-index:3;pointer-events:none;overflow:hidden}
+#maxwin .mwGroup{position:absolute;left:50%;bottom:-1vh;height:62vh;aspect-ratio:716/417;
+  transform:translate(-50%,40%);opacity:0;transition:transform .45s cubic-bezier(.2,.9,.25,1.15),opacity .2s ease}
+#maxwin .mwGroup.up{transform:translate(-50%,0);opacity:1}
+body.portrait #maxwin .mwGroup{height:auto;width:128vw;bottom:0}
+#maxwin .mwSpr{position:absolute;inset:0;width:100%;height:100%;image-rendering:auto}
+#maxwin .mwConfetti{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden;animation:mwConfIn .5s ease both}
+@keyframes mwConfIn{from{opacity:0}to{opacity:1}}
+#maxwin .mwConfTile{position:absolute;left:0;width:100%;aspect-ratio:16/9}
+#maxwin .mwSpark{position:absolute;z-index:5;width:calc(7vmin*var(--s,1));aspect-ratio:1;transform:translate(-50%,-50%);pointer-events:none}
+/* title + count-up sit in the clear centre band above the elves */
+#maxwin .mwText{top:6vh;bottom:auto;z-index:4}
+#maxwin .mwTier.spr{position:relative;width:min(48vw,720px);aspect-ratio:560/160;font-size:0;color:transparent}
+body.portrait #maxwin .mwText{top:24vh;bottom:auto}
+body.portrait #maxwin .mwTier.spr{width:80vw}
+/* soft plate so the amount stays readable where it meets the row of heads */
+#maxwin .mwText::before{content:'';position:absolute;inset:-4% -12%;z-index:-1;background:radial-gradient(closest-side,rgba(20,12,24,.5),rgba(20,12,24,0))}
+
+/* Big-win POV group layer (append to static/elfhaus.css). Sits under #bigwin .bw (title + amount). */
+#bigwin .bwElves { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
+#bigwin .bw { position: relative; z-index: 2; }
+#bigwin .bwFx { z-index: 1; }
+#bigwin .bwGroup {                       /* frame 584x397: Vi | Roxy | Coco, cropped at the waist */
+	position: absolute; left: 50%; bottom: -1vh; height: 74vh; aspect-ratio: 584 / 397;
+	transform: translate(-50%, 10%); opacity: 0; transition: transform .45s cubic-bezier(.2, 1.4, .4, 1), opacity .16s linear;
+}
+#bigwin .bwGroup.in { transform: translate(-50%, 0); opacity: 1; }
+#bigwin .bwSpr { position: absolute; inset: 0; width: 100%; height: 100%; }
+body.portrait #bigwin .bwGroup { height: auto; width: 122vw; bottom: 0; }
+/* keep the amount legible over the group: soft dark plate behind the text block */
+#bigwin .bw::before { content: ''; position: absolute; inset: -6% -14%; z-index: -1;
+	background: radial-gradient(closest-side, rgba(20, 12, 24, .55), rgba(20, 12, 24, 0)); }

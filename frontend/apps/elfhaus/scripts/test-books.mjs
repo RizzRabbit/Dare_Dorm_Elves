@@ -141,9 +141,11 @@ let priceErrors = 0;
 	let idx = null;
 	for (const f of [live, join(appDir, 'math-snapshot/index.json')]) { try { idx = JSON.parse(readFileSync(f, 'utf8')); break; } catch {} }
 	console.log('\n=== Mode prices ===');
+	const ovr = JSON.parse(readFileSync(join(appDir, 'price-override.json'), 'utf8'));
 	for (const m of idx?.modes || []) {
 		const got = gen.modes?.[m.name]?.cost;
-		if (got !== Number(m.cost)) { console.error(`  MISMATCH ${m.name}: generated ${got} vs index ${m.cost}`); priceErrors++; }
+		if (ovr[m.name] !== undefined && got === ovr[m.name] && got !== Number(m.cost)) console.log(`  OVERRIDE ${m.name} ${got}x (math index still ${m.cost}x; price-override.json)`);
+		else if (got !== Number(m.cost)) { console.error(`  MISMATCH ${m.name}: generated ${got} vs index ${m.cost}`); priceErrors++; }
 		else console.log(`  OK ${m.name} ${got}x`);
 	}
 	if (!idx) { console.error('  no math index found'); priceErrors++; }

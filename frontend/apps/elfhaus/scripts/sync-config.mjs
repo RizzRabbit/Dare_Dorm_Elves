@@ -6,7 +6,7 @@ import { join, resolve } from 'node:path';
 const app = resolve(import.meta.dirname, '..'), repo = resolve(app, '../../..');
 const lib = join(repo, 'math/games/elfhaus/library');
 const snap = join(app, 'math-snapshot');
-const defaults = { base: 1, ante: 3, dare: 50, double_dare: 225, triple_dare: 700, mystery: 600, egw: 450 };
+const defaults = { base: 1, ante: 3, dare: 100, double_dare: 250, triple_dare: 600, mystery: 600, egw: 450 };
 const modes = Object.fromEntries(Object.entries(defaults).map(([k, cost]) => [k, { cost, rtp: null, maxWinX: 50000, pBonus: null }]));
 let source = 'PROVISIONAL (no math publish files yet)';
 const sets = [
@@ -32,5 +32,14 @@ if (set) {
 		break;
 	}
 }
+// Buy prices decided ahead of the math rebuild (price-override.json). Until the new publish files carry them, these win
+// over the index; the old RTP was measured at the old prices, so it is dropped for any mode repriced here.
+const PRICE_OVERRIDE = Object.fromEntries(Object.entries(JSON.parse(readFileSync(join(app, 'price-override.json'), 'utf8'))).filter(([k]) => !k.startsWith('_')));
+const repriced = [];
+for (const [k, cost] of Object.entries(PRICE_OVERRIDE)) {
+	if (!modes[k] || modes[k].cost === cost) continue;
+	modes[k].cost = cost; modes[k].rtp = null; repriced.push(k);
+}
+if (repriced.length) source += ` + PRICE_OVERRIDE (${repriced.join(', ')})`;
 writeFileSync(join(app, 'src/game/modes.generated.json'), JSON.stringify({ source, modes }, null, 1) + '\n');
 console.log('modes:', source);

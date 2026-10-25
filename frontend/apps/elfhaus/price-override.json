@@ -1,0 +1,4 @@
+{
+ "_note": "Buy prices decided ahead of the scatter-trigger math rebuild (2026-10-25). They win over the math index until its publish files match; remove an entry once they do.",
+ "dare": 100, "double_dare": 250, "triple_dare": 600, "mystery": 600, "egw": 450
+}

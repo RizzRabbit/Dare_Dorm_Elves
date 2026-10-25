@@ -165,7 +165,7 @@ export function setWinMeter(x: number) {
 export function resetWinMeter() { S.meterX = 0; setAmount($('#win'), 0); }
 /** Big-win banner. The amount climbs through the tiers (countup.ts countTiers: fast between tiers, a short crawl
  *  into each threshold, the tier title swaps in with a pop as it crosses, much faster past 1000x, eased into the
- *  exact amount). At 1000x the character layer fades in behind the amount (bigwinChars.ts). Tap once = jump to the
+ *  exact amount). At 1000x the character layer fades in behind the amount (bigwinElves.ts, the Vi / Roxy / Coco POV group). Tap once = jump to the
  *  end, tap again (or wait) = close. Turbo shortens everything. featfx.ts adds burst / confetti / pop sheets. */
 export async function bigWin(x: number, label?: string) {
 	const B = $('#bigwin'), T = B.querySelector('.bwTier') as HTMLElement;
