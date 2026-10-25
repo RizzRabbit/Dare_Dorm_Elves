@@ -1,5 +1,14 @@
 # Final art import runbook (from the 2026-10-25 dry run on `dryrun-final`)
 
+> **Integration branch: `final`** (worktree `/workspace/elfhaus-fe-final`, built clean from `frontend-elfhaus` 0b51f91, 2026-10-25).
+> What is approved, held, in progress and rejected is tracked in **[APPROVED_ASSETS.md](APPROVED_ASSETS.md)**, the single source of truth.
+> Only items listed there as "Approved and in the build" go in. `final` already contains: the step 1 cherry-picks, the slowed
+> win-screen motion.patch (15:01 build) + p3d maxwin_title, the round 8c stacks (from f16cc93's tree, not the commit) and symbols v3
+> (+ regenerated reel blur strips). It does NOT contain Roxy p3d, fx_wfexpand / wild statics (3211a0a) or the r4 motion.patch (6b4034b).
+> New approved work lands on `final` as its own commit that also updates APPROVED_ASSETS.md. `dryrun-final` is history only.
+> Note: in `final`, the step 3 `stacks_v2/dropin_static`, `fx` and `wilds` imports were NOT run (not approved); `roxy` is held.
+
+
 All commands are copy-paste. Paths: `FE=/workspace/elfhaus-fe` (branch `frontend-elfhaus`), app `FE/frontend/apps/elfhaus`.
 Budget: about 10 minutes (anim build ~1 min, imports seconds, test + build ~1 min, QA shots ~10 min because `base_wincap` plays 10 free spins).
 
@@ -13,10 +22,18 @@ Budget: about 10 minutes (anim build ~1 min, imports seconds, test + build ~1 mi
 
 ## 1. Pipeline fixes (once): cherry-pick from `dryrun-final`
 ```
-cd $FE && git cherry-pick 2c88dba fd709ea 477db47 576e609 0f992c6 9b509d6 322951a
+cd $FE && git cherry-pick 2c88dba fd709ea 477db47 576e609 0f992c6 9b509d6 322951a 11b3200 ffaaacd 24e2471 766bb71 12396d3
 # 2c88dba import-art stacks guard | fd709ea dev server PORT | 477db47 egw_wm5 QA book | 576e609 this runbook | 0f992c6 tsc fixes for 2c88dba/fd709ea (+ runbook) | 9b509d6 runbook
 # 322951a glowing wild frame (wildframe.ts; ui.ts / bookEventHandlerMap.ts hooks; CSS block at the end of elfhaus.css). Applies on 0b51f91 alone
 #         or after motion.patch. QA: /workspace/elfhaus-shots/tool/wframe.mjs (PORT=<dev port>) -> /workspace/elfhaus-shots/wildframe/
+# ffaaacd wild frame v2: thicker (5 px line) + brighter two-layer glow (CSS block at the end of elfhaus.css + one <b class="wfH"> in wildframe.ts). Applies right after 322951a
+#         QA: /workspace/elfhaus-shots/tool/wframe2.mjs -> /workspace/elfhaus-shots/wildframe2/
+# 24e2471 merge badges (no doubled x4x4 during the lean; fly-in + running product + count-up kept) + stacks memory (merge_win never
+#         resident with merge_join; WM5 peak 30.4 MB) + QA books egw_wm2/3/4/egw_wm5_win. QA: tool/mbadge.mjs <book> <WxH> -> /workspace/elfhaus-shots/mergebadge/
+# 766bb71 board tempo: src/game/tempo.ts (ANIM_TEMPO=2 board anims + stacks sheet playback, SPIN_TEMPO=1.25 / STOP_TEMPO=1.1 reels; turbo = old
+#         timings) + Space/tap skip mid-round. Applies after 24e2471. QA: tool/slowrec.mjs <book> <WxH> <tag> -> /workspace/elfhaus-shots/slowed/
+# 12396d3 stacks sheets crossfade (sprite.ts blend + planOf, stacks.ts blend:true): calm frames dissolve, moving frames cut. Applies after 766bb71.
+#         QA: tool/vclock.mjs (virtual-clock 30 fps capture) + tool/vcontact.py -> /workspace/elfhaus-shots/slowed/smooth_contact.jpg
 ```
 Never cherry-pick the `DRYRUN ART` / `DRYRUN PATCHES` commits.
 
@@ -29,13 +46,16 @@ cd /workspace/elfhaus-frameless/stacks_anim
 /workspace/rembgenv/bin/python build_anim.py --qa -j 6 --out out_final        # ~60 s; 60 sheets
 python3 -c "import json;d=json.load(open('out_final/report.json'));print(d['total_decoded_mb'],'MB decoded,',d['total_file_mb'],'MB files')"
 ```
-Dry run: 60 sheets, 677 MB decoded (all of them, never all at once), 26.4 MB of webp. Look at `out_final/qa/` before importing.
+**Round 8c (2026-10-25 15:10): the stacks worker's `stacks_anim/out` IS the build to import** (60 sheets, 364.9 MB decoded total,
+11.7 MB webp; WM5 join + idle + letters = 29.2 MB). Use `out/sheets` in step 3 instead of rebuilding into `out_final`, unless the
+stacks worker re-runs it; then check `out/report.json` total_decoded_mb is still ~365.
+Old dry run (pre-8c): 60 sheets, 677 MB decoded (all of them, never all at once), 26.4 MB of webp. Look at `out_final/qa/` before importing.
 
 ## 3. Import (from the app dir)
 ```
 cd $FE/frontend/apps/elfhaus
 node scripts/import-art.mjs stacks /workspace/elfhaus-frameless/stacks_v2/dropin_static/per_reel   # statics: merge_idle + letters_ignite x15
-node scripts/import-art.mjs stacks /workspace/elfhaus-frameless/stacks_anim/out_final/sheets       # 60 animated sheets
+node scripts/import-art.mjs stacks /workspace/elfhaus-frameless/stacks_anim/out/sheets             # 60 animated sheets (round 8c build)
 node scripts/import-art.mjs fx     /workspace/elfhaus-restyle/out/static/art                       # fx_wfexpand_R1..5 + fx_wild.webp
 node scripts/import-art.mjs wilds  /workspace/elfhaus-restyle/out/proposed_wild_statics            # WF, WM2..WM5 statics
 node scripts/import-art.mjs roxy   /workspace/elfhaus-roxy-p3d/out                                 # p3d -> roxy_full_* (old pages removed)
