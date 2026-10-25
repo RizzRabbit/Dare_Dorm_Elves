@@ -22,7 +22,7 @@ export const bet = () => (S.replay ? S.replayBet : S.levels[S.betIdx] ?? 0);
 export const wait = (ms: number) => new Promise<void>((res) => setTimeout(res, ms * (S.turbo ? 0.35 : 1)));
 const pos = (r: number, row: number) => ({ x: r * S.cell, y: row * S.cell });
 
-const ph = (key: string) => `<span class="ph">${key} placeholder</span>`;
+const ph = (_key: string) => ''; // no visible placeholder labels in release builds
 const img = (key: string) => (ART[key] ? `<img src="${ART[key]}" alt="" draggable="false">` : '');
 // Multiplier lettering: text only, in a faceted pink "gemstone" fill (repeating diagonal hard-stop bands) with a
 // light-pink inner outline, a thin dark-plum outer stroke, a white specular band across the cap tops and a few
@@ -83,7 +83,7 @@ export function symHTML(name: string, v?: number) {
 	}
 	const t = name[0];
 	if (ART[name]) return `<div class="sym ${t} ${name} art">${img(name)}</div>`;
-	return `<div class="sym ${t} ${name}"><span class="id">${name}</span><span class="nm">${(SYMBOL_NAMES[name] || name).toUpperCase()}</span>${ph(name)}</div>`;
+	return `<div class="sym ${t} ${name}"><span class="nm">${(SYMBOL_NAMES[name] || name).toUpperCase()}</span>${ph(name)}</div>`;
 }
 export function buildCells() {
 	const c = $('#cells'); c.innerHTML = '';
@@ -116,7 +116,7 @@ export function renderOverlays(anim: boolean | number = false) {
 		// dashed columns, labels and WILD plate are only for the no-art fallback.
 		if (ART[key]) d.classList.add('art');
 		d.innerHTML = (ART[key] ? `<div class="wart">${img(key)}</div>`
-			: g.reels.map((_, i) => `<div class="wfph" style="left:${i * S.cell}px;width:${S.cell}px"><span>ELF ${i + 1}</span></div>`).join('') + `<div class="mlabel">${key} placeholder · ${n} elves</div><div class="plate">WILD</div>`) +
+			: g.reels.map((_, i) => `<div class="wfph" style="left:${i * S.cell}px;width:${S.cell}px"><span>ELF ${i + 1}</span></div>`).join('') + `<div class="plate">WILD</div>`) +
 			gemHTML(g.product, 'stack') + `<div class="ovrd">${DOTS}</div>`;
 		d.dataset.reels = g.reels.join(',');
 		if (!anim) d.style.animation = 'none';
@@ -127,7 +127,7 @@ export function renderOverlays(anim: boolean | number = false) {
 		const d = document.createElement('div'); d.className = 'ov full';
 		d.style.left = pos(r, 0).x + 'px'; d.style.width = S.cell + 'px';
 		if (ART.WF) d.classList.add('art');
-		d.innerHTML = (ART.WF ? `<div class="wart">${img('WF')}</div>` : `<div class="wfph" style="left:0;width:100%"><span>FULL-REEL<br>WILD</span></div><div class="tag">WF placeholder</div><div class="plate">WILD</div>`) +
+		d.innerHTML = (ART.WF ? `<div class="wart">${img('WF')}</div>` : `<div class="wfph" style="left:0;width:100%"><span>FULL-REEL<br>WILD</span></div><div class="plate">WILD</div>`) +
 			gemHTML(v, 'stack') + `<div class="ovrd">${DOTS}</div>`;
 		d.dataset.reel = String(r);
 		if (anim !== r) d.style.animation = 'none';

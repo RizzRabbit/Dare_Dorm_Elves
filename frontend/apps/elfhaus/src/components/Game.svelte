@@ -17,7 +17,7 @@
 		{:else}
 			<div id="logo" role="img" aria-label="Elfhaus">
 				<svg class="crest" viewBox="0 0 200 200" aria-hidden="true"><polygon points="100,4 114,40 150,18 142,58 186,52 160,86 196,100 160,114 186,148 142,142 150,182 114,160 100,196 86,160 50,182 58,142 14,148 40,114 4,100 40,86 14,52 58,58 50,18 86,40" fill="#8A7FA3" stroke="#1E1A26" stroke-width="4" stroke-linejoin="round" /><circle cx="100" cy="100" r="62" fill="#4E4660" stroke="#1E1A26" stroke-width="4" /><circle cx="100" cy="100" r="52" fill="none" stroke="#B9A2E0" stroke-width="2" stroke-dasharray="3 5" opacity=".7" /></svg>
-				<span class="l1">ELF</span><span class="l2">HAUS</span><span class="ph">logo placeholder</span>
+				<span class="l1">ELF</span><span class="l2">HAUS</span>
 			</div>
 		{/if}
 	</header>
@@ -60,7 +60,7 @@
 </div>
 
 <div id="replayBar" class="hidden"><span>REPLAY · <b id="replayMode"></b></span><button id="replayPlay">PLAY</button></div>
-<div id="intro" class="overlay hidden"><div class="bwFx" aria-hidden="true"></div><div class="card"><div class="tierName"></div><div class="spins"></div><button class="cont">PRESS TO CONTINUE</button><span class="ph">intro art placeholder</span></div></div>
+<div id="intro" class="overlay hidden"><div class="bwFx" aria-hidden="true"></div><div class="card"><div class="tierName"></div><div class="spins"></div><button class="cont">PRESS TO CONTINUE</button></div></div>
 <div id="maxwin" class="hidden" role="dialog" aria-label="Max win"><div class="mwStage"><div class="mwBg" style={art.background_fs ? `background-image:url(${art.background_fs})` : ''}></div><div class="mwShade"></div></div><div class="mwText"><div class="mwTier">MAX WIN</div><div class="mwX">0x</div><div class="mwAmt"></div><div class="mwHint">CLICK TO CONTINUE</div></div></div>
 <div id="cardFlip" class="overlay hidden" aria-live="polite"><div class="cfStage"><div class="cfCard"></div><div class="cfName"></div></div></div>
 <div id="outro" class="overlay hidden"><div class="bwFx" aria-hidden="true"></div><div class="card"><div class="tierName">TOTAL WIN</div><div class="otAmt"></div><div class="otHint">TAP TO CONTINUE</div></div></div>
