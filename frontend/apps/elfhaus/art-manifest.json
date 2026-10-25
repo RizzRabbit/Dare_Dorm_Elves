@@ -1,99 +1,119 @@
 {
   "_comment": "Elfhaus art manifest. For each key, the first existing path (relative to the repo root) is copied into static/art/ at build time by scripts/sync-art.mjs. Drop final art at the first path under assets/final/ and rebuild: no code changes. Keys with no file render a clearly-marked PLACEHOLDER.",
   "H1": [
+    "assets/final/webp/symbol_H1.webp",
     "assets/final/symbol_H1.png",
     "assets/final/H1.png",
     "assets/concepts/H1_roxy_final_user.jpg"
   ],
   "H2": [
+    "assets/final/webp/symbol_H2.webp",
     "assets/final/symbol_H2.png",
     "assets/final/H2.png",
     "assets/concepts/H2_jade_final_user.jpg"
   ],
   "H3": [
+    "assets/final/webp/symbol_H3.webp",
     "assets/final/symbol_H3.png",
     "assets/final/H3.png",
     "assets/concepts/H3_vi_final_user.jpg"
   ],
   "H4": [
+    "assets/final/webp/symbol_H4.webp",
     "assets/final/symbol_H4.png",
     "assets/final/H4.png",
     "assets/concepts/H4_coco_final_user.jpg"
   ],
   "L1": [
+    "assets/final/webp/symbol_L1_spin_bottle.webp",
     "assets/final/symbol_L1_spin_bottle.png",
     "assets/final/L1.png"
   ],
   "L2": [
+    "assets/final/webp/symbol_L2_lips.webp",
     "assets/final/symbol_L2_lips.png",
     "assets/final/L2.png"
   ],
   "L3": [
+    "assets/final/webp/symbol_L3_pink_phone.webp",
     "assets/final/symbol_L3_pink_phone.png",
     "assets/final/L3.png"
   ],
   "L4": [
+    "assets/final/webp/symbol_L4_red_cup.webp",
     "assets/final/symbol_L4_red_cup.png",
     "assets/final/L4.png"
   ],
   "L5": [
+    "assets/final/webp/symbol_L5_leaf.webp",
     "assets/final/symbol_L5_leaf.png",
     "assets/final/L5.png"
   ],
   "W": [
+    "assets/final/webp/wild_W_single.webp",
     "assets/final/wild_W_single.png",
     "assets/final/symbol_W.png",
     "assets/final/W.png"
   ],
   "WF": [
+    "assets/final/webp/wild_WF_fullreel.webp",
     "assets/final/wild_WF_fullreel.png",
     "assets/final/wild_fullreel_WF.png",
     "assets/final/WF.png"
   ],
   "WM2": [
+    "assets/final/webp/wild_WM2_two_elves.webp",
     "assets/final/wild_WM2_two_elves.png",
     "assets/final/wild_merged_WM2.png",
     "assets/final/WM2.png"
   ],
   "WM3": [
+    "assets/final/webp/wild_WM3_three_elves.webp",
     "assets/final/wild_WM3_three_elves.png",
     "assets/final/wild_merged_WM3.png",
     "assets/final/WM3.png"
   ],
   "WM4": [
+    "assets/final/webp/wild_WM4_four_elves.webp",
     "assets/final/wild_WM4_four_elves.png",
     "assets/final/wild_merged_WM4.png",
     "assets/final/WM4.png"
   ],
   "WM5": [
+    "assets/final/webp/wild_WM5_five_elves.webp",
     "assets/final/wild_WM5_five_elves.png",
     "assets/final/wild_merged_WM5.png",
     "assets/final/WM5.png"
   ],
   "background": [
+    "assets/final/webp/bg_base_noroxy_1920x1080.webp",
     "assets/final/bg_base_noroxy_1920x1080.png",
     "assets/final/bg_base_1920x1080.png",
     "assets/final/background_base.jpg",
     "assets/final/background_base.png"
   ],
   "background_portrait": [
+    "assets/final/webp/bg_base_mobile_noroxy_1080x1920.webp",
     "assets/final/bg_base_mobile_noroxy_1080x1920.png",
     "assets/final/bg_base_mobile_1080x1920.png",
     "assets/final/background_base_portrait.jpg",
     "assets/final/background_base_portrait.png"
   ],
   "background_fs": [
+    "assets/final/webp/bg_freespins_1920x1080.webp",
     "assets/final/bg_freespins_1920x1080.png",
     "assets/final/background_fs.jpg",
     "assets/final/background_fs.png"
   ],
   "background_fs_portrait": [
+    "assets/final/webp/bg_base_mobile_noroxy_1080x1920.webp",
     "assets/final/bg_base_mobile_noroxy_1080x1920.png",
     "assets/final/bg_base_mobile_1080x1920.png",
     "assets/final/background_fs_portrait.jpg",
     "assets/final/background_fs_portrait.png"
   ],
   "logo": [
+    "assets/final/webp/logo.webp",
     "assets/final/logo.png"
   ],
   "maxwin_webm": [
@@ -103,6 +123,7 @@
     "assets/final/fx/maxwin_elves.mp4"
   ],
   "logo_full": [
+    "assets/final/webp/logo_full.webp",
     "assets/final/logo_full.png"
   ],
   "frame": [
