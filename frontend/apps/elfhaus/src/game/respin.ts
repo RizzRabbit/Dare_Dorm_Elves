@@ -1,48 +1,59 @@
-// Respin counter: a compact plaque shown while a sticky-wild respin sequence runs (base game and feature spins).
-// Book semantics: each sequence allows at most 3 respins; respinStart carries `step` (1-based) and `remaining`
-// (respins still available after this one). A new sequence starts again at 1 / 3 (shown as a fresh reset).
-// Placement: beside the board (right side) when there is room, otherwise above the board / free-spin bar.
+// Respin tracker: 3 small circles shown while a sticky-wild respin sequence runs (base game and feature spins).
+// Book semantics: each sequence allows at most 3 respins; respinStart carries `step` (1-based) and `remaining`.
+// Circles: empty ring = respin still available, filled = used. A new sequence (step 1 after a used one) empties
+// the circles with a quick visible reset before the first fill.
+// Placement: centred on the board's bottom bezel when it is deep enough, otherwise just below the frame.
+import { FX, rcFill, rcCSS } from './fx';
+import { hasSheet } from './sprite';
 const MAX = 3;
-let hideT = 0;
+let hideT = 0, fillT = 0;
 const el = () => document.getElementById('respinCtr') as HTMLElement | null;
 
 export function placeRespin() {
 	const C = el(); if (!C || C.classList.contains('hidden')) return;
 	const fr = document.getElementById('frame')!.getBoundingClientRect();
-	const portrait = document.body.classList.contains('portrait');
-	// decide the mode with the side (vertical) plaque size, then measure in the chosen mode
-	document.body.classList.remove('rcTop');
-	const side = !portrait && innerWidth - fr.right >= C.offsetWidth + 56;
-	document.body.classList.toggle('rcTop', !side);
-	const w = C.offsetWidth, h = C.offsetHeight;
-	if (side) {
-		C.style.left = `${Math.round(fr.right + 28)}px`;
-		C.style.top = `${Math.round(fr.top + fr.height / 2 - h / 2)}px`;
-	} else {
-		const fs = document.getElementById('fsBar')!;
-		const anchor = fs.classList.contains('hidden') ? fr.top : fs.getBoundingClientRect().top;
-		const logo = document.getElementById('logo')?.getBoundingClientRect();
-		const minTop = logo && logo.height ? logo.bottom + 4 : 4;
-		C.style.left = `${Math.round(innerWidth / 2 - w / 2)}px`;
-		C.style.top = `${Math.round(Math.max(minTop, anchor - h - 8))}px`;
-	}
+	const bd = document.getElementById('board')!.getBoundingClientRect();
+	const h = C.offsetHeight, w = C.offsetWidth;
+	const bezel = fr.bottom - bd.bottom;
+	const top = bezel >= h + 2 ? bd.bottom + (bezel - h) / 2 : fr.bottom + 4;
+	C.classList.toggle('below', bezel < h + 2);
+	document.body.classList.toggle('rcBelow', bezel < h + 2);
+	C.style.left = `${Math.round(bd.left + bd.width / 2 - w / 2)}px`;
+	C.style.top = `${Math.round(top)}px`;
 }
 
-/** Show/update for respin `step` of 3 with `remaining` left after it. */
-export function showRespin(step: number, remaining: number) {
+// Each circle shows a static frame of the rcfill sheet (empty / filled); a new fill plays the sheet forward,
+// a reset plays it backwards. Without the sheet the CSS fallback ring/fill (class .on) is used.
+function paint(C: HTMLElement, step: number, popIdx: number) {
+	const sp = hasSheet(FX); C.classList.toggle('sp', sp);
+	C.querySelectorAll<HTMLElement>('i').forEach((p, i) => {
+		p.classList.toggle('on', i < step);
+		if (!sp) return;
+		if (i === popIdx) rcFill(p); else { p.querySelectorAll('canvas').forEach((c) => c.remove()); p.style.cssText = rcCSS(i < step); }
+	});
+	C.dataset.step = String(step);
+	C.setAttribute('aria-label', `Respin ${step} of ${MAX}`);
+}
+
+/** Show/update for respin `step` of 3 (`remaining` left after it). */
+export function showRespin(step: number, _remaining?: number) {
 	const C = el(); if (!C) return;
-	clearTimeout(hideT);
-	const fresh = C.classList.contains('hidden') || step === 1;
-	(C.querySelector('.rcNum') as HTMLElement).textContent = `${step}`;
-	(C.querySelector('.rcLeft') as HTMLElement).textContent = remaining > 0 ? `${remaining} LEFT` : 'LAST RESPIN';
-	C.querySelectorAll('.rcPips i').forEach((p, i) => { p.classList.toggle('used', i < step); p.classList.toggle('now', i === step - 1); });
-	C.classList.remove('hidden', 'fade'); C.dataset.step = String(step);
-	document.body.classList.add('rcOn');
+	clearTimeout(hideT); clearTimeout(fillT);
+	const wasHidden = C.classList.contains('hidden');
+	const prev = wasHidden ? 0 : Number(C.dataset.step || 0);
+	C.classList.remove('hidden', 'fade', 'reset');
+	if (wasHidden) { paint(C, 0, -1); C.classList.add('fade'); }
 	placeRespin();
-	C.classList.remove('bump', 'reset'); void C.offsetWidth; C.classList.add(fresh ? 'reset' : 'bump');
+	if (wasHidden) { void C.offsetWidth; C.classList.remove('fade'); }
+	if (!wasHidden && step <= prev) {
+		// a new sequence: visibly empty the circles, then fill the first
+		C.querySelectorAll<HTMLElement>('i.on').forEach((p) => { p.classList.remove('on'); if (hasSheet(FX)) rcFill(p, true); });
+		C.classList.add('reset');
+		fillT = window.setTimeout(() => { C.classList.remove('reset'); paint(C, step, step - 1); }, 300);
+	} else paint(C, step, step - 1);
 }
 
-/** Sequence over: hold the final count briefly, then fade out. */
+/** Sequence over: hold the final state briefly, then fade out. */
 export function endRespin(delay = 900) {
 	const C = el(); if (!C || C.classList.contains('hidden')) return;
 	clearTimeout(hideT);
@@ -50,7 +61,9 @@ export function endRespin(delay = 900) {
 }
 export function hideRespin() {
 	const C = el(); if (!C) return;
-	clearTimeout(hideT); C.classList.add('hidden'); C.classList.remove('fade', 'bump', 'reset');
-	document.body.classList.remove('rcOn', 'rcTop');
+	clearTimeout(hideT); clearTimeout(fillT);
+	C.classList.add('hidden'); C.classList.remove('fade', 'reset');
+	C.dataset.step = '0';
+	document.body.classList.remove('rcOn', 'rcBelow');
 }
 export const RESPIN_MAX = MAX;

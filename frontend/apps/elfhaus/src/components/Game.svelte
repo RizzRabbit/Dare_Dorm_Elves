@@ -30,7 +30,7 @@
 				<svg id="lines"></svg>
 			</div>
 		</div>
-		<div id="respinCtr" class="hidden" role="status" aria-live="polite"><div class="rcLbl">RESPIN</div><div class="rcRow"><span class="rcNum">1</span><span class="rcOf">/ 3</span></div><div class="rcPips"><i></i><i></i><i></i></div><div class="rcLeft">2 LEFT</div></div>
+		<div id="respinCtr" class="hidden" role="status" aria-live="polite" aria-label="Respin 0 of 3" data-step="0"><i></i><i></i><i></i></div>
 		<div id="stepToast" class="hidden" aria-live="polite"></div>
 	</div>
 	<footer id="hud">

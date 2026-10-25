@@ -3,6 +3,7 @@ import ART_JSON from './art.generated.json';
 import { LINES, MAX_WIN_X, ROWS, REELS, SYMBOL_NAMES } from './config';
 import { money } from './format';
 import type { Group, LineWin } from './typesBookEvent';
+import { mxBurst, lockIconCSS } from './fx';
 
 export const ART = ART_JSON as Record<string, string | null>;
 export const $ = <T extends HTMLElement = HTMLElement>(s: string) => document.querySelector(s) as T;
@@ -21,35 +22,62 @@ const pos = (r: number, row: number) => ({ x: r * S.cell, y: row * S.cell });
 
 const ph = (key: string) => `<span class="ph">${key} placeholder</span>`;
 const img = (key: string) => (ART[key] ? `<img src="${ART[key]}" alt="" draggable="false">` : '');
-// Pink gem multiplier badge (matte SVG, no glow). Text sits inside the SVG so its dark stroke renders the
-// same everywhere; the size steps down for 4-character labels ("x100") so 3 digits always fit.
-const GEM_FACETS =
-	'<polygon points="25,3 75,3 63,22 37,22" fill="#F7A6CB"/>' + // crown top
-	'<polygon points="75,3 97,43 77,43 63,22" fill="#E86BA8"/>' + // upper right
-	'<polygon points="25,3 37,22 23,43 3,43" fill="#F28CBE"/>' + // upper left
-	'<polygon points="3,43 23,43 37,64 25,83" fill="#B83279"/>' + // lower left
-	'<polygon points="97,43 75,83 63,64 77,43" fill="#9E2467"/>' + // lower right
-	'<polygon points="25,83 37,64 63,64 75,83" fill="#7D1A52"/>' + // pavilion bottom
-	'<polygon points="37,22 63,22 77,43 63,64 37,64 23,43" fill="#D9458F"/>' + // table
-	'<polygon points="37,22 63,22 50,43" fill="#E2579C" opacity=".9"/><polygon points="37,64 63,64 50,43" fill="#C23A82" opacity=".9"/>' +
-	'<polygon points="30,7 46,7 38,17 31,17" fill="#fff" opacity=".8"/>' + // small white highlight
-	'<polygon points="25,3 75,3 97,43 75,83 25,83 3,43" fill="none" stroke="#2A1022" stroke-width="3.2" stroke-linejoin="round"/>';
-export function gemHTML(v: number, extra = '', style = '') {
-	const t = 'x' + v, fs = t.length >= 5 ? 23 : t.length === 4 ? 28 : 34;
-	return `<div class="gem${extra ? ' ' + extra : ''}"${style ? ` style="${style}"` : ''} data-v="${v}"><svg viewBox="0 0 100 86" aria-hidden="true">${GEM_FACETS}` +
-		`<text x="50" y="44" font-size="${fs}">${t}</text></svg><i class="sw"></i></div>`;
+// Multiplier lettering: text only, in a faceted pink "gemstone" fill (repeating diagonal hard-stop bands) with a
+// light-pink inner outline, a thin dark-plum outer stroke, a white specular band across the cap tops and a few
+// tiny 4-point glints (sprite sheet, fx.ts) that twinkle now and then. All layers are SVG text sharing one viewBox (60 units high,
+// 48-unit Nunito Black, caps ~34 units), so it renders identically in Chrome and Safari. Gradients live once
+// in a hidden <svg> (userSpaceOnUse, so every instance gets the same facet scale).
+const MX_H = 60, MX_FS = 48, MX_BASE = 50, CHAR_W = 27;
+function ensureMxDefs() {
+	if (document.getElementById('mxDefs')) return;
+	const d = document.createElement('div');
+	d.innerHTML = `<svg id="mxDefs" width="0" height="0" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true"><defs>` +
+		`<linearGradient id="mxFacet" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="15" y2="21" spreadMethod="repeat">` +
+		`<stop offset="0" stop-color="#FF96C8"/><stop offset=".3" stop-color="#FF96C8"/><stop offset=".3" stop-color="#E44792"/>` +
+		`<stop offset=".55" stop-color="#E44792"/><stop offset=".55" stop-color="#FFC4E0"/><stop offset=".68" stop-color="#FFC4E0"/>` +
+		`<stop offset=".68" stop-color="#C42A78"/><stop offset="1" stop-color="#C42A78"/></linearGradient>` +
+		`<linearGradient id="mxShade" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="${MX_H}">` +
+		`<stop offset=".27" stop-color="#fff" stop-opacity="0"/><stop offset=".3" stop-color="#fff" stop-opacity=".85"/>` +
+		`<stop offset=".39" stop-color="#fff" stop-opacity=".3"/><stop offset=".43" stop-color="#fff" stop-opacity="0"/>` +
+		`<stop offset=".62" stop-color="#3A0A26" stop-opacity="0"/><stop offset=".84" stop-color="#3A0A26" stop-opacity=".38"/></linearGradient>` +
+		`</defs></svg>`;
+	document.body.appendChild(d.firstChild!);
 }
-/** Update a gem in place and play the gentle pop + facet sweep. */
+function mxSVG(t: string, w: number, anchor: 'end' | 'middle') {
+	const x = anchor === 'end' ? w - 5 : w / 2;
+	const txt = (cls: string) => `<text class="${cls}" x="${x}" y="${MX_BASE}" text-anchor="${anchor}" font-size="${MX_FS}">${t}</text>`;
+	return `<svg viewBox="0 0 ${w} ${MX_H}" aria-hidden="true">${txt('o')}${txt('i')}${txt('f')}${txt('h')}</svg>`;
+}
+/** Text span of the lettering as % of its box (data-tl / data-tr / data-cx), used to place glints and bursts. */
+function mxSpan(t: string, w: number, anchor: 'end' | 'middle') {
+	const tw = t.length * CHAR_W, x = anchor === 'end' ? w - 5 : w / 2, l = anchor === 'end' ? x - tw : x - tw / 2;
+	const pc = (v: number) => ((v / w) * 100).toFixed(1);
+	return `data-tl="${pc(l)}" data-tr="${pc(l + tw)}" data-cx="${pc(l + tw / 2)}"`;
+}
+const CORNER_W = 150; // fits "x100" (and "x1000") right-aligned
+export function gemHTML(v: number, extra = '', style = '') {
+	ensureMxDefs();
+	return `<div class="mx${extra ? ' ' + extra : ''}" style="${style}" data-v="${v}" ${mxSpan('x' + v, CORNER_W, 'end')}>${mxSVG('x' + v, CORNER_W, 'end')}</div>`;
+}
+/** Merged-wild total in the same lettering (smaller), e.g. "x6 × x6 = x36". */
+export function mxTotalHTML(t: string) {
+	ensureMxDefs();
+	const w = Math.round(t.length * CHAR_W * 0.92 + 16);
+	return `<div class="mx total" style="aspect-ratio:${w}/${MX_H}" ${mxSpan(t, w, 'middle')}>${mxSVG(t, w, 'middle')}</div>`;
+}
+/** Update a multiplier in place and play the burst sprite behind it. */
 export function setGem(el: Element | null, v: number) {
 	if (!el) return;
-	const g = el as HTMLElement, t = 'x' + v, tx = g.querySelector('text');
-	if (tx) { tx.textContent = t; tx.setAttribute('font-size', String(t.length >= 5 ? 23 : t.length === 4 ? 28 : 34)); }
-	g.dataset.v = String(v); g.classList.remove('grow'); void g.offsetWidth; g.classList.add('grow');
+	const g = el as HTMLElement, t = 'x' + v;
+	g.innerHTML = mxSVG(t, CORNER_W, 'end');
+	const tw = t.length * CHAR_W, pc = (n: number) => ((n / CORNER_W) * 100).toFixed(1);
+	g.dataset.v = String(v); g.dataset.tl = pc(CORNER_W - 5 - tw); g.dataset.tr = pc(CORNER_W - 5); g.dataset.cx = pc(CORNER_W - 5 - tw / 2);
+	mxBurst(g);
 }
 export function symHTML(name: string, v?: number) {
 	if (name === 'W') {
 		const val = v || 1;
-		return `<div class="sym W">${ART.W ? img('W') : `<span class="nm">WILD</span>${ph('W')}`}<span class="plate">WILD</span></div>${gemHTML(val)}<div class="lock">LOCKED</div>`;
+		return `<div class="sym W">${ART.W ? img('W') : `<span class="nm">WILD</span>${ph('W')}`}<span class="plate">WILD</span></div>${gemHTML(val)}<div class="lock"><i class="lkI" style="${lockIconCSS()}"></i>LOCKED</div>`;
 	}
 	const t = name[0];
 	if (ART[name]) return `<div class="sym ${t} ${name}">${img(name)}</div>`;
@@ -82,7 +110,7 @@ export function renderOverlays(anim: boolean | number = false) {
 		d.innerHTML = (ART[key] ? `<div class="wart">${img(key)}</div>`
 			: g.reels.map((_, i) => `<div class="wfph" style="left:${i * S.cell}px;width:${S.cell}px"><span>ELF ${i + 1}</span></div>`).join('') + `<div class="mlabel">${key} placeholder · ${n} elves</div><div class="plate">WILD</div>`) +
 			g.values.map((v, i) => gemHTML(v, '', `right:calc(${(n - 1 - i) * S.cell}px + 4px)`)).join('') +
-			`<div class="formula">${g.values.map((v) => 'x' + v).join(' × ')} = x${g.product}</div>`;
+			mxTotalHTML(`${g.values.map((v) => 'x' + v).join(' × ')} = x${g.product}`);
 		if (!anim) d.style.animation = 'none';
 		o.appendChild(d);
 	});

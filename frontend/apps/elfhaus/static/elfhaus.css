@@ -82,9 +82,6 @@ button.small{padding:3px 10px;font-size:12px}
 .sym.W img{animation:breathe 2.8s ease-in-out infinite;transform-origin:50% 60%}
 .badge{position:absolute;right:3px;bottom:3px;z-index:3;min-width:calc(var(--cell)*.3);max-width:calc(var(--cell)*.42);padding:0 3px;text-align:center;font-family:"Nunito";font-weight:900;font-size:max(10px,calc(var(--cell)*.13));line-height:1.25;white-space:nowrap;
   color:var(--cream);background:var(--grain),linear-gradient(#D45A74,var(--rose) 60%,var(--rose2));border:2px solid var(--ink);border-radius:4px;box-shadow:0 1px 0 #2A243377}
-.lock{position:absolute;left:6px;bottom:6px;z-index:3;display:none;font-family:"Nunito";font-weight:900;font-size:calc(var(--cell)*.068);letter-spacing:.6px;
-  background:var(--denim);color:var(--cream);padding:0 5px;border:1.5px solid var(--ink);border-radius:4px}
-.cell.locked .lock{display:block}
 .cell.locked .plate{display:none}
 .sym.W .plate{bottom:3px;left:4px;transform:none;font-size:max(8px,calc(var(--cell)*.09));padding:0 4px}
 .badge.b10{background:var(--grain),linear-gradient(#9B7CC9,#7E5BB0 60%,#5E4290)} .badge.b100{background:var(--grain),linear-gradient(#E4DDF2,#B9A2E0 60%,#8E7BB5);color:var(--ink)}
@@ -376,36 +373,18 @@ body.short #maxwin .mwText{bottom:3vh} body.short .mwTier{font-size:40px} body.s
 body.portrait #maxwin .mwVid{top:17vh;-webkit-mask-image:linear-gradient(#0000,#000 9%,#000 88%,#0000);mask-image:linear-gradient(#0000,#000 9%,#000 88%,#0000)}
 body.portrait #maxwin .mwText{bottom:16vh}
 
-/* ---- Respin counter: compact matte plaque (distinct from the wide free-spin bar) ---- */
-#respinCtr{position:fixed;left:-999px;top:0;z-index:7;min-width:132px;padding:8px 16px 9px;border-radius:10px;text-align:center;pointer-events:none;
-  background:linear-gradient(#2C2738f2,#1C1922f2);border:2px solid #8E7BB5;box-shadow:inset 0 1px 0 #ffffff1f,0 8px 18px -8px #000c;
-  color:#F2EEFA;font-family:"Nunito";transition:opacity .3s}
+/* ---- Respin tracker: 3 small circles (empty ring = remaining, pink fill = used). Matte, no glow. ---- */
+#respinCtr{--rd:14px;position:fixed;left:-999px;top:0;z-index:7;display:flex;gap:calc(var(--rd)*.55);
+  pointer-events:none;transition:opacity .25s ease}
+body.portrait #respinCtr{--rd:11px} body.short:not(.portrait) #respinCtr{--rd:12px}
+#respinCtr.hidden{display:none}
 #respinCtr.fade{opacity:0}
-#respinCtr .rcLbl{font-family:"Cinzel";font-weight:800;font-size:15px;letter-spacing:3px;color:#CDBDEB}
-#respinCtr .rcRow{display:flex;align-items:baseline;justify-content:center;gap:6px;line-height:1;margin:2px 0 6px}
-#respinCtr .rcNum{font-family:"Cinzel";font-weight:900;font-size:46px;color:#F2EEFA;font-variant-numeric:tabular-nums;
-  filter:drop-shadow(0 2px 0 #120F18)}
-#respinCtr .rcOf{font-family:"Cinzel";font-weight:800;font-size:22px;color:#B9B3C6}
-#respinCtr .rcPips{display:flex;justify-content:center;gap:7px}
-#respinCtr .rcPips i{width:22px;height:7px;border-radius:2px;background:#3A3448;border:1px solid #5D5370}
-#respinCtr .rcPips i.used{background:#8E7BB5;border-color:#A28FC8}
-#respinCtr .rcPips i.now{background:#E4DCF6;border-color:#F2EEFA}
-#respinCtr .rcLeft{margin-top:6px;font-weight:900;font-size:13px;letter-spacing:1.5px;color:#DCD8E6}
-#respinCtr.bump .rcNum{animation:rcBump .38s ease-out}
-#respinCtr.reset{animation:rcIn .4s ease-out}
-@keyframes rcBump{0%{transform:scale(1)}40%{transform:scale(1.22)}100%{transform:scale(1)}}
-@keyframes rcIn{0%{transform:scale(.82);opacity:0}100%{transform:scale(1);opacity:1}}
-/* above-the-board mode (portrait / narrow): horizontal layout, banner moves onto the board top while it shows */
-body.rcTop #respinCtr{display:flex;align-items:center;gap:12px;padding:5px 14px;min-width:0}
-body.rcTop #respinCtr .rcRow{margin:0} body.rcTop #respinCtr .rcNum{font-size:34px} body.rcTop #respinCtr .rcOf{font-size:18px}
-body.rcTop #respinCtr .rcLbl{font-size:14px;letter-spacing:2px} body.rcTop #respinCtr .rcLeft{margin:0;font-size:12px}
-body.rcTop #respinCtr .rcPips{flex-direction:row}
-body.rcTop #respinCtr.hidden{display:none!important}
-body.rcOn.rcTop #banner{top:calc(50% - var(--cell)*2 + 10px)}
-body:not(.rcTop) #respinCtr{min-width:156px;padding:10px 18px 11px}
-body:not(.rcTop) #respinCtr .rcNum{font-size:58px} body:not(.rcTop) #respinCtr .rcOf{font-size:26px}
-body:not(.rcTop) #respinCtr .rcLbl{font-size:17px} body:not(.rcTop) #respinCtr .rcLeft{font-size:14px}
-body:not(.rcTop) #respinCtr .rcPips i{width:28px;height:8px}
+#respinCtr i{position:relative;display:block;box-sizing:border-box;width:var(--rd);height:var(--rd);border-radius:50%}
+/* CSS fallback only when the fx sheet failed to load; normally each circle is a frame of the rcfill sprite sheet */
+#respinCtr:not(.sp) i{border:max(2px,calc(var(--rd)*.17)) solid #D9D2EA;background:#2A2236;box-shadow:0 0 0 1px #1A1420}
+#respinCtr:not(.sp) i.on{background:#E44792}
+#respinCtr.sp i.on{filter:drop-shadow(0 0 3px #F06AAE99)}
+body.portrait.rcBelow #stepToast,body.rcBelow #app #stepToast{margin-top:20px}
 
 /* ---- layout v2: one control panel centered under the board, in every orientation; viewport-relative sizes ----
    #ctrlTop/.side/#bar/#strip dissolve (display:contents) so every control and the balance/bet/win readouts sit in one
@@ -455,26 +434,44 @@ body.short:not(.portrait) #top{display:flex;position:fixed;top:6px;right:0;left:
 body.short:not(.portrait) #logo.art{display:block;--lw:min(180px,calc(var(--gutR,200px) - 20px));width:var(--lw);height:calc(var(--lw) / 2.9);max-width:none}
 body.short:not(.portrait) #logo.art img{width:100%;height:100%}
 
-/* ---- pink gem multiplier badge: upper-right of each wild cell / each wild reel. Matte, no glow. ---- */
-.gem{position:absolute;top:3px;right:3px;z-index:3;width:clamp(34px,calc(var(--cell)*.36),64px);aspect-ratio:100/86;pointer-events:none;transform-origin:60% 40%}
-.gem svg{display:block;width:100%;height:100%;overflow:visible}
-.gem text{font-family:"Nunito",sans-serif;font-weight:900;fill:#fff;stroke:#2A1022;stroke-width:6;paint-order:stroke fill;stroke-linejoin:round;
-  text-anchor:middle;dominant-baseline:central;letter-spacing:-.5px}
-.gem .sw{position:absolute;inset:0;overflow:hidden;clip-path:polygon(25% 3.5%,75% 3.5%,97% 50%,75% 96.5%,25% 96.5%,3% 50%)}
-.gem .sw::before{content:"";position:absolute;top:-10%;bottom:-10%;left:-60%;width:38%;transform:skewX(-20deg);opacity:0;
-  background:linear-gradient(90deg,#fff0,#ffffff8c 50%,#fff0)}
-.gem.grow{animation:gemPop .48s ease-out}
-.gem.grow .sw::before{animation:gemSweep .62s ease-out .08s}
-@keyframes gemPop{0%{transform:scale(1)}45%{transform:scale(1.2)}100%{transform:scale(1)}}
-@keyframes gemSweep{0%{left:-60%;opacity:1}100%{left:130%;opacity:1}}
-.ov .gem{top:4px}
-/* merged-wild product (x2 × x3 = x6): neutral matte plate at the bottom, replaces the old red tag */
-.ov .formula{position:absolute;left:50%;bottom:6px;translate:-50% 0;z-index:3;white-space:nowrap;font-family:"Nunito";font-weight:900;
-  font-size:max(11px,calc(var(--cell)*.11));color:#fff;background:#2A2433e0;border:2px solid #1C1722;border-radius:5px;padding:0 8px}
+/* ---- multiplier lettering (ui.ts mxSVG): text only, faceted pink gem fill, light inner + dark plum outer outline.
+   Cap height = 18% of the cell (min 11px). Soft pink glow; glints + growth burst are sprite sheets. ---- */
+.mx{position:absolute;top:2px;right:2px;z-index:3;height:max(19.5px,calc(var(--cell)*.318));aspect-ratio:150/60;pointer-events:none;transform-origin:85% 45%}
+.mx svg{display:block;width:100%;height:100%;overflow:visible}
+.mx text{font-family:"Nunito",sans-serif;font-weight:900;letter-spacing:-1px;stroke-linejoin:round;paint-order:stroke fill}
+.mx .o{fill:#3A0F2C;stroke:#3A0F2C;stroke-width:9}
+.mx .i{fill:#FFE6F2;stroke:#FFE6F2;stroke-width:4.2}
+.mx .f{fill:url(#mxFacet)}
+.mx .h{fill:url(#mxShade)}
+/* soft pink glow behind the lettering (allowed on multipliers); glints and the growth burst are sprites (fx.ts) */
+.mx svg{filter:drop-shadow(0 0 calc(var(--cell)*.03) #F06AAE8c)}
+.mx .spr{position:absolute;pointer-events:none}
+.mx .fxGlint{width:auto;height:46%;aspect-ratio:1;translate:-50% -50%;z-index:2}
+.mx .fxBurst{top:50%;height:270%;aspect-ratio:1;translate:-50% -50%;z-index:-1}
+.mx{isolation:isolate}
+.ov .mx{top:3px}
+/* merged-wild total: same lettering, smaller, bottom centre; a faint plum wash keeps it legible over busy art */
+.ov .mx.total{top:auto;right:auto;left:50%;bottom:5px;translate:-50% 0;height:max(17px,calc(var(--cell)*.22));transform-origin:50% 60%;
+  background:radial-gradient(closest-side,#2A243366,#2A243300);padding:0 4px}
 /* landscape: banners sit in the fsBar lane just above the board (never up in the title); during bonuses they overlap the board's top edge */
 body:not(.portrait) #app #banner{top:calc(50% - var(--cell)*2 - 6px);transform:translate(-50%,-100%);font-size:clamp(13px,2.4vh,20px);padding:4px clamp(12px,1.6vw,24px)}
-body:not(.portrait) #app #fsBar:not(.hidden) ~ #banner,body.rcOn.rcTop:not(.portrait) #app #banner{top:calc(50% - var(--cell)*2 + 8px);transform:translateX(-50%)}
+body:not(.portrait) #app #fsBar:not(.hidden) ~ #banner{top:calc(50% - var(--cell)*2 + 8px);transform:translateX(-50%)}
 /* free-spin bar: landscape tucks into the bezel top; landscape phone puts it in the right gutter, level with the board bottom */
 body:not(.portrait):not(.short) #app #fsBar{margin-bottom:-10px;position:relative;z-index:4}
 body.short:not(.portrait) #app #fsBar{position:fixed;right:6px;left:auto;top:auto;bottom:calc(100% - var(--frB,300px));width:calc(var(--gutR,200px) - 12px);
   flex-wrap:wrap;justify-content:center;gap:2px 10px;font-size:12px;padding:3px 8px;margin:0;z-index:6}
+
+/* ---- sprite canvases (sprite.ts / fx.ts) ---- */
+canvas.spr{display:block;pointer-events:none}
+canvas.fxFill{position:absolute;inset:0;width:100%;height:100%}
+.cell canvas.fxRim{position:absolute;inset:-6%;width:112%;height:112%;z-index:4}
+/* LOCKED: deep-plum pill with lavender caps, dark outline, sprite padlock; the locked cell gets a thin lavender/pink
+   inner frame with a soft glow. Sits bottom-left (the WILD plate is hidden while locked); multiplier is top-right. */
+.lock{position:absolute;left:4px;bottom:4px;z-index:3;display:none;align-items:center;gap:2px;font-family:"Nunito";font-weight:900;
+  font-size:max(8.5px,calc(var(--cell)*.085));line-height:1;letter-spacing:.7px;color:#EDE6FA;
+  background:linear-gradient(#4A2458,#2E1638);padding:2px 6px 2px 3px;border:1.5px solid #120A16;border-radius:99px;
+  box-shadow:inset 0 0 0 1px #C9B3EC66,0 0 6px #F06AAE55}
+.lock .lkI{position:relative;display:inline-block;width:1.35em;height:1.35em;flex:none}
+.cell.locked .lock{display:inline-flex}
+.cell.locked::after{content:"";position:absolute;inset:1px;z-index:2;pointer-events:none;border:2px solid #D7B8EE;
+  box-shadow:inset 0 0 0 1px #F48FC0,inset 0 0 8px #F06AAE66,0 0 0 1px #1A1420}

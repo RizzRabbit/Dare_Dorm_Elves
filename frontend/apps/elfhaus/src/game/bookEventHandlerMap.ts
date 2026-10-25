@@ -5,6 +5,7 @@ import type { BookEvent, BookEventOf, BookEventType } from './typesBookEvent';
 import { roxy, roxyState } from './roxy';
 import { maxWinCelebration } from './maxwin';
 import { showRespin, endRespin, hideRespin } from './respin';
+import { mxBurst, lockFx } from './fx';
 import { $, S, k, bet, wait, banner, toast, hideToast, bigWin, setWinMeter, clearLines, drawWins, renderCell, renderOverlays, cellEl, setGem } from './ui';
 
 const TL = (t: Tier) => TIER_LABEL[t].toUpperCase();
@@ -70,17 +71,20 @@ export const bookEventHandlerMap: Handlers = {
 		ev.changes.forEach((c) => {
 			if (c.kind !== 'single') return;
 			const el = cellEl(c.reel, c.row);
-			setGem(el.querySelector('.gem'), c.to);
+			setGem(el.querySelector('.mx'), c.to);
 			const p = document.createElement('div'); p.className = 'plus'; p.textContent = '+1'; el.appendChild(p);
 		});
-		document.querySelectorAll('.ov .gem').forEach((b) => b.classList.add('grow'));
+		if (ev.changes.some((c) => c.kind !== 'single')) document.querySelectorAll<HTMLElement>('.ov .mx:not(.total)').forEach((b) => mxBurst(b));
 		await wait(650);
 	},
 	async respinStart(ev) {
 		hideToast();
 		document.querySelectorAll('.cell').forEach((c) => c.classList.remove('win', 'dim'));
 		$('#lines').innerHTML = '';
-		ev.locked.singles.forEach((s) => cellEl(s.reel, s.row).classList.add('locked'));
+		ev.locked.singles.forEach((s) => {
+			const c = cellEl(s.reel, s.row);
+			if (!c.classList.contains('locked')) { c.classList.add('locked'); lockFx(c); }
+		});
 		ev.replace.forEach((p) => cellEl(p.reel, p.row).classList.add('replace'));
 		showRespin(ev.step, ev.remaining);
 		await wait(700);
