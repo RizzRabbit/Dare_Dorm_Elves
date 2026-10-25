@@ -7,7 +7,7 @@ Regenerate: `python3 scripts/pack-atlases.py` (Pillow + ffmpeg). Source clips li
 - `ui.json` – created automatically once PNGs are dropped in `assets/final/ui/` (frame name = file name).
 - `H1_idle..H4_idle.json` – 37 frames @12fps, 256px, `animations.H<n>_idle`, seamless loop.
 - `roxy_full_idle_0/1`, `roxy_full_anticipation_0/1` (49 frames, loop), `roxy_full_disappointed_0/1`, `roxy_full_excited_0/1` (37 frames, one-shot). 270×480 frames, 2 pages each; each page's `animations.<name>` lists its own frames – concat page 0 then page 1.
-- Backgrounds (not atlased): `bg_base_1920x1080.webp`, `bg_freespins_1920x1080.webp`, `bg_base_mobile_1080x1920.webp`.
+- Backgrounds are not here: the Lounge webps live in `assets/final/webp/` and reach the game via art-manifest.json -> sync-art (`static/art/background*.webp`).
 
 ## Playing
 ```ts
