@@ -8,7 +8,7 @@ import { initSplash, stingDone, skipSplash } from './intro';
 export const LOADER_CARDS = [
 	'4 Bonus Modes: Dare, Double Dare, Triple Dare and ???. Three dares… and one dirty little secret.',
 	'Sticky Wilds: x1, x2, x3. Once she’s in, she stays… and gets hotter every respin.',
-	'Elves Gone Wild Feature Spins: x2 × x3 = x6. Whole reels go WILD. Side by side? They multiply.',
+	'Elves Gone Wild Feature Spins: x4 × x5 = x20. Whole reels go WILD. Side by side? They multiply.',
 ] as const;
 
 let total = 0, done = 0;
