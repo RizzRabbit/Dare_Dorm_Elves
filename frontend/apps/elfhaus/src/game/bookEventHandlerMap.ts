@@ -3,7 +3,8 @@ import { MAX_WIN_X, ROWS, REELS, TIER_LABEL, SPIN_CAP as MAX_FS, type Tier } fro
 import { money } from './format';
 import type { BookEvent, BookEventOf, BookEventType, Locked, Pos } from './typesBookEvent';
 import { roxy, roxyState } from './roxy';
-import { maxWinCelebration } from './maxwin';
+import { maxWinCelebration, preloadMaxWin } from './maxwin';
+import { BIGWIN_ELVES_MIN_X, preloadBigWinElves } from './bigwinElves';
 import { showRespin, endRespin, hideRespin } from './respin';
 import { mxBurst, lockFx, clearSymWins, symLand, symWin, landBump } from './fx';
 import { cardFlip } from './cardflip';
@@ -257,6 +258,10 @@ export const bookEventHandlerMap: Handlers = {
 
 export async function playBookEvents(events: BookEvent[]) {
 	S.roundBase = 0;
+	// celebration sheets are lazy: start decoding them only once this round's book shows they're needed (the reels spin
+	// meanwhile); they're released again after the screen closes
+	if (events.some((e) => e.type === 'wincap')) void preloadMaxWin();
+	else if (events.some((e) => e.type === 'setWin' && (e as { amount?: number }).amount! / 100 >= BIGWIN_ELVES_MIN_X)) void preloadBigWinElves();
 	if (roxyState() === 'anticipation') roxy('idle');
 	for (const ev of events) {
 		const h = (bookEventHandlerMap as any)[ev.type];

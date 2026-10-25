@@ -1,12 +1,16 @@
 // MAX WIN celebration (sprite version): shown ONLY when a round hits the 50,000x cap (wincap event).
-// Five elves (Coco | Jade | wild elf | Roxy | Vi) packed shoulder to shoulder lean in over the player (first-person
-// POV), gawk at the count-up, then react in a staggered wave; Roxy and the wild elf peak with a comedic ahegao.
-// The row is ONE group sprite sheet (sprite.ts SpriteAnim); the only CSS motion is its rise-in and the overlay fade. Sheets are lazy: preloadMaxWin() fetches them at idle time after the game is up,
-// releaseMaxWin() drops them after the show so ~55 MB of decoded textures don't sit in memory.
+// Five elves (Coco | Jade | Delilah | Roxy | Vi) packed shoulder to shoulder lean in over the player (first-person
+// POV), gawk at the count-up, then lose it one by one (not on a grid): each breaks into a comedic ecstatic face.
+// Round 4: each elf is her OWN sheet (maxwin_elf_*: drawn expression frames + blush/heart overlays) driven by elfrig.ts:
+// 30 fps expression steps with drawn in-betweens, transform-only bob/sway/squash/tilt/hop/giggle, staggered rise-in.
+// Sheets are lazy: nothing is decoded at idle. preloadMaxWin() starts the decode the moment a max win is known (playBookEvents
+// sees a wincap in the round's book, i.e. before the reels even spin); maxWinCelebration() awaits it before the entrance, so
+// nothing pops in, and releaseMaxWin() closes the ImageBitmaps after the screen closes (~13.4 MB decoded for the five elves).
 import { $, bet } from './ui';
 import { MAX_WIN_X } from './config';
 import { money } from './format';
 import { loadSheet, hasSheet, play, stop, unloadSheet, type Anim, type Atlas } from './sprite';
+import { ElfRig, TEMPO, type ElfCfg } from './elfrig';
 
 // atlases live outside ./fx/ on purpose so fx.ts doesn't load them on the loading screen
 const ATL = import.meta.glob('./maxwin/*.json', { eager: true, import: 'default' }) as Record<string, Atlas>;
@@ -14,44 +18,63 @@ const IMG = import.meta.glob('../assets/maxwin/*.webp', { eager: true, import: '
 const ids = Object.keys(ATL).map((p) => p.split('/').pop()!.replace('.json', ''));
 const src = (id: string) => Object.entries(IMG).find(([p]) => p.endsWith('/' + id + '.webp'))?.[1] || '';
 
-const GROUP = 'maxwin_group';
-const RISE = 150;                     // ms: group rise-in starts (CSS), intro sprite at RISE + 250
+const RISE = 150;                     // ms: first elf starts rising (staggered, centre out)
 const SPARK = [[30, 16], [70, 14], [22, 32], [78, 30], [42, 8], [58, 36], [36, 40], [64, 6]];
 const COUNT_MS = 4200, COUNT_AT = 600;
 
 let loading: Promise<void> | null = null;
-export function preloadMaxWin() {
-	const go = () => { loading ??= Promise.all(ids.map((id) => hasSheet(id) ? 0 : loadSheet(id, src(id), ATL['./maxwin/' + id + '.json']).catch((e) => console.warn('maxwin sheet', id, e)))).then(() => {}); };
-	const ric = (window as any).requestIdleCallback as ((f: () => void, o?: object) => void) | undefined;
-	setTimeout(() => (ric ? ric(go, { timeout: 4000 }) : go()), 1500);
+/** Start decoding the max-win sheets (idempotent; returns the pending decode). Call as soon as a max win is determined. */
+export function preloadMaxWin(): Promise<void> {
+	return (loading ??= Promise.all(ids.map((id) => hasSheet(id) ? 0 : loadSheet(id, src(id), ATL['./maxwin/' + id + '.json']).catch((e) => console.warn('maxwin sheet', id, e)))).then(() => {}));
 }
-/** Free the decoded textures after the show (they reload lazily if a second max win ever happens). */
+/** Free the decoded textures after the show (ImageBitmap.close via unloadSheet; they reload on the next max win). */
 export function releaseMaxWin() { ids.forEach((id) => unloadSheet(id)); loading = null; }
 
-const live = new Set<Anim>(); const timers: number[] = [];
+const live = new Set<Anim>(); const timers: number[] = []; let rig: ElfRig | null = null;
 const later = (ms: number, f: () => void) => timers.push(window.setTimeout(f, ms));
 function run(id: string, name: string, host: Element, o: Parameters<typeof play>[3] = {}) {
 	const a = play(id, name, host, { cls: 'mwSpr', ...o }); if (a) live.add(a); return a;
 }
-/** Swap the animation on a host without a blank frame: the new canvas sits on top, the old one goes 2 rAFs later. */
+/** Swap the animation on a host without a blank frame. play() paints frame 0 synchronously when there is no delay,
+ *  so the old canvas goes on the SAME frame (a 2-rAF overlap let e.g. Delilah's heart show through the next anim);
+ *  only a delayed start keeps the old canvas 2 rAFs as a fallback. */
 function swap(old: Anim | null, id: string, name: string, host: Element, o: Parameters<typeof play>[3] = {}) {
 	const a = run(id, name, host, o);
-	if (old) requestAnimationFrame(() => requestAnimationFrame(() => { stop(old); live.delete(old); }));
+	if (old) {
+		if (a && !o.delay) { stop(old); live.delete(old); }
+		else requestAnimationFrame(() => requestAnimationFrame(() => { stop(old); live.delete(old); }));
+	}
 	return a;
 }
+// Expression in-betweens (state, frames at 30 fps) for every change: anticipation squint/giggle ('ant'),
+// half-rolled eyes + half-open mouth ('half'), half-lids ('blinkh'). Never a cross-fade of two faces.
+const TRANS: Record<string, [string, number][]> = {
+	'gawk>blink': [['blinkh', 1]], 'blink>gawk': [['blinkh', 1]],
+	'gawk>peak': [['blinkh', 1], ['ant', 2]], 'peak>ahe': [['ant', 2], ['half', 2]], 'ahe>peak': [['half', 2], ['ant', 1]],
+	'peak>gawk': [['ant', 1], ['blinkh', 2]], 'ahe>gawk': [['half', 2], ['blinkh', 1]], 'gawk>ahe': [['ant', 2], ['half', 2]],
+};
+// Roxy's ecstatic face is her 'peak' layer, so her gawk<->peak runs through the ahegao in-betweens
+const TRANS_RX = { ...TRANS, 'gawk>peak': [['blinkh', 1], ['ant', 2], ['half', 2]], 'peak>gawk': [['half', 2], ['blinkh', 1]] } as typeof TRANS;
+const FX: ElfCfg['fx'] = { peak: ['squash', 'tilt', 'giggle'], ahe: ['squash', 'tilt', 'hop'], gawk: ['squash', 'tilt0'] };
+const BLUSH = { ant: 0.35, half: 0.8, ahe: 1, peak: 0.55 };
+const ELVES = ['coco', 'jade', 'delilah', 'roxy', 'vi'];
+const CO = 0, JA = 1, DL = 2, RX = 3, VI = 4;
+// The peak, ms after the count lands. Irregular on purpose: Roxy breaks first, Coco + Jade almost together, Delilah
+// after a short laugh (her hearts), Vi late; each drifts back to her laugh at her own time, then all settle.
+const PEAK: [number, string, number][] = [
+	[RX, 'peak', 133], [CO, 'peak', 67], [JA, 'peak', 200], [DL, 'peak', 333], [CO, 'ahe', 533], [JA, 'ahe', 600],
+	[DL, 'ahe', 733], [VI, 'peak', 1067], [JA, 'peak', 1267], [RX, 'gawk', 1467], [VI, 'ahe', 1467], [CO, 'peak', 1533],
+	[DL, 'peak', 2067], [RX, 'peak', 2200], [VI, 'peak', 2333],
+	[RX, 'gawk', 3400], [VI, 'gawk', 3560], [DL, 'gawk', 3700], [CO, 'gawk', 3820], [JA, 'gawk', 3980],
+];
 function groupShow(host: HTMLElement, landAt: number) {
-	later(RISE, () => host.classList.add('up'));                         // CSS rise-in (450 ms ease-out)
-	let cur: Anim | null = null;
-	later(RISE + 250, () => {
-		cur = run(GROUP, 'intro', host, { hold: true, onEnd: () => { cur = swap(cur, GROUP, 'loop', host, { delay: 0 }); } });
-	});
-	// peak: the per-elf stagger (Jade, Coco, Vi, Roxy, WF) is baked into the 9-frame 'peak' anim
-	later(landAt, () => {
-		cur = swap(cur, GROUP, 'peak', host, { hold: true, onEnd: () => {
-			cur = swap(cur, GROUP, 'peakHold', host);
-			later(1600, () => { cur = swap(cur, GROUP, 'settle', host, { hold: true, onEnd: () => { cur = swap(cur, GROUP, 'loop', host); } }); });
-		} });
-	});
+	const cfg = (n: string, i: number): ElfCfg => ({ id: 'maxwin_elf_' + n, base: 'gawk', trans: i === RX ? TRANS_RX : TRANS,
+		fx: i === RX ? { ...FX, peak: ['squash', 'tilt', 'hop'] } : FX, blush: i === RX ? { ...BLUSH, peak: 1 } : BLUSH,
+		heartOn: i === DL ? 'peak' : undefined, blink: ['blink', 'gawk', 2300, 4200] });
+	const rig = new ElfRig(host, ELVES.map(cfg));
+	rig.enter(RISE, [DL, JA, RX, CO, VI], 60);                          // centre out, ease-out-back rise (elfrig)
+	for (const [i, s, t] of PEAK) rig.set(i, s, landAt + Math.round(t * TEMPO));   // same irregular order, stretched (elfrig TEMPO)
+	return rig;
 }
 function sparkle(stage: HTMLElement, i: number) {
 	const h = document.createElement('div'); h.className = 'mwSpark'; stage.appendChild(h);
@@ -67,7 +90,7 @@ function sparkle(stage: HTMLElement, i: number) {
 const ease = (t: number) => 1 - Math.pow(1 - t, 3);
 export async function maxWinCelebration() {
 	const M = $('#maxwin'); const stage = M.querySelector('.mwStage') as HTMLElement;
-	await (loading ?? (preloadMaxWin(), loading));
+	await preloadMaxWin();                                             // fallback: wait for the decode before the entrance (instant if already preloaded)
 	const crowd = document.createElement('div'); crowd.className = 'mwCrowd'; stage.appendChild(crowd);
 	const conf = document.createElement('div'); conf.className = 'mwConfetti'; stage.insertBefore(conf, crowd);
 	const portrait = document.body.classList.contains('portrait');
@@ -82,8 +105,12 @@ export async function maxWinCelebration() {
 	hint.textContent = matchMedia('(pointer: coarse)').matches ? 'TAP TO CONTINUE' : 'CLICK TO CONTINUE';
 	M.classList.remove('hidden', 'held', 'out'); void M.offsetWidth; M.classList.add('on');
 	const landAt = COUNT_AT + COUNT_MS;
-	const g = document.createElement('div'); g.className = 'mwGroup'; crowd.appendChild(g); groupShow(g, landAt);
-	later(400, () => run('maxwin_title', 'intro', tier, { hold: true, onEnd: () => run('maxwin_title', 'shine', tier) }));
+	const g = document.createElement('div'); g.className = 'mwGroup'; crowd.appendChild(g);
+	rig = groupShow(g, landAt).start();                                // one rAF clock for the elves + title cue
+	rig.at(400, () => {                                                // title: soft scale overshoot as its sprite starts
+		tier.classList.add('pop');
+		const a = run('maxwin_title', 'intro', tier, { hold: true, onEnd: () => { swap(a, 'maxwin_title', 'shine', tier); } });
+	});
 	SPARK.slice(0, 5).forEach((_, i) => sparkle(stage, i));
 	// count-up (live text); a tap during the show skips straight to the final amount
 	const skip = () => { skipped = true; };
@@ -100,20 +127,20 @@ export async function maxWinCelebration() {
 	});
 	M.removeEventListener('pointerdown', skip);
 	M.classList.add('landed');
-	await new Promise((r) => setTimeout(r, skipped ? 300 : 2200));
-	M.classList.add('held');
+	// the slower peak plays out under the hold; the continue hint shows after it, but a click works from the landing on
+	const heldT = setTimeout(() => M.classList.add('held'), skipped ? 300 : Math.round(2200 * TEMPO));
 	await new Promise<void>((res) => {
 		const done = (e: Event) => {
 			if (e instanceof KeyboardEvent && !['Space', 'Enter', 'Escape'].includes(e.code)) return;
-			e.preventDefault(); e.stopPropagation();
+			e.preventDefault(); e.stopPropagation(); clearTimeout(heldT);
 			M.removeEventListener('pointerdown', done); removeEventListener('keydown', done, { capture: true } as any); res();
 		};
 		M.addEventListener('pointerdown', done); addEventListener('keydown', done, { capture: true });
 	});
-	M.classList.add('out');
-	await new Promise((r) => setTimeout(r, 450));
-	timers.splice(0).forEach(clearTimeout); live.forEach((a) => stop(a)); live.clear();
-	crowd.remove(); conf.remove(); stage.querySelectorAll('.mwSpark').forEach((n) => n.remove()); tier.classList.remove('spr');
+	M.classList.add('out');                                            // fade + slide the row down (CSS, transform/opacity)
+	await new Promise<void>((r) => (rig ? rig.at(rig.ms + 600, r) : setTimeout(r, 600)));   // on the rig's rAF clock: the elves keep moving through the fade
+	timers.splice(0).forEach(clearTimeout); live.forEach((a) => stop(a)); live.clear(); rig?.destroy(); rig = null;
+	crowd.remove(); conf.remove(); stage.querySelectorAll('.mwSpark').forEach((n) => n.remove()); tier.classList.remove('spr', 'pop');
 	M.classList.add('hidden'); M.classList.remove('on', 'landed', 'held', 'out');
 	releaseMaxWin();
 }

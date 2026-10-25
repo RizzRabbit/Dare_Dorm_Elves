@@ -231,7 +231,7 @@ body.portrait #strip{padding:6px 12px 7px;margin-top:22px} body.portrait #strip 
 body.portrait #fsBar{font-size:14px;gap:10px;padding:3px 14px}
 body.portrait #banner{font-size:13px;padding:4px 12px;white-space:normal;width:max-content;max-width:calc(94*var(--vw));text-align:center}
 body.portrait .tierName{font-size:38px} body.portrait .spins{font-size:22px} body.portrait #intro .card{padding:22px 20px}
-body.portrait .bwTier{font-size:52px} body.portrait .bwAmt{font-size:38px}
+body.portrait .bwTier{font-size:min(52px,calc(7.8*var(--vw)));letter-spacing:1px;white-space:nowrap} body.portrait .bwAmt{font-size:38px} /* LEGENDARY WIN on one line */
 body.portrait #buyCards{grid-template-columns:1fr 1fr} body.portrait .bcard:last-child{grid-column:span 2}
 
 /* ---------- production additions ---------- */
@@ -643,13 +643,20 @@ canvas.uiFill{position:absolute;inset:0;width:100%;height:100%}
 @keyframes btnPress{0%{transform:scale(.9)}100%{transform:none}}
 #app #spinBtn.armed{box-shadow:0 0 0 2px #3A0F2C}
 
-/* MAX WIN sprite layout. One POV group sprite (frame 716x417): Coco | Jade | WF | Roxy | Vi, cropped at the waist. */
+/* MAX WIN sprite layout. One POV group sprite (frame 716x417): Coco | Jade | Delilah | Roxy | Vi, cropped at the waist. */
 #maxwin .mwCrowd{position:absolute;inset:0;z-index:3;pointer-events:none;overflow:hidden}
-#maxwin .mwGroup{position:absolute;left:50%;bottom:calc(-1*var(--vh));height:calc(62*var(--vh));aspect-ratio:716/417;
-  transform:translate(-50%,40%);opacity:0;transition:transform .45s cubic-bezier(.2,.9,.25,1.15),opacity .2s ease}
-#maxwin .mwGroup.up{transform:translate(-50%,0);opacity:1}
+#maxwin .mwGroup{position:absolute;left:50%;bottom:calc(-1*var(--vh));height:calc(62*var(--vh));aspect-ratio:716/417;transform:translate(-50%,0)}
 body.portrait #maxwin .mwGroup{height:auto;width:calc(128*var(--vw));bottom:0}
 #maxwin .mwSpr{position:absolute;inset:0;width:100%;height:100%;image-rendering:auto}
+/* round 4: per-elf puppet layers (elfrig.ts), each animated by transform/opacity only; exit = fade + slide down */
+.mwGroup .elf,.bwGroup .elf{position:absolute;will-change:transform,opacity;backface-visibility:hidden}
+.elf .elfCv{position:absolute;inset:0;width:100%;height:100%}
+.elf .elfOv{position:absolute;pointer-events:none;will-change:transform,opacity}
+#maxwin .mwCrowd{transition:transform .5s cubic-bezier(.5,0,.75,0),opacity .45s cubic-bezier(.4,0,1,1)}
+#maxwin.out .mwCrowd{transform:translateY(16%);opacity:0}
+#maxwin.out{transition:opacity .5s cubic-bezier(.45,0,.55,1) .06s}   /* exit: the row starts sliding, then the screen eases out */
+#maxwin .mwTier.spr{transform:scale(.5);opacity:0;transition:none}
+#maxwin.on .mwTier.spr.pop{transform:scale(1);opacity:1;transition:transform .5s cubic-bezier(.34,1.56,.64,1),opacity .2s ease-out}
 #maxwin .mwConfetti{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden;animation:mwConfIn .5s ease both}
 @keyframes mwConfIn{from{opacity:0}to{opacity:1}}
 #maxwin .mwConfTile{position:absolute;left:0;width:100%;aspect-ratio:16/9}
@@ -668,11 +675,15 @@ body.portrait #maxwin .mwTier.spr{width:calc(80*var(--vw))}
 #bigwin .bwFx { z-index: 1; }
 #bigwin .bwGroup {                       /* frame 584x397: Vi | Roxy | Coco, cropped at the waist */
 	position: absolute; left: 50%; bottom: calc(-1*var(--vh)); height: calc(74*var(--vh)); aspect-ratio: 584 / 397;
-	transform: translate(-50%, 10%); opacity: 0; transition: transform .45s cubic-bezier(.2, 1.4, .4, 1), opacity .16s linear;
+	transform: translate(-50%, 0);           /* round 4: the elves rise in individually (elfrig.ts) */
 }
 #bigwin .bwGroup.in { transform: translate(-50%, 0); opacity: 1; }
 #bigwin .bwSpr { position: absolute; inset: 0; width: 100%; height: 100%; }
-body.portrait #bigwin .bwGroup { height: auto; width: calc(122*var(--vw)); bottom: 0; }
+body.portrait #bigwin .bwGroup { height: auto; width: calc(100*var(--vw)); bottom: calc(-7*var(--vh)); }   /* smaller + sunk: covers less of the board */
+/* landscape: smaller + sunk group, and the title block lifted clear of the heads while the group is up */
+body:not(.portrait) #bigwin .bwGroup { height: calc(56*var(--vh)); bottom: calc(-8*var(--vh)); }
+body:not(.portrait) #bigwin .bw { top: 0; transition: top .35s ease-out; }
+body:not(.portrait) #bigwin.chars .bw { top: calc(-17*var(--vh)); }
 /* keep the amount legible over the group: soft dark plate behind the text block */
 #bigwin .bw::before { content: ''; position: absolute; inset: -6% -14%; z-index: -1;
 	background: radial-gradient(closest-side, rgba(20, 12, 24, .55), rgba(20, 12, 24, 0)); }

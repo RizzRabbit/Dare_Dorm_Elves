@@ -17,7 +17,7 @@ import { tapLines } from './winlines';
 import { startShimmer, initWfExpand } from './wildfx';
 import { setArmedGlow, wireTapFx } from './uifx';
 import { featOpen, featPop, featClose } from './featfx';
-import { preloadBigWinElves, bigWinElvesStart, bigWinElvesEnd } from './bigwinElves';
+import { BIGWIN_ELVES_MIN_X, preloadBigWinElves, bigWinElvesStart, bigWinElvesEnd } from './bigwinElves';
 import { setBigWinFx } from './ui';
 import { setSocial, isSocial, t } from './strings';
 import { $, S, ART, bet, buildCells, renderAll, renderOverlays, setOverlayHook, resetWinMeter, setWinMeter, banner, wait, waitRaw } from './ui';
@@ -28,7 +28,6 @@ import { initStacks, stackIdle } from './stacks';
 import { setBg, warmBg } from './bg';
 import { placeAlcove } from './alcove';
 import { initLoader, preloadArt, track, loaderReady, hideLoader } from './loader';
-import { preloadMaxWin } from './maxwin';
 import { fitStage, toStage } from './stage';
 import { placeRespin } from './respin';
 import { loadAllFx } from './fx';
@@ -426,14 +425,13 @@ export async function initGame() {
 	startShimmer(); wireTapFx();
 	// big-win banner moments: burst + confetti on open, a star pop on each tier title, the character layer from 1000x
 	setBigWinFx({
-		start: (B) => featOpen(B.querySelector('.bwFx')),
+		// backup trigger for the lazy elf sheets (playBookEvents normally started the decode when the book arrived)
+		start: (B, x) => { featOpen(B.querySelector('.bwFx')); if (x >= BIGWIN_ELVES_MIN_X) void preloadBigWinElves(); },
 		tier: (B) => featPop(B.querySelector('.bwTier')),
 		// the Vi / Roxy / Coco group (bigwinElves.ts, BIGWIN_ELVES_MIN_X = 1000) rises in as the count crosses 1000x
 		chars: (B) => bigWinElvesStart(B, 1000),
 		end: (B) => { featClose(B.querySelector('.bwFx')); bigWinElvesEnd(); },
 	});
-	const ric = (window as any).requestIdleCallback as ((f: () => void, o?: object) => void) | undefined;
-	setTimeout(() => (ric ? ric(() => preloadBigWinElves(), { timeout: 5000 }) : preloadBigWinElves()), 2500);
 	document.addEventListener('pointerdown', (e) => { if (!(e.target as Element)?.closest?.('#bigwin,#outro')) { skipBoard(false); if (!(e.target as Element)?.closest?.('#menu,#buyMenu,#autoMenu,#msg')) hurry(); } }, { capture: true, passive: true });
 	track(initRoxy(layout));
 	loadAllFx(track).then(() => renderAll());
@@ -442,12 +440,12 @@ export async function initGame() {
 	buildCells(); S.sym = IDLE.map((c) => [...c]); S.vals = new Map([[2 * 4 + 2, 1]]);
 	wire(); layout(); setBusy(true);
 	try {
-		if (url.replay) { setSocial(url.social || isSocialCurrency()); applyJurisdiction(); await track(loadReplay()); await loaderReady(); preloadMaxWin(); }
+		if (url.replay) { setSocial(url.social || isSocialCurrency()); applyJurisdiction(); await track(loadReplay()); await loaderReady(); }
 		else {
 			const rd = await track(authenticate());
 			setSocial(url.social || !!S.jur.socialCasino || isSocialCurrency());
 			applyJurisdiction(); sessionReady = true; setStrip(); resetWinMeter();
-			await loaderReady(); layout(); preloadMaxWin();
+			await loaderReady(); layout();
 			setBusy(false);
 			await resume(rd);
 		}
