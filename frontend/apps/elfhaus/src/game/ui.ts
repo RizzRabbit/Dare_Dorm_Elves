@@ -142,21 +142,10 @@ export function renderAll() {
 	renderOverlays(false);
 }
 export function clearLines() {
-	$('#lines').innerHTML = '';
+	const c = $('#lines') as unknown as HTMLCanvasElement; c.getContext('2d')?.clearRect(0, 0, c.width, c.height);
+	document.querySelectorAll('.wlAmt').forEach((e) => e.remove());
 	document.querySelectorAll('.cell').forEach((c) => c.classList.remove('win', 'dim', 'replace', 'out'));
 	clearSymWins();
-}
-export function drawWins(wins: LineWin[]) {
-	const svg = $('#lines'); svg.innerHTML = '';
-	document.querySelectorAll('.cell').forEach((c) => c.classList.add('dim'));
-	wins.forEach((w, i) => {
-		const ln = LINES[w.lineIndex - 1]; if (!ln) return;
-		const pts = ln.map((row, r) => { const p = pos(r, row); return `${p.x + S.cell / 2},${p.y + S.cell / 2}`; }).join(' ');
-		const pl = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
-		pl.setAttribute('points', pts); pl.setAttribute('stroke', LINE_COLORS[i % LINE_COLORS.length]); pl.setAttribute('opacity', '.85');
-		svg.appendChild(pl);
-		w.positions.forEach((p) => { const c = cellEl(p.reel, p.row); c.classList.remove('dim'); c.classList.add('win'); symWin(c); });
-	});
 }
 export function toast(html: string) { const t = $('#stepToast'); t.innerHTML = html; t.classList.remove('hidden'); }
 export const hideToast = () => $('#stepToast').classList.add('hidden');

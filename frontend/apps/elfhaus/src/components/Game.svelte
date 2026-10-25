@@ -28,7 +28,7 @@
 				<div id="strips"></div>
 				<div id="cells"></div>
 				<div id="overlays"></div>
-				<svg id="lines"></svg>
+				<canvas id="lines"></canvas>
 			</div>
 		</div>
 		<div id="stepToast" class="hidden" aria-live="polite"></div>

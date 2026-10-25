@@ -95,8 +95,8 @@ button.small{padding:3px 10px;font-size:12px}
 .cell.locked .plate{display:none}
 .sym.W .plate{bottom:3px;left:4px;transform:none;font-size:max(8px,calc(var(--cell)*.09));padding:0 4px}
 .badge.b10{background:var(--grain),linear-gradient(#9B7CC9,#7E5BB0 60%,#5E4290)} .badge.b100{background:var(--grain),linear-gradient(#E4DDF2,#B9A2E0 60%,#8E7BB5);color:var(--ink)}
-.cell.win .sym{animation:winBob .7s ease-in-out 2;outline:3px solid var(--rose);outline-offset:-3px;background:#C8435F14}
-.cell.dim{filter:saturate(.35) brightness(.82);opacity:.55}
+.cell.win .sym{animation:winBob .7s ease-in-out 2}
+.cell.dim{opacity:.5;transition:opacity .15s}
 .cell.out{opacity:0}
 .cell.drop .sym{animation:drop .32s cubic-bezier(.3,1.3,.5,1) both}
 .grow{animation:grow .5s ease-out}
@@ -124,7 +124,11 @@ button.small{padding:3px 10px;font-size:12px}
 
 /* ---------- lines / toast / banner / fs bar: dark glass, thin border, serif ---------- */
 #lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:4}
-#lines polyline{fill:none;stroke-width:6;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 2px 0 #2A243399)}
+/* line-amount label near the end of the racing win line (small, no box) */
+.wlAmt{position:absolute;z-index:5;transform:translate(-50%,0);pointer-events:none;font:800 13px "Nunito";color:#FFF2F8;letter-spacing:.3px;
+  font-variant-numeric:tabular-nums;white-space:nowrap;text-shadow:0 0 6px #C42A78,0 1px 0 #2A2433;animation:wlIn .16s ease-out}
+@keyframes wlIn{from{opacity:0;transform:translate(-50%,4px)}to{opacity:1;transform:translate(-50%,0)}}
+body.portrait .wlAmt{font-size:11px}
 #stepToast,#banner,#fsBar,.modal,#intro .card{background:var(--glass2);border:1px solid var(--hair);color:#F2F0F7;box-shadow:0 10px 24px -8px #0009}
 #stepToast{position:relative;margin-top:8px;z-index:6;font-family:"Nunito";font-weight:900;color:#fff;min-height:38px;
   font-size:22px;padding:3px 22px 4px;border-radius:8px;white-space:nowrap}

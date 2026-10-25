@@ -7,7 +7,8 @@ import { maxWinCelebration } from './maxwin';
 import { showRespin, endRespin, hideRespin } from './respin';
 import { mxBurst, lockFx, clearSymWins } from './fx';
 import { timing, isSpinning, startSpin, markStopped, sinceStart, sleep, spinCells, stopReel } from './reels';
-import { $, S, k, bet, wait, banner, toast, hideToast, bigWin, setWinMeter, clearLines, drawWins, renderCell, renderOverlays, cellEl, setGem, ovMx, symHTML } from './ui';
+import { $, S, k, bet, wait, banner, toast, hideToast, bigWin, setWinMeter, clearLines, renderCell, renderOverlays, cellEl, setGem, ovMx, symHTML } from './ui';
+import { playWins } from './winlines';
 import { grab, combineInto } from './combine';
 
 const TL = (t: Tier) => TIER_LABEL[t].toUpperCase();
@@ -74,10 +75,8 @@ export const bookEventHandlerMap: Handlers = {
 		if (fresh.length) await wait(250);
 	},
 	async winInfo(ev) {
-		drawWins(ev.wins);
-		const amt = Math.min(ev.totalWin / 100, MAX_WIN_X) * bet();
-		toast(`+${money(amt)}`);
-		await wait(1100);
+		// one thin line at a time races along each payline; its amount ticks into WIN (winlines.ts)
+		await playWins(ev.wins, S.roundBase);
 	},
 	async updateStepWin(ev) { setWinMeter(S.roundBase + ev.amount / 100); },
 	async wildGrow(ev) {
@@ -101,7 +100,7 @@ export const bookEventHandlerMap: Handlers = {
 	async respinStart(ev) {
 		hideToast();
 		document.querySelectorAll('.cell').forEach((c) => c.classList.remove('win', 'dim')); clearSymWins();
-		$('#lines').innerHTML = '';
+		clearLines();
 		ev.locked.singles.forEach((s) => {
 			const c = cellEl(s.reel, s.row);
 			if (!c.classList.contains('locked')) { c.classList.add('locked'); lockFx(c); }
