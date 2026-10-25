@@ -317,10 +317,9 @@ body.portrait #logo.art{height:clamp(40px,calc(8*var(--vh)),92px);max-width:calc
 #loader.ready #lGo{display:block}
 @keyframes lPulse{50%{transform:scale(1.04)}}
 .lCredit{position:absolute;bottom:max(10px,env(safe-area-inset-bottom));left:0;right:0;text-align:center;font:700 12px "Nunito";letter-spacing:1.5px;color:#9A90AE}
-@media (orientation:portrait){
-  #lLogo{width:calc(94*var(--vw));max-height:calc(34*var(--vh))}
-  .lCard{gap:12px;padding:10px 12px 10px 10px}
-}
+/* portrait = the stage's portrait (body.portrait, stage.ts), never the window media query: one rule for every layer */
+body.portrait #lLogo{width:calc(94*var(--vw));max-height:calc(34*var(--vh))}
+body.portrait .lCard{gap:12px;padding:10px 12px 10px 10px}
 /* short popout (landscape, under 520px tall): logo left, cards and controls right */
 @media (orientation:landscape) and (max-height:0px){ /* retired: fixed design stage */
   #loader{flex-direction:row;gap:calc(3*var(--vw));padding:12px calc(4*var(--vw)) 28px}

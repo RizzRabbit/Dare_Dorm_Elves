@@ -16,7 +16,12 @@ const PORT_W = 390, PORT_AR: [number, number] = [1.5, 2.4];     // stage height 
 const clamp = (v: number, [a, b]: [number, number]) => Math.min(b, Math.max(a, v));
 
 export function fitStage() {
-	const vw = innerWidth, vh = innerHeight, portrait = vh > vw * 1.1;
+	// The visible box, not the layout viewport: in an iOS Safari / Stake iframe innerHeight can include area under the
+	// browser bars, which pushed the top of the stage (logo, Roxy's head) off screen. Take the smallest non-zero size.
+	const de = document.documentElement, vv = window.visualViewport;
+	const pick = (...a: (number | null | undefined)[]) => Math.min(...a.filter((x): x is number => !!x && x > 0)) || 1;
+	const vw = pick(innerWidth, de.clientWidth, vv && vv.width * vv.scale), vh = pick(innerHeight, de.clientHeight, vv && vv.height * vv.scale);
+	const portrait = vh > vw * 1.1;
 	let w: number, h: number;
 	if (portrait) { w = PORT_W; h = Math.round(PORT_W * clamp(vh / vw, PORT_AR)); }
 	else { h = LAND_H; w = Math.round(LAND_H * clamp(vw / vh, LAND_AR)); }
@@ -24,6 +29,7 @@ export function fitStage() {
 	const tb = portrait ? 1 : Math.min(TB_MAX, Math.max(1, TB_MIN / s));
 	Object.assign(ST, { w, h, s, ox, oy, portrait, tb });
 	document.body.classList.toggle('tb', tb > 1.001);
+	document.body.classList.toggle('portrait', portrait); // same rule for the loader, the game and every CSS layer
 	const r = document.documentElement.style;
 	r.setProperty('--dw', w + 'px'); r.setProperty('--dh', h + 'px'); r.setProperty('--s', String(s));
 	r.setProperty('--tb', tb.toFixed(3)); r.setProperty('--tbs', Math.min(tb, 1.5).toFixed(3)); r.setProperty('--tbm', Math.min(tb, 1.6).toFixed(3));
