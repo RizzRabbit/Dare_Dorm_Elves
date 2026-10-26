@@ -1,8 +1,9 @@
 // Win-line presentation: one thin glowing line at a time races along a winning payline from reel 1 to reel 5
 // (canvas overlay, rAF, time-based). While a line plays only its winning symbols run the win sprite, its amount
 // ticks into the WIN field and a small amount label shows near the line's end. After the last line a short summary
-// highlights every winning symbol with no line over the board. Tap = finish this line now and go to the next one;
-// a second quick tap = skip to the summary. Turbo plays a fast version. Normal pace = the old one x ANIM_TEMPO (tempo.ts).
+// highlights every winning symbol with no line over the board. Tap 1 = finish this line now and go to the next one;
+// tap 2 (any time in the same presentation, v3.15d) = zip to the end: no more lines, the WIN meter lands on the
+// step total, and a big-win banner that follows lands on its final tier/amount (countup.ts zip). Turbo plays a fast version. Normal pace = the old one x ANIM_TEMPO (tempo.ts).
 // Cost: one canvas, three strokes per frame (wide faint glow, mid glow, bright core) plus a pre-rendered head stamp;
 // nothing animates filter/shadow, and the canvas is cleared and idle between lines.
 import { LINES, REELS } from './config';
@@ -15,10 +16,11 @@ import type { LineWin } from './typesBookEvent';
 import { T } from './tempo';
 import { sfx } from './audio';
 import { voice } from './voice';
+import { skipCounts, setZip } from './countup';
 
 let cv: HTMLCanvasElement | null = null, ctx: CanvasRenderingContext2D | null = null, dpr = 1;
 let head: HTMLCanvasElement | null = null;
-let skipLine = false, skipAll = false, lastTap = 0, active = false;
+let skipLine = false, skipAll = false, taps = 0, active = false;
 
 function ensure() {
 	const board = $('#board');
@@ -65,11 +67,11 @@ async function run(ms: number, fn: (t: number) => void) {
 }
 async function hold(ms: number) { const t0 = performance.now(); while (performance.now() - t0 < ms && !skipLine && !skipAll) await frame(); }
 
-/** Tap handler (wired in game.ts): first tap finishes the current line, a second quick tap skips to the end. */
+/** Tap / Space handler (wired in game.ts; panel / menu taps are not passed in): tap 1 finishes the current line,
+ *  tap 2 in the same presentation zips to the end. */
 export function tapLines() {
-	if (!active) return; const now = performance.now();
-	if (now - lastTap < 400) skipAll = true; else skipLine = true;
-	lastTap = now;
+	if (!active) return;
+	if (++taps >= 2) { skipAll = true; setZip(true); } else skipLine = true;
 }
 export const linesActive = () => active;
 
@@ -88,7 +90,7 @@ export function clearRace() {
 
 /** Play the step's line wins one at a time. base = WIN meter value (x bet) before this step. */
 export async function playWins(wins: LineWin[], base: number) {
-	ensure(); active = true; skipAll = false; lastTap = 0;
+	ensure(); active = true; skipAll = false; taps = 0; setZip(false);
 	const cells = document.querySelectorAll('.cell'); cells.forEach((c) => c.classList.add('dim'));
 	const n = wins.length, turbo = S.turbo;
 	// per line: race + hold; long lists get faster so a step never drags (old pace ~0.55 s/line, min ~0.3 s; x ANIM_TEMPO)
@@ -110,7 +112,7 @@ export async function playWins(wins: LineWin[], base: number) {
 	skipLine = false;
 	// summary: every winning symbol highlighted, no line over the board
 	const tot = base + wins.reduce((a, w) => a + w.win / 100, 0);
-	clearRace(); setWinMeter(tot);
+	clearRace(); setWinMeter(tot); if (skipAll) skipCounts(); // zipped: the WIN meter shows the step total now
 	// round win so far (x bet): < 2 small, 2-5 medium, 5-10 big; >= 10 gets the big-win sting instead; turbo = small only
 	if (n && tot < 10) sfx(turbo || tot < 2 ? 'win_small' : tot < 5 ? 'win_medium' : 'win_big');
 	if (n && !turbo && tot >= 2 && tot < 10) voice('win');

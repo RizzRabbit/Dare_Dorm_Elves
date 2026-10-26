@@ -44,6 +44,11 @@ export function skipCounts() {
 	runs.clear();
 }
 export const counting = () => runs.size > 0;
+// v3.15d: "zip" = the player tapped twice during this win presentation (winlines.ts). The big-win banner that follows
+// lands on its final tier and amount at once instead of counting through the tiers. Cleared once used / per round.
+let zip = false;
+export const setZip = (v: boolean) => { zip = v; };
+export const zipped = () => zip;
 
 // ---------- anticipatory big-win count (the banner amount) ----------
 // Count in "x the bet" space through the tier thresholds below the win: each leg accelerates out of the last tier,

@@ -8,7 +8,7 @@ import { money } from './format';
 import type { Group, LineWin } from './typesBookEvent';
 import { DOTS } from './respin';
 import { mxBurst, lockIconCSS, symWin, clearSymWins } from './fx';
-import { countTo, countMs, setAmount, skipCounts, countTiers, BIG_TIERS } from './countup';
+import { countTo, countMs, setAmount, skipCounts, countTiers, BIG_TIERS, zipped, setZip } from './countup';
 import { hold, tempo } from './tempo';
 
 export const ART = ART_JSON as Record<string, string | null>;
@@ -194,7 +194,7 @@ export function setWinMeter(x: number) {
 	if (dx > 0) countTo($('#win'), nx * bet(), countMs(dx, S.turbo) * tempo()); // x ANIM_TEMPO (turbo: 1)
 	else setAmount($('#win'), nx * bet());
 }
-export function resetWinMeter() { S.meterX = 0; setAmount($('#win'), 0); }
+export function resetWinMeter() { S.meterX = 0; setAmount($('#win'), 0); setZip(false); }
 /** Big-win banner. The amount climbs through the tiers (countup.ts countTiers: fast between tiers, a short crawl
  *  into each threshold, the tier title swaps in with a pop as it crosses, much faster past 1000x, eased into the
  *  exact amount). At 1000x the character layer fades in behind the amount (bigwinElves.ts, the Vi / Roxy / Coco POV group). Tap once = jump to the
@@ -219,11 +219,13 @@ export async function bigWin(x: number, label?: string) {
 	let landed = false, chars = false;
 	const tap = () => { if (!landed) skipCounts(); else close(); };
 	B.addEventListener('pointerdown', tap);
-	await countTiers(amt, x, bet(), {
+	const counted = countTiers(amt, x, bet(), {
 		turbo: S.turbo,
 		onTier: (i) => { if (label) return; T.textContent = BIG_TIERS[i].name; titleHook(T, BIG_TIERS[i].name); T.classList.add('on'); T.classList.remove('pop'); void T.offsetWidth; T.classList.add('pop'); fxHooks.tier?.(B, i); },
 		onX: (v) => { if (!chars && v >= 1000) { chars = true; B.classList.add('chars'); fxHooks.chars?.(B); } },
 	});
+	if (zipped()) { setZip(false); skipCounts(); } // v3.15d: 2 taps on the lines = land on the final tier + amount now
+	await counted;
 	landed = true; cu.stop(200);
 	await Promise.race([waitRaw(S.turbo ? 700 * 0.35 : x >= 1000 ? 2200 : 1500), closed]);
 	duck(false);

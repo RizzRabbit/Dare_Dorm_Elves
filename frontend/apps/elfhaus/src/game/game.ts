@@ -160,7 +160,7 @@ function autoStopReason(roundWin: number) {
 
 /** Tap / Space during a round: finish the count-ups, the current win line, a merge / stack, every board pause
  *  (tempo.ts holds) and, unless a menu was tapped, land the reels now. */
-function skipBoard(reels = true) { skipCounts(); tapLines(); skipMerge(); skipHolds(); if (reels) hurry(); }
+function skipBoard(reels = true, lines = true) { skipCounts(); if (lines) tapLines(); skipMerge(); skipHolds(); if (reels) hurry(); }
 
 // ---------- RGS round ----------
 async function finishRound(round: any) {
@@ -543,7 +543,8 @@ export async function initGame() {
 		chars: (B) => bigWinElvesStart(B, 1000),
 		end: (B) => { featClose(B.querySelector('.bwFx')); bigWinElvesEnd(); },
 	});
-	document.addEventListener('pointerdown', (e) => { if (!(e.target as Element)?.closest?.('#bigwin,#outro')) { skipBoard(false); if (!(e.target as Element)?.closest?.('#menu,#popMenu,#buyMenu,#bmConfirm,#autoMenu,#msg')) hurry(); } }, { capture: true, passive: true });
+	// v3.15d: taps on a menu / panel / confirm card (or that close one) do not count toward the win lines' 2-tap zip
+	document.addEventListener('pointerdown', (e) => { const t = e.target as Element; if (!t?.closest?.('#bigwin,#outro')) { const ui = !!t?.closest?.('#menu,#popMenu,#buyMenu,#bmConfirm,#autoMenu,#msg'); skipBoard(false, !ui && !t?.closest?.('#menuBtn,#buyBtn,#autoBtn') && !anyOpen() && !popOpen()); if (!ui) hurry(); } }, { capture: true, passive: true });
 	track(initRoxy(layout));
 	loadAllFx(track).then(() => renderAll());
 	setOverlayHook(stackIdle); initStacks().then(() => renderOverlays(false)); void initWfExpand(); // optional stack / per-reel expand sheets (placeholders until imported)
