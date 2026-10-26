@@ -19,5 +19,8 @@ for (const [cur, v, want] of cases) {
 F.setCurrency('USD');
 if (F.money(0.1234, 2) !== '$0.12') { fail++; console.error('  FAIL fixed digits'); }
 for (const [v, w] of [[1.5, '1.50'], [0.0025, '0.0025'], [10, '10.00']]) if (F.amountStr(v) !== w) { fail++; console.error(`  FAIL amountStr ${v} -> ${F.amountStr(v)}`); }
-console.log(`Formatter: ${fail ? fail + ' failures' : `${cases.length + 4}/${cases.length + 4} passed`}`);
+// v3.16b (#188): social currencies are detected from the currency alone
+for (const [c, w] of [['XSC', true], ['XGC', true], ['xsc', true], ['XEC', true], ['USD', false], ['', false]]) { F.setCurrency(c); if (F.isSocialCurrency() !== w) { fail++; console.error(`  FAIL isSocialCurrency ${c}`); } else console.log(`  OK isSocialCurrency ${c || '(none)'} = ${w}`); }
+F.setCurrency('USD');
+console.log(`Formatter: ${fail ? fail + ' failures' : `${cases.length + 10}/${cases.length + 10} passed`}`);
 process.exit(fail ? 1 : 0);

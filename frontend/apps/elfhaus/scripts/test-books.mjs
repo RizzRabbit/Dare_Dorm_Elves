@@ -216,6 +216,9 @@ if (disclaimerMatch) {
 		['#77/#188 Paylines heading hidden in social + replay', /isSocial\(\) \|\| S\.replay \? 'Win lines' : 'Paylines'/.test(gameCode) && !/<h3>Paylines<\/h3>/.test(gameCode)],
 		['#77 no raw server message in error box', !/error\?\.message/.test(gameCode.slice(gameCode.indexOf('function showError'), gameCode.indexOf('function setBusy')))],
 		['#235 controls explain Menu/Info/Music/Sound/X/drag/intro skip/PLAY', ['Info', 'Music', 'Sound', 'small X', 'swipe', "Don\\'t show this again", 'PLAY'].every((w) => cp.includes(w)) && /controlsUi\(\)/.test(gameCode)],
+		['#188 replay sets currency before social', /if \(url\.replay\) \{ setCurrency\(url\.currency \|\| 'USD'\); setSocial\(url\.social \|\| isSocialCurrency\(\)\)/.test(gameCode)],
+		['#187 resume uses the round stake, no level snap before play', /S\.roundBet = amt;/.test(gameCode) && !/exact\(amt/.test(gameCode) && /S\.roundBet > 0 \? S\.roundBet/.test(readFileSync(join(appDir, 'src/game/ui.ts'), 'utf8'))],
+		['#187 snap only after the resumed round', /finally \{\s*S\.roundBet = 0;\s*if \(amt > 0 && S\.levels\.length\) S\.betIdx/.test(gameCode)],
 		['no other-game names in sources', !/Waylanders|Lilith/i.test(css + gameCode + cp)],
 	];
 	for (const [k, ok] of checks) { if (ok) console.log(`  OK ${k}`); else { console.error(`  VIOLATION: ${k}`); violations++; } }

@@ -18,11 +18,12 @@ const LINE_COLORS = ['#C8435F', '#4E6A8C', '#B79BE0', '#7E9C6B', '#9A6FB0', '#8B
 export const S = {
 	currency: 'USD', balance: 0, levels: [] as number[], betIdx: 0, ante: false, turbo: false, busy: false, auto: 0,
 	sym: [] as string[][], vals: new Map<number, number>(), full: new Map<number, number>(), groups: [] as Group[],
-	roundBase: 0, meterX: 0, inBonus: false, cell: 100, ready: false, replay: false, replayBet: 0,
+	roundBase: 0, meterX: 0, inBonus: false, cell: 100, ready: false, replay: false, replayBet: 0, roundBet: 0,
 	jur: {} as Record<string, any>,
 };
 export const k = (r: number, row: number) => r * ROWS + row;
-export const bet = () => (S.replay ? S.replayBet : S.levels[S.betIdx] ?? 0);
+// v3.16b (#187): a resumed round shows and pays at its own stake (roundBet, from round.amount), never a snapped level
+export const bet = () => (S.replay ? S.replayBet : S.roundBet > 0 ? S.roundBet : S.levels[S.betIdx] ?? 0);
 /** Board pause at the old pace: stretched by ANIM_TEMPO and skippable by tap / Space (tempo.ts hold); turbo = 0.35x as before. */
 export const wait = (ms: number) => (S.turbo ? waitRaw(ms * 0.35) : hold(ms));
 /** Plain timer (win screens / resume: their pace is their own). */

@@ -239,20 +239,21 @@ async function authenticate() {
 }
 async function resume(rd: any) {
 	if (!rd?.state?.length) return;
-	if (rd.amount > 0) {
-		const amt = rd.amount / API_AMOUNT_MULTIPLIER;
-		// v3.16 (#187): exact level, else the amount divided by the mode's cost, else the nearest level
-		const near = (v: number) => S.levels.reduce((bi, l, k) => (Math.abs(l - v) < Math.abs(S.levels[bi] - v) ? k : bi), 0);
-		const exact = (v: number) => S.levels.findIndex((l) => Math.abs(l - v) < 1e-9);
-		const c = modeCost(rd.mode as ModeKey) || 1;
-		const i = exact(amt) >= 0 ? exact(amt) : exact(amt / c) >= 0 ? exact(amt / c) : near(amt);
-		if (S.levels.length) S.betIdx = i;
-	}
+	// v3.16b (#187): round.amount is the BASE bet (the amount sent in /wallet/play; the RGS charges amount x the mode's
+	// costMultiplier, and payout = payoutMultiplier x amount: rgs-fetcher schema.ts:170, :195). The resumed round is shown
+	// and paid at exactly that stake; the bet level is snapped only for the next new spin, after the round ends.
+	const amt = rd.amount > 0 ? rd.amount / API_AMOUNT_MULTIPLIER : 0;
+	S.roundBet = amt;
 	setArm(null, rd.mode === 'ante');
 	setStrip(); banner('RESUMING YOUR LAST ROUND', 1600);
 	setBusy(true);
 	try { await waitRaw(600); await playBookEvents(rd.state); await finishRound({ ...rd, active: true }); }
-	catch (e) { showError(e); } finally { setBusy(false); }
+	catch (e) { showError(e); }
+	finally {
+		S.roundBet = 0;
+		if (amt > 0 && S.levels.length) S.betIdx = S.levels.reduce((bi, l, k) => (Math.abs(l - amt) < Math.abs(S.levels[bi] - amt) ? k : bi), 0);
+		setStrip(); setBusy(false);
+	}
 }
 async function loadReplay() {
 	S.replay = true; document.body.classList.add('replay');
@@ -568,7 +569,8 @@ export async function initGame() {
 	buildCells(); S.sym = IDLE.map((c) => [...c]); S.vals = new Map([[2 * 4 + 2, 1]]);
 	wire(); layout(); setBusy(true);
 	try {
-		if (url.replay) { setSocial(url.social || isSocialCurrency()); applyJurisdiction(); await track(loadReplay()); await loaderReady(); }
+		// v3.16b (#188): currency first, so XSC / XGC replays are social even without social=true
+		if (url.replay) { setCurrency(url.currency || 'USD'); setSocial(url.social || isSocialCurrency()); applyJurisdiction(); await track(loadReplay()); await loaderReady(); }
 		else {
 			const rd = await track(authenticate());
 			setSocial(url.social || !!S.jur.socialCasino || isSocialCurrency());
