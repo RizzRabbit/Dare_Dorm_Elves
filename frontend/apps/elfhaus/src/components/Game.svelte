@@ -71,10 +71,10 @@
 	<button class="mX" aria-label="Close" title="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="xb" d="M5 5 12.9 11.1 19 19 11.1 12.9ZM19 5 12.9 12.9 5 19 11.1 11.1Z" /></svg></button>
 	<div class="mView"><div class="mTrack">
 	<div class="mHead"><h2 id="buyTitle">BONUS</h2></div>
+	<div id="bmBet" class="row"><!-- v3.15b (James): bet steps at the top of the bonus menu; HUD steps, limits and sync --><button id="bmDown" class="ico flat" aria-label="Decrease"><svg viewBox="0 0 24 24"><path d="M5 12h14" /></svg></button><span class="v"><small>BET</small><b id="bmBetV">—</b></span><button id="bmUp" class="ico flat" aria-label="Increase"><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5v14" /></svg></button></div>
 	<div id="anteRow" class="row"><span class="lbl">ANTE <small id="anteCost">3x</small></span><button id="anteSw" class="sw" role="switch" aria-checked="false" aria-label="Ante"><i></i></button></div>
 	<div id="turboRow" class="row"><span class="lbl">TURBO <small id="turboSub">faster animations</small></span><button id="turboSw" class="sw" role="switch" aria-checked="false" aria-label="Turbo"><i></i></button></div>
 	<div id="buyCards"></div>
-	<div id="bmBet" class="row"><button id="bmDown" class="ico flat" aria-label="Decrease"><svg viewBox="0 0 24 24"><path d="M5 12h14" /></svg></button><span class="v"><small>BET</small><b id="bmBetV">—</b></span><button id="bmUp" class="ico flat" aria-label="Increase"><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5v14" /></svg></button></div>
 	</div></div>
 </div></div>
 <div id="bmConfirm" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="cfName"><div class="modal cf">
@@ -108,7 +108,7 @@
 <div id="menu" class="overlay hidden" role="dialog" aria-modal="true" aria-label="Game info"><div class="modal rules hasX">
 	<button class="mX" aria-label="Close" title="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="xb" d="M5 5 12.9 11.1 19 19 11.1 12.9ZM19 5 12.9 12.9 5 19 11.1 11.1Z" /></svg></button>
 	<div class="mView"><div class="mTrack">
-	<h2 id="rulesTitle">GAME RULES</h2><div id="rulesBody"></div>
+	<h2 id="rulesTitle">GAME INFO</h2><div id="rulesBody"></div>
 	</div></div>
 </div></div>
 <div id="msg" class="overlay hidden" role="alertdialog" aria-modal="true"><div class="modal"><div class="mView"><div class="mTrack"><h2 id="msgTitle">MESSAGE</h2><p id="msgBody"></p><button id="msgOk">OK</button></div></div></div></div>

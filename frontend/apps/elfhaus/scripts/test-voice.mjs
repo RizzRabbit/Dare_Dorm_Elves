@@ -112,6 +112,15 @@ console.log('\n=== v3.11 bet-mode re-arm (src/game/voice.ts) ===');
 	VS.busy = false; now += 500;
 	ok(V.voice('mode', { mode: 'dare' }) === true, 'and plays at 21.5 s: only played lines arm the guard');
 	ok(VS.played.length === 3, `3 mode lines played (${VS.played.join()})`);
+	// v3.15b (James): each moment draws only from its own bucket: mode = that elf's giggles, never a tease / win line
+	const modes = ['base', 'ante', 'dare', 'double_dare', 'triple_dare', 'egw', 'mystery'];
+	VS.played.length = 0;
+	for (let i = 0; i < 400; i++) { now += 30000; V.voice('mode', { mode: modes[i % modes.length] }); }
+	ok(VS.played.length > 300 && VS.played.every((f) => /^gig_/.test(f)), `mode only plays gig_* (${VS.played.length} lines, none vo_*_tease / win)`);
+	ok(V.teaseOk([{ type: 'reveal' }], 0) === true, 'tease allowed: base near miss, no win, no bonus');
+	ok(V.teaseOk([{ type: 'reveal' }], 2) === false, 'no tease on a winning round');
+	for (const ty of ['buyTriggerStart', 'freeSpinTrigger', 'updateFreeSpin', 'mysteryStart', 'egwStart'])
+		ok(V.teaseOk([{ type: ty }, { type: 'reveal' }], 0) === false, `no tease on a buy / bonus round (${ty})`);
 	Object.defineProperty(globalThis, 'performance', { value: realPerf, configurable: true, writable: true });
 }
 console.log(fail ? `\nvoice tests: ${fail} FAILED` : '\nvoice tests: all passed');

@@ -21,7 +21,9 @@ class Scroller {
 		view.addEventListener('pointermove', (e) => this.move(e));
 		view.addEventListener('pointerup', (e) => this.up(e));
 		view.addEventListener('pointercancel', (e) => this.up(e));
-		view.addEventListener('lostpointercapture', (e) => { if (this.dragging && e.pointerId === this.pid) this.up(e); });
+		// target check: taking capture from a touch's implicit capture fires lostpointercapture on the inner element, and it
+		// bubbles here; only the view's own loss ends the drag (v3.15b: touch drags were cut off at the 6 px threshold)
+		view.addEventListener('lostpointercapture', (e) => { if (e.target === view && this.dragging && e.pointerId === this.pid) this.up(e); });
 		// a drag past the threshold swallows the click that follows it (capture: before any button's own handler)
 		view.addEventListener('click', (e) => { if (this.suppress) { this.suppress = false; e.stopPropagation(); e.preventDefault(); } }, true);
 		view.addEventListener('wheel', (e) => {

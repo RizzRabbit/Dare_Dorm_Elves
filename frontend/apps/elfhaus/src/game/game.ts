@@ -278,7 +278,6 @@ const MYSTERY_CARD = `<svg class="bMyst" viewBox="0 0 100 100" aria-hidden="true
 function buildBuy() {
 	const off = !!S.jur.disabledBuyFeature;
 	$('#buyTitle').textContent = t('buyTitle');
-	$('#anteCost').textContent = fmtX(ANTE_COST) + (isSocial() ? ' play' : ' bet');
 	$('#buyCards').classList.toggle('hidden', off);
 	$('#buyCards').innerHTML = off ? '' : BUY_MODES.map((m) => {
 		const a = CARD_ART[m];
@@ -324,7 +323,8 @@ function openConfirm(m: ModeKey) {
 }
 /** Live state: prices at the current bet, affordability, armed card, Ante switch. */
 function paintBuy() {
-	$('#bmBetV').textContent = money(bet()); $('#bmBet small').textContent = t('betLabel');
+	$('#bmBetV').textContent = money(bet()); $('#bmBet small').textContent = isSocial() ? 'PLAY AMOUNT' : t('betLabel');
+	$('#anteCost').textContent = `${money(modeCost('ante') * bet())} · ${fmtX(ANTE_COST)}${isSocial() ? ' play' : ' bet'}`; // v3.15b: live price like the cards
 	($('#bmDown') as HTMLButtonElement).disabled = S.busy || S.betIdx <= 0;
 	($('#bmUp') as HTMLButtonElement).disabled = S.busy || S.betIdx >= S.levels.length - 1;
 	const sw = $('#anteSw'); sw.setAttribute('aria-checked', String(S.ante)); sw.classList.toggle('on', S.ante);
@@ -369,7 +369,7 @@ function buildRules() {
 			`<svg viewBox="-1 -1 ${W5 + 2} ${H4 + 2}" aria-hidden="true">${cells}<polyline points="${path}"/></svg></figure>`;
 	}).join('');
 	const win = isSocial() ? 'wins' : 'pays', cc = copyCtx();
-	$('#rulesTitle').textContent = 'GAME RULES';
+	$('#rulesTitle').textContent = 'GAME INFO';
 	$('#rulesBody').innerHTML = `
 <h3>How to play</h3>
 <p>5 reels × 4 rows with 20 fixed lines. Wins ${isSocial() ? 'are awarded' : 'pay'} left to right for 3, 4 or 5 matching symbols on a line, starting on the leftmost reel. Only the highest win per line counts. Line wins are multiplied by the ${isSocial() ? 'play amount' : 'bet'} per line (the total ${isSocial() ? 'play amount' : 'bet'} divided by 20).</p>
@@ -493,7 +493,7 @@ function wire() {
 			closePanel('#bmConfirm');
 		});
 	}
-	registerPanel('#autoMenu'); registerPanel('#menu'); registerPanel('#msg', { closable: false });
+	registerPanel('#autoMenu'); registerPanel('#menu', { onClose: () => ($('#menuBtn') as HTMLElement).focus({ preventScroll: true }) }); // v3.15b (F1) registerPanel('#msg', { closable: false });
 	$('#buyBtn').onclick = () => { sfx('ui_buy_open'); buildBuy(); openPanel('#buyMenu'); };
 	initSettings(() => { buildRules(); openPanel('#menu'); });
 	$('#replayPlay').onclick = () => playReplay();

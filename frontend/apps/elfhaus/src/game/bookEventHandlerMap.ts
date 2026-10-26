@@ -24,7 +24,7 @@ import { countTo, countMs, setAmount, skipCounts } from './countup';
 import { grab, combineInto } from './combine';
 import { tempo, hold } from './tempo';
 import { sfx, loop, music, duck, duckFor, type Handle } from './audio';
-import { voice, voiceSpin } from './voice';
+import { voice, voiceSpin, teaseOk } from './voice';
 // Pauses here use ui.wait: the old pace x ANIM_TEMPO, skippable by tap / Space (tempo.ts); turbo keeps its short values.
 
 const scattersOnBoard = (): Pos[] => S.sym.flatMap((col, reel) => col.map((n, row) => ({ reel, row, n }))).filter((c) => c.n === 'S').map(({ reel, row }) => ({ reel, row }));
@@ -328,5 +328,5 @@ export async function playBookEvents(events: BookEvent[]) {
 		await h(ev);
 	}
 	// a tease that never turned into a bonus
-	if (roxyState() === 'anticipation') { roxy('disappointed'); if (!(S.roundBase > 0)) voice('tease'); }
+	if (roxyState() === 'anticipation') { roxy('disappointed'); if (teaseOk(events, S.roundBase)) voice('tease'); }
 }

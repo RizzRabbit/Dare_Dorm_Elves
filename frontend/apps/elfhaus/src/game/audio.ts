@@ -74,7 +74,13 @@ export const audioVol = (k: Vol) => (on() && prefs[k] ? vol[k] : 0);
 /** v3.15 slider: set a volume; moving it above 0 also turns that sound back on (master, the bus, and voice with Sound). */
 export function setAudioVol(k: Vol, v: number) {
 	vol[k] = Math.min(1, Math.max(0, v)); safe(() => localStorage.setItem(`elfhaus.${k}v`, vol[k].toFixed(2)));
-	if (vol[k] > 0) { const on1 = (p: Pref) => { prefs[p] = true; safe(() => localStorage.setItem('elfhaus.' + p, '1')); }; on1('snd'); urlMute = false; on1(k); if (k === 'sfx') on1('vox'); }
+	if (vol[k] > 0) {
+		const set = (p: Pref, b: boolean, store = true) => { prefs[p] = b; if (store) safe(() => localStorage.setItem('elfhaus.' + p, b ? '1' : '0')); };
+		// v3.15b (FSD F3): leaving a muted session (launch mute or the old master off) brings back only this slider's sound;
+		// the other stays off (stored only when the stored master was off; a launch mute stays session-only)
+		if (!on()) { const keep = !prefs.snd; for (const p of (k === 'mus' ? ['sfx', 'vox'] : ['mus']) as Pref[]) set(p, false, keep); }
+		set('snd', true); urlMute = false; set(k, true); if (k === 'sfx') set('vox', true);
+	}
 	if (on() && !ctx) unlock(); // a slider drag is a user gesture
 	apply();
 }
@@ -94,8 +100,16 @@ function apply() {
 
 /** Read the stored switches and the launch param; arm the first-tap unlock. Call once at boot (no audio work here). */
 export function initAudio() {
-	for (const k of ['snd', 'mus', 'sfx', 'vox'] as Pref[]) safe(() => { const v = localStorage.getItem('elfhaus.' + k); if (v != null) prefs[k] = v !== '0'; });
+	for (const k of ['snd', 'mus', 'sfx', 'vox'] as Pref[]) safe(() => { const v = localStorage.getItem('elfhaus.' + k); if (v != null) prefs[k] = !/^(0|off|false|no)$/i.test(v.trim()); }); // v3.15b (F5): 'off' etc. read as off
 	for (const k of ['mus', 'sfx'] as Vol[]) safe(() => { const v = parseFloat(localStorage.getItem(`elfhaus.${k}v`) ?? ''); if (Number.isFinite(v)) vol[k] = Math.min(1, Math.max(0, v)); });
+	// v3.15b (FSD F4): one-time migration of pre-v3.15 switches to the Sound slider: voice follows Sound, and an old
+	// Sound effects off becomes Sound = 0 (once: it runs only while no elfhaus.sfxv is stored)
+	safe(() => {
+		if (localStorage.getItem('elfhaus.sfxv') != null || (localStorage.getItem('elfhaus.sfx') == null && localStorage.getItem('elfhaus.vox') == null)) return;
+		if (!prefs.sfx) vol.sfx = 0;
+		prefs.sfx = prefs.vox = true;
+		localStorage.setItem('elfhaus.sfxv', vol.sfx.toFixed(2)); localStorage.setItem('elfhaus.sfx', '1'); localStorage.setItem('elfhaus.vox', '1');
+	});
 	safe(() => {
 		const q = new URLSearchParams(location.search), s = (q.get('sound') ?? q.get('audio') ?? '').toLowerCase(), m = (q.get('mute') ?? '').toLowerCase();
 		if (['0', 'off', 'false', 'no'].includes(s) || ['1', 'true', 'on', 'yes'].includes(m)) urlMute = true;

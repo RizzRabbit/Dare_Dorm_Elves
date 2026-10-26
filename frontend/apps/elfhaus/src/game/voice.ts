@@ -45,6 +45,12 @@ const pick = <T>(a: T[]) => a[Math.floor(rnd() * a.length) % a.length];
 const gig = (e: Elf) => [1, 2, 3].map((n) => `gig_${e}_${n}`);
 const line = (e: Elf, m: string) => (VOICE_LINES[e].includes(m) ? [`vo_${e}_${m}_1`] : []);
 
+/** v3.15b: the near-miss tease bucket is for a real near miss only: no win and no bonus of any kind in the round
+ *  (no bought trigger, Mystery, EGW or free spins: buy rounds and bought bonus spins never tease). */
+export function teaseOk(events: { type: string }[], win: number) {
+	return !(win > 0) && !events.some((e) => /^(freeSpin|updateFreeSpin|buyTrigger|mystery|egw)/.test(e.type));
+}
+
 /** Call once per round: ends the wild-once-per-spin window and drops a stale pending line. */
 export function voiceSpin() { spin++; cancelPendingVoice(); }
 
@@ -64,7 +70,7 @@ export function voice(m: Moment, o: { reel?: number; tier?: string; mode?: strin
 			files = m === 'stack' ? gig(e) : rnd() < 0.5 ? line(e, 'wild') : gig(e);
 		} else if (m === 'mode') {
 			const e = MODE_ELF[o.mode || ''] ?? pick(REEL_ELF);
-			files = [...gig(e), ...line(e, 'tease')];
+			files = gig(e); // v3.15b (James): a bet-mode pick / CONFIRM is that elf's giggles only, never a 'so close' tease or a win line
 		} else {
 			let elves = POOL[m] ?? [];
 			if (m === 'fsstart' && o.tier && /hidden|myst/i.test(o.tier)) elves = ['delilah'];
