@@ -65,3 +65,21 @@ export const controlsTurbo = () => ' Turbo (the lightning button, or the switch 
 export const controlsAuto = (c: CopyCtx) =>
 	' Autoplay runs 10 to 1,000 spins with optional stops (net loss, single win, balance increase, feature trigger); net loss and gain count ' +
 	(c.social ? "each spin's full play amount." : "each spin's full cost.") + ' It also stops on any error or low balance; press the spin button to stop it.';
+/** v3.16 (#235): Menu, Info, Music / Sound, closing panels, the intro skip box and replay PLAY. */
+export const controlsUi = () =>
+	' The menu button opens Info (these rules) and the Music and Sound volume sliders. Close a panel with the small X in its top corner, Esc or a tap outside it; drag or swipe to scroll it.' +
+	' "Don\'t show this again" on the intro screen skips it next time. In a replay, PLAY shows the recorded round and PLAY AGAIN repeats it.';
+/** v3.16 (#77): fixed player text per RGS error code (social-safe); the server's own message is never shown. */
+const ERR_TEXT: Record<string, string> = {
+	ERR_VAL: 'The request was not accepted. Please try again.',
+	ERR_IS: 'Your session is no longer valid. Please reload the game.',
+	ERR_ATE: 'Your session has expired. Please reload the game.',
+	ERR_GLE: 'You have reached a limit set on your account.',
+	ERR_LOC: 'This game is not available in your location.',
+	ERR_MAINTENANCE: 'The game is under maintenance. Please try again later.',
+	ERR_RGS_URL: 'The game could not find its server. Please reload the game.',
+	ERR_BET_LEVELS: 'The game could not load its settings. Please reload the game.',
+	ERR_REPLAY: 'This replay could not be loaded.',
+};
+export const errorText = (code: string) => ERR_TEXT[code] || 'Something went wrong. Please check your connection and try again.';
+export const ERROR_TEXTS = Object.values(ERR_TEXT);

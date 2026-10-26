@@ -11,7 +11,7 @@ import {
 	ANTE_COST, CONFIRM_ABOVE_X, fmtX, BUY_MODES, GAME_ID, LINES, MAX_WIN_X, MODES, MODE_LABEL, MYSTERY_ODDS, PAYTABLE,
 	SPIN_CAP, START_FS, EPIC_STACK_X, SYMBOL_NAMES, VERSION, isProvisional, oneIn, type ModeKey,
 } from './config';
-import { confirmCopy, controlsAuto, controlsBonus, controlsTurbo, costHeader, modeDesc, turboCopy, type CopyCtx, type CopyMode } from './copy';
+import { confirmCopy, controlsAuto, controlsBonus, controlsTurbo, controlsUi, costHeader, errorText, modeDesc, turboCopy, type CopyCtx, type CopyMode } from './copy';
 import { registerPanel, openPanel, closePanel, isOpen, anyOpen, measurePanel } from './panels';
 import { money, mult, setCurrency, setLocale, isSocialCurrency, amountStr } from './format';
 import { skipCounts } from './countup';
@@ -56,6 +56,7 @@ const url = {
 let sessionReady = false;
 let replayState: BookEvent[] = [];
 let replayCost = 1;
+let replayNoAmt = false; // v3.16 (#172): replay URL had no usable amount, amounts are shown for a 1.00 bet
 
 // ---------- small helpers ----------
 const show = (sel: string, on: boolean) => $(sel).classList.toggle('hidden', !on);
@@ -82,6 +83,11 @@ function pickArm(m: ModeKey | null, ante = false) {
 	const was = spinMode(); setArm(m, ante); const now = spinMode();
 	if (now !== was) voice('mode', { mode: now });
 }
+/** v3.16 (#174): replay bar shows the base bet, the mode's cost multiplier and the total. */
+function replayLabel() {
+	const m = url.mode as ModeKey, name = MODE_LABEL[m] || url.mode;
+	return `${name} · ${t('betLabel')} ${money(bet())} × ${mult(replayCost)} = ${money(bet() * replayCost)}${replayNoAmt ? ' (sample)' : ''}`;
+}
 function setStrip() {
 	$('#balance').textContent = S.replay ? '—' : money(S.balance);
 	$('#bet').textContent = money(bet() * (S.replay ? replayCost : modeCost(spinMode())));
@@ -98,12 +104,14 @@ const FATAL = new Set(['ERR_RGS_URL', 'ERR_IS', 'ERR_ATE', 'ERR_BET_LEVELS', 'ER
 function showError(error: any) {
 	console.warn('RGS error', error); sfx('ui_error');
 	const code = error?.error || 'ERR_UE';
-	const text = code === 'ERR_IPB' ? t('noFunds') : error?.message || 'Something went wrong.';
+	// v3.16 (#77): fixed, social-safe text per RGS code; raw server messages only go to the console
+	const text = code === 'ERR_IPB' ? t('noFunds') : errorText(code);
 	message(code === 'ERR_IPB' ? 'INSUFFICIENT BALANCE' : 'CONNECTION PROBLEM', `${text} (${code})`, { reload: FATAL.has(code) });
 }
 function setBusy(b: boolean) {
 	S.busy = b; $('#spinBtn').classList.toggle('busy', b);
-	['#buyBtn', '#betUp', '#betDown', '#armTag', '#bmUp', '#bmDown'].forEach((s) => (($(s) as HTMLButtonElement).disabled = b || !sessionReady));
+	['#buyBtn', '#betUp', '#betDown', '#armTag', '#bmUp', '#bmDown'].forEach((s) => (($(s) as HTMLButtonElement).disabled = b || !sessionReady || S.replay));
+	($('#autoBtn') as HTMLButtonElement).disabled = S.replay || !sessionReady; // v3.16 (#171); stays live mid-round so it can stop autoplay
 	($('#menuBtn') as HTMLButtonElement).disabled = b; if (b) closePop();
 }
 // ---------- autoplay (Stake-style panel) ----------
@@ -143,6 +151,7 @@ function buildAuto() {
 	readStops();
 }
 function startAuto() {
+	if (S.replay) return; // v3.16 (#171)
 	const f = readStops(); if (!f || S.busy) return;
 	Object.assign(stops, f, { feat: featStop, start: S.balance });
 	closePanel('#autoMenu', true);
@@ -172,7 +181,8 @@ async function finishRound(round: any) {
 	setStrip();
 }
 async function round(mode: ModeKey) {
-	if (S.busy || !sessionReady || S.replay) return;
+	if (S.replay) { stopAuto(); return; } // v3.16 (#171): a replay never leaves autoplay armed on the spin button
+	if (S.busy || !sessionReady) return;
 	const cost = modeCost(mode) * bet();
 	if (S.balance + 1e-9 < cost) { S.auto = 0; setAuto(); sfx('ui_error'); message('INSUFFICIENT BALANCE', t('noFunds')); return; }
 	setBusy(true); resetWinMeter(); endBonusUi();
@@ -231,8 +241,12 @@ async function resume(rd: any) {
 	if (!rd?.state?.length) return;
 	if (rd.amount > 0) {
 		const amt = rd.amount / API_AMOUNT_MULTIPLIER;
-		const i = S.levels.findIndex((l) => Math.abs(l - amt) < 1e-9);
-		if (i >= 0) S.betIdx = i;
+		// v3.16 (#187): exact level, else the amount divided by the mode's cost, else the nearest level
+		const near = (v: number) => S.levels.reduce((bi, l, k) => (Math.abs(l - v) < Math.abs(S.levels[bi] - v) ? k : bi), 0);
+		const exact = (v: number) => S.levels.findIndex((l) => Math.abs(l - v) < 1e-9);
+		const c = modeCost(rd.mode as ModeKey) || 1;
+		const i = exact(amt) >= 0 ? exact(amt) : exact(amt / c) >= 0 ? exact(amt / c) : near(amt);
+		if (S.levels.length) S.betIdx = i;
 	}
 	setArm(null, rd.mode === 'ante');
 	setStrip(); banner('RESUMING YOUR LAST ROUND', 1600);
@@ -243,11 +257,12 @@ async function resume(rd: any) {
 async function loadReplay() {
 	S.replay = true; document.body.classList.add('replay');
 	S.currency = url.currency || 'USD'; setCurrency(S.currency);
-	S.replayBet = url.amount / API_AMOUNT_MULTIPLIER || 0;
+	// v3.16 (#172): a missing or bad amount never shows $0.00; amounts are then shown for a 1.00 bet
+	S.replayBet = url.amount > 0 ? url.amount / API_AMOUNT_MULTIPLIER : 1; replayNoAmt = !(url.amount > 0);
 	if (import.meta.env.DEV && (url.mock || !url.rgsUrl)) {
 		const d: any = await (await import('../mock/mockRgs')).mockReplay({ mode: url.mode, event: url.event || url.book || '' });
 		replayState = d.state; replayCost = Number(d.costMultiplier) || modeCost(url.mode as ModeKey) || 1;
-		$('#replayMode').textContent = MODE_LABEL[url.mode as ModeKey] || url.mode;
+		$('#replayMode').textContent = replayLabel();
 		show('#replayBar', true); setStrip();
 		return;
 	}
@@ -256,7 +271,7 @@ async function loadReplay() {
 	if (d?.error) throw d;
 	if (!d?.state?.length) throw { error: 'ERR_REPLAY', message: 'The replay returned no round data.' };
 	replayState = d.state; replayCost = Number(d.costMultiplier) || modeCost(url.mode as ModeKey) || 1;
-	$('#replayMode').textContent = MODE_LABEL[url.mode as ModeKey] || url.mode;
+	$('#replayMode').textContent = replayLabel();
 	show('#replayBar', true); setStrip();
 }
 async function playReplay() {
@@ -386,9 +401,9 @@ function buildRules() {
 <h3>${isSocial() ? 'Win table' : 'Paytable'}</h3>
 <table><tr><th>Symbol</th><th>3</th><th>4</th><th>5</th></tr>${pt}</table>
 <p>Values shown in ${xb} for a full line.</p>
-<h3>Paylines</h3><div class="plGrid">${lines}</div><p>20 fixed lines, read left to right from the leftmost reel.</p>
+<h3>${isSocial() || S.replay ? 'Win lines' : 'Paylines'}</h3><div class="plGrid">${lines}</div><p>20 fixed lines, read left to right from the leftmost reel.</p>
 <h3>Controls</h3>
-<p>Spin with the round button${S.jur.disabledSpacebar ? '' : ' or the Space bar'}. − and + change the ${isSocial() ? 'play amount' : 'bet'}. ${controlsBonus(cc)}${S.jur.disabledTurbo ? '' : controlsTurbo()}${S.jur.disabledAutoplay ? '' : controlsAuto(cc)} Replays never change your balance.</p>
+<p>Spin with the round button${S.jur.disabledSpacebar ? '' : ' or the Space bar'}. − and + change the ${isSocial() ? 'play amount' : 'bet'}. ${controlsBonus(cc)}${S.jur.disabledTurbo ? '' : controlsTurbo()}${S.jur.disabledAutoplay ? '' : controlsAuto(cc)}${controlsUi()} Replays never change your balance.</p>
 <p>All characters are adults. Elfhaus is a Rizzin Games production.</p>
 <h3>Disclaimer</h3><p class="disc">${DISCLAIMER}</p>`;
 }
@@ -463,7 +478,7 @@ function wire() {
 	$('#turboBtn').onclick = () => setTurbo(!S.turbo);
 	$('#turboSw').onclick = () => setTurbo(!S.turbo);
 	syncTurbo();
-	$('#autoBtn').onclick = () => { if (S.auto) return stopAuto(); if (S.busy) return; buildAuto(); openPanel('#autoMenu'); };
+	$('#autoBtn').onclick = () => { if (S.auto) return stopAuto(); if (S.busy || S.replay) return; buildAuto(); openPanel('#autoMenu'); };
 	$('#autoStart').onclick = startAuto;
 	$('#advBtn').onclick = () => { const open = $('#adv').classList.toggle('hidden') === false; $('#advBtn').setAttribute('aria-expanded', String(open)); $('#advBtn').classList.toggle('open', open); measurePanel('#autoMenu'); };
 	$('#stFeat').onclick = () => { featStop = !featStop; buildAuto(); };

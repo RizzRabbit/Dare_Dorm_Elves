@@ -128,7 +128,7 @@ console.log(`\n=== 2. Social-mode restricted word scan ===`);
 // Scan strings, rules, and UI text in social mode
 // Stake social casino banned list (approval guidelines, front-end communication / jurisdiction requirements) plus
 // cost / costs / price (v3.13). Word forms: bets/betting, buys/buying, paying/payout, wagers, credits, funds, purchases.
-const RESTRICTED = /\b(bets?|betting|buy|buys|buying|bought|pay|pays|paid|paying|payouts?|wager\w*|cash\w*|money|credits?|currency|currencies|stakes?|funds?|funding|purchase\w*|cost of|at the cost of|costs?|prices?)\b/i;
+const RESTRICTED = /\b(bets?|betting|buy|buys|buying|bought|pay|pays|paid|paying|payouts?|wager\w*|cash\w*|money|credits?|currency|currencies|stakes?|funds?|funding|purchase\w*|cost of|at the cost of|costs?|prices?|paylines?|paytables?|gambl\w*|deposit\w*|withdraw\w*)\b/i; // v3.16 (#77): + paylines, paytable, gamble, deposit, withdraw
 
 // Read strings.ts
 const stringsCode = readFileSync(join(appDir, 'src/game/strings.ts'), 'utf8');
@@ -180,7 +180,9 @@ if (disclaimerMatch) {
 		for (const [k, v] of Object.entries(cf)) if (k !== 'title' && k !== 'amount') texts.push([`confirm ${m}.${k}`, v]);
 	}
 	for (const [k, v] of Object.entries(C.turboCopy(true))) texts.push(['turbo.' + k, v]);
-	texts.push(['costHeader', C.costHeader(true)], ['controlsBonus', C.controlsBonus(ctx)], ['controlsTurbo', C.controlsTurbo()], ['controlsAuto', C.controlsAuto(ctx)]);
+	texts.push(['costHeader', C.costHeader(true)], ['controlsBonus', C.controlsBonus(ctx)], ['controlsTurbo', C.controlsTurbo()], ['controlsAuto', C.controlsAuto(ctx)], ['controlsUi', C.controlsUi()]);
+	for (const e of C.ERROR_TEXTS) texts.push(['error text', e]); // v3.16 (#77): fixed RGS error strings
+	texts.push(['error fallback', C.errorText('ERR_XYZ')]);
 	// rules template: drop every ${...} (balanced), keep the social side of `isSocial() ? 'a' : 'b'` branches
 	const fn = gameCode.slice(gameCode.indexOf('function buildRules('), gameCode.indexOf('// ---------- layout'));
 	const tpl = fn.slice(fn.indexOf("$('#rulesBody').innerHTML = `"));
@@ -197,6 +199,26 @@ if (disclaimerMatch) {
 		if (hit) { console.error(`  VIOLATION in ${k}: "${v}" matches "${hit[0]}"`); violations++; }
 		else console.log(`  OK ${k}: "${String(v).slice(0, 90)}${String(v).length > 90 ? '…' : ''}"`);
 	}
+}
+
+// v3.16: replay / social compliance (#77, #171, #172, #174, #188, #235), static checks on the shipped sources
+{
+	const css = readFileSync(join(appDir, 'static/elfhaus.css'), 'utf8');
+	const cp = readFileSync(join(appDir, 'src/game/copy.ts'), 'utf8');
+	const checks = [
+		['#171 autoBtn handler ignores replay', /\$\('#autoBtn'\)\.onclick = \(\) => \{[^\n]*S\.replay\) return;/.test(gameCode)],
+		['#171 startAuto ignores replay', /function startAuto\(\) \{\s*if \(S\.replay\) return;/.test(gameCode)],
+		['#171 round() clears autoplay in replay', /if \(S\.replay\) \{ stopAuto\(\); return; \}/.test(gameCode)],
+		['#171 autoBtn disabled in replay', /\$\('#autoBtn'\) as HTMLButtonElement\)\.disabled = S\.replay/.test(gameCode)],
+		['#171 replay hides betting controls', /body\.replay #autoBtn,body\.replay #buyBtn,body\.replay #betUp,body\.replay #betDown/.test(css)],
+		['#174 replay bar shows bet x multiplier = total', /money\(bet\(\)\)\} × \$\{mult\(replayCost\)\} = \$\{money\(bet\(\) \* replayCost\)\}/.test(gameCode) && (gameCode.match(/textContent = replayLabel\(\)/g) || []).length === 2],
+		['#172 missing replay amount falls back to 1', /S\.replayBet = url\.amount > 0 \? url\.amount \/ API_AMOUNT_MULTIPLIER : 1/.test(gameCode)],
+		['#77/#188 Paylines heading hidden in social + replay', /isSocial\(\) \|\| S\.replay \? 'Win lines' : 'Paylines'/.test(gameCode) && !/<h3>Paylines<\/h3>/.test(gameCode)],
+		['#77 no raw server message in error box', !/error\?\.message/.test(gameCode.slice(gameCode.indexOf('function showError'), gameCode.indexOf('function setBusy')))],
+		['#235 controls explain Menu/Info/Music/Sound/X/drag/intro skip/PLAY', ['Info', 'Music', 'Sound', 'small X', 'swipe', "Don\\'t show this again", 'PLAY'].every((w) => cp.includes(w)) && /controlsUi\(\)/.test(gameCode)],
+		['no other-game names in sources', !/Waylanders|Lilith/i.test(css + gameCode + cp)],
+	];
+	for (const [k, ok] of checks) { if (ok) console.log(`  OK ${k}`); else { console.error(`  VIOLATION: ${k}`); violations++; } }
 }
 
 // Loading-screen texts: feature cards (loader.ts) and the visible text in the loader markup (Game.svelte)
