@@ -69,6 +69,15 @@ export const controlsAuto = (c: CopyCtx) =>
 export const controlsUi = () =>
 	' The menu button opens Info (these rules) and the Music and Sound volume sliders. Close a panel with the small X in its top corner, Esc or a tap outside it; drag or swipe to scroll it.' +
 	' "Don\'t show this again" on the intro screen skips it next time. In a replay, PLAY shows the recorded round and PLAY AGAIN repeats it.';
+/** v3.16c (James): resume card for an unfinished round. amount = the round's final win at its own stake, or null when
+ *  unknown. Social mode never says "collect": skip shows the result. */
+export const resumeCopy = (social: boolean, amount: string | null) => ({
+	title: 'Unfinished round',
+	line: social
+		? (amount ? `Resume to watch it, or skip to see your result (${amount}).` : 'Resume to watch it, or skip to see your result.')
+		: (amount ? `Resume to watch it, or skip to collect ${amount}.` : 'Resume or skip to collect.'),
+	resume: 'RESUME', skip: 'SKIP',
+});
 /** v3.16 (#77): fixed player text per RGS error code (social-safe); the server's own message is never shown. */
 const ERR_TEXT: Record<string, string> = {
 	ERR_VAL: 'The request was not accepted. Please try again.',

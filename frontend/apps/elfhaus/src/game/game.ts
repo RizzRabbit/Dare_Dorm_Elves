@@ -11,10 +11,10 @@ import {
 	ANTE_COST, CONFIRM_ABOVE_X, fmtX, BUY_MODES, GAME_ID, LINES, MAX_WIN_X, MODES, MODE_LABEL, MYSTERY_ODDS, PAYTABLE,
 	SPIN_CAP, START_FS, EPIC_STACK_X, SYMBOL_NAMES, VERSION, isProvisional, oneIn, type ModeKey,
 } from './config';
-import { confirmCopy, controlsAuto, controlsBonus, controlsTurbo, controlsUi, costHeader, errorText, modeDesc, turboCopy, type CopyCtx, type CopyMode } from './copy';
+import { confirmCopy, resumeCopy, controlsAuto, controlsBonus, controlsTurbo, controlsUi, costHeader, errorText, modeDesc, turboCopy, type CopyCtx, type CopyMode } from './copy';
 import { registerPanel, openPanel, closePanel, isOpen, anyOpen, measurePanel } from './panels';
 import { money, mult, setCurrency, setLocale, isSocialCurrency, amountStr } from './format';
-import { skipCounts } from './countup';
+import { skipCounts, setAmount } from './countup';
 import { tapLines } from './winlines';
 import { startShimmer, initWfExpand } from './wildfx';
 import { setArmedGlow, wireTapFx } from './uifx';
@@ -41,7 +41,7 @@ import { hideRespin } from './respin';
 import type { BookEvent } from './typesBookEvent';
 
 const DISCLAIMER =
-	'Malfunction voids all wins and plays. A consistent internet connection is required. In the event of a disconnection, reload the game to finish any uncompleted rounds. The expected return is calculated over many plays. The game display is not representative of any physical device and is for illustrative purposes only. Winnings are settled according to the amount received from the Remote Game Server and not from events within the web browser. © 2026 Rizzin Games.';
+	'Malfunction voids all wins and plays. A consistent internet connection is required. In the event of a disconnection, reload the game to finish any uncompleted rounds. The expected return is calculated over many plays. The game display is not representative of any physical device and is for illustrative purposes only. Winnings are settled according to the amount received from the Remote Game Server and not from events within the web browser. TM and © 2026 Engine.';
 
 const q = new URLSearchParams(location.search);
 const url = {
@@ -245,15 +245,36 @@ async function resume(rd: any) {
 	const amt = rd.amount > 0 ? rd.amount / API_AMOUNT_MULTIPLIER : 0;
 	S.roundBet = amt;
 	setArm(null, rd.mode === 'ante');
-	setStrip(); banner('RESUMING YOUR LAST ROUND', 1600);
-	setBusy(true);
-	try { await waitRaw(600); await playBookEvents(rd.state); await finishRound({ ...rd, active: true }); }
+	setStrip(); setBusy(true);
+	// v3.16c (James): ask first. The round's final win (book finalWin, x100) at its own stake, when the book has one.
+	const fw = (rd.state as any[]).find((e) => e?.type === 'finalWin');
+	const X = fw && Number.isFinite(fw.amount) ? Math.min(fw.amount / 100, MAX_WIN_X) : null;
+	const pick = await askResume(X != null && amt > 0 ? money(X * amt) : null);
+	try {
+		if (pick === 'resume') { banner('RESUMING YOUR LAST ROUND', 1600); await waitRaw(600); await playBookEvents(rd.state); await finishRound({ ...rd, active: true }); }
+		else { // SKIP: no animation; end-round credits the win, the HUD win shows the final payout at the round's stake
+			await finishRound({ ...rd, active: true });
+			if (X != null) { S.meterX = X; setAmount($('#win'), X * bet()); }
+		}
+	}
 	catch (e) { showError(e); }
 	finally {
 		S.roundBet = 0;
+		setArm(null, false); // v3.16c (James): after any resumed round (Ante or a buy) the game is back to base; Ante needs its confirm card again
 		if (amt > 0 && S.levels.length) S.betIdx = S.levels.reduce((bi, l, k) => (Math.abs(l - amt) < Math.abs(S.levels[bi] - amt) ? k : bi), 0);
 		setStrip(); setBusy(false);
 	}
+}
+/** v3.16c: the unfinished-round card; resolves on RESUME or SKIP only (registered closable: false, no X). */
+function askResume(amount: string | null): Promise<'resume' | 'skip'> {
+	const c = resumeCopy(isSocial(), amount);
+	$('#rcTitle').textContent = c.title; $('#rcLine').textContent = c.line;
+	$('#rcResume').textContent = c.resume; $('#rcSkip').textContent = c.skip;
+	openPanel('#resumeCard');
+	return new Promise((res) => {
+		const done = (v: 'resume' | 'skip') => { $('#rcResume').onclick = $('#rcSkip').onclick = null; sfx('ui_click'); closePanel('#resumeCard', true); res(v); };
+		$('#rcResume').onclick = () => done('resume'); $('#rcSkip').onclick = () => done('skip');
+	});
 }
 async function loadReplay() {
 	S.replay = true; document.body.classList.add('replay');
@@ -510,7 +531,7 @@ function wire() {
 		});
 	}
 	registerPanel('#autoMenu'); registerPanel('#menu', { onClose: () => ($('#menuBtn') as HTMLElement).focus({ preventScroll: true }) }); // v3.15b (F1)
-	registerPanel('#msg', { closable: false });
+	registerPanel('#msg', { closable: false }); registerPanel('#resumeCard', { closable: false }); // v3.16c
 	$('#buyBtn').onclick = () => { sfx('ui_buy_open'); buildBuy(); openPanel('#buyMenu'); };
 	initSettings(() => { buildRules(); openPanel('#menu'); });
 	$('#replayPlay').onclick = () => playReplay();
@@ -561,7 +582,7 @@ export async function initGame() {
 		end: (B) => { featClose(B.querySelector('.bwFx')); bigWinElvesEnd(); },
 	});
 	// v3.15d: taps on a menu / panel / confirm card (or that close one) do not count toward the win lines' 2-tap zip
-	document.addEventListener('pointerdown', (e) => { const t = e.target as Element; if (!t?.closest?.('#bigwin,#outro')) { const ui = !!t?.closest?.('#menu,#popMenu,#buyMenu,#bmConfirm,#autoMenu,#msg'); skipBoard(false, !ui && !t?.closest?.('#menuBtn,#buyBtn,#autoBtn,#turboBtn,#betUp,#betDown') && !anyOpen() && !popOpen()); if (!ui) hurry(); } }, { capture: true, passive: true });
+	document.addEventListener('pointerdown', (e) => { const t = e.target as Element; if (!t?.closest?.('#bigwin,#outro')) { const ui = !!t?.closest?.('#menu,#popMenu,#buyMenu,#bmConfirm,#autoMenu,#msg,#resumeCard'); skipBoard(false, !ui && !t?.closest?.('#menuBtn,#buyBtn,#autoBtn,#turboBtn,#betUp,#betDown') && !anyOpen() && !popOpen()); if (!ui) hurry(); } }, { capture: true, passive: true });
 	track(initRoxy(layout));
 	loadAllFx(track).then(() => renderAll());
 	setOverlayHook(stackIdle); initStacks().then(() => renderOverlays(false)); void initWfExpand(); // optional stack / per-reel expand sheets (placeholders until imported)

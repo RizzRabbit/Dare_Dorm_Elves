@@ -113,6 +113,11 @@
 </div></div>
 <div id="msg" class="overlay hidden" role="alertdialog" aria-modal="true"><div class="modal"><div class="mView"><div class="mTrack"><h2 id="msgTitle">MESSAGE</h2><p id="msgBody"></p><button id="msgOk">OK</button></div></div></div></div>
 
+<!-- v3.16c: unfinished-round card (no X, no outside tap; only RESUME / SKIP) -->
+<div id="resumeCard" class="overlay hidden" role="alertdialog" aria-modal="true" aria-labelledby="rcTitle"><div class="modal cf"><div class="mView"><div class="mTrack">
+	<h2 id="rcTitle"></h2><p id="rcLine"></p>
+	<div class="rcBtns"><button id="rcResume" class="go"></button><button id="rcSkip" class="go"></button></div>
+</div></div></div></div>
 <div id="loader" role="dialog" aria-label="Loading Elfhaus">
 	<div class="spBg"></div>
 	<div class="spStage">

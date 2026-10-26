@@ -1136,7 +1136,11 @@ body.portrait .modal .mX{top:2px;right:2px}
 @keyframes pRise{from{opacity:0;transform:translate3d(0,14px,0) scale(.985)}to{opacity:1;transform:none}}
 @keyframes pSink{from{opacity:1;transform:none}to{opacity:0;transform:translate3d(0,10px,0) scale(.99)}}
 @media (prefers-reduced-motion:reduce){.overlay.pIn>.modal{animation:pFadeIn .52s ease-out both}.overlay.pOut>.modal{animation:none}}
-#menu,#buyMenu,#autoMenu,#bmConfirm,#msg{touch-action:none;overscroll-behavior:contain}
+/* v3.16c: unfinished-round card, same look as the bonus confirm card */
+#resumeCard{z-index:65;background:#0B0A0F99}
+#rcLine{font-size:14px;font-weight:600;line-height:1.4;color:#ECE6F2;margin:0 0 14px}
+.rcBtns{display:flex;gap:12px;justify-content:center;margin-bottom:4px}
+#menu,#buyMenu,#autoMenu,#bmConfirm,#msg,#resumeCard{touch-action:none;overscroll-behavior:contain}
 /* bonus menu: Turbo row under Ante; the switches' hit areas fill their row padding (like the settings rows) */
 #turboRow,#anteRow{margin-top:8px} /* v3.15b: #bmBet now sits above Ante */
 #anteRow .sw::before,#turboRow .sw::before{content:"";position:absolute;inset:-9px -14px}

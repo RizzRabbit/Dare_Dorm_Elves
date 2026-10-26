@@ -165,6 +165,21 @@ if (disclaimerMatch) {
 	}
 }
 
+// v3.16c (James): the disclaimer is exactly this text, in every mode (one DISCLAIMER constant, real and social), in the
+// source and in the built bundle (run after the build)
+{
+	const WANT = 'Malfunction voids all wins and plays. A consistent internet connection is required. In the event of a disconnection, reload the game to finish any uncompleted rounds. The expected return is calculated over many plays. The game display is not representative of any physical device and is for illustrative purposes only. Winnings are settled according to the amount received from the Remote Game Server and not from events within the web browser. TM and © 2026 Engine.';
+	const src = disclaimerMatch?.[1];
+	if (src === WANT) console.log('  OK DISCLAIMER source is the exact approved text');
+	else { console.error('  VIOLATION: DISCLAIMER source differs from the approved text'); violations++; }
+	const dir = join(appDir, 'build/_app/immutable');
+	let bundles = [];
+	try { bundles = readdirSync(dir, { recursive: true }).filter((f) => String(f).endsWith('.js')).map((f) => readFileSync(join(dir, String(f)), 'utf8')); } catch {}
+	const esc = WANT.replace('©', '\\xA9'), esc2 = WANT.replace('©', '\\u00A9');
+	if (bundles.some((b) => b.includes(WANT) || b.includes(esc) || b.includes(esc2))) console.log('  OK DISCLAIMER exact text present in the build');
+	else { console.error('  VIOLATION: exact DISCLAIMER text not found in build/_app/immutable (build first)'); violations++; }
+}
+
 // v3.13: copy.ts (bonus confirm cards, Turbo toggle, mode descriptions, cost-related rules lines) rendered in social
 // mode for every mode, and the static text of the rules template in game.ts (buildRules) with its social branches.
 {
@@ -181,6 +196,14 @@ if (disclaimerMatch) {
 	}
 	for (const [k, v] of Object.entries(C.turboCopy(true))) texts.push(['turbo.' + k, v]);
 	texts.push(['costHeader', C.costHeader(true)], ['controlsBonus', C.controlsBonus(ctx)], ['controlsTurbo', C.controlsTurbo()], ['controlsAuto', C.controlsAuto(ctx)], ['controlsUi', C.controlsUi()]);
+	// v3.16c: resume card, social side, with and without a known amount
+	for (const amt of ['22.80 GC', null]) for (const [k, v] of Object.entries(C.resumeCopy(true, amt))) texts.push([`resumeCopy social ${amt ?? 'none'}.${k}`, v]);
+	{
+		const r1 = C.resumeCopy(false, '$22.80'), r0 = C.resumeCopy(false, null), s1 = C.resumeCopy(true, '22.80 GC');
+		const ok = r1.title === 'Unfinished round' && r1.line === 'Resume to watch it, or skip to collect $22.80.' && r0.line === 'Resume or skip to collect.'
+			&& !/collect/i.test(s1.line) && s1.line.includes('22.80 GC') && r1.resume === 'RESUME' && r1.skip === 'SKIP';
+		if (ok) console.log('  OK resumeCopy wording (real with / without amount, social has no "collect")'); else { console.error('  VIOLATION: resumeCopy wording', JSON.stringify([r1, r0, s1])); violations++; }
+	}
 	for (const e of C.ERROR_TEXTS) texts.push(['error text', e]); // v3.16 (#77): fixed RGS error strings
 	texts.push(['error fallback', C.errorText('ERR_XYZ')]);
 	// rules template: drop every ${...} (balanced), keep the social side of `isSocial() ? 'a' : 'b'` branches
@@ -218,7 +241,11 @@ if (disclaimerMatch) {
 		['#235 controls explain Menu/Info/Music/Sound/X/drag/intro skip/PLAY', ['Info', 'Music', 'Sound', 'small X', 'swipe', "Don\\'t show this again", 'PLAY'].every((w) => cp.includes(w)) && /controlsUi\(\)/.test(gameCode)],
 		['#188 replay sets currency before social', /if \(url\.replay\) \{ setCurrency\(url\.currency \|\| 'USD'\); setSocial\(url\.social \|\| isSocialCurrency\(\)\)/.test(gameCode)],
 		['#187 resume uses the round stake, no level snap before play', /S\.roundBet = amt;/.test(gameCode) && !/exact\(amt/.test(gameCode) && /S\.roundBet > 0 \? S\.roundBet/.test(readFileSync(join(appDir, 'src/game/ui.ts'), 'utf8'))],
-		['#187 snap only after the resumed round', /finally \{\s*S\.roundBet = 0;\s*if \(amt > 0 && S\.levels\.length\) S\.betIdx/.test(gameCode)],
+		['#187 snap only after the resumed round', /finally \{\s*S\.roundBet = 0;[\s\S]{0,240}?if \(amt > 0 && S\.levels\.length\) S\.betIdx/.test(gameCode)],
+		['v3.16c resumed Ante / buy round ends back in base (no re-arm)', /finally \{\s*S\.roundBet = 0;\s*setArm\(null, false\);/.test(gameCode)],
+		['v3.16c resume card asks before anything plays', /const pick = await askResume\([^\n]*\n\ttry \{\n\t\tif \(pick === 'resume'\) \{[^\n]*playBookEvents\(rd\.state\)/.test(gameCode)],
+		['v3.16c SKIP: end-round, no animation, HUD win = final payout at round stake', /else \{[^\n]*\n\t\t\tawait finishRound\(\{ \.\.\.rd, active: true \}\);\n\t\t\tif \(X != null\) \{ S\.meterX = X; setAmount\(\$\('#win'\), X \* bet\(\)\); \}/.test(gameCode)],
+		['v3.16c resume card: closable false, no X, excluded from the 2-tap skip', /registerPanel\('#resumeCard', \{ closable: false \}\)/.test(gameCode) && /#msg,#resumeCard'\)/.test(gameCode) && (() => { const sv = readFileSync(join(appDir, 'src/components/Game.svelte'), 'utf8'); const m = sv.match(/<div id="resumeCard"[\s\S]*?<\/div><\/div><\/div><\/div>/); return !!m && !/mX|Close/.test(m[0]) && /rcResume/.test(m[0]) && /rcSkip/.test(m[0]); })()],
 		['no other-game names in sources', !/Waylanders|Lilith/i.test(css + gameCode + cp)],
 	];
 	for (const [k, ok] of checks) { if (ok) console.log(`  OK ${k}`); else { console.error(`  VIOLATION: ${k}`); violations++; } }
