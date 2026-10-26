@@ -47,6 +47,16 @@ function lockCarried(l: Locked) {
 }
 export const endBonusUi = () => { music('base'); setBg(false); document.body.classList.remove('inBonus'); $('#fsBar').classList.add('hidden'); $('#intro').classList.add('hidden'); S.inBonus = false; };
 
+/** v3.10 EGW: the reels named by egwStart (reel -> stack value). The math sends them as already-locked full reels in the
+ * next reveal, which used to pin them on the board before the spin even started ("drops the wilds like a ton of bricks").
+ * Now that reveal spins them like any other reel: they stop left to right in the normal order with the normal settle,
+ * land as four single wilds (normal wildLand + glow brighten), then form their stack through the same stackComplete path
+ * as a stack that lands in base / Dare (stackIn: calm stack-from-singles + face reaction; turbo: its short squash/pop).
+ * No extra anticipation: the reveal's own math anticipation flags apply, exactly as in the other modes. */
+let egwPending: Map<number, number> | null = null;
+/** split a stack value over the four singles so their badges add up to it (stackComplete sums the parts) */
+const egwParts = (v: number) => Array.from({ length: ROWS }, (_, i) => Math.floor(v / ROWS) + (i < v % ROWS ? 1 : 0)).map((x) => Math.max(1, x));
+
 type Handlers = { [T in BookEventType]: (ev: BookEventOf<T>) => Promise<void> };
 export const bookEventHandlerMap: Handlers = {
 	// Reels stop left to right (reels.ts timing); the spin press already started the blur in base play, free spins
@@ -54,16 +64,18 @@ export const bookEventHandlerMap: Handlers = {
 	async reveal(ev) {
 		clearLines(); hideToast(); hideRespin();
 		const lockedSingles = new Set(ev.locked.singles.map((s) => k(s.reel, s.row)));
-		const fullLocked = new Set(ev.locked.fullReels.map((f) => f.reel));
+		const egw = egwPending; egwPending = null;
+		const fullLocked = new Set(ev.locked.fullReels.filter((f) => !egw?.has(f.reel)).map((f) => f.reel));
 		if (!isSpinning()) startSpin((r, row) => fullLocked.has(r) || lockedSingles.has(k(r, row)));
 		S.sym = ev.board.map((col) => col.slice(1, 1 + ROWS).map((s) => s.name));
 		S.vals = new Map(); S.full = new Map();
-		ev.locked.fullReels.forEach((f) => S.full.set(f.reel, f.value));
+		ev.locked.fullReels.forEach((f) => { if (!egw?.has(f.reel)) S.full.set(f.reel, f.value); });
 		// merged groups whose stacks are all carried over stay merged (no re-merge animation every free spin)
 		S.groups = S.groups.filter((g) => g.reels.every((r) => S.full.has(r))).map((g) => {
 			const values = g.reels.map((r) => S.full.get(r)!); return { reels: g.reels, values, product: values.reduce((a, b) => a * b, 1) };
 		});
 		ev.board.forEach((col, r) => col.slice(1, 1 + ROWS).forEach((s, row) => { if (s.wild && !S.full.has(r)) S.vals.set(k(r, row), s.multiplier || 1); }));
+		egw?.forEach((v, r) => egwParts(v).forEach((p, row) => { S.sym[r][row] = 'W'; S.vals.set(k(r, row), p); }));
 		renderOverlays(false); warmStacks();
 		const T = timing();
 		const ant = ev.anticipation.some((a) => a > 0);
@@ -97,6 +109,9 @@ export const bookEventHandlerMap: Handlers = {
 		clearTimeout(riserT); (riser as Handle | null)?.stop(150);
 		markStopped();
 		await sleep(T.land);
+		// EGW: the landed singles form their stacks one reel at a time, left to right, like stacks landing in the other modes
+		if (egw) for (const [reel, value] of [...egw].sort((a, b) => a[0] - b[0]))
+			await bookEventHandlerMap.stackComplete({ type: 'stackComplete', index: -1, step: 0, reel, parts: egwParts(value), value, instant: false });
 	},
 	async stackComplete(ev) {
 		// the four wild values ADD into the stack's value (SPEC: sum of the 4 cell values)
@@ -265,7 +280,7 @@ export const bookEventHandlerMap: Handlers = {
 		if (ev.outcome !== 'none') { banner(`${TL(ev.outcome)}!`, 1500); sfx('bonus_trigger'); duckFor(3000); voice('bonus'); }
 		await wait(ev.outcome === 'none' ? 500 : 1100);
 	},
-	async egwStart() { await wait(300); },
+	async egwStart(ev) { egwPending = new Map(ev.reels.map((r) => [r, ev.value])); },
 	async buyTriggerStart() { await wait(200); },
 	async wincap() { hideRespin(); setWinMeter(MAX_WIN_X); await maxWinCelebration(); },
 	async finalWin(ev) { setWinMeter(Math.min(ev.amount / 100, MAX_WIN_X)); },

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Single-cell wilds W_R1..W_R5 from the approved stacks r8d art (v3.7, gate F1).
+"""SUPERSEDED in v3.10 by scripts/gen-wild-singles-v4.py (kept for the record; do not re-run).
+Single-cell wilds W_R1..W_R5 from the approved stacks r8d art (v3.7, gate F1).
 
 Neither symbols v3 nor the r8d set has a single-cell wild per elf, so each W_R<n> is a crop of that reel's own r8d single
 (stacks_v2/groups/g<n>_reels<n>-<n>_<elf>.png = merge_idle frame 0 of WF_R<n>) with its r8d WILD letters

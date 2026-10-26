@@ -270,7 +270,7 @@ async function playReplay() {
 // 3-elf groups, Elves Gone Wild = the 5-wide group; Mystery Spin is a face-down card with an ink "?" (not the studio logo).
 // v3.6: Double / Triple / Elves Gone Wild use the approved stacks r8d stills (scripts/gen-stack-stills.py), not the old
 // static WM2 / WM3 / WM5 scenes.
-const CARD_ART: Partial<Record<ModeKey, string>> = { dare: ART.W_R1 || '', double_dare: 'assets/stacks/still/WM2_R1-2.webp', triple_dare: 'assets/stacks/still/WM3_R1-3.webp', egw: 'assets/stacks/still/WM5_R1-5.webp' };
+const CARD_ART: Partial<Record<ModeKey, string>> = { dare: ART.W_R1_card || ART.W_R1 || '', double_dare: 'assets/stacks/still/WM2_R1-2.webp', triple_dare: 'assets/stacks/still/WM3_R1-3.webp', egw: 'assets/stacks/still/WM5_R1-5.webp' };
 const MYSTERY_CARD = `<svg class="bMyst" viewBox="0 0 100 100" aria-hidden="true"><rect x="23" y="12" width="54" height="76" rx="7" fill="#2A1734" stroke="#E7A6CB" stroke-width="2.5"/>` +
 	`<rect x="29" y="18" width="42" height="64" rx="4" fill="none" stroke="#E7A6CB" stroke-width="1" opacity=".55"/><text x="50" y="64" text-anchor="middle" font-family="Cinzel" font-weight="800" font-size="40" fill="#FBEAF4">?</text></svg>`;
 function buildBuy() {

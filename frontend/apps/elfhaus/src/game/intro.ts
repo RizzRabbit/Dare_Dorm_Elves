@@ -14,7 +14,7 @@ const url = (f: string) => U['../assets/intro/' + f] || '';
 // art: an ART key, or (egw, v3.6) the approved stacks r8d still of the merged pair instead of the old static WM2 scene
 const CARDS: Record<'modes' | 'sticky' | 'egw', { art: string; title: string; line: string }> = {
 	modes: { art: 'S', title: '4 Bonus Modes', line: 'Dare, Double, Triple or a Mystery Spin.' },
-	sticky: { art: 'W_R2', title: 'Sticky Wilds', line: 'Wilds lock in place and grow every respin.' },
+	sticky: { art: 'W_R2_card', title: 'Sticky Wilds', line: 'Wilds lock in place and grow every respin.' },
 	egw: { art: 'assets/stacks/still/WM2_R1-2.webp', title: 'Elves Gone Wild', line: 'Full wild reels side by side multiply.' },
 };
 

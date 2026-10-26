@@ -14,7 +14,9 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../..'))
 W = os.path.join(ROOT, 'assets/final/webp')
 # glow colour per wild = the matching elf's symbols-v3 neon (R1 Roxy H1, R2 Jade H2, R3 Vi H3, R4 Coco H4); R5 Delilah
 # (no v3 symbol) uses her blue band; the single W uses Roxy/brand pink like its sticker band.
-COL = {'W_single': '#FF4FB0', 'W_R1': '#FF4FB0', 'W_R2': '#2EF2D8', 'W_R3': '#B46BFF', 'W_R4': '#FF5468', 'W_R5': '#4F8BFF'}
+# v3.10: W_R1..W_R5 singles + their gold glows now come from scripts/gen-wild-singles-v4.py (glow traced on the whole figure,
+# not on the cropped sprite); this script only regenerates the generic W_single glow.
+COL = {'W_single': '#FF4FB0'}
 hexc = lambda h: np.array([int(h[i:i + 2], 16) for i in (1, 3, 5)], np.float32)
 def disk(r): y, x = np.ogrid[-r:r + 1, -r:r + 1]; return (x * x + y * y <= r * r).astype(np.uint8)
 def dil(a, r): return cv2.dilate(a, disk(r)) if r > 0 else a
