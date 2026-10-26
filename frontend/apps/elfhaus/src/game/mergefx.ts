@@ -44,9 +44,6 @@ export function skipMerge() {
 const begin = () => { running++; if (S.turbo) skipping = true; };
 const end = () => { if (--running <= 0) { running = 0; skipping = false; } };
 
-const LETTERS: Record<number, string[]> = { 1: ['WILD'], 2: ['WI', 'LD'], 3: ['W', 'IL', 'D'], 4: ['W', 'I', 'L', 'D'], 5: ['W', 'I', 'L', 'D', '♥'] };
-/** Placeholder letter row for a merged overlay (one span per reel); replaced by the letters art when it lands. */
-export const lettersHTML = (n: number) => `<div class="mLets">${(LETTERS[n] || LETTERS[5]).map((l, i) => `<b style="left:${((i + 0.5) / n) * 100}%">${l}</b>`).join('')}</div>`;
 const ovOf = (r: number) => document.querySelector<HTMLElement>(`.ov.full[data-reel="${r}"]`) ||
 	[...document.querySelectorAll<HTMLElement>('.ov.merge')].find((o) => o.dataset.reels?.split(',').includes(String(r))) || null;
 const cellsOf = (r: number) => [0, 1, 2, 3].map((row) => cellEl(r, row));
@@ -193,8 +190,8 @@ export async function mergeIn(reels: number[], values: number[], product: number
 		if (big) { const h = col(x0, n * step); burst(h, 'big', 60); made.push(h); }
 		shake(big ? 4 : 2.5, big ? 170 : 120);
 		// 4) letters ignite left to right after the scale settle (the letters sheet's blank lead-in waits for it)
-		const lets = ov && !stackLetters(ov) ? [...ov.querySelectorAll<HTMLElement>('.mLets b')] : [];
-		lets.forEach((l, i) => A(l, [{ opacity: 0, transform: 'translate(-50%,0) scale(1.7)' }, { opacity: 1, transform: 'translate(-50%,0) scale(.92)', offset: .6 }, { opacity: 1, transform: 'translate(-50%,0) scale(1)' }], { duration: 280, delay: 600 + i * 80, easing: 'ease-out', fill: 'backwards' }));
+		const lets = ov && !stackLetters(ov) ? [...ov.querySelectorAll<HTMLElement>('.mLets')] : []; // sheet not decoded yet: the r8d letters still
+		lets.forEach((l) => A(l, [{ opacity: 0 }, { opacity: 1 }], { duration: 280, delay: 600, easing: 'ease-out', fill: 'backwards' }));
 		await sw(140);
 		// 5) each reel's corner gem flies into the merged wild's one corner gem; it shows the running product as they land
 		const mx = ov?.querySelector<HTMLElement>('.mx') || null;

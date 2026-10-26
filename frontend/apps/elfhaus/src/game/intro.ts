@@ -11,10 +11,11 @@ import GLINT_ATLAS from '../assets/intro/sting_glint.atlas.json';
 const U = import.meta.glob('../assets/intro/*.webp', { eager: true, import: 'default', query: '?url' }) as Record<string, string>;
 const url = (f: string) => U['../assets/intro/' + f] || '';
 
+// art: an ART key, or (egw, v3.6) the approved stacks r8d still of the merged pair instead of the old static WM2 scene
 const CARDS: Record<'modes' | 'sticky' | 'egw', { art: string; title: string; line: string }> = {
 	modes: { art: 'S', title: '4 Bonus Modes', line: 'Dare, Double, Triple or a Mystery Spin.' },
 	sticky: { art: 'W_R2', title: 'Sticky Wilds', line: 'Wilds lock in place and grow every respin.' },
-	egw: { art: 'WM2', title: 'Elves Gone Wild', line: 'Full wild reels side by side multiply.' },
+	egw: { art: 'assets/stacks/still/WM2_R1-2.webp', title: 'Elves Gone Wild', line: 'Full wild reels side by side multiply.' },
 };
 
 const KEY = 'elfhaus.skipSplash';
@@ -53,7 +54,8 @@ function layout() {
 	ps.forEach((p, i) => { const q = d.panels[i];
 		const key = /modes/.test(q.img) ? 'modes' : /sticky/.test(q.img) ? 'sticky' : 'egw', c = CARDS[key];
 		if (p.dataset.k !== key) { p.dataset.k = key; p.setAttribute('aria-label', LOADER_CARDS[key === 'modes' ? 0 : key === 'sticky' ? 1 : 2]);
-			p.innerHTML = `<div class="spArt">${ART[c.art] ? `<img src="${ART[c.art]}" alt="" draggable="false">` : ''}</div><div class="spTxt"><h3></h3><p></p></div>`;
+			const src = c.art.includes('/') ? c.art : ART[c.art];
+			p.innerHTML = `<div class="spArt">${src ? `<img src="${src}" alt="" draggable="false">` : ''}</div><div class="spTxt"><h3></h3><p></p></div>`;
 			p.querySelector('h3')!.textContent = c.title; p.querySelector('p')!.textContent = c.line; }
 		place(p, q); p.style.setProperty('--d', q.delayMs + 'ms'); });
 	const tp = R.querySelector<HTMLImageElement>('#lGo img')!; if (tp.getAttribute('src') !== url(d.tap.img)) tp.src = url(d.tap.img);

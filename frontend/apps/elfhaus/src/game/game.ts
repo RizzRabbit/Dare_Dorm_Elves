@@ -29,7 +29,7 @@ import { initStacks, stackIdle } from './stacks';
 import { setBg, warmBg } from './bg';
 import { placeAlcove } from './alcove';
 import { initLoader, preloadArt, track, loaderReady, hideLoader } from './loader';
-import { fitStage, toStage } from './stage';
+import { fitStage, toStage, ST } from './stage';
 import { placeRespin } from './respin';
 import { loadAllFx } from './fx';
 import { startSpin, abortSpin, hurry } from './reels';
@@ -259,7 +259,9 @@ async function playReplay() {
 // ---------- bonus menu: Ante toggle, activate a bonus, bet -/+ with live prices ----------
 // aifix (audit 5): real in-game art on every card: Dare = a single (per-reel) wild, Double / Triple = the merged 2- and
 // 3-elf groups, Elves Gone Wild = the 5-wide group; Mystery Spin is a face-down card with an ink "?" (not the studio logo).
-const CARD_ART: Partial<Record<ModeKey, string>> = { dare: 'W_R1', double_dare: 'WM2', triple_dare: 'WM3', egw: 'WM5' };
+// v3.6: Double / Triple / Elves Gone Wild use the approved stacks r8d stills (scripts/gen-stack-stills.py), not the old
+// static WM2 / WM3 / WM5 scenes.
+const CARD_ART: Partial<Record<ModeKey, string>> = { dare: ART.W_R1 || '', double_dare: 'assets/stacks/still/WM2_R1-2.webp', triple_dare: 'assets/stacks/still/WM3_R1-3.webp', egw: 'assets/stacks/still/WM5_R1-5.webp' };
 const MYSTERY_CARD = `<svg class="bMyst" viewBox="0 0 100 100" aria-hidden="true"><rect x="23" y="12" width="54" height="76" rx="7" fill="#2A1734" stroke="#E7A6CB" stroke-width="2.5"/>` +
 	`<rect x="29" y="18" width="42" height="64" rx="4" fill="none" stroke="#E7A6CB" stroke-width="1" opacity=".55"/><text x="50" y="64" text-anchor="middle" font-family="Cinzel" font-weight="800" font-size="40" fill="#FBEAF4">?</text></svg>`;
 function buildBuy() {
@@ -268,7 +270,7 @@ function buildBuy() {
 	$('#anteCost').textContent = fmtX(ANTE_COST) + (isSocial() ? ' play' : ' bet');
 	$('#buyCards').classList.toggle('hidden', off);
 	$('#buyCards').innerHTML = off ? '' : BUY_MODES.map((m) => {
-		const a = CARD_ART[m] && (ART[CARD_ART[m]!] || ART.W);
+		const a = CARD_ART[m];
 		return `<button class="bcard" data-m="${m}" aria-pressed="false"><span class="bArt">${m === 'mystery' ? MYSTERY_CARD : a ? `<img src="${a}" alt="" draggable="false">` : ''}</span>` +
 			`<span class="bName">${MODE_LABEL[m].toUpperCase()}</span><span class="bPrice"></span><span class="bX">${mult(modeCost(m))}</span></button>`;
 	}).join('');
@@ -343,6 +345,19 @@ function buildRules() {
 }
 
 // ---------- layout ----------
+const HUD_GAP = 11; // screen px between the board frame's bottom and the HUD's top (incl. the mode tag); the armed glow reaches ~3 px higher, so >= 8 px armed
+/** Screen px from the board frame's bottom (board, alcove crown / recess) to the top of the HUD or anything drawn above it. */
+function hudGap() {
+	const vis = (e: Element) => { const c = getComputedStyle(e); return c.display !== 'none' && c.visibility !== 'hidden'; };
+	let bot = $('#board').getBoundingClientRect().bottom;
+	for (const id of ['alcoveCrown', 'alcoveRecess']) { const e = document.getElementById(id); if (e && vis(e)) bot = Math.max(bot, e.getBoundingClientRect().bottom); }
+	const hud = $('#hud'), tag = $('#armTag'), hid = tag.classList.contains('hidden');
+	if (hid) tag.classList.remove('hidden');
+	let top = hud.getBoundingClientRect().top;
+	hud.querySelectorAll('*').forEach((e) => { if (!vis(e)) return; const r = e.getBoundingClientRect(); if (r.width && r.height) top = Math.min(top, r.top); });
+	if (hid) tag.classList.add('hidden');
+	return top - bot;
+}
 export function layout() {
 	// one shared scale (stage.ts): lay out in stage design px; the stage is never 'short' any more
 	const st = fitStage(), W = st.w, H = st.h, portrait = st.portrait, short = false;
@@ -369,6 +384,14 @@ export function layout() {
 	S.cell = cell; renderAll();
 	// Roxy stands in the room as an animated sprite, so the backgrounds are the Roxy-free paintings.
 	placeAlcove(); // board frame B2 layers from #board / #hud (alcove.ts); before setBg so the _fs state applies on first paint
+	// v3.6: the board's frame (crown + recess) ends at least HUD_GAP screen px above the HUD's top edge, counting the mode
+	// tag over the spin button (measured shown even when no mode is armed, so arming never moves the board); the board
+	// shrinks a little rather than overlap.
+	for (let i = 0; i < 8 && cell > 1; i++) {
+		const d = HUD_GAP - hudGap(); if (d <= 0) break;
+		cell = Math.max(1, cell - Math.max(1, Math.ceil(d / ST.s / 4)));
+		document.documentElement.style.setProperty('--cell', cell + 'px'); S.cell = cell; renderAll(); placeAlcove();
+	}
 	setBg(S.inBonus); warmBg(); // base or free-spins painting for this orientation (bg.ts: preloaded, crossfaded)
 	const fr = toStage($('#frame').getBoundingClientRect());
 	document.documentElement.style.setProperty('--gutR', Math.max(0, W - fr.right) + 'px');

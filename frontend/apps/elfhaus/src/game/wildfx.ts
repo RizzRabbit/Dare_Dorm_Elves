@@ -4,14 +4,13 @@
 //   stackForm(reel)  : four row flashes pull into one light column as a reel fills with wilds
 //   wfExpand(ov)     : the full-reel wild unfurls from the middle rows. The fx_wild 'wfexpand' row bakes ONE elf (reel 1,
 //                      Roxy), so each reel plays its own fx_wfexpand_R<n> sheet when imported (assets/fx/, decoded on
-//                      demand, freed FREE_MS after use, like Roxy's states); without it the elf frame is skipped when
-//                      that reel's stack sheets are loaded (they show the right elf), else the old row plays
+//                      demand, freed FREE_MS after use, like Roxy's states); without it the elf frame is skipped (the
+//                      stack stills / sheets show the right elf; the old baked row is never played)
 //   mergeFx(reels)   : light seams close between adjacent full reels + one soft sweep over the merged group
 //   shimmer          : ONE shared scheduler; every ~1.6 s the next visible wild gets a single comet round its
 //                      frame (so each wild shimmers every few seconds), at most 2 at once, paused while the reels
 //                      spin, during win lines, or when the tab is hidden
 import { play, hasSheet, loadSheet, unloadSheet, type Atlas } from './sprite';
-import { stackListed } from './stacks';
 import { S, $ } from './ui';
 import { isSpinning } from './reels';
 import { linesActive } from './winlines';
@@ -83,7 +82,7 @@ export function wfExpand(ov: HTMLElement | null) {
 	if (own) { // this reel's own elf: play now if decoded, else as soon as it is (or skip the elf if that takes too long)
 		const t0 = performance.now(), go = () => { own.used = performance.now(); if (hasSheet(rid(r)) && ov.isConnected && performance.now() - t0 < WAIT_MS) expandWith(rid(r), ov); };
 		if (hasSheet(rid(r))) go(); else void warmExpand(r)?.then(go);
-	} else if (ok() && !stackListed('merge_idle', ov) && !stackListed('stack_form', ov)) expandWith(ID, ov); // the old row (one baked elf) only on the placeholder art
+	} // v3.6: the fx_wild 'wfexpand' row (one old baked elf) is never played; the stack stills / sheets show the right elf
 	if (ok()) play(ID, 'wshineT', ov, { cls: 'wfx wfxIn wfxTop', delay: 420 });
 }
 export function mergeFx(reels: number[], seams = true) {

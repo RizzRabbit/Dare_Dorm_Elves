@@ -76,15 +76,6 @@
   "L5_win": [
     "assets/final/webp/symbol_L5_leaf_win.webp"
   ],
-  "W": [
-    "assets/final/webp/wild_W_single.webp",
-    "assets/final/wild_W_single.png",
-    "assets/final/symbol_W.png",
-    "assets/final/W.png"
-  ],
-  "W_win": [
-    "assets/final/webp/wild_W_single_win.webp"
-  ],
   "W_R1": [
     "assets/final/webp/wild_W_R1.webp"
   ],
@@ -130,9 +121,6 @@
   "S_glow": [
     "assets/final/webp/symbol_S_scatter_glow.webp"
   ],
-  "W_glow": [
-    "assets/final/webp/wild_W_single_glow.webp"
-  ],
   "W_R1_glow": [
     "assets/final/webp/wild_W_R1_glow.webp"
   ],
@@ -147,36 +135,6 @@
   ],
   "W_R5_glow": [
     "assets/final/webp/wild_W_R5_glow.webp"
-  ],
-  "WF": [
-    "assets/final/webp/wild_WF_fullreel.webp",
-    "assets/final/wild_WF_fullreel.png",
-    "assets/final/wild_fullreel_WF.png",
-    "assets/final/WF.png"
-  ],
-  "WM2": [
-    "assets/final/webp/wild_WM2_two_elves.webp",
-    "assets/final/wild_WM2_two_elves.png",
-    "assets/final/wild_merged_WM2.png",
-    "assets/final/WM2.png"
-  ],
-  "WM3": [
-    "assets/final/webp/wild_WM3_three_elves.webp",
-    "assets/final/wild_WM3_three_elves.png",
-    "assets/final/wild_merged_WM3.png",
-    "assets/final/WM3.png"
-  ],
-  "WM4": [
-    "assets/final/webp/wild_WM4_four_elves.webp",
-    "assets/final/wild_WM4_four_elves.png",
-    "assets/final/wild_merged_WM4.png",
-    "assets/final/WM4.png"
-  ],
-  "WM5": [
-    "assets/final/webp/wild_WM5_five_elves.webp",
-    "assets/final/wild_WM5_five_elves.png",
-    "assets/final/wild_merged_WM5.png",
-    "assets/final/WM5.png"
   ],
   "background": [
     "assets/final/webp/bg_base_noroxy_1920x1080.webp",
@@ -321,9 +279,6 @@
   ],
   "card_flip": [
     "assets/final/fx/card_flip.webp"
-  ],
-  "sym_W": [
-    "assets/final/fx/sym_W.webp"
   ],
   "reel_stripA": [
     "assets/final/fx/reel_stripA.webp"

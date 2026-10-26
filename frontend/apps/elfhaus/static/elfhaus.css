@@ -811,6 +811,8 @@ body.tb .modal.bm{width:min(860px,calc(94*var(--vw)/var(--tbm)))}
 .ov .mGhost>canvas,.ov .mGhost>.wart{position:absolute;inset:0;width:100%;height:100%}
 .ov>canvas.stk_body,.ov>.wart{transform-origin:50% 55%}
 .ov:has(>canvas.stk_letters) .mLets{display:none}
+.ov .mLets.mStill{inset:0;height:auto} .ov .mLets.mStill img{display:block;width:100%;height:100%;pointer-events:none} /* r8d letters still (ui.ts stillHTML) until letters_ignite decodes */
+.ov:has(>canvas.stk_win) .mLets{display:none}
 .ov:has(>canvas.stk_win)>canvas.stk_body{opacity:0}
 
 /* ---- wild multipliers: ONE pink gem in each wild's top-left corner (cell, full reel, merged group = product).

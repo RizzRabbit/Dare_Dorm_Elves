@@ -1,5 +1,4 @@
 // DOM renderer (ported from prototype/app.js). It only displays what book events say.
-import { lettersHTML } from './mergefx';
 import { frameHTML } from './wildframe';
 import ART_JSON from './art.generated.json';
 import { LINES, MAX_WIN_X, ROWS, REELS, SYMBOL_NAMES } from './config';
@@ -37,6 +36,13 @@ const winLayer = (key: string) => (ART[key + '_win'] ? `<img class="olWin" src="
 const glowLayer = (key: string) => (ART[key + '_glow'] ? `<i class="symGlow"><img src="${ART[key + '_glow']}" alt="" draggable="false"></i>` : '');
 const winFx = (key: string) => (ART[key + '_glow'] ? '' : winLayer(key));
 const img = (key: string) => (ART[key] ? `<img src="${ART[key]}" alt="" draggable="false">` : '');
+// Stacked / merged wild stills (scripts/gen-stack-stills.py): the approved stacks r8d art per overlay position, frame 0
+// of merge_idle (body) and the held last frame of letters_ignite (WILD), so an overlay shows the same elves and letters
+// from its first frame until its sheets decode (the canvases then cover them). Also the bonus-buy / splash card art.
+const stillPos = (reels: number[]) => (reels.length === 1 ? `WF_R${reels[0] + 1}` : `WM${reels.length}_R${reels[0] + 1}-${reels[reels.length - 1] + 1}`);
+const stillSrc = (reels: number[], letters = false) => `assets/stacks/still/${stillPos(reels)}${letters ? '_letters' : ''}.webp`;
+const stillHTML = (reels: number[]) => `<div class="wart"><img src="${stillSrc(reels)}" alt="" draggable="false"></div>` +
+	`<div class="mLets mStill"><img src="${stillSrc(reels, true)}" alt="" draggable="false"></div>`;
 // Multiplier lettering: text only, in a faceted pink "gemstone" fill (repeating diagonal hard-stop bands) with a
 // light-pink inner outline, a thin dark-plum outer stroke, a white specular band across the cap tops and a few
 // tiny 4-point glints (sprite sheet, fx.ts) that twinkle now and then. All layers are SVG text sharing one viewBox (60 units high,
@@ -137,12 +143,9 @@ export function renderOverlays(anim: boolean | number = false) {
 		const n = g.reels.length, key = `WM${n}`;
 		const d = document.createElement('div'); d.className = 'ov merge';
 		d.style.left = pos(g.reels[0], 0).x + 'px'; d.style.width = n * S.cell + 'px';
-		// Final art (n reels x 4 rows, same aspect as the merged area) fills the overlay edge to edge; the
-		// dashed columns, labels and WILD plate are only for the no-art fallback.
-		if (ART[key]) d.classList.add('art');
-		d.innerHTML = (ART[key] ? `<div class="wart">${img(key)}</div>`
-			: g.reels.map((_, i) => `<div class="wfph" style="left:${i * S.cell}px;width:${S.cell}px"><span>ELF ${i + 1}</span></div>`).join('') + `<div class="plate">WILD</div>`) +
-			lettersHTML(n) + `<i class="ovWinO"></i>` + frameHTML(g.reels) + gemHTML(g.product, 'stack', nudgeCSS(key)) + `<div class="ovrd">${DOTS}</div>`;
+		// The r8d still (n reels x 4 rows, same aspect as the merged area) fills the overlay edge to edge.
+		d.classList.add('art');
+		d.innerHTML = stillHTML(g.reels) + `<i class="ovWinO"></i>` + frameHTML(g.reels) + gemHTML(g.product, 'stack', nudgeCSS(key)) + `<div class="ovrd">${DOTS}</div>`;
 		d.dataset.reels = g.reels.join(',');
 		if (!anim) d.style.animation = 'none';
 		o.appendChild(d);
@@ -151,9 +154,8 @@ export function renderOverlays(anim: boolean | number = false) {
 		if (inGroup.has(r)) return;
 		const d = document.createElement('div'); d.className = 'ov full';
 		d.style.left = pos(r, 0).x + 'px'; d.style.width = S.cell + 'px';
-		if (ART.WF) d.classList.add('art');
-		d.innerHTML = (ART.WF ? `<div class="wart">${img('WF')}</div>` : `<div class="wfph" style="left:0;width:100%"><span>FULL-REEL<br>WILD</span></div><div class="plate">WILD</div>`) +
-			`<i class="ovWinO"></i>` + frameHTML([r]) + gemHTML(v, 'stack', nudgeCSS('WF')) + `<div class="ovrd">${DOTS}</div>`;
+		d.classList.add('art');
+		d.innerHTML = stillHTML([r]) + `<i class="ovWinO"></i>` + frameHTML([r]) + gemHTML(v, 'stack', nudgeCSS('WF')) + `<div class="ovrd">${DOTS}</div>`;
 		d.dataset.reel = String(r);
 		if (anim !== r) d.style.animation = 'none';
 		o.appendChild(d);
