@@ -505,6 +505,7 @@ export async function initGame() {
 			setBusy(false);
 			await resume(rd);
 		}
+		if (!url.replay) S.ready = true; // voice idle timer waits for this
 	} catch (e) { hideLoader(); showError(e); }
 	finally { setBusy(false); setStrip(); layout(); document.body.dataset.ready = '1'; }
 }
