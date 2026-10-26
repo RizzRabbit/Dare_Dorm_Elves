@@ -1056,9 +1056,6 @@ body.portrait #outro .otAmt{font-size:32px}
 @media (prefers-reduced-motion:reduce){#intro .card,#outro .card{animation:none}}
 
 /* ---------- aifix 13 (audit 24): settings panel (no audio in the game, so no sound toggle) ---------- */
-#settings{margin:0 0 14px;padding-bottom:12px;border-bottom:1.5px solid #6E4A7E}
-#settings h2{margin:0 0 8px}
-.setRow{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:8px 2px;font-size:15px;color:#F6ECF3}
 .sw{position:relative;width:46px;height:26px;padding:0;border-radius:999px;background:#2A1B33;border:1.5px solid #6E4A7E;cursor:pointer;flex:none}
 .sw::after{content:"";position:absolute;top:3px;left:3px;width:17px;height:17px;border-radius:50%;background:#F6ECF3;transition:transform calc(.12s*var(--at))}
 .sw.on{background:#FF5FB0;border-color:#FF5FB0} .sw.on::after{transform:translateX(20px);background:#2A1433}
@@ -1100,10 +1097,8 @@ body:not(.portrait) #bigwin.chars .bw{top:0;translate:0 calc(-17*var(--vh))}
    Roxy, board, HUD and overlays always share #root's single transform and can never come apart. ---- */
 #root #bg,#root #bgFade,#root #roxy,#root #roxySh,#root #app,#root .overlay,#root #replayBar,#root #maxwin,#root #loader,
 #root #flyLayer,#root #flyLayer .mx,body.short:not(.portrait) #root #top,body.short:not(.portrait) #root #app #fsBar{position:absolute}
-.setRow.dim{opacity:.5} /* v3.8: Music / Sound effects rows while Sound is off */
 /* v3.9: the whole settings row is the tap target (settings.ts forwards a row tap to its switch); the switch's own hit area
    also fills the row's padding. Nothing moves: no size, padding or position changes. */
-#settings .setRow{cursor:pointer;-webkit-tap-highlight-color:transparent} #settings .sw::before{content:"";position:absolute;inset:-9px -14px}
 
 /* ===== v3.13 (James 2026-10-26): panels (panels.ts) =====
    Corner X: a small stylized neon blade X (two tapered strokes, plum stone outline, soft pink neon), no button plate,
@@ -1121,7 +1116,7 @@ body:not(.portrait) #bigwin.chars .bw{top:0;translate:0 calc(-17*var(--vh))}
 body.tb .modal{--xHit:max(44px, calc(46px / (var(--s, 1) * var(--tbm, 1))))}
 .modal .mX::before{content:'';position:absolute;left:50%;top:50%;width:var(--xHit);height:var(--xHit);transform:translate(-50%,-50%)}
 body.portrait .modal .mX{top:2px;right:2px}
-.hasX .mHead,.hasX #settings>h2:first-child{padding-right:30px}
+.hasX .mHead{padding-right:30px}
 .mView{position:relative;flex:1 1 auto;min-height:0;overflow:hidden;touch-action:none;overscroll-behavior:contain;cursor:grab}
 .mView.dragging{cursor:grabbing} .mView.dragging *{pointer-events:none}
 .mView:not(.scrolls){cursor:auto}
@@ -1182,3 +1177,33 @@ body.portrait #fsMore .fmBig{font-size:52px} body.portrait #fsMore[data-max="1"]
 body.portrait #fsMore .fmSub{font-size:16px} body.portrait #fsMore .card{padding:12px 30px 14px}
 /* landscape phones (body.tb: stage scale < .66): the same text boost as the intro/outro values */
 body.tb:not(.portrait) #fsMore .card{zoom:var(--tbs)}
+
+/* ---------- v3.15 (James): compact menu pop-out above the HUD menu button (settings.ts) ----------
+   Dark rounded card in the plum/neon frame; rows Info / Music / Sound; Music + Sound slide one slider out to the right
+   with a pointer arrow. Motion: opacity + transform only (open .35s, slider .3s). No round knobs (pill thumb). */
+#popMenu{position:absolute;z-index:45;min-width:150px;padding:6px;border-radius:12px;background:linear-gradient(#24162EF5,#170E1FF5);
+  border:1.5px solid #6E4A7E;box-shadow:0 14px 30px -10px #000C;opacity:0;visibility:hidden;pointer-events:none;
+  transform:translateY(10px) scale(.97);transform-origin:0 100%;transition:opacity .35s ease-out,transform .35s cubic-bezier(.2,.8,.3,1),visibility 0s .35s}
+#popMenu.open{opacity:1;visibility:visible;pointer-events:auto;transform:none;transition:opacity .35s ease-out,transform .35s cubic-bezier(.2,.8,.3,1),visibility 0s}
+#popMenu .pmItem{position:relative}
+#popMenu .pmRow{display:flex;align-items:center;gap:12px;width:100%;padding:9px 14px 9px 10px;border:0;border-radius:8px;background:none;
+  font-family:"Nunito",sans-serif;font-weight:800;font-size:15px;letter-spacing:1.5px;color:#F6ECF3;text-align:left}
+#popMenu .pmRow:hover,#popMenu .pmRow:focus-visible,#popMenu .pmItem.open .pmRow{background:#FFFFFF12}
+#popMenu .pmRow:focus-visible{outline:1.5px solid #FF5FB0;outline-offset:-1.5px}
+#popMenu .pmRow svg{width:22px;height:22px;flex:none;fill:none;stroke:#E9D6EE;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#popMenu .pmX{display:none} #popMenu .pmItem.open .pmI{display:none} #popMenu .pmItem.open .pmX{display:block;stroke:#FF5FB0}
+#popMenu .pmSlide{position:absolute;left:calc(100% + 14px);top:50%;display:flex;align-items:center;height:40px;padding:0 16px;border-radius:10px;
+  background:linear-gradient(#24162EF5,#170E1FF5);border:1.5px solid #6E4A7E;box-shadow:0 10px 24px -10px #000C;
+  opacity:0;visibility:hidden;pointer-events:none;transform:translate(-8px,-50%);transition:opacity .3s ease-out,transform .3s cubic-bezier(.2,.8,.3,1),visibility 0s .3s}
+#popMenu .pmSlide::before{content:"";position:absolute;left:-7px;top:50%;width:11px;height:11px;margin-top:-6px;background:#1E1227;
+  border-left:1.5px solid #6E4A7E;border-bottom:1.5px solid #6E4A7E;transform:rotate(45deg)}
+#popMenu .pmItem.open .pmSlide{opacity:1;visibility:visible;pointer-events:auto;transform:translate(0,-50%);transition:opacity .3s ease-out,transform .3s cubic-bezier(.2,.8,.3,1),visibility 0s}
+#popMenu input[type=range]{-webkit-appearance:none;appearance:none;width:150px;height:28px;margin:0;background:none;cursor:pointer;--v:100%}
+#popMenu input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:linear-gradient(90deg,#FF5FB0 var(--v),#3A2747 var(--v))}
+#popMenu input[type=range]::-moz-range-track{height:6px;border-radius:3px;background:linear-gradient(90deg,#FF5FB0 var(--v),#3A2747 var(--v))}
+#popMenu input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:22px;margin-top:-8px;border-radius:4px;background:#FFF4FA;border:1.5px solid #3A2347}
+#popMenu input[type=range]::-moz-range-thumb{width:12px;height:22px;border-radius:4px;background:#FFF4FA;border:1.5px solid #3A2347}
+#popMenu input[type=range]:focus-visible{outline:1.5px solid #FF5FB0;outline-offset:4px;border-radius:4px}
+body.portrait #popMenu input[type=range]{width:128px}
+body.tb #popMenu{zoom:calc(var(--tbm)*1.25)} /* landscape phones: rows ~10px text, matched to the HUD labels */
+@media (prefers-reduced-motion:reduce){#popMenu,#popMenu.open,#popMenu .pmSlide,#popMenu .pmItem.open .pmSlide{transform:none}#popMenu .pmSlide{transform:translateY(-50%)!important}}

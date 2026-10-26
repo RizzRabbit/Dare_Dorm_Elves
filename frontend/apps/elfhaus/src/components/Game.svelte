@@ -45,7 +45,7 @@
 			</button>
 		</div>
 		<div id="bar">
-			<button id="menuBtn" class="ico flat" aria-label="Menu" title="Menu"><svg viewBox="0 0 24 24"><path d="M4 6.5h16M4 12h16M4 17.5h16" /></svg></button>
+			<button id="menuBtn" class="ico flat" aria-label="Menu" title="Menu" aria-haspopup="menu" aria-expanded="false" aria-controls="popMenu"><svg viewBox="0 0 24 24"><path d="M4 6.5h16M4 12h16M4 17.5h16" /></svg></button>
 			<button id="betDown" class="ico flat" aria-label="Decrease"><svg viewBox="0 0 24 24"><path d="M5 12h14" /></svg></button>
 			<button id="spinBtn" aria-label="Spin"><svg viewBox="0 0 48 48"><path d="M37.5 24a13.5 13.5 0 1 1-4-9.6" /><path d="M34.5 7.5v7.5H27" /></svg><span id="autoN" aria-hidden="true"></span></button>
 			<button id="armTag" class="hidden" aria-label=""><span class="t"></span><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 3l6 6M9 3l-6 6" /></svg></button>
@@ -104,10 +104,10 @@
 	<button id="autoStart" class="go">START</button>
 	</div></div>
 </div></div>
-<div id="menu" class="overlay hidden" role="dialog" aria-modal="true" aria-label="Settings and game rules"><div class="modal rules hasX">
+<div id="popMenu" role="menu" aria-label="Menu" aria-hidden="true"><button id="pmInfo" class="pmRow" role="menuitem"><svg class="pmI" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" /><path d="M12 11v5.5M12 7.6v.2" /></svg><span>Info</span></button><div class="pmItem" data-k="mus"><button id="pmMusic" class="pmRow" role="menuitem" aria-expanded="false" aria-controls="pmMusicS"><svg class="pmI" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.5V6l10-2v11.5" /><circle cx="6.5" cy="17.5" r="2.5" /><circle cx="16.5" cy="15.5" r="2.5" /></svg><svg class="pmX" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17" /></svg><span>Music</span></button><div id="pmMusicS" class="pmSlide"><input type="range" min="0" max="100" step="5" aria-label="Music volume" /></div></div><div class="pmItem" data-k="sfx"><button id="pmSound" class="pmRow" role="menuitem" aria-expanded="false" aria-controls="pmSoundS"><svg class="pmI" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4Z" /><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" /></svg><svg class="pmX" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17" /></svg><span>Sound</span></button><div id="pmSoundS" class="pmSlide"><input type="range" min="0" max="100" step="5" aria-label="Sound volume" /></div></div></div>
+<div id="menu" class="overlay hidden" role="dialog" aria-modal="true" aria-label="Game info"><div class="modal rules hasX">
 	<button class="mX" aria-label="Close" title="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="xb" d="M5 5 12.9 11.1 19 19 11.1 12.9ZM19 5 12.9 12.9 5 19 11.1 11.1Z" /></svg></button>
 	<div class="mView"><div class="mTrack">
-	<div id="settings"><h2>SETTINGS</h2><div class="setRow"><span>Sound</span><button id="setSnd" class="sw" role="switch" aria-checked="true" aria-label="Sound"></button></div><div class="setRow" id="setMusRow"><span>Music</span><button id="setMus" class="sw" role="switch" aria-checked="true" aria-label="Music"></button></div><div class="setRow" id="setSfxRow"><span>Sound effects</span><button id="setSfx" class="sw" role="switch" aria-checked="true" aria-label="Sound effects"></button></div><div class="setRow" id="setVoxRow"><span>Voice</span><button id="setVox" class="sw" role="switch" aria-checked="true" aria-label="Voice"></button></div></div>
 	<h2 id="rulesTitle">GAME RULES</h2><div id="rulesBody"></div>
 	</div></div>
 </div></div>

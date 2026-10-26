@@ -21,7 +21,7 @@ import { setArmedGlow, wireTapFx } from './uifx';
 import { featOpen, featClose } from './featfx';
 import { BIGWIN_ELVES_MIN_X, preloadBigWinElves, bigWinElvesStart, bigWinElvesEnd } from './bigwinElves';
 import { setBigWinFx } from './ui';
-import { initSettings, syncSettings } from './settings';
+import { initSettings, popOpen, closePop } from './settings';
 import { initAudio, sfx } from './audio';
 import { initVoiceIdle, voice } from './voice';
 import { setSocial, isSocial, t } from './strings';
@@ -104,7 +104,7 @@ function showError(error: any) {
 function setBusy(b: boolean) {
 	S.busy = b; $('#spinBtn').classList.toggle('busy', b);
 	['#buyBtn', '#betUp', '#betDown', '#armTag', '#bmUp', '#bmDown'].forEach((s) => (($(s) as HTMLButtonElement).disabled = b || !sessionReady));
-	($('#menuBtn') as HTMLButtonElement).disabled = b;
+	($('#menuBtn') as HTMLButtonElement).disabled = b; if (b) closePop();
 }
 // ---------- autoplay (Stake-style panel) ----------
 // Counts only (no infinite: the RGS jurisdiction config has no flag that allows it). Optional stops, in currency:
@@ -495,12 +495,11 @@ function wire() {
 	}
 	registerPanel('#autoMenu'); registerPanel('#menu'); registerPanel('#msg', { closable: false });
 	$('#buyBtn').onclick = () => { sfx('ui_buy_open'); buildBuy(); openPanel('#buyMenu'); };
-	$('#menuBtn').onclick = () => { buildRules(); syncSettings(); openPanel('#menu'); };
-	initSettings();
+	initSettings(() => { buildRules(); openPanel('#menu'); });
 	$('#replayPlay').onclick = () => playReplay();
 	addEventListener('keydown', (e) => {
 		if (e.code !== 'Space' || S.jur.disabledSpacebar) return;
-		if (anyOpen()) return;
+		if (anyOpen() || popOpen()) return;
 		e.preventDefault();
 		if (S.auto) { stopAuto(); return; }
 		if (S.busy) { if (!e.repeat) skipBoard(); return; } // Space mid-round = the same skip as a tap on the board
@@ -510,7 +509,7 @@ function wire() {
 	});
 	// plain button clicks (the buy menu, bet steps, mode arming and errors play their own sounds above)
 	document.addEventListener('click', (e) => {
-		const b = (e.target as Element)?.closest?.('#menuBtn,.mX,#turboBtn,#turboSw,#autoBtn,#autoStart,#advBtn,#msgOk,#replayPlay,.chip,#settings .sw,#stFeat') as HTMLButtonElement | null;
+		const b = (e.target as Element)?.closest?.('#menuBtn,.mX,#turboBtn,#turboSw,#autoBtn,#autoStart,#advBtn,#msgOk,#replayPlay,.chip,#popMenu .pmRow,#stFeat') as HTMLButtonElement | null;
 		if (b && !b.disabled) sfx('ui_click');
 	});
 	addEventListener('resize', layout);
@@ -544,7 +543,7 @@ export async function initGame() {
 		chars: (B) => bigWinElvesStart(B, 1000),
 		end: (B) => { featClose(B.querySelector('.bwFx')); bigWinElvesEnd(); },
 	});
-	document.addEventListener('pointerdown', (e) => { if (!(e.target as Element)?.closest?.('#bigwin,#outro')) { skipBoard(false); if (!(e.target as Element)?.closest?.('#menu,#buyMenu,#bmConfirm,#autoMenu,#msg')) hurry(); } }, { capture: true, passive: true });
+	document.addEventListener('pointerdown', (e) => { if (!(e.target as Element)?.closest?.('#bigwin,#outro')) { skipBoard(false); if (!(e.target as Element)?.closest?.('#menu,#popMenu,#buyMenu,#bmConfirm,#autoMenu,#msg')) hurry(); } }, { capture: true, passive: true });
 	track(initRoxy(layout));
 	loadAllFx(track).then(() => renderAll());
 	setOverlayHook(stackIdle); initStacks().then(() => renderOverlays(false)); void initWfExpand(); // optional stack / per-reel expand sheets (placeholders until imported)

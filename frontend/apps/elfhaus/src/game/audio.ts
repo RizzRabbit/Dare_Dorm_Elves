@@ -3,7 +3,7 @@
 // then are the mp3s fetched (relative URLs, so the Stake sub-path works) and decoded, UI + reels first, then the base
 // music, then the rest. A sound asked for before its buffer is ready is skipped. Every call is fire-and-forget and
 // wrapped so a failure (no Web Audio, blocked fetch, bad decode) leaves the game playing silently; nothing awaits audio.
-// Settings: Sound (master) / Music / Sound effects, persisted in localStorage elfhaus.snd / .mus / .sfx (default on).
+// Settings: Sound (master) / Music / Sound effects, persisted in localStorage elfhaus.snd / .mus / .sfx (default on); v3.15 volumes elfhaus.musv / .sfxv from the menu pop-out sliders.
 // A launch URL param (sound=0|off|false or mute=1|true) starts the game muted for that session without changing storage.
 // v3.9: a third bus for the elf voice lines + giggles (pack/voice, 35 files, loaded last). Voice switch elfhaus.vox
 // (default on; master Sound off / URL mute silence it too). STRICT one-at-a-time across every elf: while a clip plays,
@@ -51,6 +51,10 @@ const CREATE_TRIES = 3; // AudioContext constructor attempts (one per tap) befor
 type Pref = 'snd' | 'mus' | 'sfx' | 'vox';
 const prefs: Record<Pref, boolean> = { snd: true, mus: true, sfx: true, vox: true };
 let urlMute = false;
+// v3.15: Music / Sound volume sliders (0..1, persisted as elfhaus.musv / .sfxv); 0 = mute. Sound drives effects + voice.
+type Vol = 'mus' | 'sfx';
+const vol: Record<Vol, number> = { mus: 1, sfx: 1 };
+const gMus = () => (prefs.mus ? vol.mus : 0), gSfx = () => (prefs.sfx ? vol.sfx : 0), gVox = () => (prefs.vox ? vol.sfx : 0);
 let ctx: AudioContext | null = null, master: GainNode | null = null, musicBus: GainNode | null = null, duckG: GainNode | null = null, sfxBus: GainNode | null = null;
 let vduckG: GainNode | null = null, voxBus: GainNode | null = null;
 const buf = new Map<Snd, AudioBuffer>(), vbuf = new Map<string, AudioBuffer>();
@@ -65,6 +69,15 @@ const now = () => ctx!.currentTime;
 const ramp = (p: AudioParam, v: number, s = 0.08) => safe(() => { const t = now(); p.cancelScheduledValues(t); p.setValueAtTime(p.value, t); p.linearRampToValueAtTime(v, t + s); });
 
 export const audioPrefs = () => ({ ...prefs, muted: urlMute });
+/** v3.15 slider value as heard (0 when the master Sound or that bus is off, or the launch param muted the session). */
+export const audioVol = (k: Vol) => (on() && prefs[k] ? vol[k] : 0);
+/** v3.15 slider: set a volume; moving it above 0 also turns that sound back on (master, the bus, and voice with Sound). */
+export function setAudioVol(k: Vol, v: number) {
+	vol[k] = Math.min(1, Math.max(0, v)); safe(() => localStorage.setItem(`elfhaus.${k}v`, vol[k].toFixed(2)));
+	if (vol[k] > 0) { const on1 = (p: Pref) => { prefs[p] = true; safe(() => localStorage.setItem('elfhaus.' + p, '1')); }; on1('snd'); urlMute = false; on1(k); if (k === 'sfx') on1('vox'); }
+	if (on() && !ctx) unlock(); // a slider drag is a user gesture
+	apply();
+}
 export function setAudioPref(k: Pref, v: boolean) {
 	prefs[k] = v; if (k === 'snd' && v) urlMute = false;
 	safe(() => localStorage.setItem('elfhaus.' + k, v ? '1' : '0'));
@@ -73,15 +86,16 @@ export function setAudioPref(k: Pref, v: boolean) {
 }
 function apply() {
 	if (!ctx) return;
-	ramp(master!.gain, on() ? 1 : 0); ramp(musicBus!.gain, prefs.mus ? 1 : 0); ramp(sfxBus!.gain, prefs.sfx ? 1 : 0); ramp(voxBus!.gain, prefs.vox ? 1 : 0);
-	if (!on() || !prefs.vox) stopVoice();
+	ramp(master!.gain, on() ? 1 : 0); ramp(musicBus!.gain, gMus()); ramp(sfxBus!.gain, gSfx()); ramp(voxBus!.gain, gVox());
+	if (!on() || !gVox()) stopVoice();
 	if (on()) load();
-	if (on() && prefs.mus) syncMusic(); else stopMusic(0.3);
+	if (on() && gMus()) syncMusic(); else stopMusic(0.3);
 }
 
 /** Read the stored switches and the launch param; arm the first-tap unlock. Call once at boot (no audio work here). */
 export function initAudio() {
 	for (const k of ['snd', 'mus', 'sfx', 'vox'] as Pref[]) safe(() => { const v = localStorage.getItem('elfhaus.' + k); if (v != null) prefs[k] = v !== '0'; });
+	for (const k of ['mus', 'sfx'] as Vol[]) safe(() => { const v = parseFloat(localStorage.getItem(`elfhaus.${k}v`) ?? ''); if (Number.isFinite(v)) vol[k] = Math.min(1, Math.max(0, v)); });
 	safe(() => {
 		const q = new URLSearchParams(location.search), s = (q.get('sound') ?? q.get('audio') ?? '').toLowerCase(), m = (q.get('mute') ?? '').toLowerCase();
 		if (['0', 'off', 'false', 'no'].includes(s) || ['1', 'true', 'on', 'yes'].includes(m)) urlMute = true;
@@ -107,7 +121,7 @@ function unlock() {
 			master = ctx.createGain(); musicBus = ctx.createGain(); duckG = ctx.createGain(); sfxBus = ctx.createGain();
 			vduckG = ctx.createGain(); voxBus = ctx.createGain();
 			musicBus.connect(duckG); duckG.connect(vduckG); vduckG.connect(master); sfxBus.connect(master); voxBus.connect(master); master.connect(ctx.destination);
-			master.gain.value = 1; musicBus.gain.value = prefs.mus ? 1 : 0; sfxBus.gain.value = prefs.sfx ? 1 : 0; voxBus.gain.value = prefs.vox ? 1 : 0;
+			master.gain.value = 1; musicBus.gain.value = gMus(); sfxBus.gain.value = gSfx(); voxBus.gain.value = gVox();
 			// old iOS: a silent one-sample buffer started inside the gesture unlocks output
 			const b = ctx.createBuffer(1, 1, 22050), s = ctx.createBufferSource(); s.buffer = b; s.connect(ctx.destination); s.start(0);
 			if (!want) want = document.body.classList.contains('inBonus') ? 'bonus' : 'base';
@@ -146,7 +160,7 @@ function src(n: Snd, bus: GainNode, gain = 1, rate = 1, loop = false) {
 	s.onended = () => safe(() => g.disconnect());
 	return { s, g };
 }
-const live = () => !!ctx && on() && prefs.sfx && !hidden && ctx.state === 'running';
+const live = () => !!ctx && on() && gSfx() > 0 && !hidden && ctx.state === 'running';
 
 export type Handle = { stop: (fadeMs?: number) => void };
 const NOOP: Handle = { stop: () => {} };
@@ -171,7 +185,7 @@ export function loop(n: Snd, gain = 1): Handle { return safe(() => (live() ? han
 /** Switch the music (800 ms crossfade). Safe to call any time; it starts once unlocked and loaded. */
 export function music(m: 'base' | 'bonus') { want = m; safe(syncMusic); }
 function syncMusic() {
-	if (!ctx || !on() || !prefs.mus || !want) return;
+	if (!ctx || !on() || !gMus() || !want) return;
 	if (cur?.name === want) return;
 	const n = MUSIC[want]; if (!buf.has(n)) return; // the old track keeps playing until the new one has decoded
 	const x = src(n, musicBus!, 0, 1, true); if (!x) return;
@@ -197,7 +211,7 @@ let vcur: { s: AudioBufferSourceNode; g: GainNode } | null = null;
 let vBusyUntil = 0;   // performance.now() ms when the current clip ends (0 = none); new clips also wait VGAP after it
 let vPending: { name: string; until: number } | null = null, vPendT = 0;
 let vStarted = 0;     // clips started this session (smoke tests / debugging)
-const vlive = () => !!ctx && on() && prefs.vox && !hidden && ctx.state === 'running';
+const vlive = () => !!ctx && on() && gVox() > 0 && !hidden && ctx.state === 'running';
 /** true while a clip plays or within the 400 ms gap after it. */
 export const voiceBusy = () => vBusyUntil > 0 && performance.now() < vBusyUntil + VGAP;
 export const voiceReady = (name: string) => vbuf.has(name);
