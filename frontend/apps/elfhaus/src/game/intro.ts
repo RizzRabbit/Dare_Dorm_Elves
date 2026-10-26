@@ -37,7 +37,10 @@ function layout() {
 	R.dataset.o = o;
 	const st = R.querySelector<HTMLElement>('.spStage')!;
 	st.style.width = d.size[0] + 'px'; st.style.height = d.size[1] + 'px';
-	st.style.setProperty('--sps', String(Math.min(S.w / d.size[0], S.h / d.size[1])));
+	// portrait: keep a strip free under the splash for the "Don't show this again" row (.spSkip, bottom of the loader);
+	// on short phones (Stake in iPhone Safari, ~390x550-660 visible) TAP TO PARTY sat on top of it and a tap ticked the box
+	const keep = o === 'port' ? 2 * 30 : 0;
+	st.style.setProperty('--sps', String(Math.min(S.w / d.size[0], (S.h - keep) / d.size[1])));
 	R.querySelector<HTMLElement>('.spBg')!.style.backgroundImage = `url(${url(d.bg)})`;
 	const t = R.querySelector<HTMLImageElement>('.spTitle')!; if (!t.src.endsWith(d.title.img)) t.src = url(d.title.img); place(t, d.title);
 	// aifix (audit 3): the painted panels (garbled AI lettering, fake mini-boards) are replaced by plain HTML cards: the
@@ -89,6 +92,8 @@ export function initSplash() {
 	cb.checked = skipSplash();
 	cb.onchange = () => { try { cb.checked ? localStorage.setItem(KEY, '1') : localStorage.removeItem(KEY); } catch {} };
 	layout(); addEventListener('resize', layout);
+	// iOS: the visible box changes without a window resize (bars) and reports late after a rotation
+	visualViewport?.addEventListener('resize', layout); addEventListener('orientationchange', () => { setTimeout(layout, 120); setTimeout(layout, 500); });
 	sting.then(() => { R.classList.add('in'); removeEventListener('resize', layout); addEventListener('resize', layout); });
 	runSting();
 }

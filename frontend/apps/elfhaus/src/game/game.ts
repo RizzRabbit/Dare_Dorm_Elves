@@ -357,6 +357,9 @@ export function layout() {
 	const lane = short ? 16 : portrait ? 42 : Math.max(fsH - 14, 26), FRAME = short || portrait ? 0 : 34;
 	const used = top + hud + 2 * lane + FRAME + (short ? 14 : portrait ? 30 : 12);
 	let cell = portrait ? Math.min((W - 40) / 5, (H - used) / 4) : Math.min((H - used) / 4, (W - 120) / 5);
+	// Portrait: keep room for Roxy (head to waist) between the title and the board; on short phones (Stake in iPhone
+	// Safari, ~390x550 visible) the board gives way a little instead of covering her. Tall phones are unaffected.
+	if (portrait && document.body.classList.contains('hasRoxy')) cell = Math.min(cell, (H - used - 72) / 4);
 	// Landscape: always leave Roxy her gutter left of the board (placeRoxy shows her only at >= 45% of the stage
 	// height; sheet aspect ~0.495, left ~11% empty). Near-square windows (1024x1080, 1280x1024, iPad landscape) used to
 	// give the board the whole width and hide her; now the board gives way a little and she stays in the room.
@@ -414,7 +417,8 @@ function wire() {
 		S.replay ? playReplay() : round(spinMode());
 	});
 	addEventListener('resize', layout);
-	addEventListener('orientationchange', () => setTimeout(layout, 120));
+	// iOS reports the new size late after a rotation: lay out again once it has settled
+	addEventListener('orientationchange', () => { setTimeout(layout, 120); setTimeout(layout, 500); });
 	visualViewport?.addEventListener('resize', layout);
 }
 function applyJurisdiction() {
