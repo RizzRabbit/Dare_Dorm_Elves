@@ -69,12 +69,18 @@ export function roxyMem() {
 (window as any).__roxyMem = roxyMem;
 // Idle behaviour: she holds a resting frame (eyes open, no wink) with a slight code-driven sway, and every 15-30s
 // plays the full idle clip once. The clip is played rotated (REST+1 .. end, 0 .. REST) so it starts right after
-// and ends exactly on the resting pose; state switches cross-fade over ~150ms so nothing pops.
+// and ends exactly on the resting pose; state switches cut on a frame (v3.11: no cross-fade, see setFrame).
 const REST = 8, FADE_MS = 150;
 let resting = true, clipPos = 0, nextClipAt = 0, cur: Frame | null = null, fadeFrom: Frame | null = null, fadeT0 = 0;
 const schedule = (t: number) => (nextClipAt = t + 15000 + Math.random() * 15000);
+// v3.11 (bug 2026-10-26, "mouth detached from her head"): NO cross-fade between frames any more. Blending two frames
+// whose heads sit at different spots drew two faces at once, so a second mouth / eyes slid off on their own path
+// (onto her chin, neck, chest) while she bobbed. Every face pixel now comes from the ONE current frame on the ONE
+// canvas, which carries the single bob / sway transform, so face and body can never separate. State changes cut on
+// the 12 fps frame clock like any other frame step. `fade` is kept for the call sites; it is ignored.
+const CROSSFADE = false;
 function setFrame(f: Frame, t: number, fade = false) {
-	if (fade && cur && cur !== f) { fadeFrom = cur; fadeT0 = t; }
+	if (CROSSFADE && fade && cur && cur !== f) { fadeFrom = cur; fadeT0 = t; }
 	cur = f;
 }
 function step(t: number) {

@@ -1,6 +1,6 @@
 // Unit test for the v3.9 voice rules in src/game/audio.ts (fake Web Audio, real timers): exactly one voice clip at a
 // time across all elves, the 400 ms gap, the single pending high-priority slot, the AudioContext create-retry cap and
-// the cleared decode timer. Run by `pnpm test` (node scripts/test-voice.mjs).
+// the cleared decode timer; v3.11: voice.ts bet-mode re-arm only counts lines that played. Run by `pnpm test` (node scripts/test-voice.mjs).
 import { readFileSync } from 'node:fs';
 import { transformWithEsbuild } from 'vite';
 const src = readFileSync(new URL('../src/game/audio.ts', import.meta.url), 'utf8');
@@ -85,6 +85,34 @@ console.log('\n=== AudioContext create-retry cap ===');
 	A.initAudio(); for (let i = 0; i < 10; i++) tap();
 	ok(W.ctor === 3, `constructor tried 3 times over 10 taps (got ${W.ctor})`);
 	ok(A.playVoice('vo_roxy_bonus_1') === false, 'no context: voice stays silent, no throw');
+}
+console.log('\n=== v3.11 bet-mode re-arm (src/game/voice.ts) ===');
+{
+	// voice.ts with its audio / ui imports stubbed: playVoice answers like audio.ts (false while another voice is busy)
+	const vsrc = readFileSync(new URL('../src/game/voice.ts', import.meta.url), 'utf8');
+	let { code: vc } = await transformWithEsbuild(vsrc, 'voice.ts', { loader: 'ts', format: 'esm' });
+	vc = vc.replace(/import\s*\{([^}]*)\}\s*from\s*["']\.\/(?:audio|ui)["'];?/g, (_, n) => `const {${n.replace(/\btype\s+\w+\s*,?/g, '')}} = globalThis.__vstub;`);
+	ok(!/^\s*import\s/m.test(vc), 'voice.ts imports stubbed');
+	const ELVES = ['roxy', 'jade', 'vi', 'coco', 'delilah'];
+	const VS = globalThis.__vstub = { busy: false, played: [], S: { turbo: false, auto: 0, replay: false },
+		playVoice: (f) => { if (VS.busy) return false; VS.played.push(f); return true; }, voiceReady: () => true, cancelPendingVoice: () => {},
+		VOICE_LINES: Object.fromEntries(ELVES.map((e) => [e, ['wild', 'tease', 'win', 'bonus']])) };
+	let now = 1e6; const realPerf = globalThis.performance;
+	Object.defineProperty(globalThis, 'performance', { value: { now: () => now }, configurable: true, writable: true });
+	const V = await import('data:text/javascript;base64,' + Buffer.from(vc).toString('base64'));
+	VS.busy = true;
+	ok(V.voice('mode', { mode: 'dare' }) === false, 'mode line dropped while another voice is busy');
+	VS.busy = false; now += 1000;
+	ok(V.voice('mode', { mode: 'dare' }) === true, 'same mode 1 s later plays: the dropped line did NOT start the 20 s re-arm');
+	now += 5000;
+	ok(V.voice('mode', { mode: 'dare' }) === false, 'same mode 5 s after a line that played stays quiet');
+	ok(V.voice('mode', { mode: 'ante' }) === true, 'a different mode still speaks');
+	VS.busy = true; now += 16000; // 21 s after the dare line that played
+	ok(V.voice('mode', { mode: 'dare' }) === false, 'dropped again (busy) at 21 s');
+	VS.busy = false; now += 500;
+	ok(V.voice('mode', { mode: 'dare' }) === true, 'and plays at 21.5 s: only played lines arm the guard');
+	ok(VS.played.length === 3, `3 mode lines played (${VS.played.join()})`);
+	Object.defineProperty(globalThis, 'performance', { value: realPerf, configurable: true, writable: true });
 }
 console.log(fail ? `\nvoice tests: ${fail} FAILED` : '\nvoice tests: all passed');
 process.exit(fail ? 1 : 0);

@@ -8,7 +8,7 @@
 		"sync": "node scripts/sync-art.mjs && node scripts/sync-config.mjs",
 		"dev": "node scripts/sync-art.mjs && node scripts/sync-config.mjs && vite dev --host",
 		"build": "node scripts/sync-art.mjs && node scripts/sync-config.mjs && node scripts-build.mjs",
-		"test": "node scripts/sync-config.mjs && node scripts/test-format.mjs && node scripts/test-books.mjs && node scripts/test-voice.mjs",
+		"test": "node scripts/sync-config.mjs && node scripts/test-format.mjs && node scripts/test-books.mjs && node scripts/test-voice.mjs && node scripts/test-egw.mjs",
 		"package": "node scripts/package-release.mjs",
 		"preview": "vite preview"
 	},

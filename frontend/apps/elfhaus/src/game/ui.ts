@@ -107,10 +107,10 @@ export function setGem(el: Element | null, v: number, fx = true) {
  * wilds merge); without art for that reel it falls back to the generic W (+ its win pose). */
 export function symHTML(name: string, v?: number, reel?: number) {
 	if (name === 'W') {
-		const val = v || 1;
+		const val = v || 1; // v === 0 (an EGW split under 4, egwParts.ts): no badge at all
 		const rk = reel !== undefined && ART['W_R' + (reel + 1)] ? 'W_R' + (reel + 1) : '';
 		const wArt = rk ? glowLayer(rk, 2) + img(rk) : ART.W ? glowLayer('W') + img('W') + winFx('W') : '';
-		return `<div class="sym W${wArt ? ' art' : ''}${rk ? ' wReel' : ''}">${wArt ? wArt : `<span class="nm">WILD</span>${ph('W')}<span class="plate">WILD</span>`}</div>${gemHTML(val, '', nudgeCSS('W'))}<div class="lock"><i class="lkI" style="${lockIconCSS()}"></i><span class="lkT">LOCKED</span>${DOTS}</div>`;
+		return `<div class="sym W${wArt ? ' art' : ''}${rk ? ' wReel' : ''}">${wArt ? wArt : `<span class="nm">WILD</span>${ph('W')}<span class="plate">WILD</span>`}</div>${v === 0 ? '' : gemHTML(val, '', nudgeCSS('W'))}<div class="lock"><i class="lkI" style="${lockIconCSS()}"></i><span class="lkT">LOCKED</span>${DOTS}</div>`;
 	}
 	const t = name[0];
 	if (ART[name]) return `<div class="sym ${t} ${name} art">${glowLayer(name)}${img(name)}${winFx(name)}</div>`;

@@ -2,7 +2,7 @@
 // canvas; only transform/opacity are animated by CSS, nothing animates filter or shadow.
 //   wildLand(cell)   : the round frame flares (wflash) + a soft ring and six sparkles (wland) when a wild lands
 //   stackForm(reel)  : four row flashes pull into one light column as a reel fills with wilds
-//   wfExpand(ov)     : the full-reel wild unfurls from the middle rows: each reel plays its own fx_wfexpand_R<n> sheet
+//   wfExpand(ov)     : v3.11: a top shine only. The per-reel fx_wfexpand_R<n> elf sheet is no longer drawn (it doubled the elf); it was: each reel plays its own fx_wfexpand_R<n> sheet
 //                      when imported (assets/fx/, decoded on demand, freed FREE_MS after use, like Roxy's states); without
 //                      it the elf frame is skipped (the stack stills / sheets show the right elf). v3.7: the old baked
 //                      one-elf 'wfexpand' row is cropped out of fx_wild.webp
@@ -38,13 +38,14 @@ export function stackForm(reel: number) {
 	return new Promise<void>((res) => { const a = play(ID, 'stackform', host, { cls: 'wfx', onEnd: () => { host.remove(); res(); } }); if (!a) { host.remove(); res(); } else { a.frames = a.frames.slice(COL_FROM); a.last = -1; } });
 }
 // ---- per-reel wild-expand sheets (assets/fx/fx_wfexpand_R<n>.{webp,json}, listed in assets/fx/index.json) ----
-const FX_DIR = 'assets/fx/', FREE_MS = 4000, WAIT_MS = 220;
+const FX_DIR = 'assets/fx/', FREE_MS = 4000, EXPAND_SHEETS = false;
 type RS = { atlas: Atlas; url: string; dec: Promise<void> | null; used: number };
 const perReel = new Map<number, RS>(); // 0-based reel -> sheet (compressed blob kept; decoded only around use)
 let fxIndex: Promise<void> | null = null, sweeper = 0;
 const rid = (r: number) => `fx_wfexpand_R${r + 1}`;
 /** Fetch the per-reel expand sheets' JSON + compressed bytes (no decode). A missing index means "none". */
 export function initWfExpand() {
+	if (!EXPAND_SHEETS) return (fxIndex ||= Promise.resolve()); // v3.11: not drawn, not fetched
 	return (fxIndex ||= fetch(FX_DIR + 'index.json').then((r) => (r.ok ? r.json() : { sheets: [] })).catch(() => ({ sheets: [] }))
 		.then(async (ix: { sheets?: string[] }) => {
 			await Promise.all((ix.sheets || []).map(async (id) => {
@@ -59,6 +60,7 @@ export function initWfExpand() {
 }
 /** Start decoding reel r's expand sheet (call a beat before wfExpand, e.g. when the reel starts to fill). */
 export function warmExpand(r: number) {
+	if (!EXPAND_SHEETS) return null; // v3.11: per-reel expand sheets are never drawn (wfExpand), so never decoded
 	const s = perReel.get(r); if (!s) return null;
 	s.used = performance.now();
 	if (!sweeper) sweeper = window.setInterval(sweep, 1000);
@@ -72,19 +74,11 @@ function sweep() {
 	});
 	if (!any) { clearInterval(sweeper); sweeper = 0; }
 }
-const reelOf = (ov: HTMLElement) => (ov.dataset.reel != null ? +ov.dataset.reel : NaN);
-function expandWith(id: string, ov: HTMLElement) {
-	ov.classList.add('wfxOpen');
-	const a = play(id, 'wfexpand', ov, { cls: 'wfx wfxIn', onEnd: () => { ov.classList.remove('wfxOpen'); if (a) delete a.cv.dataset.fx; } });
-	if (!a) ov.classList.remove('wfxOpen'); else a.cv.dataset.fx = id;
-}
 export function wfExpand(ov: HTMLElement | null) {
 	if (!ov) return;
-	const r = reelOf(ov), own = perReel.get(r);
-	if (own) { // this reel's own elf: play now if decoded, else as soon as it is (or skip the elf if that takes too long)
-		const t0 = performance.now(), go = () => { own.used = performance.now(); if (hasSheet(rid(r)) && ov.isConnected && performance.now() - t0 < WAIT_MS) expandWith(rid(r), ov); };
-		if (hasSheet(rid(r))) go(); else void warmExpand(r)?.then(go);
-	} // the fx_wild sheet has no 'wfexpand' row (v3.7); the stack stills / sheets show the right elf
+	// v3.11: no per-reel elf expand sheet any more. It drew a SECOND elf (its own framing / scale) over the stack's own
+	// merge_idle canvas while the stack formed: a larger, offset Delilah on reel 5 in Triple Dare FS (bug 2026-10-26).
+	// The stack stills / sheets are the only elf; this is the top shine only.
 	if (ok()) play(ID, 'wshineT', ov, { cls: 'wfx wfxIn wfxTop', delay: 420 });
 }
 export function mergeFx(reels: number[], seams = true) {

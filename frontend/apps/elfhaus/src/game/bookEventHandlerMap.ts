@@ -1,5 +1,6 @@
 // One handler per design/EVENTS.md event (ported from prototype/app.js H). Handlers only display.
 import { MAX_WIN_X, ROWS, REELS, TIER_LABEL, SPIN_CAP as MAX_FS, type Tier } from './config';
+import { egwParts } from './egwParts';
 import { money } from './format';
 import type { BookEvent, BookEventOf, BookEventType, Locked, Pos } from './typesBookEvent';
 import { roxy, roxyState } from './roxy';
@@ -11,7 +12,7 @@ import { cardFlip } from './cardflip';
 import { timing, isSpinning, startSpin, markStopped, sinceStart, sleep, spinMini, stopMini, stopReel } from './reels';
 import { $, S, k, bet, wait, banner, toast, hideToast, bigWin, setWinMeter, clearLines, renderCell, renderOverlays, cellEl, setGem, ovMx, symHTML } from './ui';
 import { playWins } from './winlines';
-import { wildLand, wfExpand, warmExpand } from './wildfx';
+import { wildLand, wfExpand } from './wildfx';
 import { setBg } from './bg';
 import { stackIn, mergeIn, growIn, clearOvWins } from './mergefx';
 import { stackPrefetch } from './stacks';
@@ -50,12 +51,29 @@ export const endBonusUi = () => { music('base'); setBg(false); document.body.cla
 /** v3.10 EGW: the reels named by egwStart (reel -> stack value). The math sends them as already-locked full reels in the
  * next reveal, which used to pin them on the board before the spin even started ("drops the wilds like a ton of bricks").
  * Now that reveal spins them like any other reel: they stop left to right in the normal order with the normal settle,
- * land as four single wilds (normal wildLand + glow brighten), then form their stack through the same stackComplete path
- * as a stack that lands in base / Dare (stackIn: calm stack-from-singles + face reaction; turbo: its short squash/pop).
- * No extra anticipation: the reveal's own math anticipation flags apply, exactly as in the other modes. */
+ * land as four single wilds (normal wildLand + glow brighten). v3.11: once the LAST reel has stopped, all the EGW stacks
+ * form together in one pass (formStack in parallel: the shared calm stack-from-singles, ONE face reaction for the
+ * leftmost stack; turbo: the short squash/pop), then the book's mergeGroups plays. The four badges add up exactly to
+ * the stack value (egwParts.ts: under 4 the extra rows show no badge). No extra anticipation: the reveal's own math
+ * anticipation flags apply, exactly as in the other modes. */
 let egwPending: Map<number, number> | null = null;
-/** split a stack value over the four singles so their badges add up to it (stackComplete sums the parts) */
-const egwParts = (v: number) => Array.from({ length: ROWS }, (_, i) => Math.floor(v / ROWS) + (i < v % ROWS ? 1 : 0)).map((x) => Math.max(1, x));
+
+async function formStack(ev: { reel: number; value: number; instant?: boolean }, react = true) {
+	// the four wild values ADD into the stack's value (SPEC: sum of the 4 cell values)
+	const flying = grab([0, 1, 2, 3].map((row) => cellEl(ev.reel, row).querySelector<HTMLElement>('.mx')));
+	const render = (frameDelay = 0) => {
+		S.full.set(ev.reel, ev.value);
+		for (let row = 0; row < ROWS; row++) { S.vals.delete(k(ev.reel, row)); cellEl(ev.reel, row).style.visibility = 'hidden'; }
+		renderOverlays(false);
+		frameIn(document.querySelector<HTMLElement>(`.ov.full[data-reel="${ev.reel}"]`), frameDelay); // the stack lands: its frame draws in
+		// normal pace: the sum gem waits for the flying badges (combineInto shows it), no "x4 x10" overlap during the crossfade
+		if (!S.turbo && flying.length) { const g = ovMx(ev.reel); if (g) g.style.visibility = 'hidden'; }
+	};
+	sfx('wild_stack_merge', { throttle: 250 });
+	if (ev.instant) render(); else await stackIn(ev.reel, render, react); // singles ease together → crossfade into the full-reel elf (turbo: squash → flash → pop)
+	await combineInto(flying, ovMx(ev.reel));
+	await wait(250);
+}
 
 type Handlers = { [T in BookEventType]: (ev: BookEventOf<T>) => Promise<void> };
 export const bookEventHandlerMap: Handlers = {
@@ -75,7 +93,7 @@ export const bookEventHandlerMap: Handlers = {
 			const values = g.reels.map((r) => S.full.get(r)!); return { reels: g.reels, values, product: values.reduce((a, b) => a * b, 1) };
 		});
 		ev.board.forEach((col, r) => col.slice(1, 1 + ROWS).forEach((s, row) => { if (s.wild && !S.full.has(r)) S.vals.set(k(r, row), s.multiplier || 1); }));
-		egw?.forEach((v, r) => egwParts(v).forEach((p, row) => { S.sym[r][row] = 'W'; S.vals.set(k(r, row), p); }));
+		egw?.forEach((v, r) => egwParts(v, ROWS).forEach((p, row) => { S.sym[r][row] = 'W'; S.vals.set(k(r, row), p); }));
 		renderOverlays(false); warmStacks();
 		const T = timing();
 		const ant = ev.anticipation.some((a) => a > 0);
@@ -109,26 +127,12 @@ export const bookEventHandlerMap: Handlers = {
 		clearTimeout(riserT); (riser as Handle | null)?.stop(150);
 		markStopped();
 		await sleep(T.land);
-		// EGW: the landed singles form their stacks one reel at a time, left to right, like stacks landing in the other modes
-		if (egw) for (const [reel, value] of [...egw].sort((a, b) => a[0] - b[0]))
-			await bookEventHandlerMap.stackComplete({ type: 'stackComplete', index: -1, step: 0, reel, parts: egwParts(value), value, instant: false });
+		// EGW (v3.11, owner: "have them form once at the end of the spin"): after the LAST reel has stopped, every EGW reel
+		// forms its stack together in ONE pass (the same calm stack-from-singles / turbo pop as base and Dare), with one
+		// face reaction (the leftmost EGW reel) instead of one per reel; the book's mergeGroups follows.
+		if (egw) { const rs = [...egw].sort((a, b) => a[0] - b[0]); await Promise.all(rs.map(([reel, value], i) => formStack({ reel, value }, i === 0))); }
 	},
-	async stackComplete(ev) {
-		// the four wild values ADD into the stack's value (SPEC: sum of the 4 cell values)
-		const flying = grab([0, 1, 2, 3].map((row) => cellEl(ev.reel, row).querySelector<HTMLElement>('.mx')));
-		const render = (frameDelay = 0) => {
-			S.full.set(ev.reel, ev.value);
-			for (let row = 0; row < ROWS; row++) { S.vals.delete(k(ev.reel, row)); cellEl(ev.reel, row).style.visibility = 'hidden'; }
-			renderOverlays(false);
-			frameIn(document.querySelector<HTMLElement>(`.ov.full[data-reel="${ev.reel}"]`), frameDelay); // the stack lands: its frame draws in
-			// normal pace: the sum gem waits for the flying badges (combineInto shows it), no "x4 x10" overlap during the crossfade
-			if (!S.turbo && flying.length) { const g = ovMx(ev.reel); if (g) g.style.visibility = 'hidden'; }
-		};
-		sfx('wild_stack_merge', { throttle: 250 });
-		if (ev.instant) render(); else await stackIn(ev.reel, render); // singles ease together → crossfade into the full-reel elf (turbo: squash → flash → pop)
-		await combineInto(flying, ovMx(ev.reel));
-		await wait(250);
-	},
+	async stackComplete(ev) { await formStack(ev); },
 	async mergeGroups(ev) {
 		// adjacent stacks MULTIPLY into one number per group (SPEC: product within a group)
 		// each fresh group: anticipation → lean → hit (shockwave, burst, shake) → letters ignite →
@@ -235,16 +239,22 @@ export const bookEventHandlerMap: Handlers = {
 	},
 	async guaranteedStacks(ev) {
 		// Triple Dare / Epic: the missing full-reel wilds grow in on their reels; carried singles there fly into them
-		ev.stacks.forEach((st) => void warmExpand(st.reel)); // per-reel expand sheets decode while the first ones play
 		for (const st of ev.stacks) {
 			const flying = grab(st.absorbed.map((a) => cellEl(st.reel, a.row).querySelector<HTMLElement>('.mx')));
 			S.full.set(st.reel, st.value);
-			for (let row = 0; row < ROWS; row++) { S.vals.delete(k(st.reel, row)); cellEl(st.reel, row).style.visibility = 'hidden'; }
-			renderOverlays(st.reel);
-			frameIn(document.querySelector<HTMLElement>(`.ov.full[data-reel="${st.reel}"]`));
+			for (let row = 0; row < ROWS; row++) S.vals.delete(k(st.reel, row));
+			// v3.11: the stack forms IN PLACE over the reel: one overlay, centre anchor, opacity + a 3 % scale settle (no
+			// CSS settle scaleY from the top, no second expand sprite); the reel's cells fade out under it, then hide
+			renderOverlays(false);
+			const ov = document.querySelector<HTMLElement>(`.ov.full[data-reel="${st.reel}"]`);
+			const cells = Array.from({ length: ROWS }, (_, row) => cellEl(st.reel, row)), base = S.turbo ? 220 : 600, dur = S.turbo ? base : base * tempo(); // wait() applies the tempo itself
+			if (ov) { ov.style.animation = 'none'; ov.style.transformOrigin = '50% 50%'; ov.animate([{ opacity: 0, transform: 'scale(1.03)' }, { opacity: 1, transform: 'none' }], { duration: dur, easing: 'cubic-bezier(.3,.1,.3,1)' }); }
+			cells.forEach((el) => el.animate([{ opacity: 1 }, { opacity: 1, offset: 0.4 }, { opacity: 0 }], { duration: dur, easing: 'ease-in-out', fill: 'forwards' }));
+			frameIn(ov, S.turbo ? 0 : base * 0.5);
 			sfx('wild_stack_merge', { throttle: 250 });
-			wfExpand(document.querySelector<HTMLElement>(`.ov.full[data-reel="${st.reel}"]`));
-			await combineInto(flying, ovMx(st.reel));
+			wfExpand(ov); // top shine only (v3.11: no per-reel elf expand sheet)
+			await Promise.all([combineInto(flying, ovMx(st.reel)), wait(base)]);
+			cells.forEach((el) => { el.getAnimations().forEach((a) => a.cancel()); el.style.visibility = 'hidden'; });
 			await wait(S.turbo ? 150 : 350);
 		}
 		lockCarried(ev.locked);

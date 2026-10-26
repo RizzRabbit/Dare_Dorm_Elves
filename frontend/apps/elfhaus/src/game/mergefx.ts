@@ -19,7 +19,7 @@
 // letters_ignite / merge_win play at these same beats and merge_idle loops; any sheet not there keeps its placeholder.
 import { S, $, setGem, gemHTML, ovMx, cellEl, pos } from './ui';
 import { burst } from './fx';
-import { mergeFx, stackForm, wfExpand, warmExpand } from './wildfx';
+import { mergeFx, stackForm, wfExpand } from './wildfx';
 import { grab } from './combine';
 import { toStage } from './stage';
 import { hasStack, stackOnce, stackLetters, stackWin, stackWinOff, stackPrepare, stackRelease, stackWarm, stackReact, stackReactSkip } from './stacks';
@@ -67,13 +67,13 @@ const col = (x: number, w: number) => { const d = document.createElement('div');
  * Beats are written at the old pace and stretched x ANIM_TEMPO (A / sw): hold 0.3 s, lean 0.56 s, crossfade 0.6 s,
  * letters 0.5 s, frame 0.6 s at normal speed. Turbo keeps the old flash-and-pop (below); tap snaps to the end state.
  * `render(frameDelay)` swaps the cells for the overlay (and schedules its frame draw-in). */
-export async function stackIn(reel: number, render: (frameDelay?: number) => void) {
-	if (!S.turbo) return stackFromSingles(reel, render);
+/** `react` false: no face reaction after the calm form (v3.11 EGW forms several reels in one pass with ONE reaction). */
+export async function stackIn(reel: number, render: (frameDelay?: number) => void, react = true) {
+	if (!S.turbo) return stackFromSingles(reel, render, react);
 	begin();
 	try {
 		const cells = cellsOf(reel), c = S.cell;
 		const probe = document.createElement('div'); probe.className = 'ov full'; probe.dataset.reel = String(reel);
-		void warmExpand(reel); // per-reel expand sheet decodes during the squash
 		if (hasStack('stack_form', probe)) { // the sheet does the flash + build-up itself
 			render(); const ov = ovOf(reel); if (ov) { ov.style.animation = 'none'; await Promise.race([stackOnce('stack_form', ov), sw(700)]); }
 			return;
@@ -85,12 +85,12 @@ export async function stackIn(reel: number, render: (frameDelay?: number) => voi
 		render();
 		cells.forEach((el) => (el.querySelector('.sym') || el).getAnimations().forEach((a) => a.cancel()));
 		const ov = ovOf(reel);
-		if (ov) { ov.style.animation = 'none'; A(ov, [{ transform: 'scale(.9,.25)', opacity: 0 }, { transform: 'scale(1.06,1.08)', opacity: 1, offset: .45 }, { transform: 'scale(.98,.97)', offset: .72 }, { transform: 'none', opacity: 1 }], { duration: 480, easing: 'ease-out' }); wfExpand(ov); }
+		if (ov) { ov.style.animation = 'none'; ov.style.transformOrigin = '50% 50%'; A(ov, [{ transform: 'scale(.9,.25)', opacity: 0 }, { transform: 'scale(1.06,1.08)', opacity: 1, offset: .45 }, { transform: 'scale(.98,.97)', offset: .72 }, { transform: 'none', opacity: 1 }], { duration: 480, easing: 'ease-out' }); wfExpand(ov); }
 		await sw(260);
 	} finally { end(); }
 }
 
-async function stackFromSingles(reel: number, render: (frameDelay?: number) => void) {
+async function stackFromSingles(reel: number, render: (frameDelay?: number) => void, react = true) {
 	begin();
 	const cells = cellsOf(reel), c = S.cell; let tapped = false;
 	try {
@@ -130,7 +130,7 @@ async function stackFromSingles(reel: number, render: (frameDelay?: number) => v
 	// 5) the settled elf reacts (per-elf face, ~2.6-2.75 s at 12 fps, real speed); letters + frame keep drawing in alongside.
 	// Not awaited: it doesn't block the win flow. Skipped (straight to idle) when the stack was tapped through / turbo.
 	const ov = ovOf(reel);
-	if (ov && !tapped && !S.turbo && ov.classList.contains('full')) void stackReact(ov, reel);
+	if (react && ov && !tapped && !S.turbo && ov.classList.contains('full')) void stackReact(ov, reel);
 }
 
 /** mergeGroups (a fresh group): the full choreography. `apply` swaps the overlays to the merged one at the hit. */

@@ -56,7 +56,7 @@ export function voice(m: Moment, o: { reel?: number; tier?: string; mode?: strin
 		if (S.replay && m === 'idle') return false;
 		const t = performance.now();
 		if (m === 'wild') { if (wildSpin === spin) return false; wildSpin = spin; } // first wild of the spin only
-		if (m === 'mode') { const k = o.mode || '?'; if (t - (lastMode.get(k) ?? -1e9) < VOICE.modeRearmMs) return false; lastMode.set(k, t); }
+		if (m === 'mode' && t - (lastMode.get(o.mode || '?') ?? -1e9) < VOICE.modeRearmMs) return false; // re-arm only counts from a line that played
 		if (RARE.has(m)) { if (t - lastRare < VOICE.rareMinMs || rnd() >= VOICE.rareChance) return false; }
 		let files: string[];
 		if (m === 'wild' || m === 'stack') {
@@ -75,7 +75,7 @@ export function voice(m: Moment, o: { reel?: number; tier?: string; mode?: strin
 		if (!files.length) return false;
 		const f = pick(files);
 		if (!playVoice(f, HIGH.has(m) ? 'high' : 'normal')) return false;
-		lastFile = f; if (RARE.has(m)) lastRare = t; if (m === 'idle') lastIdle = t;
+		lastFile = f; if (RARE.has(m)) lastRare = t; if (m === 'idle') lastIdle = t; if (m === 'mode') lastMode.set(o.mode || '?', t);
 		return true;
 	} catch { return false; }
 }
