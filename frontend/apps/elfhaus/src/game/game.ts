@@ -309,6 +309,8 @@ function activate(m: ModeKey) {
 	banner(`${MODE_LABEL[m].toUpperCase()} ON · ${money(modeCost(m) * bet())} ${isSocial() ? 'PER PLAY' : 'PER SPIN'}`, 1600);
 }
 let confirming: ModeKey | null = null;
+/** CONFIRM on the bonus confirm card (only from the click handler on #bmConfirm, v3.13e). */
+function confirmYes() { const m = confirming; closePanel('#bmConfirm', true); confirming = null; if (m) activate(m); }
 function openConfirm(m: ModeKey) {
 	confirming = m;
 	const c = confirmCopy(m as CopyMode, copyCtx(), MODE_LABEL[m], money(modeCost(m) * bet()), mult(modeCost(m)));
@@ -472,18 +474,27 @@ function wire() {
 	});
 	registerPanel('#buyMenu', { onClose: () => { sfx('ui_buy_close'); closePanel('#bmConfirm', true); } });
 	registerPanel('#bmConfirm', { onClose: () => { confirming = null; } });
-	{ // 'Tap anywhere to cancel': any tap on the confirm overlay or card cancels, except CONFIRM itself (a drag is not a tap)
-		const cf = $('#bmConfirm'); let x0 = 0, y0 = 0;
-		cf.addEventListener('pointerdown', (e) => { x0 = e.clientX; y0 = e.clientY; });
+	{ // 'Tap anywhere to cancel': any tap on the confirm overlay or card cancels, except CONFIRM itself (a drag is not a tap).
+		// v3.13e (FSD B1/M1): touch target adjustment can retarget a tap near CONFIRM (e.g. on the hint) onto #cfYes and
+		// shifts the click's coordinates, so neither the click target nor the click point is trusted. CONFIRM needs a
+		// pointerdown that itself started inside #cfYes (pointerdown is not retargeted), and a drag is real pointer travel
+		// (pointermove from the down point, same pointer) over 6 px, or a pointercancel. Keyboard clicks (detail 0) confirm.
+		const cf = $('#bmConfirm'); let x0 = 0, y0 = 0, pid = -1, moved = false, downYes = false;
+		cf.addEventListener('pointerdown', (e) => { pid = e.pointerId; x0 = e.clientX; y0 = e.clientY; moved = false; downYes = !!(e.target as Element)?.closest?.('#cfYes'); });
+		cf.addEventListener('pointermove', (e) => { if (e.pointerId === pid && !moved && Math.hypot(e.clientX - x0, e.clientY - y0) > 6) moved = true; });
+		cf.addEventListener('pointercancel', (e) => { if (e.pointerId === pid) moved = true; });
 		cf.addEventListener('click', (e) => {
-			const t = e.target as HTMLElement;
-			if (t.closest('#cfYes') || Math.hypot(e.clientX - x0, e.clientY - y0) > 6 || e.target === cf) return; // backdrop already handled by panels.ts
+			const yes = (e.target as HTMLElement).closest('#cfYes'), kbd = e.detail === 0, wasMoved = moved, wasYes = downYes;
+			moved = false; downYes = false; pid = -1;
+			if (kbd) { if (yes) confirmYes(); return; }
+			if (wasMoved) return;
+			if (yes && wasYes) return confirmYes();
+			if (e.target === cf) return; // backdrop already handled by panels.ts
 			closePanel('#bmConfirm');
 		});
 	}
 	registerPanel('#autoMenu'); registerPanel('#menu'); registerPanel('#msg', { closable: false });
 	$('#buyBtn').onclick = () => { sfx('ui_buy_open'); buildBuy(); openPanel('#buyMenu'); };
-	$('#cfYes').onclick = () => { const m = confirming; closePanel('#bmConfirm', true); confirming = null; if (m) activate(m); };
 	$('#menuBtn').onclick = () => { buildRules(); syncSettings(); openPanel('#menu'); };
 	initSettings();
 	$('#replayPlay').onclick = () => playReplay();

@@ -1132,7 +1132,7 @@ body.portrait .modal .mX{top:2px;right:2px}
 .mView.scrolls:not(.atTop):not(.atEnd){-webkit-mask-image:linear-gradient(transparent,#000 18px,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(transparent,#000 18px,#000 calc(100% - 22px),transparent)}
 .overlay.pIn{animation:pFadeIn .52s ease-out both}
 .overlay.pIn>.modal{animation:pRise .52s cubic-bezier(.22,.7,.3,1) both}
-.overlay.pOut{animation:pFadeOut .46s ease-in both;pointer-events:none}
+.overlay.pOut{animation:pFadeOut .46s ease-in both} /* v3.13e: stays hit-testable; panels.ts swallows its clicks */
 .overlay.pOut>.modal{animation:pSink .46s ease-in both}
 @keyframes pFadeIn{from{opacity:0}to{opacity:1}}
 @keyframes pFadeOut{from{opacity:1}to{opacity:0}}
@@ -1161,6 +1161,8 @@ body.portrait .modal .mX{top:2px;right:2px}
 .cfAmt small{display:block;font-size:12px;font-weight:800;color:#CFC9DA;opacity:.8;margin-top:2px}
 #cfNote{font-size:12px;opacity:.7;margin:6px 0 12px}
 #cfYes{margin:0 auto}
-.cfHint{font-size:11px;letter-spacing:.8px;opacity:.5;margin:10px 0 0!important;text-transform:uppercase}
+.cfHint{font-size:11px;letter-spacing:.8px;opacity:.5;margin:max(24px,calc(26px / var(--s,1))) 0 0!important;text-transform:uppercase}
+/* v3.13e (FSD B1): about 26 screen px of dead space between CONFIRM and the hint at every stage scale (modal zoom under body.tb) */
+body.tb .cfHint{margin-top:calc(26px / (var(--s,1) * var(--tbm,1)))!important}
 body.portrait .modal.cf h2{font-size:22px}
 body.short:not(.portrait) .cfArt,body.tb .cfArt{width:min(120px,34%)}

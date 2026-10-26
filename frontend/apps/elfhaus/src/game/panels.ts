@@ -138,6 +138,9 @@ export function registerPanel(sel: string, opts: { onClose?: () => void; closabl
 	panels.set(sel, p);
 	el.querySelectorAll<HTMLElement>('.mX').forEach((b) => b.addEventListener('click', () => closePanel(sel)));
 	// backdrop: only a tap that started on the backdrop closes (a drag that ends outside the card does not)
+	// v3.13e (FSD M2): a closing panel stays hit-testable and swallows every click until it is hidden, so a quick
+	// second tap neither falls through to the menu underneath nor reaches the panel's own controls
+	el.addEventListener('click', (e) => { if (el.classList.contains('pOut')) { e.stopImmediatePropagation(); e.stopPropagation(); e.preventDefault(); } }, true);
 	el.addEventListener('pointerdown', (e) => { p.downOut = e.target === el; });
 	el.addEventListener('click', (e) => { if (p.closable && e.target === el && p.downOut) closePanel(sel); p.downOut = false; });
 	el.addEventListener('wheel', (e) => e.preventDefault(), { passive: false }); // no page scroll bleed in the iframe
