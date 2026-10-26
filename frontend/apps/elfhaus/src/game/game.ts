@@ -493,7 +493,8 @@ function wire() {
 			closePanel('#bmConfirm');
 		});
 	}
-	registerPanel('#autoMenu'); registerPanel('#menu', { onClose: () => ($('#menuBtn') as HTMLElement).focus({ preventScroll: true }) }); // v3.15b (F1) registerPanel('#msg', { closable: false });
+	registerPanel('#autoMenu'); registerPanel('#menu', { onClose: () => ($('#menuBtn') as HTMLElement).focus({ preventScroll: true }) }); // v3.15b (F1)
+	registerPanel('#msg', { closable: false });
 	$('#buyBtn').onclick = () => { sfx('ui_buy_open'); buildBuy(); openPanel('#buyMenu'); };
 	initSettings(() => { buildRules(); openPanel('#menu'); });
 	$('#replayPlay').onclick = () => playReplay();
@@ -544,7 +545,7 @@ export async function initGame() {
 		end: (B) => { featClose(B.querySelector('.bwFx')); bigWinElvesEnd(); },
 	});
 	// v3.15d: taps on a menu / panel / confirm card (or that close one) do not count toward the win lines' 2-tap zip
-	document.addEventListener('pointerdown', (e) => { const t = e.target as Element; if (!t?.closest?.('#bigwin,#outro')) { const ui = !!t?.closest?.('#menu,#popMenu,#buyMenu,#bmConfirm,#autoMenu,#msg'); skipBoard(false, !ui && !t?.closest?.('#menuBtn,#buyBtn,#autoBtn') && !anyOpen() && !popOpen()); if (!ui) hurry(); } }, { capture: true, passive: true });
+	document.addEventListener('pointerdown', (e) => { const t = e.target as Element; if (!t?.closest?.('#bigwin,#outro')) { const ui = !!t?.closest?.('#menu,#popMenu,#buyMenu,#bmConfirm,#autoMenu,#msg'); skipBoard(false, !ui && !t?.closest?.('#menuBtn,#buyBtn,#autoBtn,#turboBtn,#betUp,#betDown') && !anyOpen() && !popOpen()); if (!ui) hurry(); } }, { capture: true, passive: true });
 	track(initRoxy(layout));
 	loadAllFx(track).then(() => renderAll());
 	setOverlayHook(stackIdle); initStacks().then(() => renderOverlays(false)); void initWfExpand(); // optional stack / per-reel expand sheets (placeholders until imported)
