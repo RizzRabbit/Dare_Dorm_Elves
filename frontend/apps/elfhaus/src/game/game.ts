@@ -265,7 +265,7 @@ const MYSTERY_CARD = `<svg class="bMyst" viewBox="0 0 100 100" aria-hidden="true
 function buildBuy() {
 	const off = !!S.jur.disabledBuyFeature;
 	$('#buyTitle').textContent = t('buyTitle');
-	$('#anteCost').textContent = fmtX(ANTE_COST) + ' bet';
+	$('#anteCost').textContent = fmtX(ANTE_COST) + (isSocial() ? ' play' : ' bet');
 	$('#buyCards').classList.toggle('hidden', off);
 	$('#buyCards').innerHTML = off ? '' : BUY_MODES.map((m) => {
 		const a = CARD_ART[m] && (ART[CARD_ART[m]!] || ART.W);
@@ -326,7 +326,7 @@ function buildRules() {
 <p>Wilds substitute for every symbol. Each wild carries its own multiplier, starting at x1. A winning line through a wild triggers a respin: wilds lock, the other symbols of the winning lines respin, and everything else stays. Every locked wild that connects again gains +1. Up to 3 respins per spin; every step ${win} as it lands. Dots on locked wilds show the respins left.</p>
 <p>Four wilds on one reel become a full-reel wild worth the sum of their multipliers. A stack completed by wilds that all landed on the same spin is an instant stack. Adjacent full-reel wilds merge into one wide wild worth the product of their values; non-adjacent ones add. A line's multiplier is the product of merged groups plus the sum of the other wilds it uses.</p>
 <h3>Dare Cards and free spins</h3>
-<p>The Dare Card is the scatter: at most one per reel, it never pays and can land on any spin or respin. 3 Dare Cards on the final board start Dare (${START_FS.dare} free spins), 4 start Double Dare (${START_FS.double_dare}). 5 flip the Dare Card: Triple Dare (${START_FS.triple_dare}) or Epic (${START_FS.hidden}).</p>
+<p>The Dare Card is the scatter: at most one per reel, it never awards a win and can land on any spin or respin. 3 Dare Cards on the final board start Dare (${START_FS.dare} free spins), 4 start Double Dare (${START_FS.double_dare}). 5 flip the Dare Card: Triple Dare (${START_FS.triple_dare}) or Epic (${START_FS.hidden}).</p>
 <p>In Dare, wilds clear after each spin. From Double Dare up, the trigger spin's wilds stay in place for the bonus and all wilds stay locked. Triple Dare starts with at least 1 full-reel wild, Epic with at least 2 (guaranteed stacks are added if missing). During free spins, 2 Dare Cards add +2 spins and 3 or more add +5, up to ${SPIN_CAP} spins in total.</p>
 <h3>Modes</h3>
 <p>${(['ante', ...BUY_MODES] as ModeKey[]).map((m) => `<b>${MODE_LABEL[m]}</b> (${mult(modeCost(m))}): ${MODE_DESC[m]}`).join('<br>')}</p>
