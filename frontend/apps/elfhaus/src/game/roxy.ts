@@ -162,10 +162,10 @@ export function placeRoxy(portrait: boolean, frameRect: DOMRect) {
 	const sh = document.getElementById('roxySh');
 	if (sh) { const w = h * ar; sh.style.display = top == null && show ? 'block' : 'none';
 		sh.style.left = (left + w * 0.08) + 'px'; sh.style.width = (w * 0.76) + 'px'; sh.style.height = (h * 0.045) + 'px'; sh.style.top = (H - h * (0.022 + 0.0225)) + 'px'; }
-	// portrait: she fades out over the 40px above the end of the board's second row, so her lower body never fills
+	// portrait: she fades out over the 72px above the end of the board's second row, so her lower body never fills
 	// reels 3-4 or shows behind the HUD (tall screens; through the reels she is dimmed by CSS #board::before).
 	const bR = bEl ? toStage(bEl.getBoundingClientRect()) : null; const bBot = bR ? bR.top + bR.height * 0.5 : H;
-	const mask = top != null && top + h > bBot ? `linear-gradient(to bottom,#000 ${bBot - top - 40}px,transparent ${bBot - top}px)` : '';
+	const mask = top != null && top + h > bBot ? `linear-gradient(to bottom,#000 ${bBot - top - 72}px,transparent ${bBot - top}px)` : '';
 	cv.style.setProperty('-webkit-mask-image', mask); cv.style.setProperty('mask-image', mask);
 }
 /** Starts Roxy: calls onReady as soon as the idle loop can show; resolves once every state's sheets are downloaded

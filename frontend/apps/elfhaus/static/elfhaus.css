@@ -276,7 +276,7 @@ body:not(.portrait).short #hud{max-width:none}
 body.hasRoxy #roxy{display:block}
 /* portrait: Roxy stands behind the game, so the reel plate (recess wall + board tint) is semi-transparent there */
 body.portrait.hasRoxy #alcoveRecess{opacity:.6} body.portrait.hasRoxy #board{background:transparent}
-body.portrait.hasRoxy #board::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background:rgba(18,12,24,.75)} /* dims her behind the reels; strips/cells/lines draw above */
+body.alcove.portrait.hasRoxy #frame{background:rgba(18,12,24,.75)} /* one dim layer under the board: dims her behind the reels and on the back-wall strip up to the crown (no seam); strips/cells/lines draw above */
 
 /* ---- In-game title: ELFHAUS wordmark centered above the reel board ---- */
 #top{position:relative;top:auto;left:auto;right:auto;width:100%;height:auto;display:flex;justify-content:center;padding-top:6px;pointer-events:none;z-index:5}
