@@ -472,6 +472,15 @@ function wire() {
 	});
 	registerPanel('#buyMenu', { onClose: () => { sfx('ui_buy_close'); closePanel('#bmConfirm', true); } });
 	registerPanel('#bmConfirm', { onClose: () => { confirming = null; } });
+	{ // 'Tap anywhere to cancel': any tap on the confirm overlay or card cancels, except CONFIRM itself (a drag is not a tap)
+		const cf = $('#bmConfirm'); let x0 = 0, y0 = 0;
+		cf.addEventListener('pointerdown', (e) => { x0 = e.clientX; y0 = e.clientY; });
+		cf.addEventListener('click', (e) => {
+			const t = e.target as HTMLElement;
+			if (t.closest('#cfYes') || Math.hypot(e.clientX - x0, e.clientY - y0) > 6 || e.target === cf) return; // backdrop already handled by panels.ts
+			closePanel('#bmConfirm');
+		});
+	}
 	registerPanel('#autoMenu'); registerPanel('#menu'); registerPanel('#msg', { closable: false });
 	$('#buyBtn').onclick = () => { sfx('ui_buy_open'); buildBuy(); openPanel('#buyMenu'); };
 	$('#cfYes').onclick = () => { const m = confirming; closePanel('#bmConfirm', true); confirming = null; if (m) activate(m); };

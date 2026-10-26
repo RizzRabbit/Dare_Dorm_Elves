@@ -48,7 +48,7 @@ export function confirmCopy(m: CopyMode, c: CopyCtx, name: string, amount: strin
 		x: c.social ? `${x} play` : `${x} bet`,
 		note: 'Stays on for every spin until you turn it off.',
 		button: 'CONFIRM',
-		hint: 'Tap outside to go back',
+		hint: 'Tap anywhere to cancel',
 	};
 }
 
