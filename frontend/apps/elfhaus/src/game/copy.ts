@@ -22,7 +22,7 @@ export function modeDesc(m: CopyMode, c: CopyCtx): string {
 		case 'double_dare': return `One real trigger spin with 4 Dare Cards, then ${c.fs.double_dare} free spins. The trigger spin's wilds stay in place; all wilds stay locked and keep growing.`;
 		case 'triple_dare': return `One real trigger spin with 5 Dare Cards, then ${c.fs.triple_dare} free spins. The trigger spin's wilds stay in place, with at least 1 full-reel wild guaranteed.`;
 		case 'mystery': return `One spin that always lands 2 Dare Cards; the remaining reels are the reveal. The result was decided before the spin: No bonus ${c.odds.none}% · Double Dare ${c.odds.double_dare}% · Triple Dare ${c.odds.triple_dare}% · Epic ${c.odds.hidden}%. A bonus continues on the same board.`;
-		case 'egw': return 'One supercharged spin: 2 to 5 full-reel wilds (x4 each) are placed before the reels land, then respins. It never awards free spins.';
+		case 'egw': return 'One supercharged spin: 2 to 5 reels land wilds that grow into full-reel wilds (x4 each) once the spin stops, then respins. It never awards free spins.';
 	}
 }
 
@@ -34,7 +34,7 @@ export function shortDesc(m: CopyMode, c: CopyCtx): string {
 		case 'double_dare': return `A trigger spin with 4 Dare Cards, then ${c.fs.double_dare} free spins. Its wilds stay in place and stay locked, growing all bonus long.`;
 		case 'triple_dare': return `A trigger spin with 5 Dare Cards, then ${c.fs.triple_dare} free spins with at least 1 full-reel wild guaranteed. Its wilds stay in place.`;
 		case 'mystery': return `One spin that always lands 2 Dare Cards; the other reels reveal the result. No bonus ${c.odds.none}% · Double Dare ${c.odds.double_dare}% · Triple Dare ${c.odds.triple_dare}% · Epic ${c.odds.hidden}%.`;
-		case 'egw': return 'One supercharged spin: 2 to 5 full-reel wilds (x4 each) drop in before the reels land, then respins. No free spins.';
+		case 'egw': return 'One supercharged spin: 2 to 5 reels land wilds that grow into full-reel wilds (x4 each) once the spin stops, then respins. No free spins.';
 	}
 }
 
