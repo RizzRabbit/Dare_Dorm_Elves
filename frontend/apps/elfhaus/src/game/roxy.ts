@@ -146,9 +146,10 @@ export function placeRoxy(portrait: boolean, frameRect: DOMRect) {
 		// the cut line at the board's top edge (see clipPath below), so everything above it shows; she draws over the
 		// crown (z-index, CSS body.portrait #roxy) and under the logo, overlays and HUD.
 		const logoEl = document.getElementById('logo'); const logo = logoEl ? toStage(logoEl.getBoundingClientRect()) : null;
-		const y0 = logo && logo.height ? logo.bottom - 8 : 8;
+		// she fills the band: the top of her head (ponytail) ~8px below the logo (10 less her idle bob), her waist on the cut line.
+		const y0 = logo && logo.height ? logo.bottom + 10 : 8;
 		const space = Math.max(60, cut - y0);
-		h = Math.min(space / 0.41, H * 0.66);
+		h = space / 0.41;
 		top = cut - h * 0.44;
 		left = Math.min(W * 0.6 - h * ar * 0.43, W - h * ar * 0.62);
 	} else {
@@ -165,6 +166,9 @@ export function placeRoxy(portrait: boolean, frameRect: DOMRect) {
 		sh.style.left = (left + w * 0.08) + 'px'; sh.style.width = (w * 0.76) + 'px'; sh.style.height = (h * 0.045) + 'px'; sh.style.top = (H - h * (0.022 + 0.0225)) + 'px'; }
 	// portrait: cut her off at the board frame's top edge, so she never covers the reels.
 	cv.style.clipPath = top == null ? '' : `inset(0 0 ${Math.max(0, h - (cut - top))}px 0)`;
+	// and fade the last 14px above the cut, so the waist crop doesn't look pasted on.
+	const mask = top == null ? '' : `linear-gradient(to bottom,#000 ${cut - top - 14}px,transparent ${cut - top}px)`;
+	cv.style.setProperty('-webkit-mask-image', mask); cv.style.setProperty('mask-image', mask);
 }
 /** Starts Roxy: calls onReady as soon as the idle loop can show; resolves once every state's sheets are downloaded
  *  (the loading screen waits on it; only idle is decoded, see RESIDENT). */
