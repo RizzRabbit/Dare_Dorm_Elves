@@ -3,8 +3,8 @@
 // 400 ms gap, the single pending high-priority slot and the music duck live in audio.ts.
 //   ALWAYS (still never over another clip): bonus trigger / mystery hit (Roxy / Coco), free spins start (Jade / Delilah;
 //     Delilah alone for the hidden / Epic tier), max win (Vi / Delilah), and the player picking a different bet mode (any
-//     of the 7: base, ante, dare, double_dare, triple_dare, mystery, egw; game.ts pickArm): that mode's elf giggles or
-//     teases; the same mode again within VOICE.modeRearmMs stays quiet; bet up / down, turbo and autoplay never speak
+//     of the 7: base, ante, dare, double_dare, triple_dare, mystery, egw; game.ts pickArm): that mode's elf says her
+//     mode line (v3.15c; Base / Ante: a giggle); the same mode again within VOICE.modeRearmMs stays quiet; bet up / down, turbo and autoplay never speak
 //   RARE (one shared budget): big win (Roxy / Delilah), medium win 2x..<10x (Jade / Vi), first wild of a spin (that reel's
 //     elf: W_R1 Roxy .. W_R5 Delilah, line or giggle), full-reel stack reaction (giggle), near miss (Jade / Vi / Coco
 //     tease) -> at most one per VOICE.rareMinMs, and then only with VOICE.rareChance
@@ -69,8 +69,10 @@ export function voice(m: Moment, o: { reel?: number; tier?: string; mode?: strin
 			const e = REEL_ELF[o.reel ?? -1] ?? pick(REEL_ELF);
 			files = m === 'stack' ? gig(e) : rnd() < 0.5 ? line(e, 'wild') : gig(e);
 		} else if (m === 'mode') {
-			const e = MODE_ELF[o.mode || ''] ?? pick(REEL_ELF);
-			files = gig(e); // v3.15b (James): a bet-mode pick / CONFIRM is that elf's giggles only, never a 'so close' tease or a win line
+			// v3.15c (James): a bonus pick (CONFIRM of Dare / Double Dare / Triple Dare / EGW / Mystery) is that elf's own mode
+			// line only ("Mmmm... I choose dare!"), replacing the giggles; Base / Ante keep a random elf's giggle. Never a tease or win line.
+			const e = MODE_ELF[o.mode || ''];
+			files = e ? line(e, 'mode') : gig(pick(REEL_ELF));
 		} else {
 			let elves = POOL[m] ?? [];
 			if (m === 'fsstart' && o.tier && /hidden|myst/i.test(o.tier)) elves = ['delilah'];

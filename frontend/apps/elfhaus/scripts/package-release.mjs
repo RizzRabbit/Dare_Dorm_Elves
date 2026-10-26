@@ -46,10 +46,10 @@ for (const j of walk(OUT).filter((f) => f.endsWith('.json') && f.includes('/asse
 const missing = [...refs].filter((r) => !existsSync(join(OUT, r)));
 if (missing.length) fail(`${missing.length} referenced asset(s) missing from the package:\n  ` + missing.join('\n  '));
 console.log(`asset check: ${refs.size} referenced asset paths, all present`);
-// v3.9: voice clips are fetched by computed name (assets/audio/voice/<vo_|gig_>*.mp3, audio.ts VOICE_LINES): all 35 must ship
+// v3.9: voice clips are fetched by computed name (assets/audio/voice/<vo_|gig_>*.mp3, audio.ts VOICE_LINES): all 40 must ship (v3.15c + 5 mode lines)
 if (outCode.includes('assets/audio/voice/')) {
 	const vdir = join(OUT, 'assets/audio/voice'), want = [];
-	const L = { roxy: ['wild', 'bigwin', 'bonus', 'idle'], jade: ['wild', 'win', 'fsstart', 'tease'], vi: ['wild', 'win', 'tease', 'maxwin'], coco: ['wild', 'bonus', 'tease', 'idle'], delilah: ['wild', 'fsstart', 'bigwin', 'maxwin'] };
+	const L = { roxy: ['wild', 'bigwin', 'bonus', 'idle', 'mode'], jade: ['wild', 'win', 'fsstart', 'tease', 'mode'], vi: ['wild', 'win', 'tease', 'maxwin', 'mode'], coco: ['wild', 'bonus', 'tease', 'idle', 'mode'], delilah: ['wild', 'fsstart', 'bigwin', 'maxwin', 'mode'] };
 	for (const [e, ms] of Object.entries(L)) { ms.forEach((m) => want.push(`vo_${e}_${m}_1.mp3`)); [1, 2, 3].forEach((n) => want.push(`gig_${e}_${n}.mp3`)); }
 	const vmiss = want.filter((f) => !existsSync(join(vdir, f)));
 	if (vmiss.length) fail(`${vmiss.length} voice clip(s) missing:\n  ` + vmiss.join('\n  '));

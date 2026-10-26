@@ -51,7 +51,7 @@ console.log('\n=== Voice: one clip at a time ===');
 	const A = await import('data:text/javascript;base64,' + Buffer.from(code).toString('base64'));
 	A.initAudio(); tap();
 	for (let i = 0; i < 100 && !A.voiceReady('gig_delilah_3'); i++) await sleep(20);
-	ok(A.voiceReady('vo_roxy_bonus_1') && A.voiceReady('gig_delilah_3'), 'all voice buffers loaded after the tap');
+	ok(A.voiceReady('vo_roxy_bonus_1') && A.voiceReady('gig_delilah_3') && ['roxy','jade','vi','coco','delilah'].every((e) => A.voiceReady(`vo_${e}_mode_1`)), 'all voice (incl. 5 mode lines) buffers loaded after the tap');
 	ok(W.decodeTimers === 0, `15 s decode timers cleared on success (pending: ${W.decodeTimers})`);
 	// two triggers in the same moment -> one clip
 	const a = A.playVoice('vo_roxy_wild_1'), b = A.playVoice('gig_jade_1');
@@ -96,7 +96,7 @@ console.log('\n=== v3.11 bet-mode re-arm (src/game/voice.ts) ===');
 	const ELVES = ['roxy', 'jade', 'vi', 'coco', 'delilah'];
 	const VS = globalThis.__vstub = { busy: false, played: [], S: { turbo: false, auto: 0, replay: false },
 		playVoice: (f) => { if (VS.busy) return false; VS.played.push(f); return true; }, voiceReady: () => true, cancelPendingVoice: () => {},
-		VOICE_LINES: Object.fromEntries(ELVES.map((e) => [e, ['wild', 'tease', 'win', 'bonus']])) };
+		VOICE_LINES: Object.fromEntries(ELVES.map((e) => [e, ['wild', 'tease', 'win', 'bonus', 'mode']])) };
 	let now = 1e6; const realPerf = globalThis.performance;
 	Object.defineProperty(globalThis, 'performance', { value: { now: () => now }, configurable: true, writable: true });
 	const V = await import('data:text/javascript;base64,' + Buffer.from(vc).toString('base64'));
@@ -116,7 +116,22 @@ console.log('\n=== v3.11 bet-mode re-arm (src/game/voice.ts) ===');
 	const modes = ['base', 'ante', 'dare', 'double_dare', 'triple_dare', 'egw', 'mystery'];
 	VS.played.length = 0;
 	for (let i = 0; i < 400; i++) { now += 30000; V.voice('mode', { mode: modes[i % modes.length] }); }
-	ok(VS.played.length > 300 && VS.played.every((f) => /^gig_/.test(f)), `mode only plays gig_* (${VS.played.length} lines, none vo_*_tease / win)`);
+	ok(VS.played.length > 300 && VS.played.every((f) => /^(gig_|vo_\w+_mode_1$)/.test(f)), `mode only plays gig_* / mode lines (${VS.played.length} lines, none vo_*_tease / win)`);
+	// v3.15c (James): each bonus pick plays ONLY its own elf's mode line (never a giggle, tease or another elf); Base / Ante giggle
+	const ME = { dare: 'roxy', double_dare: 'jade', triple_dare: 'vi', egw: 'coco', mystery: 'delilah' };
+	for (const [m, e] of Object.entries(ME)) {
+		VS.played.length = 0;
+		for (let i = 0; i < 40; i++) { now += 30000; V.voice('mode', { mode: m }); }
+		ok(VS.played.length === 40 && VS.played.every((f) => f === `vo_${e}_mode_1`), `${m} pick -> only vo_${e}_mode_1 (${[...new Set(VS.played)].join()})`);
+	}
+	for (const m of ['base', 'ante']) {
+		VS.played.length = 0;
+		for (let i = 0; i < 40; i++) { now += 30000; V.voice('mode', { mode: m }); }
+		ok(VS.played.length === 40 && VS.played.every((f) => /^gig_/.test(f)), `${m} pick -> giggles only, no mode line / tease`);
+	}
+	now += 30000; VS.played.length = 0;
+	ok(V.voice('mode', { mode: 'dare' }) === true && V.voice('mode', { mode: 'dare' }) === false && VS.played.length === 1, 'same pick twice in a row plays the line once');
+	VS.busy = true; ok(V.voice('mode', { mode: 'egw' }) === false, 'mode line never starts over another voice clip'); VS.busy = false;
 	ok(V.teaseOk([{ type: 'reveal' }], 0) === true, 'tease allowed: base near miss, no win, no bonus');
 	ok(V.teaseOk([{ type: 'reveal' }], 2) === false, 'no tease on a winning round');
 	for (const ty of ['buyTriggerStart', 'freeSpinTrigger', 'updateFreeSpin', 'mysteryStart', 'egwStart'])

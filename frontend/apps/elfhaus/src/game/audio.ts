@@ -5,7 +5,7 @@
 // wrapped so a failure (no Web Audio, blocked fetch, bad decode) leaves the game playing silently; nothing awaits audio.
 // Settings: Sound (master) / Music / Sound effects, persisted in localStorage elfhaus.snd / .mus / .sfx (default on); v3.15 volumes elfhaus.musv / .sfxv from the menu pop-out sliders.
 // A launch URL param (sound=0|off|false or mute=1|true) starts the game muted for that session without changing storage.
-// v3.9: a third bus for the elf voice lines + giggles (pack/voice, 35 files, loaded last). Voice switch elfhaus.vox
+// v3.9: a third bus for the elf voice lines + giggles (pack/voice, 40 files since v3.15c, loaded last). Voice switch elfhaus.vox
 // (default on; master Sound off / URL mute silence it too). STRICT one-at-a-time across every elf: while a clip plays,
 // and for VGAP ms after it ends, every new voice request is dropped (never queued), except that ONE high-priority line
 // (bonus trigger / max win) may wait in a single pending slot and plays after the gap if it is still within VPEND ms of
@@ -40,8 +40,8 @@ const ELVES = ['roxy', 'jade', 'vi', 'coco', 'delilah'] as const;
 export type Elf = (typeof ELVES)[number];
 // vo_<elf>_<moment>_1 lines (INTEGRATION_PLAN.md section 6) + gig_<elf>_1..3
 export const VOICE_LINES: Record<Elf, string[]> = {
-	roxy: ['wild', 'bigwin', 'bonus', 'idle'], jade: ['wild', 'win', 'fsstart', 'tease'], vi: ['wild', 'win', 'tease', 'maxwin'],
-	coco: ['wild', 'bonus', 'tease', 'idle'], delilah: ['wild', 'fsstart', 'bigwin', 'maxwin'],
+	roxy: ['wild', 'bigwin', 'bonus', 'idle', 'mode'], jade: ['wild', 'win', 'fsstart', 'tease', 'mode'], vi: ['wild', 'win', 'tease', 'maxwin', 'mode'],
+	coco: ['wild', 'bonus', 'tease', 'idle', 'mode'], delilah: ['wild', 'fsstart', 'bigwin', 'maxwin', 'mode'], // v3.15c: + vo_<elf>_mode_1 bonus-pick lines
 };
 const VFILES: string[] = ELVES.flatMap((e) => [...VOICE_LINES[e].map((m) => `vo_${e}_${m}_1`), ...[1, 2, 3].map((n) => `gig_${e}_${n}`)]);
 const VGAP = 400, VPEND = 1000; // ms of silence between two clips; how long a pending high-priority line stays relevant
