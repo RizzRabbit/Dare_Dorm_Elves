@@ -13,12 +13,13 @@ ROWS, REELS = 4, 5
 CAP_C = 5_000_000            # 50,000x in centi-x
 SPIN_CAP = 20                # free spins played per round (SPEC v2 §6)
 MAX_RESPINS = 3
-START_FS = {"dare": 8, "double_dare": 10, "triple_dare": 10, "hidden": 12}
+START_FS = {"dare": 8, "double_dare": 10, "triple_dare": 10, "hidden": 14}   # Epic 12 -> 14 (user 2026-10-26)
 SC = "S"                     # Dare Card scatter (SPEC v2 §2): no pay, max 1 per reel, triggers by count
 SCATTER_TIER = {3: "dare", 4: "double_dare", 5: "flip"}
 FLIP_ODDS = {"triple_dare": 75, "hidden": 25}   # 5-scatter card flip (base / ante / Mystery); TD buy skips it
 GUARANTEE = {"triple_dare": 1, "hidden": 2}     # full-reel wilds guaranteed at bonus start (animated in)
 GUAR_WEIGHTS = [1, 0.3, 0.6, 3, 4]
+GUAR_MIN_VAL = {"triple_dare": 4, "hidden": 6}   # Epic guaranteed stacks start at x6 (was x4), user 2026-10-26
 GUAR_ADJ = 0.1                                  # weight factor for a placed stack next to an existing stack              # default reel weights for placed guarantee stacks (per mode in reel_params)
 TIERS = ("dare", "double_dare", "triple_dare", "hidden")
 MYSTERY_ODDS = {"none": 50, "double_dare": 37, "triple_dare": 10, "hidden": 3}
@@ -364,7 +365,7 @@ def place_guarantee(rnd, tier, full, sv, weights):
         picks += _pick(w, 1, exclude=set(full) | set(picks))
     for r in picks:
         absorbed = [{"row": row, "value": sv.pop((r, row))} for row in range(ROWS) if (r, row) in sv]
-        val = max(4, sum(x["value"] for x in absorbed) + (ROWS - len(absorbed)))
+        val = max(GUAR_MIN_VAL.get(tier, 4), sum(x["value"] for x in absorbed) + (ROWS - len(absorbed)))
         full[r] = val
         placed.append({"reel": r, "value": val, "absorbed": absorbed})
     rnd.emit("guaranteedStacks", tier=tier, stacks=placed, locked=locked_obj(full, sv))

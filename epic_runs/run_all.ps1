@@ -1,0 +1,10 @@
+﻿$ErrorActionPreference = "Continue"
+$py = "D:\dev\elfhaus-math\math\.venv\Scripts\python.exe"; $d = "D:\dev\elfhaus-math-epic\epic_runs"
+Set-Location D:\dev\elfhaus-math-epic\math
+"start $(Get-Date)" | Out-File "$d\run_local.log"
+& $py games\elfhaus\run_local.py 1000000 200000 1 1 base,ante,mystery *>> "$d\run_local.log"
+"done $(Get-Date)" | Out-File -Append "$d\run_local.log"
+& $py "$d\epic_stats.py" *> "$d\epic_stats.log"
+"start $(Get-Date)" | Out-File "$d\natural_epic.log"
+& $py "$d\natural_epic.py" 300 *>> "$d\natural_epic.log"
+"done $(Get-Date)" | Out-File -Append "$d\natural_epic.log"
