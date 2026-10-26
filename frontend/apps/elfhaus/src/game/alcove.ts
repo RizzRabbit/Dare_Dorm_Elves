@@ -1,7 +1,8 @@
 // Board frame B2 "Lounge Alcove" (art: /workspace/elfhaus-bg/board_frame/r2, README.md + frames.json).
 // Layers in #app, back to front: #alcoveAmbient (CSS light spill + contact shadow) < #alcoveRecess (plum back wall) <
 // #alcoveLedge (9-slice mantel under the HUD) < #board (transparent) < #alcoveCrown (crown + pilasters + drapes, with the
-// three .tw twinkle layers in the same box) < #fsBar / #top logo. Every rect is derived from #board, #hud and --cell in
+// three .tw twinkle layers in the same box) < #fsBar / #top logo. Portrait: #alcoveRail (v3.7, a crop of the crown's beam
+// moulding) closes the frame under the board, behind the pilaster bases. Every rect is derived from #board, #hud and --cell in
 // stage px, so nothing is a fixed-size image. Free spins: setAlcoveFs() fades the _fs crown / recess in on opacity
 // (called from bg.ts setBg, the same path that swaps the room plate).
 import { ART } from './ui';
@@ -14,7 +15,8 @@ const F = {
 } as const;
 const PAD = 0.045, BLEED = 0.12;                   // opening padding and back-wall bleed under the lips, x cell
 const LEDGE = { top: 0.31, side: 0.40, bottom: 0.21 }; // border-image widths x cell (slices 100/130/69/130 of 2044x245)
-const ids = ['alcoveAmbient', 'alcoveRecess', 'alcoveLedge', 'alcoveCrown'] as const;
+const ids = ['alcoveAmbient', 'alcoveRecess', 'alcoveLedge', 'alcoveCrown', 'alcoveRail'] as const;
+const RAIL = { x0: 100, x1: 1503, h: 48 }; // portrait rail: pilaster centre to centre and its height, in crown png px
 let built = false, orient = '';
 
 function build() {
@@ -22,6 +24,7 @@ function build() {
 	const html = `<div id="alcoveAmbient"></div>`
 		+ `<div id="alcoveRecess"><i class="avBase"></i><i class="avFs"></i></div>`
 		+ `<div id="alcoveLedge"></div>`
+		+ `<div id="alcoveRail"></div>`
 		+ `<div id="alcoveCrown"><i class="avBase"></i><i class="avFs"></i><i class="tw tw0"></i><i class="tw tw1"></i><i class="tw tw2"></i></div>`;
 	const wrap = document.createElement('div'); wrap.id = 'alcove'; wrap.setAttribute('aria-hidden', 'true'); wrap.innerHTML = html;
 	app.insertBefore(wrap, top || app.firstChild);
@@ -44,7 +47,7 @@ export function placeAlcove() {
 	document.body.classList.add('alcove');
 	const o = ST.portrait ? 'portrait' : 'landscape', f = F[o], cell = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cell')) || 100;
 	const $ = (id: string) => document.getElementById(id) as HTMLElement;
-	const [amb, rec, led, cr] = ids.map($);
+	const [amb, rec, led, cr, rail] = ids.map($);
 	if (o !== orient) {
 		orient = o;
 		const set = (el: HTMLElement, sel: string, k: string) => { (el.querySelector(sel) as HTMLElement).style.backgroundImage = url(k); };
@@ -52,11 +55,14 @@ export function placeAlcove() {
 		set(cr, '.avBase', `alcove_crown_${o}`); set(cr, '.avFs', `alcove_crown_fs_${o}`);
 		[0, 1, 2].forEach((i) => set(cr, `.tw${i}`, `alcove_twinkle${i}_${o}`));
 		led.style.borderImageSource = url('alcove_ledge');
+		rail.style.backgroundImage = o === 'portrait' ? url('alcove_rail_portrait') : 'none';
 	}
 	const b = toStage($('board').getBoundingClientRect()), h = toStage($('hud').getBoundingClientRect());
 	// crown (+ twinkles): uniform scale u, board_in_png aligned on #board
 	const u = b.width / f.board[2], cx = b.left - f.board[0] * u, cy = b.top - f.board[1] * u, cw = f.size[0] * u, ch = f.size[1] * u;
 	box(cr, cx, cy, cw, ch);
+	// portrait bottom rail: right under the board (2 px onto its transparent 6 px border, the cells stay >= 4 px clear)
+	if (o === 'portrait') box(rail, cx + RAIL.x0 * u, b.bottom - 2, (RAIL.x1 - RAIL.x0) * u, RAIL.h * u);
 	// recess: board + pad + bleed on every side
 	const e = (PAD + BLEED) * cell;
 	box(rec, b.left - e, b.top - e, b.width + 2 * e, b.height + 2 * e);

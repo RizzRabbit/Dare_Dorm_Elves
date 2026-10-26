@@ -150,6 +150,6 @@ def wflash(n=10, S=192):
 
 if __name__ == '__main__':
     # sized for phones (a phone cell is ~70 CSS px): ~1920x2880, one shared sheet
-    pack('fx_wild', {'wland': (wland(12, 160), 30, False), 'stackform': (stackform(12, 96, 384), 30, False), 'wfexpand': (wfexpand(12, 144, 576), 30, False),
+    pack('fx_wild', {'wland': (wland(12, 160), 30, False), 'stackform': (stackform(12, 96, 384), 30, False),  # v3.7: wfexpand row dropped (dead, one old baked elf)
                      'seam': (seam(12, 64, 384), 30, False), 'msweep': (msweep(10, 128), 30, False),
                      'wshine': (shine(24, 160, 160, 0.045, True), 30, False), 'wshineT': (shine(24, 96, 384, 0.045), 30, False), 'wflash': (wflash(10, 160), 30, False)}, cols=12, quality=82)

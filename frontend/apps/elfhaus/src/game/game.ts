@@ -350,7 +350,7 @@ const HUD_GAP = 11; // screen px between the board frame's bottom and the HUD's 
 function hudGap() {
 	const vis = (e: Element) => { const c = getComputedStyle(e); return c.display !== 'none' && c.visibility !== 'hidden'; };
 	let bot = $('#board').getBoundingClientRect().bottom;
-	for (const id of ['alcoveCrown', 'alcoveRecess']) { const e = document.getElementById(id); if (e && vis(e)) bot = Math.max(bot, e.getBoundingClientRect().bottom); }
+	for (const id of ['alcoveCrown', 'alcoveRecess', 'alcoveRail']) { const e = document.getElementById(id); if (e && vis(e)) bot = Math.max(bot, e.getBoundingClientRect().bottom); }
 	const hud = $('#hud'), tag = $('#armTag'), hid = tag.classList.contains('hidden');
 	if (hid) tag.classList.remove('hidden');
 	let top = hud.getBoundingClientRect().top;

@@ -33,7 +33,8 @@ const winLayer = (key: string) => (ART[key + '_win'] ? `<img class="olWin" src="
 // Win glow: the symbol's own outline as a neon sprite (<KEY>_glow, same size + registration as the symbol art), drawn
 // BEHIND the art and shown only on .cell.win (CSS: opacity fade in, slow opacity/scale pulse, fade out). The outer <i>
 // carries the fade, the inner <img> the pulse. Where a key has a glow, the old *_win crossfade layer is not used.
-const glowLayer = (key: string) => (ART[key + '_glow'] ? `<i class="symGlow"><img src="${ART[key + '_glow']}" alt="" draggable="false"></i>` : '');
+// v3.7: a wild's glow draws its sprite twice (same file, one decode) so its always-on neon reads stronger than a symbol's.
+const glowLayer = (key: string, n = 1) => (ART[key + '_glow'] ? `<i class="symGlow">${`<img src="${ART[key + '_glow']}" alt="" draggable="false">`.repeat(n)}</i>` : '');
 const winFx = (key: string) => (ART[key + '_glow'] ? '' : winLayer(key));
 const img = (key: string) => (ART[key] ? `<img src="${ART[key]}" alt="" draggable="false">` : '');
 // Stacked / merged wild stills (scripts/gen-stack-stills.py): the approved stacks r8d art per overlay position, frame 0
@@ -106,7 +107,7 @@ export function symHTML(name: string, v?: number, reel?: number) {
 	if (name === 'W') {
 		const val = v || 1;
 		const rk = reel !== undefined && ART['W_R' + (reel + 1)] ? 'W_R' + (reel + 1) : '';
-		const wArt = rk ? glowLayer(rk) + img(rk) : ART.W ? glowLayer('W') + img('W') + winFx('W') : '';
+		const wArt = rk ? glowLayer(rk, 2) + img(rk) : ART.W ? glowLayer('W') + img('W') + winFx('W') : '';
 		return `<div class="sym W${wArt ? ' art' : ''}${rk ? ' wReel' : ''}">${wArt ? wArt : `<span class="nm">WILD</span>${ph('W')}<span class="plate">WILD</span>`}</div>${gemHTML(val, '', nudgeCSS('W'))}<div class="lock"><i class="lkI" style="${lockIconCSS()}"></i><span class="lkT">LOCKED</span>${DOTS}</div>`;
 	}
 	const t = name[0];

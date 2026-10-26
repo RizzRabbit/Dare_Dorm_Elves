@@ -195,6 +195,9 @@
   "alcove_crown_fs_portrait": [
     "assets/final/webp/frame/b2_crown_fs_portrait.webp"
   ],
+  "alcove_rail_portrait": [
+    "assets/final/webp/frame/b2_rail_portrait.webp"
+  ],
   "alcove_recess_portrait": [
     "assets/final/webp/frame/b2_recess_portrait.webp"
   ],

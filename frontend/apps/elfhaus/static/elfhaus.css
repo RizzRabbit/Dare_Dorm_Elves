@@ -844,6 +844,11 @@ body.alcove #alcoveAmbient,body.alcove #alcoveRecess,body.alcove #alcoveLedge,bo
 #alcoveLedge{z-index:-1;box-sizing:border-box;border-style:solid;border-color:transparent;border-image-slice:100 130 69 130 fill;border-image-repeat:stretch;
   filter:brightness(.34) saturate(1.35)}
 #alcoveCrown{z-index:1}
+/* v3.7 (gate F2) portrait: the frame's bottom rail (alcove.ts #alcoveRail) and the board inset - a 6 px transparent border
+   around the exact 5 x 4 grid, so no cell / wild frame meets the clip edge (was 4 px cut) and the rail never covers a cell */
+#alcoveRail{position:absolute;left:0;top:0;pointer-events:none;display:none;z-index:1;background-size:100% 100%;background-repeat:no-repeat}
+body.alcove.portrait #alcoveRail{display:block}
+body.alcove.portrait #board{border-width:6px;width:calc(var(--cell)*5 + var(--gap)*4 + 12px);height:calc(var(--cell)*4 + var(--gap)*3 + 12px)}
 #alcoveRecess>i,#alcoveCrown>i{position:absolute;inset:0;background-size:100% 100%;background-repeat:no-repeat}
 #alcove .avFs{opacity:0;transition:opacity .45s ease-out}
 #alcove .fs>.avFs{opacity:1}
@@ -937,6 +942,16 @@ canvas.wfxRing{display:none}
 .cell.win .sym.art>.symGlow{animation:aiSymBob calc(1.3s*var(--at)) ease-in-out infinite alternate}
 @keyframes aiGlowPulse{from{opacity:1;transform:none}to{opacity:.55;transform:scale(1.015)}}
 @media (prefers-reduced-motion:reduce){.cell.win .sym .symGlow img,.cell.win .sym.art>.symGlow{animation:none}}
+/* v3.7 (owner: wilds must stand out): every landed wild cell (singles + sticky/locked) always shows its own neon outline
+   glow (W_R<n>_glow, behind the art) and breathes slowly (opacity .9 <-> .55, ~2.8 s cycle, x --at); one gentle brighten
+   on land (.wLand, ~400 ms ease-out) then the breathe. Opacity/transform only. Never on the spin tape (.slot, blur) or a
+   spinning cell (hidden); full-reel / merged wilds hide their cells (own frames). A win keeps the stronger pulse above. */
+.cell.wild:not(.win) .sym.W .symGlow{opacity:1}
+.cell.wild:not(.win) .sym.W .symGlow img{animation:wGlowBreathe calc(.7s*var(--at)) ease-in-out infinite alternate}
+.cell.wild.wLand:not(.win) .sym.W .symGlow img{animation:wGlowLand calc(.2s*var(--at)) ease-out both,wGlowBreathe calc(.7s*var(--at)) ease-in-out calc(.2s*var(--at)) infinite alternate}
+@keyframes wGlowBreathe{from{opacity:.9}to{opacity:.55}}
+@keyframes wGlowLand{from{opacity:.35;transform:scale(.98)}45%{opacity:1;transform:scale(1.03)}to{opacity:.9;transform:none}}
+@media (prefers-reduced-motion:reduce){.cell.wild:not(.win) .sym.W .symGlow img,.cell.wild.wLand:not(.win) .sym.W .symGlow img{animation:none;opacity:.8}}
 /* ===== aifix: splash (audit 3): blurred, darkened Lounge plate (splash_bg_*.webp) + 3 plain feature cards with real
    in-game art (intro.ts CARDS). Plum ink frame, one line of copy; the cards only fade/rise in (transform/opacity). */
 #loader .spCard{box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:18px;padding:30px 30px 34px;border-radius:18px;
@@ -1029,6 +1044,7 @@ body.portrait #outro .otAmt{font-size:32px}
 /* Calm motion = the same switches as prefers-reduced-motion */
 body.calm .cell.win .sym.art>img,body.calm .cell.win .sym .symGlow img,body.calm .cell.win .sym.art>.symGlow,
 body.calm #alcove .tw,body.calm #intro .card,body.calm #outro .card{animation:none}
+body.calm .cell.wild:not(.win) .sym.W .symGlow img,body.calm .cell.wild.wLand:not(.win) .sym.W .symGlow img{animation:none;opacity:.8}
 body.calm #alcove .tw{opacity:.45}
 body.calm #loader #lGo{animation:none}
 
@@ -1037,7 +1053,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:45;bac
   opacity:.025;mix-blend-mode:overlay}
 
 /* ---------- aifix polish: glow budget (one glow source per screen state) ----------
-   idle: no UI glows (the room lights are the light). win: the symbol outline glow (.symGlow) only; everything else
+   idle: no UI glows (the room lights are the light), except the wild cells' own outline glow (v3.7, always on). win: the symbol outline glow (.symGlow) only; everything else
    that used to glow (win line, line amounts, wild chips, respin dots, locked cells, full-reel frames, merge letters)
    becomes a flat plum ink line. big/max win + feature titles: the title neon only (kept). */
 .pl polyline{filter:none}
