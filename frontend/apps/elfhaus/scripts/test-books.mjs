@@ -80,7 +80,9 @@ for (const file of bookFiles) {
 
 console.log(`\n=== 2. Social-mode restricted word scan ===`);
 // Scan strings, rules, and UI text in social mode
-const RESTRICTED = /\b(bet|buy|pay|pays|paid|wager|cash|money)\b/i;
+// Stake social casino banned list (approval guidelines, front-end communication / jurisdiction requirements) plus
+// cost / costs / price (v3.13). Word forms: bets/betting, buys/buying, paying/payout, wagers, credits, funds, purchases.
+const RESTRICTED = /\b(bets?|betting|buy|buys|buying|bought|pay|pays|paid|paying|payouts?|wager\w*|cash\w*|money|credits?|currency|currencies|stakes?|funds?|funding|purchase\w*|cost of|at the cost of|costs?|prices?)\b/i;
 
 // Read strings.ts
 const stringsCode = readFileSync(join(appDir, 'src/game/strings.ts'), 'utf8');
@@ -114,6 +116,40 @@ if (disclaimerMatch) {
 		violations++;
 	} else {
 		console.log(`  OK DISCLAIMER (${disc.length} chars, no restricted words)`);
+	}
+}
+
+// v3.13: copy.ts (bonus confirm cards, Turbo toggle, mode descriptions, cost-related rules lines) rendered in social
+// mode for every mode, and the static text of the rules template in game.ts (buildRules) with its social branches.
+{
+	const { transformWithEsbuild } = await import('vite');
+	const cs = readFileSync(join(appDir, 'src/game/copy.ts'), 'utf8');
+	const { code } = await transformWithEsbuild(cs, 'copy.ts', { loader: 'ts', format: 'esm' });
+	const C = await import('data:text/javascript;base64,' + Buffer.from(code).toString('base64'));
+	const ctx = { social: true, anteX: '3x', anteOdds: 'about 1 in 68', baseOdds: 'about 1 in 190', fs: { dare: 8, double_dare: 10, triple_dare: 10 }, odds: { none: 50, double_dare: 37, triple_dare: 10, hidden: 3 } };
+	const texts = [];
+	for (const m of ['ante', 'dare', 'double_dare', 'triple_dare', 'mystery', 'egw']) {
+		texts.push(['modeDesc ' + m, C.modeDesc(m, ctx)]);
+		const cf = C.confirmCopy(m, ctx, 'Mode', '300.00 GC', '3x');
+		for (const [k, v] of Object.entries(cf)) if (k !== 'title' && k !== 'amount') texts.push([`confirm ${m}.${k}`, v]);
+	}
+	for (const [k, v] of Object.entries(C.turboCopy(true))) texts.push(['turbo.' + k, v]);
+	texts.push(['costHeader', C.costHeader(true)], ['controlsBonus', C.controlsBonus(ctx)], ['controlsTurbo', C.controlsTurbo()], ['controlsAuto', C.controlsAuto(ctx)]);
+	// rules template: drop every ${...} (balanced), keep the social side of `isSocial() ? 'a' : 'b'` branches
+	const fn = gameCode.slice(gameCode.indexOf('function buildRules('), gameCode.indexOf('// ---------- layout'));
+	const tpl = fn.slice(fn.indexOf("$('#rulesBody').innerHTML = `"));
+	let out = '', depth = 0;
+	for (let i = 0; i < tpl.length; i++) {
+		if (depth === 0 && tpl[i] === '$' && tpl[i + 1] === '{') { depth = 1; i++; continue; }
+		if (depth > 0) { if (tpl[i] === '{') depth++; else if (tpl[i] === '}') depth--; continue; }
+		out += tpl[i];
+	}
+	texts.push(['rules template (static text)', out.replace(/<[^>]+>/g, ' ').replace(/innerHTML = `/, '')]);
+	for (const m of fn.matchAll(/isSocial\(\) \? '([^']*)' : '[^']*'/g)) texts.push(['rules social branch', m[1]]);
+	for (const [k, v] of texts) {
+		const hit = String(v).match(RESTRICTED);
+		if (hit) { console.error(`  VIOLATION in ${k}: "${v}" matches "${hit[0]}"`); violations++; }
+		else console.log(`  OK ${k}: "${String(v).slice(0, 90)}${String(v).length > 90 ? '…' : ''}"`);
 	}
 }
 

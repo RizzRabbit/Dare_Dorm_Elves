@@ -8,9 +8,11 @@ import { requestAuthenticate, requestBet, requestEndRound, requestReplay } from 
 // it), so every mock branch and its dynamic import are dropped from the bundle.
 import { API_AMOUNT_MULTIPLIER } from 'constants-shared/bet';
 import {
-	ANTE_COST, fmtX, BUY_MODES, GAME_ID, LINES, MAX_WIN_X, MODES, MODE_DESC, MODE_LABEL, PAYTABLE,
-	SPIN_CAP, START_FS, SYMBOL_NAMES, VERSION, isProvisional, type ModeKey,
+	ANTE_COST, CONFIRM_ABOVE_X, fmtX, BUY_MODES, GAME_ID, LINES, MAX_WIN_X, MODES, MODE_LABEL, MYSTERY_ODDS, PAYTABLE,
+	SPIN_CAP, START_FS, SYMBOL_NAMES, VERSION, isProvisional, oneIn, type ModeKey,
 } from './config';
+import { confirmCopy, controlsAuto, controlsBonus, controlsTurbo, costHeader, modeDesc, turboCopy, type CopyCtx, type CopyMode } from './copy';
+import { registerPanel, openPanel, closePanel, isOpen, anyOpen, measurePanel } from './panels';
 import { money, mult, setCurrency, setLocale, isSocialCurrency, amountStr } from './format';
 import { skipCounts } from './countup';
 import { tapLines } from './winlines';
@@ -84,13 +86,13 @@ function setStrip() {
 	$('#balance').textContent = S.replay ? '—' : money(S.balance);
 	$('#bet').textContent = money(bet() * (S.replay ? replayCost : modeCost(spinMode())));
 	$('#betLabel').textContent = t('betLabel');
-	if (!$('#buyMenu').classList.contains('hidden')) paintBuy();
+	if (isOpen('#buyMenu')) paintBuy();
 }
 function message(title: string, body: string, opts: { reload?: boolean } = {}) {
 	$('#msgTitle').textContent = title; $('#msgBody').textContent = body;
 	const b = $('#msgOk'); b.textContent = opts.reload ? 'RELOAD' : 'OK';
-	b.onclick = () => (opts.reload ? location.reload() : show('#msg', false));
-	show('#msg', true);
+	b.onclick = () => (opts.reload ? location.reload() : closePanel('#msg'));
+	openPanel('#msg');
 }
 const FATAL = new Set(['ERR_RGS_URL', 'ERR_IS', 'ERR_ATE', 'ERR_BET_LEVELS', 'ERR_REPLAY']);
 function showError(error: any) {
@@ -143,7 +145,7 @@ function buildAuto() {
 function startAuto() {
 	const f = readStops(); if (!f || S.busy) return;
 	Object.assign(stops, f, { feat: featStop, start: S.balance });
-	show('#autoMenu', false);
+	closePanel('#autoMenu', true);
 	S.auto = autoPick; setAuto(); round(spinMode());
 }
 /** After each autoplay round: the reason to stop, or '' to go on. */
@@ -286,14 +288,37 @@ function buildBuy() {
 	$('#buyCards').querySelectorAll<HTMLElement>('.bcard').forEach((b) => (b.onclick = () => {
 		const m = b.dataset.m as ModeKey;
 		if (b.classList.contains('off')) return;
-		if (armed === m) { pickArm(null); sfx('ui_click'); return; } // tap the active card again to turn it off
-		// One tap turns a bet mode on (user, live v3): no ACTIVATE / CANCEL step. Nothing is charged here - the mode is
-		// armed for the next spin and the spin button (price shown on the strip / armTag) is the one tap that spends.
-		// Tap the armed card again, or the armTag on the spin button, to go back to base.
-		show('#buyConfirm', false); pickArm(m); sfx('ui_mode_arm'); show('#buyMenu', false);
-		banner(`${MODE_LABEL[m].toUpperCase()} ON · ${money(modeCost(m) * bet())} ${isSocial() ? 'PER PLAY' : 'PER SPIN'}`, 1600);
+		if (armed === m) { pickArm(null); sfx('ui_click'); return; } // tap the active card again to turn it off (back to base: no confirm)
+		// v3.13 (James + Stake approval: a mode above CONFIRM_ABOVE_X the base bet is confirmed before it activates): the
+		// confirm card (feature, art, short description, amount per spin, CONFIRM; tap outside / Esc = back to the menu).
+		// Nothing is charged on CONFIRM either: the mode is armed and the spin button is the one tap that spends.
+		if (modeCost(m) > CONFIRM_ABOVE_X) openConfirm(m); else activate(m);
 	}));
 	paintBuy();
+}
+/** Copy context for copy.ts (social wording, odds and free-spin counts from the math config). */
+const copyCtx = (): CopyCtx => ({
+	social: isSocial(), anteX: fmtX(ANTE_COST), anteOdds: oneIn('ante', 68), baseOdds: oneIn('base', 190),
+	fs: { dare: START_FS.dare, double_dare: START_FS.double_dare, triple_dare: START_FS.triple_dare }, odds: { ...MYSTERY_ODDS },
+});
+/** What CONFIRM (or a tap on a mode at or under CONFIRM_ABOVE_X) does: the old one-tap selection. Voice fires here
+ *  (pickArm), never on the preview. A bonus closes the menu with the banner; Ante switches on in place. */
+function activate(m: ModeKey) {
+	if (m === 'ante') { pickArm(null, true); paintBuy(); sfx('ui_mode_arm'); return; }
+	pickArm(m); sfx('ui_mode_arm'); closePanel('#buyMenu', true);
+	banner(`${MODE_LABEL[m].toUpperCase()} ON · ${money(modeCost(m) * bet())} ${isSocial() ? 'PER PLAY' : 'PER SPIN'}`, 1600);
+}
+let confirming: ModeKey | null = null;
+function openConfirm(m: ModeKey) {
+	confirming = m;
+	const c = confirmCopy(m as CopyMode, copyCtx(), MODE_LABEL[m], money(modeCost(m) * bet()), mult(modeCost(m)));
+	const a = CARD_ART[m], art = $('.cfArt');
+	art.innerHTML = m === 'mystery' ? MYSTERY_CARD : a ? `<img src="${a}" alt="" draggable="false">` : '';
+	art.dataset.m = m; art.classList.toggle('hidden', !art.innerHTML);
+	$('#cfName').textContent = c.title; $('#cfDesc').textContent = c.desc;
+	$('#cfAmount').textContent = c.amount; $('#cfPer').textContent = c.per; $('#cfX').textContent = c.x;
+	$('#cfNote').textContent = c.note; $('#cfYes').textContent = c.button; $('#cfHint').textContent = c.hint;
+	sfx('ui_click'); openPanel('#bmConfirm');
 }
 /** Live state: prices at the current bet, affordability, armed card, Ante switch. */
 function paintBuy() {
@@ -302,6 +327,8 @@ function paintBuy() {
 	($('#bmUp') as HTMLButtonElement).disabled = S.busy || S.betIdx >= S.levels.length - 1;
 	const sw = $('#anteSw'); sw.setAttribute('aria-checked', String(S.ante)); sw.classList.toggle('on', S.ante);
 	$('#anteRow').classList.toggle('on', S.ante);
+	const tc = turboCopy(isSocial()); $('#turboSub').textContent = tc.sub;
+	$('#turboRow').classList.toggle('hidden', !!S.jur.disabledTurbo); syncTurbo();
 	$('#buyCards').querySelectorAll<HTMLElement>('.bcard').forEach((b) => {
 		const m = b.dataset.m as ModeKey, price = modeCost(m) * bet();
 		(b.querySelector('.bPrice') as HTMLElement).textContent = money(price);
@@ -309,6 +336,13 @@ function paintBuy() {
 		b.classList.toggle('armed', armed === m); b.setAttribute('aria-pressed', String(armed === m));
 	});
 }
+function syncTurbo() {
+	const on = !!S.turbo, sw = $('#turboSw');
+	$('#turboBtn').classList.toggle('on', on); $('#turboBtn').setAttribute('aria-pressed', String(on));
+	sw.classList.toggle('on', on); sw.setAttribute('aria-checked', String(on));
+	syncTempo();
+}
+function setTurbo(on: boolean) { if (S.jur.disabledTurbo) return; S.turbo = on; syncTurbo(); }
 function betStep(d: number) {
 	if (S.busy) return; const was = S.betIdx;
 	S.betIdx = Math.max(0, Math.min(S.levels.length - 1, S.betIdx + d)); setArm(armed, S.ante);
@@ -332,7 +366,7 @@ function buildRules() {
 		return `<figure class="pl" aria-label="Line ${i + 1}: rows ${ln.map((r) => r + 1).join('-')}"><figcaption>${i + 1}</figcaption>` +
 			`<svg viewBox="-1 -1 ${W5 + 2} ${H4 + 2}" aria-hidden="true">${cells}<polyline points="${path}"/></svg></figure>`;
 	}).join('');
-	const win = isSocial() ? 'wins' : 'pays';
+	const win = isSocial() ? 'wins' : 'pays', cc = copyCtx();
 	$('#rulesTitle').textContent = 'GAME RULES';
 	$('#rulesBody').innerHTML = `
 <h3>How to play</h3>
@@ -344,15 +378,15 @@ function buildRules() {
 <p>The Dare Card is the scatter: at most one per reel, it never awards a win and can land on any spin or respin. 3 Dare Cards on the final board start Dare (${START_FS.dare} free spins), 4 start Double Dare (${START_FS.double_dare}). 5 flip the Dare Card: Triple Dare (${START_FS.triple_dare}) or Epic (${START_FS.hidden}).</p>
 <p>In Dare, wilds clear after each spin. From Double Dare up, the trigger spin's wilds stay in place for the bonus and all wilds stay locked. Triple Dare starts with at least 1 full-reel wild, Epic with at least 2 (guaranteed stacks are added if missing). During free spins, 2 Dare Cards add +2 spins and 3 or more add +5, up to ${SPIN_CAP} spins in total.</p>
 <h3>Modes</h3>
-<p>${(['ante', ...BUY_MODES] as ModeKey[]).map((m) => `<b>${MODE_LABEL[m]}</b> (${mult(modeCost(m))}): ${MODE_DESC[m]}`).join('<br>')}</p>
-<table><tr><th>Mode</th><th>Cost</th><th>RTP</th><th>Max win</th></tr>${modeRows}</table>
+<p>${(['ante', ...BUY_MODES] as ModeKey[]).map((m) => `<b>${MODE_LABEL[m]}</b> (${mult(modeCost(m))}): ${modeDesc(m as CopyMode, cc)}`).join('<br>')}</p>
+<table><tr><th>Mode</th><th>${costHeader(isSocial())}</th><th>RTP</th><th>Max win</th></tr>${modeRows}</table>
 <p>Max win is ${MAX_WIN_X.toLocaleString('en-US')}${xb} in every mode. When it is reached, the round ends immediately and awards the max win.${isProvisional() ? ' RTP figures are pending final math.' : ''}</p>
 <h3>${isSocial() ? 'Win table' : 'Paytable'}</h3>
 <table><tr><th>Symbol</th><th>3</th><th>4</th><th>5</th></tr>${pt}</table>
 <p>Values shown in ${xb} for a full line.</p>
 <h3>Paylines</h3><div class="plGrid">${lines}</div><p>20 fixed lines, read left to right from the leftmost reel.</p>
 <h3>Controls</h3>
-<p>Spin with the round button${S.jur.disabledSpacebar ? '' : ' or the Space bar'}. − and + change the ${isSocial() ? 'play amount' : 'bet'}. The bonus button opens the bonus menu: switch Ante (${mult(ANTE_COST)}) on or off, or tap a bonus to activate it. An active mode stays on for every spin (and autoplay) until you tap its tag above the spin button or the bonus again; each spin costs that mode's price.${S.jur.disabledTurbo ? '' : ' Turbo speeds up animations.'}${S.jur.disabledAutoplay ? '' : ' Autoplay runs 10 to 1,000 spins with optional stops (net loss, single win, balance increase, feature trigger); net loss and gain count each spin\'s full cost. It also stops on any error or low balance; press the spin button to stop it.'} Replays never change your balance.</p>
+<p>Spin with the round button${S.jur.disabledSpacebar ? '' : ' or the Space bar'}. − and + change the ${isSocial() ? 'play amount' : 'bet'}. ${controlsBonus(cc)}${S.jur.disabledTurbo ? '' : controlsTurbo()}${S.jur.disabledAutoplay ? '' : controlsAuto(cc)} Replays never change your balance.</p>
 <p>All characters are adults. Elfhaus is a Rizzin Games production.</p>
 <h3>Disclaimer</h3><p class="disc">${DISCLAIMER}</p>`;
 }
@@ -420,31 +454,33 @@ function wire() {
 	$('#betDown').onclick = () => betStep(-1);
 	$('#bmUp').onclick = () => betStep(1);
 	$('#bmDown').onclick = () => betStep(-1);
-	$('#anteSw').onclick = () => { pickArm(null, !S.ante); paintBuy(); sfx(S.ante ? 'ui_mode_arm' : 'ui_click'); };
+	// Ante off = back to base, no confirm; Ante on goes through the confirm card when it costs more than CONFIRM_ABOVE_X
+	$('#anteSw').onclick = () => { if (S.ante) { pickArm(null, false); paintBuy(); sfx('ui_click'); } else if (ANTE_COST > CONFIRM_ABOVE_X) openConfirm('ante'); else activate('ante'); };
 	$('#armTag').onclick = () => { if (!S.busy) { pickArm(null); sfx('ui_click'); } };
-	$('#turboBtn').onclick = () => { S.turbo = !S.turbo; $('#turboBtn').classList.toggle('on', S.turbo); syncTempo(); };
-	syncTempo();
-	$('#autoBtn').onclick = () => { if (S.auto) return stopAuto(); if (S.busy) return; buildAuto(); show('#autoMenu', true); };
-	$('#autoClose').onclick = () => show('#autoMenu', false);
+	// v3.13: one turbo state, two switches (HUD lightning button + the bonus menu Turbo row)
+	$('#turboBtn').onclick = () => setTurbo(!S.turbo);
+	$('#turboSw').onclick = () => setTurbo(!S.turbo);
+	syncTurbo();
+	$('#autoBtn').onclick = () => { if (S.auto) return stopAuto(); if (S.busy) return; buildAuto(); openPanel('#autoMenu'); };
 	$('#autoStart').onclick = startAuto;
-	$('#advBtn').onclick = () => { const open = $('#adv').classList.toggle('hidden') === false; $('#advBtn').setAttribute('aria-expanded', String(open)); $('#advBtn').classList.toggle('open', open); };
+	$('#advBtn').onclick = () => { const open = $('#adv').classList.toggle('hidden') === false; $('#advBtn').setAttribute('aria-expanded', String(open)); $('#advBtn').classList.toggle('open', open); measurePanel('#autoMenu'); };
 	$('#stFeat').onclick = () => { featStop = !featStop; buildAuto(); };
 	['#stLoss', '#stWin', '#stUp'].forEach((id) => {
 		const el = $(id) as HTMLInputElement; el.oninput = () => readStops();
 		// on blur a valid amount is tidied to the money decimals rule (2 places; more only below one unit when significant)
 		el.onchange = () => { const v = parseAmt(el.value); if (v > 0) { el.value = amountStr(v); readStops(); } };
 	});
-	$('#buyBtn').onclick = () => { sfx('ui_buy_open'); buildBuy(); show('#buyConfirm', false); show('#buyMenu', true); };
-	$('#buyClose').onclick = () => { sfx('ui_buy_close'); show('#buyMenu', false); show('#buyConfirm', false); };
-	$('#buyNo').onclick = () => show('#buyConfirm', false);
-	$('#menuBtn').onclick = () => { buildRules(); syncSettings(); show('#menu', true); };
+	registerPanel('#buyMenu', { onClose: () => { sfx('ui_buy_close'); closePanel('#bmConfirm', true); } });
+	registerPanel('#bmConfirm', { onClose: () => { confirming = null; } });
+	registerPanel('#autoMenu'); registerPanel('#menu'); registerPanel('#msg', { closable: false });
+	$('#buyBtn').onclick = () => { sfx('ui_buy_open'); buildBuy(); openPanel('#buyMenu'); };
+	$('#cfYes').onclick = () => { const m = confirming; closePanel('#bmConfirm', true); confirming = null; if (m) activate(m); };
+	$('#menuBtn').onclick = () => { buildRules(); syncSettings(); openPanel('#menu'); };
 	initSettings();
-	$('#menuClose').onclick = () => show('#menu', false);
 	$('#replayPlay').onclick = () => playReplay();
 	addEventListener('keydown', (e) => {
 		if (e.code !== 'Space' || S.jur.disabledSpacebar) return;
-		const modal = ['#buyMenu', '#autoMenu', '#menu', '#msg'].some((s) => !$(s).classList.contains('hidden'));
-		if (modal) return;
+		if (anyOpen()) return;
 		e.preventDefault();
 		if (S.auto) { stopAuto(); return; }
 		if (S.busy) { if (!e.repeat) skipBoard(); return; } // Space mid-round = the same skip as a tap on the board
@@ -454,7 +490,7 @@ function wire() {
 	});
 	// plain button clicks (the buy menu, bet steps, mode arming and errors play their own sounds above)
 	document.addEventListener('click', (e) => {
-		const b = (e.target as Element)?.closest?.('#menuBtn,#menuClose,#turboBtn,#autoBtn,#autoClose,#autoStart,#advBtn,#buyNo,#msgOk,#replayPlay,.chip,#settings .sw,#stFeat') as HTMLButtonElement | null;
+		const b = (e.target as Element)?.closest?.('#menuBtn,.mX,#turboBtn,#turboSw,#autoBtn,#autoStart,#advBtn,#msgOk,#replayPlay,.chip,#settings .sw,#stFeat') as HTMLButtonElement | null;
 		if (b && !b.disabled) sfx('ui_click');
 	});
 	addEventListener('resize', layout);
@@ -488,7 +524,7 @@ export async function initGame() {
 		chars: (B) => bigWinElvesStart(B, 1000),
 		end: (B) => { featClose(B.querySelector('.bwFx')); bigWinElvesEnd(); },
 	});
-	document.addEventListener('pointerdown', (e) => { if (!(e.target as Element)?.closest?.('#bigwin,#outro')) { skipBoard(false); if (!(e.target as Element)?.closest?.('#menu,#buyMenu,#autoMenu,#msg')) hurry(); } }, { capture: true, passive: true });
+	document.addEventListener('pointerdown', (e) => { if (!(e.target as Element)?.closest?.('#bigwin,#outro')) { skipBoard(false); if (!(e.target as Element)?.closest?.('#menu,#buyMenu,#bmConfirm,#autoMenu,#msg')) hurry(); } }, { capture: true, passive: true });
 	track(initRoxy(layout));
 	loadAllFx(track).then(() => renderAll());
 	setOverlayHook(stackIdle); initStacks().then(() => renderOverlays(false)); void initWfExpand(); // optional stack / per-reel expand sheets (placeholders until imported)

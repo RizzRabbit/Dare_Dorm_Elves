@@ -66,15 +66,31 @@
 <div id="cardFlip" class="overlay hidden" aria-live="polite"><div class="cfStage"><div class="cfCard"></div><div class="cfName"></div></div></div>
 <div id="outro" class="overlay hidden"><div class="bwFx" aria-hidden="true"></div><div class="card"><div class="tierName">TOTAL WIN</div><div class="otAmt"></div><div class="otHint">TAP TO CONTINUE</div></div></div>
 <div id="bigwin" class="overlay hidden"><div class="bwFx" aria-hidden="true"></div><div class="bw"><div class="bwTier">BIG WIN</div><div class="bwAmt"></div><div class="bwX"></div></div></div>
-<div id="buyMenu" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="buyTitle"><div class="modal bm">
-	<div class="mHead"><h2 id="buyTitle">BONUS</h2><button id="buyClose" class="mX" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg></button></div>
+<div id="buyMenu" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="buyTitle"><div class="modal bm hasX">
+	<button class="mX" aria-label="Close" title="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="xb" d="M5 5 12.9 11.1 19 19 11.1 12.9ZM19 5 12.9 12.9 5 19 11.1 11.1Z" /></svg></button>
+	<div class="mView"><div class="mTrack">
+	<div class="mHead"><h2 id="buyTitle">BONUS</h2></div>
 	<div id="anteRow" class="row"><span class="lbl">ANTE <small id="anteCost">3x</small></span><button id="anteSw" class="sw" role="switch" aria-checked="false" aria-label="Ante"><i></i></button></div>
+	<div id="turboRow" class="row"><span class="lbl">TURBO <small id="turboSub">faster animations</small></span><button id="turboSw" class="sw" role="switch" aria-checked="false" aria-label="Turbo"><i></i></button></div>
 	<div id="buyCards"></div>
 	<div id="bmBet" class="row"><button id="bmDown" class="ico flat" aria-label="Decrease"><svg viewBox="0 0 24 24"><path d="M5 12h14" /></svg></button><span class="v"><small>BET</small><b id="bmBetV">—</b></span><button id="bmUp" class="ico flat" aria-label="Increase"><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5v14" /></svg></button></div>
-	<div id="buyConfirm" class="hidden"><p id="buyConfirmText"></p><p id="buyConfirmNote" class="note"></p><button id="buyYes">ACTIVATE</button><button id="buyNo" class="ghost">CANCEL</button></div>
+	</div></div>
 </div></div>
-<div id="autoMenu" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="autoTitle"><div class="modal am">
-	<div class="mHead"><h2 id="autoTitle">AUTOPLAY</h2><button id="autoClose" class="mX" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg></button></div>
+<div id="bmConfirm" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="cfName"><div class="modal cf">
+	<div class="mView"><div class="mTrack">
+	<div class="cfArt" aria-hidden="true"></div>
+	<h2 id="cfName"></h2>
+	<p id="cfDesc"></p>
+	<div class="cfAmt"><b id="cfAmount"></b> <span id="cfPer"></span><small id="cfX"></small></div>
+	<p id="cfNote"></p>
+	<button id="cfYes" class="go">CONFIRM</button>
+	<p id="cfHint" class="cfHint"></p>
+	</div></div>
+</div></div>
+<div id="autoMenu" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="autoTitle"><div class="modal am hasX">
+	<button class="mX" aria-label="Close" title="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="xb" d="M5 5 12.9 11.1 19 19 11.1 12.9ZM19 5 12.9 12.9 5 19 11.1 11.1Z" /></svg></button>
+	<div class="mView"><div class="mTrack">
+	<div class="mHead"><h2 id="autoTitle">AUTOPLAY</h2></div>
 	<div id="autoCounts" role="radiogroup" aria-label="Number of spins"></div>
 	<button id="advBtn" class="advBtn" aria-expanded="false">ADVANCED <svg viewBox="0 0 12 12"><path d="M3 4.5 6 7.5 9 4.5" /></svg></button>
 	<div id="adv" class="hidden">
@@ -85,12 +101,16 @@
 	</div>
 	<p id="autoErr" class="err" aria-live="polite"></p>
 	<button id="autoStart" class="go">START</button>
+	</div></div>
 </div></div>
-<div id="menu" class="overlay hidden" role="dialog" aria-modal="true"><div class="modal rules">
-	<div id="settings"><h2>SETTINGS</h2><div class="setRow"><span>Sound</span><button id="setSnd" class="sw" role="switch" aria-checked="true" aria-label="Sound"></button></div><div class="setRow" id="setMusRow"><span>Music</span><button id="setMus" class="sw" role="switch" aria-checked="true" aria-label="Music"></button></div><div class="setRow" id="setSfxRow"><span>Sound effects</span><button id="setSfx" class="sw" role="switch" aria-checked="true" aria-label="Sound effects"></button></div><div class="setRow" id="setVoxRow"><span>Voice</span><button id="setVox" class="sw" role="switch" aria-checked="true" aria-label="Voice"></button></div><div class="setRow" id="setTurboRow"><span>Turbo spins</span><button id="setTurbo" class="sw" role="switch" aria-checked="false" aria-label="Turbo spins"></button></div><div class="setRow"><span>Calm motion</span><button id="setCalm" class="sw" role="switch" aria-checked="false" aria-label="Calm motion"></button></div></div>
-	<h2 id="rulesTitle">GAME RULES</h2><div id="rulesBody"></div><button id="menuClose" class="ghost">CLOSE</button>
+<div id="menu" class="overlay hidden" role="dialog" aria-modal="true" aria-label="Settings and game rules"><div class="modal rules hasX">
+	<button class="mX" aria-label="Close" title="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="xb" d="M5 5 12.9 11.1 19 19 11.1 12.9ZM19 5 12.9 12.9 5 19 11.1 11.1Z" /></svg></button>
+	<div class="mView"><div class="mTrack">
+	<div id="settings"><h2>SETTINGS</h2><div class="setRow"><span>Sound</span><button id="setSnd" class="sw" role="switch" aria-checked="true" aria-label="Sound"></button></div><div class="setRow" id="setMusRow"><span>Music</span><button id="setMus" class="sw" role="switch" aria-checked="true" aria-label="Music"></button></div><div class="setRow" id="setSfxRow"><span>Sound effects</span><button id="setSfx" class="sw" role="switch" aria-checked="true" aria-label="Sound effects"></button></div><div class="setRow" id="setVoxRow"><span>Voice</span><button id="setVox" class="sw" role="switch" aria-checked="true" aria-label="Voice"></button></div></div>
+	<h2 id="rulesTitle">GAME RULES</h2><div id="rulesBody"></div>
+	</div></div>
 </div></div>
-<div id="msg" class="overlay hidden" role="alertdialog" aria-modal="true"><div class="modal"><h2 id="msgTitle">MESSAGE</h2><p id="msgBody"></p><button id="msgOk">OK</button></div></div>
+<div id="msg" class="overlay hidden" role="alertdialog" aria-modal="true"><div class="modal"><div class="mView"><div class="mTrack"><h2 id="msgTitle">MESSAGE</h2><p id="msgBody"></p><button id="msgOk">OK</button></div></div></div></div>
 
 <div id="loader" role="dialog" aria-label="Loading Elfhaus">
 	<div class="spBg"></div>

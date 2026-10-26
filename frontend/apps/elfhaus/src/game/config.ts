@@ -44,14 +44,7 @@ export const isProvisional = () => MODES_SOURCE.startsWith('PROVISIONAL');
 // Ante price comes from the math index (modes.generated.json); 3x as of math 6a1be1b.
 export const ANTE_COST: number = MODES.ante?.cost ?? 3;
 export const fmtX = (x: number) => `${+x.toFixed(2)}x`;
-const oneIn = (m: ModeKey, fallback: number) => `about 1 in ${MODES[m]?.pBonus ? Math.round(1 / MODES[m].pBonus!) : fallback}`;
-export const MODE_DESC: Record<ModeKey, string> = {
-	base: 'A normal spin.',
-	ante: `Costs ${fmtX(ANTE_COST)} the play amount; a bonus triggers naturally ${oneIn('ante', 68)} spins, versus ${oneIn('base', 190)} in base play. Same symbols, wins and rules.`,
-	dare: 'One real trigger spin with 3 Dare Cards (it wins as normal), then 8 free spins. Dare wilds clear after each spin.',
-	double_dare: 'One real trigger spin with 4 Dare Cards, then 10 free spins. The trigger spin\'s wilds stay in place; all wilds stay locked and keep growing.',
-	triple_dare: 'One real trigger spin with 5 Dare Cards, then 10 free spins. The trigger spin\'s wilds stay in place, with at least 1 full-reel wild guaranteed.',
-	mystery: 'One spin that always lands 2 Dare Cards; the remaining reels are the reveal. The result was decided before the spin: No bonus 50% · Double Dare 37% · Triple Dare 10% · Epic 3%. A bonus continues on the same board.',
-	egw: 'One supercharged spin: 2 to 5 full-reel wilds (x4 each) are placed before the reels land, then respins. It never awards free spins.',
-};
+/** 'about 1 in N' natural bonus odds for a mode (math index pBonus, fallback N). */
+export const oneIn = (m: ModeKey, fallback: number) => `about 1 in ${MODES[m]?.pBonus ? Math.round(1 / MODES[m].pBonus!) : fallback}`;
+// v3.13: mode descriptions moved to copy.ts (social-aware, scanned by test-books.mjs).
 
