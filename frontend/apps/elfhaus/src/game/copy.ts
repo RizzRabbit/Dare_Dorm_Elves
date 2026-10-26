@@ -34,7 +34,7 @@ export function shortDesc(m: CopyMode, c: CopyCtx): string {
 		case 'double_dare': return `4 Dare Cards. ${c.fs.double_dare} free spins, sticky wilds that grow.`;
 		case 'triple_dare': return `5 Dare Cards. ${c.fs.triple_dare} free spins, sticky wilds, a full-reel wild guaranteed.`;
 		case 'mystery': return `One spin that always lands 2 Dare Cards; the other reels reveal the result. No bonus ${c.odds.none}% · Double Dare ${c.odds.double_dare}% · Triple Dare ${c.odds.triple_dare}% · Epic ${c.odds.hidden}%.`;
-		case 'egw': return 'One supercharged spin: 2 to 5 reels land wilds that grow into full-reel wilds (x4 each) once the spin stops, then respins. No free spins.';
+		case 'egw': return '2 to 5 full-reel wilds (x4 each), then respins. No free spins.';
 	}
 }
 
