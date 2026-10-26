@@ -22,6 +22,7 @@ import { featOpen, featPop, featClose } from './featfx';
 import { countTo, countMs, setAmount, skipCounts } from './countup';
 import { grab, combineInto } from './combine';
 import { tempo } from './tempo';
+import { sfx, loop, music, duck, duckFor, type Handle } from './audio';
 // Pauses here use ui.wait: the old pace x ANIM_TEMPO, skippable by tap / Space (tempo.ts); turbo keeps its short values.
 
 const scattersOnBoard = (): Pos[] => S.sym.flatMap((col, reel) => col.map((n, row) => ({ reel, row, n }))).filter((c) => c.n === 'S').map(({ reel, row }) => ({ reel, row }));
@@ -39,9 +40,11 @@ async function showScatters(ps: Pos[], ms: number) {
 const unScatter = () => { document.querySelectorAll('.cell').forEach((c) => c.classList.remove('win', 'dim')); clearSymWins(); };
 /** Wilds that stay for the bonus: lock them in place on the current board (no re-render, so nothing jumps). */
 function lockCarried(l: Locked) {
-	l.singles.forEach((s) => { const c = cellEl(s.reel, s.row); if (!c.classList.contains('locked')) { c.classList.add('locked'); lockFx(c); } });
+	let fresh = false;
+	l.singles.forEach((s) => { const c = cellEl(s.reel, s.row); if (!c.classList.contains('locked')) { c.classList.add('locked'); lockFx(c); fresh = true; } });
+	if (fresh) sfx('wild_sticky_lock');
 }
-export const endBonusUi = () => { setBg(false); document.body.classList.remove('inBonus'); $('#fsBar').classList.add('hidden'); $('#intro').classList.add('hidden'); S.inBonus = false; };
+export const endBonusUi = () => { music('base'); setBg(false); document.body.classList.remove('inBonus'); $('#fsBar').classList.add('hidden'); $('#intro').classList.add('hidden'); S.inBonus = false; };
 
 type Handlers = { [T in BookEventType]: (ev: BookEventOf<T>) => Promise<void> };
 export const bookEventHandlerMap: Handlers = {
@@ -69,10 +72,13 @@ export const bookEventHandlerMap: Handlers = {
 		// hold an extra T.ant and brake slowly, one after another, so reel 5 always lands last
 		let at = Math.max(T.first, sinceStart() + 120), prev = at;
 		const stops: Promise<void>[] = [];
+		let riser: Handle | null = null, riserT = 0;
 		for (let r = 0; r < REELS; r++) {
 			prev = at;
 			if (r > 0) at += T.gap;
 			const slow = ev.anticipation[r] > 0 ? T.antD : 0;
+			// the riser starts with the first slowed reel's glow and fades out on the last land
+			if (slow && !riserT) riserT = window.setTimeout(() => { riser = sfx('anticipation_riser'); }, Math.max(0, prev - sinceStart()));
 			if (slow) at += T.ant;
 			const finals = Array.from({ length: ROWS }, (_, row) => symHTML(S.sym[r][row], S.vals.get(k(r, row)), r));
 			stops.push(stopReel(r, at, finals, () => {
@@ -87,6 +93,7 @@ export const bookEventHandlerMap: Handlers = {
 			}, slow, prev));
 		}
 		await Promise.all(stops);
+		clearTimeout(riserT); (riser as Handle | null)?.stop(150);
 		markStopped();
 		await sleep(T.land);
 	},
@@ -101,6 +108,7 @@ export const bookEventHandlerMap: Handlers = {
 			// normal pace: the sum gem waits for the flying badges (combineInto shows it), no "x4 x10" overlap during the crossfade
 			if (!S.turbo && flying.length) { const g = ovMx(ev.reel); if (g) g.style.visibility = 'hidden'; }
 		};
+		sfx('wild_stack_merge', { throttle: 250 });
 		if (ev.instant) render(); else await stackIn(ev.reel, render); // singles ease together → crossfade into the full-reel elf (turbo: squash → flash → pop)
 		await combineInto(flying, ovMx(ev.reel));
 		await wait(250);
@@ -116,6 +124,7 @@ export const bookEventHandlerMap: Handlers = {
 			fresh.forEach((g) => frameIn([...document.querySelectorAll<HTMLElement>('.ov.merge')].find((o) => o.dataset.reels === g.reels.join()), 60));
 		};
 		if (!fresh.length) { apply(); return; }
+		sfx('wild_stack_merge', { throttle: 250 }); // one per merge step (the fresh groups play together)
 		let applied = false; const once = () => { if (!applied) { applied = true; apply(); } };
 		await Promise.all(fresh.map((g) => mergeIn(g.reels, g.values, g.product, once)));
 		once();
@@ -191,7 +200,7 @@ export const bookEventHandlerMap: Handlers = {
 		await cardFlip(ev.result);
 	},
 	async freeSpinTrigger(ev) {
-		hideToast(); roxy('excited');
+		hideToast(); roxy('excited'); sfx('bonus_trigger'); duckFor(4000);
 		// the trigger scatters light up on the board, the wilds that stay lock in place (Dare carries nothing);
 		// the board itself is never cleared or re-rendered, so a Mystery bonus continues on the Mystery board
 		await showScatters(ev.scatters, 1100);
@@ -200,6 +209,7 @@ export const bookEventHandlerMap: Handlers = {
 		(I.querySelector('.tierName') as HTMLElement).textContent = TL(ev.tier) + '!';
 		(I.querySelector('.spins') as HTMLElement).textContent = `${ev.totalFs} FREE SPINS`;
 		I.dataset.tier = ev.tier; I.classList.remove('hidden');
+		sfx('fs_intro'); music('bonus');
 		const fx = I.querySelector<HTMLElement>('.bwFx'); featOpen(fx); featPop(I.querySelector('.tierName'));
 		// brief and skippable: a tap anywhere on the overlay continues
 		await Promise.race([wait(S.turbo ? 1400 : 2600), new Promise<void>((res) => (I.onclick = () => res()))]);
@@ -216,6 +226,7 @@ export const bookEventHandlerMap: Handlers = {
 			for (let row = 0; row < ROWS; row++) { S.vals.delete(k(st.reel, row)); cellEl(st.reel, row).style.visibility = 'hidden'; }
 			renderOverlays(st.reel);
 			frameIn(document.querySelector<HTMLElement>(`.ov.full[data-reel="${st.reel}"]`));
+			sfx('wild_stack_merge', { throttle: 250 });
 			wfExpand(document.querySelector<HTMLElement>(`.ov.full[data-reel="${st.reel}"]`));
 			await combineInto(flying, ovMx(st.reel));
 			await wait(S.turbo ? 150 : 350);
@@ -230,7 +241,7 @@ export const bookEventHandlerMap: Handlers = {
 	},
 	async freeSpinRetrigger(ev) {
 		// 2 Dare Cards = +2, 3+ = +5, up to the 20-spin cap
-		const hl = showScatters(ev.scatters, 900);
+		const hl = showScatters(ev.scatters, 900); sfx('bonus_trigger', { gain: 0.6 });
 		banner(ev.addedFs ? `+${ev.addedFs} SPINS` : `MAX ${MAX_FS} SPINS`, 1300);
 		setFsTotal(ev.totalFs); await hl; unScatter(); await wait(200);
 	},
@@ -238,18 +249,19 @@ export const bookEventHandlerMap: Handlers = {
 		// outro: TOTAL WIN counts up over a burst + confetti; tap = jump to the amount, tap again (or wait) = close
 		const O = $('#outro'), fx = O.querySelector<HTMLElement>('.bwFx'), amt = O.querySelector<HTMLElement>('.otAmt')!;
 		const total = Math.min(ev.amount / 100, MAX_WIN_X) * bet();
-		setAmount(amt, 0); O.classList.remove('hidden'); featOpen(fx);   // no star glints on the total-win screen (round 6)
+		setAmount(amt, 0); O.classList.remove('hidden'); featOpen(fx); sfx('fs_outro'); duck(true); const cu = loop('bigwin_countup_loop');   // no star glints on the total-win screen (round 6)
 		let close = () => {}; const closed = new Promise<void>((r) => (close = r)); let landed = false;
 		O.onclick = () => (landed ? close() : skipCounts());
 		await countTo(amt, total, countMs(total / Math.max(bet(), 1e-9), S.turbo) * tempo());
-		landed = true;
+		landed = true; cu.stop(200);
 		await Promise.race([wait(S.turbo ? 900 : 1800), closed]);
+		duck(false);
 		O.onclick = null; O.classList.add('hidden'); featClose(fx); endBonusUi();
 	},
 	async mysteryStart() { await wait(200); },
 	async mysteryResult(ev) {
 		roxy(ev.outcome === 'none' ? 'disappointed' : 'excited');
-		if (ev.outcome !== 'none') banner(`${TL(ev.outcome)}!`, 1500);
+		if (ev.outcome !== 'none') { banner(`${TL(ev.outcome)}!`, 1500); sfx('bonus_trigger'); duckFor(3000); }
 		await wait(ev.outcome === 'none' ? 500 : 1100);
 	},
 	async egwStart() { await wait(300); },

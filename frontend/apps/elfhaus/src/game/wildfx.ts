@@ -10,6 +10,7 @@
 //   shimmer          : ONE shared scheduler; every ~1.6 s the next visible wild gets a single comet round its
 //                      frame (so each wild shimmers every few seconds), at most 2 at once, paused while the reels
 //                      spin, during win lines, or when the tab is hidden
+import { sfx } from './audio';
 import { play, hasSheet, loadSheet, unloadSheet, type Atlas } from './sprite';
 import { S, $ } from './ui';
 import { isSpinning } from './reels';
@@ -18,6 +19,7 @@ const ID = 'fx_wild';
 const ok = () => hasSheet(ID);
 
 export function wildLand(cell: HTMLElement) {
+	sfx('wild_land', { throttle: 60 });
 	// aifix (audit 18): a calm landing: the symbol's own squash-pop (.wLand, transform only). The pink neon ring flare
 	// (wflash) and the ring + star crown (wland) are gone; the glow budget goes to the merged / stacked wild frames.
 	cell.classList.remove('wLand'); void cell.offsetWidth; cell.classList.add('wLand');

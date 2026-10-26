@@ -1082,3 +1082,4 @@ body:not(.portrait) #bigwin.chars .bw{top:0;translate:0 calc(-17*var(--vh))}
    Roxy, board, HUD and overlays always share #root's single transform and can never come apart. ---- */
 #root #bg,#root #bgFade,#root #roxy,#root #roxySh,#root #app,#root .overlay,#root #replayBar,#root #maxwin,#root #loader,
 #root #flyLayer,#root #flyLayer .mx,body.short:not(.portrait) #root #top,body.short:not(.portrait) #root #app #fsBar{position:absolute}
+.setRow.dim{opacity:.5} /* v3.8: Music / Sound effects rows while Sound is off */

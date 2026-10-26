@@ -13,6 +13,7 @@ import { play } from './sprite';
 import { money } from './format';
 import type { LineWin } from './typesBookEvent';
 import { T } from './tempo';
+import { sfx } from './audio';
 
 let cv: HTMLCanvasElement | null = null, ctx: CanvasRenderingContext2D | null = null, dpr = 1;
 let head: HTMLCanvasElement | null = null;
@@ -91,9 +92,10 @@ export async function playWins(wins: LineWin[], base: number) {
 	const n = wins.length, turbo = S.turbo;
 	// per line: race + hold; long lists get faster so a step never drags (old pace ~0.55 s/line, min ~0.3 s; x ANIM_TEMPO)
 	const race = turbo ? 150 : T(Math.max(220, Math.min(380, 2600 / n - 180))), keep = turbo ? 90 : Math.max(T(100), Math.min(T(260), race * .7));
-	let sum = 0;
+	let sum = 0, li = 0;
 	for (const w of wins) {
 		if (skipAll) break; skipLine = false;
+		if (!turbo || li === 0) sfx('winline_highlight'); li++;
 		clearSymWins(); document.querySelectorAll('.cell.win').forEach((c) => { c.classList.remove('win'); c.classList.add('dim'); });
 		clearOvWins(); w.positions.forEach((p) => { ovWin(p.reel); const c = cellEl(p.reel, p.row); c.classList.remove('dim'); const fresh = !c.classList.contains('win'); c.classList.add('win'); litOn(c); symWin(c); if (fresh && !turbo) burst(c, 'pop'); });
 		const P = path(w.lineIndex); sum += w.win / 100;
@@ -106,7 +108,10 @@ export async function playWins(wins: LineWin[], base: number) {
 	}
 	skipLine = false;
 	// summary: every winning symbol highlighted, no line over the board
-	clearRace(); setWinMeter(base + wins.reduce((a, w) => a + w.win / 100, 0));
+	const tot = base + wins.reduce((a, w) => a + w.win / 100, 0);
+	clearRace(); setWinMeter(tot);
+	// round win so far (x bet): < 2 small, 2-5 medium, 5-10 big; >= 10 gets the big-win sting instead; turbo = small only
+	if (n && tot < 10) sfx(turbo || tot < 2 ? 'win_small' : tot < 5 ? 'win_medium' : 'win_big');
 	wins.forEach((w) => w.positions.forEach((p) => { ovWin(p.reel); const c = cellEl(p.reel, p.row); c.classList.remove('dim'); c.classList.add('win'); litOn(c); symWin(c); }));
 	if (!skipAll) await hold(turbo ? 200 : T(450));
 	active = false; skipAll = false;

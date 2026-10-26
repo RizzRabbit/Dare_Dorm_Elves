@@ -1,4 +1,5 @@
 // DOM renderer (ported from prototype/app.js). It only displays what book events say.
+import { sfx, loop, duck } from './audio';
 import { frameHTML } from './wildframe';
 import ART_JSON from './art.generated.json';
 import { LINES, MAX_WIN_X, ROWS, REELS, SYMBOL_NAMES } from './config';
@@ -212,6 +213,7 @@ export async function bigWin(x: number, label?: string) {
 	(B.querySelector('.bwX') as HTMLElement).textContent = `${x.toLocaleString('en-US')}x`;
 	const amt = B.querySelector('.bwAmt') as HTMLElement; setAmount(amt, 0);
 	B.classList.remove('hidden'); B.classList.remove('chars'); fxHooks.start?.(B, x);
+	sfx('bigwin_sting'); duck(true); const cu = loop('bigwin_countup_loop');
 	let close = () => {}; const closed = new Promise<void>((r) => (close = r));
 	let landed = false, chars = false;
 	const tap = () => { if (!landed) skipCounts(); else close(); };
@@ -221,8 +223,9 @@ export async function bigWin(x: number, label?: string) {
 		onTier: (i) => { if (label) return; T.textContent = BIG_TIERS[i].name; titleHook(T, BIG_TIERS[i].name); T.classList.add('on'); T.classList.remove('pop'); void T.offsetWidth; T.classList.add('pop'); fxHooks.tier?.(B, i); },
 		onX: (v) => { if (!chars && v >= 1000) { chars = true; B.classList.add('chars'); fxHooks.chars?.(B); } },
 	});
-	landed = true;
+	landed = true; cu.stop(200);
 	await Promise.race([waitRaw(S.turbo ? 700 * 0.35 : x >= 1000 ? 2200 : 1500), closed]);
+	duck(false);
 	B.removeEventListener('pointerdown', tap); B.classList.add('hidden'); B.classList.remove('chars'); fxHooks.end?.(B);
 }
 type BwHooks = { start?: (B: HTMLElement, x: number) => void; tier?: (B: HTMLElement, i: number) => void; chars?: (B: HTMLElement) => void; end?: (B: HTMLElement) => void };

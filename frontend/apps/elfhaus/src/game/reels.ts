@@ -12,6 +12,11 @@
 import { S, ART, symHTML, k } from './ui';
 import { ROWS, REELS } from './config';
 import { SPIN_TEMPO, STOP_TEMPO } from './tempo';
+import { sfx, loop, type Handle } from './audio';
+// sound (v3.8): spin start + spin bed on every spin / respin (no bed in turbo), one stop per reel (turbo: last reel only, quieter)
+let bed: Handle | null = null;
+const spinSound = () => { sfx('reel_spin_start'); bed?.stop(); bed = S.turbo ? null : loop('reel_spin_loop'); };
+const bedOff = () => { bed?.stop(150); bed = null; };
 
 // Normal pace (spinfix, user: "still too fast and chaotic, especially when it lands"): a calm, readable spin. Slower
 // run speed (14 cells/s, was 23.6), soft 0.3 s spin-up, reels settle left to right exactly 0.28 s apart, each brakes over ~0.8 s
@@ -43,7 +48,7 @@ let raf = 0, t0 = 0, spinning = false;
 export const isSpinning = () => spinning;
 export const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, Math.max(0, ms)));
 export const sinceStart = () => performance.now() - t0;
-export const markStopped = () => { spinning = false; };
+export const markStopped = () => { spinning = false; bedOff(); };
 export function markStart() { t0 = performance.now(); }
 
 const FILL = ['H1', 'L1', 'H2', 'L2', 'L3', 'H3', 'L4', 'L5', 'H4', 'L2', 'L5', 'L1', 'L4', 'L3'];
@@ -134,6 +139,9 @@ function frame(now: number) {
 function land(R: Reel) {
 	const st = R.stop!; R.on = false; R.stop = undefined;
 	st.onLand(); // cells now show the same symbols in the same place
+	const lastReel = !reels.some((x) => x.on);
+	if (!S.turbo) sfx(`reel_stop_${R.r + 1}` as 'reel_stop_1'); else if (lastReel) sfx(`reel_stop_${R.r + 1}` as 'reel_stop_1', { gain: 0.7 });
+	if (lastReel) bedOff();
 	R.el.style.visibility = 'hidden'; R.el.classList.remove('ant');
 	st.res();
 }
@@ -157,6 +165,7 @@ export function spinCells(cells: { reel: number; row: number }[]) {
 	const now = performance.now(); t0 = now; spinning = true;
 	const by = new Map<number, number[]>(); cells.forEach((c) => by.set(c.reel, [...(by.get(c.reel) || []), c.row]));
 	by.forEach((rows, r) => startReel(reels[r], rows, now));
+	if (by.size) spinSound();
 }
 /** Spin every free cell; `keep(reel,row)` true = stays still (locked wilds, full-reel columns). */
 export function startSpin(keep: (reel: number, row: number) => boolean = () => false) {
@@ -202,7 +211,7 @@ export function hurry() {
 export function abortSpin() {
 	reels.forEach((R) => { R.on = false; R.stop?.res(); R.stop = undefined; R.el.style.visibility = 'hidden'; });
 	document.querySelectorAll('#cells .cell.spinning').forEach((c) => c.classList.remove('spinning'));
-	spinning = false;
+	spinning = false; bedOff();
 }
 
 // ---------- respins: every replaced cell spins on its own (reels stay still) ----------
@@ -213,6 +222,7 @@ const minis = new Map<string, HTMLElement>();
 export function spinMini(cells: { reel: number; row: number }[]) {
 	const host = document.getElementById('strips'); if (!host) return;
 	t0 = performance.now(); spinning = true;
+	if (cells.length) spinSound();
 	cells.forEach(({ reel, row }, i) => {
 		const c = document.getElementById(`c${reel}${row}`); if (!c) return;
 		c.classList.remove('win', 'dim', 'sprWin', 'replace', 'out', 'locked', 'mLand'); c.querySelectorAll('canvas').forEach((x) => x.remove());
@@ -231,6 +241,8 @@ export function stopMini(reel: number, row: number, at: number, onLand: () => vo
 		m?.remove(); minis.delete(`${reel}${row}`);
 		const c = document.getElementById(`c${reel}${row}`);
 		c?.classList.remove('spinning'); onLand();
+		if (!S.turbo) sfx('reel_stop_3', { throttle: 60 }); else if (!minis.size) sfx('reel_stop_3', { gain: 0.7 });
+		if (!minis.size) bedOff();
 		const sym = c?.querySelector<HTMLElement>('.sym'); // drop-in + squash and bounce (WAAPI, transform only, no reflow)
 		if (S.turbo) sym?.animate([{ transform: 'translateY(-28%) scale(.94,1.06)' }, { transform: 'translateY(4%) scale(1.07,.92)', offset: .45 }, { transform: 'translateY(-2%) scale(.98,1.02)', offset: .75 }, { transform: 'none' }], { duration: 160, easing: 'ease-out' });
 		else sym?.animate([{ transform: 'translateY(-14%)', opacity: 0.4 }, { transform: 'translateY(1.5%)', opacity: 1, offset: .7 }, { transform: 'none' }], { duration: 480, easing: 'cubic-bezier(.25,.6,.35,1)' }); // calm drop-in, one small settle

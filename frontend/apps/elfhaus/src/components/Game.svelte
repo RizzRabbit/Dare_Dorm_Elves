@@ -86,7 +86,7 @@
 	<button id="autoStart" class="go">START</button>
 </div></div>
 <div id="menu" class="overlay hidden" role="dialog" aria-modal="true"><div class="modal rules">
-	<div id="settings"><h2>SETTINGS</h2><div class="setRow" id="setTurboRow"><span>Turbo spins</span><button id="setTurbo" class="sw" role="switch" aria-checked="false" aria-label="Turbo spins"></button></div><div class="setRow"><span>Calm motion</span><button id="setCalm" class="sw" role="switch" aria-checked="false" aria-label="Calm motion"></button></div></div>
+	<div id="settings"><h2>SETTINGS</h2><div class="setRow"><span>Sound</span><button id="setSnd" class="sw" role="switch" aria-checked="true" aria-label="Sound"></button></div><div class="setRow" id="setMusRow"><span>Music</span><button id="setMus" class="sw" role="switch" aria-checked="true" aria-label="Music"></button></div><div class="setRow" id="setSfxRow"><span>Sound effects</span><button id="setSfx" class="sw" role="switch" aria-checked="true" aria-label="Sound effects"></button></div><div class="setRow" id="setTurboRow"><span>Turbo spins</span><button id="setTurbo" class="sw" role="switch" aria-checked="false" aria-label="Turbo spins"></button></div><div class="setRow"><span>Calm motion</span><button id="setCalm" class="sw" role="switch" aria-checked="false" aria-label="Calm motion"></button></div></div>
 	<h2 id="rulesTitle">GAME RULES</h2><div id="rulesBody"></div><button id="menuClose" class="ghost">CLOSE</button>
 </div></div>
 <div id="msg" class="overlay hidden" role="alertdialog" aria-modal="true"><div class="modal"><h2 id="msgTitle">MESSAGE</h2><p id="msgBody"></p><button id="msgOk">OK</button></div></div>

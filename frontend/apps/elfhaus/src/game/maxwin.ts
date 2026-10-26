@@ -8,6 +8,7 @@
 // nothing pops in, and releaseMaxWin() closes the ImageBitmaps after the screen closes (~8.5 MB decoded for the five elf sheets).
 // Round 6 (anti-AI-look art pass): new cast art (distinct poses / faces / outfits per elf, full figures; expression frames are
 // face patches over one base frame), a blurred Lounge plate replaces the black backdrop, no four-point star glints.
+import { sfx, loop, duck } from './audio';
 import { $, bet } from './ui';
 import { MAX_WIN_X } from './config';
 import { money } from './format';
@@ -100,6 +101,7 @@ export async function maxWinCelebration() {
 	xEl.textContent = '0x'; amtEl.textContent = money(0);
 	hint.textContent = matchMedia('(pointer: coarse)').matches ? 'TAP TO CONTINUE' : 'CLICK TO CONTINUE';
 	M.classList.remove('hidden', 'held', 'out'); void M.offsetWidth; M.classList.add('on');
+	sfx('bigwin_sting'); duck(true); const cu = loop('bigwin_countup_loop');
 	const landAt = COUNT_AT + COUNT_MS;
 	const g = document.createElement('div'); g.className = 'mwGroup'; crowd.appendChild(g);
 	rig = groupShow(g, landAt).start();                                // one rAF clock for the elves + title cue
@@ -120,7 +122,7 @@ export async function maxWinCelebration() {
 		};
 		requestAnimationFrame(tick);
 	});
-	M.removeEventListener('pointerdown', skip);
+	M.removeEventListener('pointerdown', skip); cu.stop(200);
 	M.classList.add('landed');
 	// the slower peak plays out under the hold; the continue hint shows after it, but a click works from the landing on
 	const heldT = setTimeout(() => M.classList.add('held'), skipped ? 300 : Math.round(2200 * TEMPO));
@@ -137,5 +139,6 @@ export async function maxWinCelebration() {
 	timers.splice(0).forEach(clearTimeout); live.forEach((a) => stop(a)); live.clear(); rig?.destroy(); rig = null;
 	crowd.remove(); if (bgEl) bgEl.style.backgroundImage = ''; tier.classList.remove('spr', 'pop');
 	M.classList.add('hidden'); M.classList.remove('on', 'landed', 'held', 'out');
+	duck(false);
 	releaseMaxWin();
 }

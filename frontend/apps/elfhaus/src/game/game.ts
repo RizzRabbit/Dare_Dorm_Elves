@@ -20,6 +20,7 @@ import { featOpen, featClose } from './featfx';
 import { BIGWIN_ELVES_MIN_X, preloadBigWinElves, bigWinElvesStart, bigWinElvesEnd } from './bigwinElves';
 import { setBigWinFx } from './ui';
 import { initSettings, syncSettings } from './settings';
+import { initAudio, sfx } from './audio';
 import { setSocial, isSocial, t } from './strings';
 import { $, S, ART, bet, buildCells, renderAll, renderOverlays, setOverlayHook, resetWinMeter, setWinMeter, banner, wait, waitRaw } from './ui';
 import { skipHolds, syncTempo } from './tempo';
@@ -85,7 +86,7 @@ function message(title: string, body: string, opts: { reload?: boolean } = {}) {
 }
 const FATAL = new Set(['ERR_RGS_URL', 'ERR_IS', 'ERR_ATE', 'ERR_BET_LEVELS', 'ERR_REPLAY']);
 function showError(error: any) {
-	console.warn('RGS error', error);
+	console.warn('RGS error', error); sfx('ui_error');
 	const code = error?.error || 'ERR_UE';
 	const text = code === 'ERR_IPB' ? t('noFunds') : error?.message || 'Something went wrong.';
 	message(code === 'ERR_IPB' ? 'INSUFFICIENT BALANCE' : 'CONNECTION PROBLEM', `${text} (${code})`, { reload: FATAL.has(code) });
@@ -163,7 +164,7 @@ async function finishRound(round: any) {
 async function round(mode: ModeKey) {
 	if (S.busy || !sessionReady || S.replay) return;
 	const cost = modeCost(mode) * bet();
-	if (S.balance + 1e-9 < cost) { S.auto = 0; setAuto(); message('INSUFFICIENT BALANCE', t('noFunds')); return; }
+	if (S.balance + 1e-9 < cost) { S.auto = 0; setAuto(); sfx('ui_error'); message('INSUFFICIENT BALANCE', t('noFunds')); return; }
 	setBusy(true); resetWinMeter(); endBonusUi();
 	// base-game state never carries: clear last spin's stacks, then the reels start turning at the press
 	S.full.clear(); S.groups = []; S.vals.clear(); renderOverlays(false); hideRespin();
@@ -277,11 +278,11 @@ function buildBuy() {
 	$('#buyCards').querySelectorAll<HTMLElement>('.bcard').forEach((b) => (b.onclick = () => {
 		const m = b.dataset.m as ModeKey;
 		if (b.classList.contains('off')) return;
-		if (armed === m) { setArm(null); return; } // tap the active card again to turn it off
+		if (armed === m) { setArm(null); sfx('ui_click'); return; } // tap the active card again to turn it off
 		// One tap turns a bet mode on (user, live v3): no ACTIVATE / CANCEL step. Nothing is charged here - the mode is
 		// armed for the next spin and the spin button (price shown on the strip / armTag) is the one tap that spends.
 		// Tap the armed card again, or the armTag on the spin button, to go back to base.
-		show('#buyConfirm', false); setArm(m); show('#buyMenu', false);
+		show('#buyConfirm', false); setArm(m); sfx('ui_mode_arm'); show('#buyMenu', false);
 		banner(`${MODE_LABEL[m].toUpperCase()} ON · ${money(modeCost(m) * bet())} ${isSocial() ? 'PER PLAY' : 'PER SPIN'}`, 1600);
 	}));
 	paintBuy();
@@ -300,7 +301,11 @@ function paintBuy() {
 		b.classList.toggle('armed', armed === m); b.setAttribute('aria-pressed', String(armed === m));
 	});
 }
-function betStep(d: number) { if (S.busy) return; S.betIdx = Math.max(0, Math.min(S.levels.length - 1, S.betIdx + d)); setArm(armed, S.ante); }
+function betStep(d: number) {
+	if (S.busy) return; const was = S.betIdx;
+	S.betIdx = Math.max(0, Math.min(S.levels.length - 1, S.betIdx + d)); setArm(armed, S.ante);
+	sfx(S.betIdx === was ? 'ui_error' : d > 0 ? 'ui_bet_up' : 'ui_bet_down'); // clamped at the min / max = error
+}
 
 // ---------- rules (C14/C32/C33/C34) ----------
 function buildRules() {
@@ -407,8 +412,8 @@ function wire() {
 	$('#betDown').onclick = () => betStep(-1);
 	$('#bmUp').onclick = () => betStep(1);
 	$('#bmDown').onclick = () => betStep(-1);
-	$('#anteSw').onclick = () => { setArm(null, !S.ante); paintBuy(); };
-	$('#armTag').onclick = () => { if (!S.busy) setArm(null); };
+	$('#anteSw').onclick = () => { setArm(null, !S.ante); paintBuy(); sfx(S.ante ? 'ui_mode_arm' : 'ui_click'); };
+	$('#armTag').onclick = () => { if (!S.busy) { setArm(null); sfx('ui_click'); } };
 	$('#turboBtn').onclick = () => { S.turbo = !S.turbo; $('#turboBtn').classList.toggle('on', S.turbo); syncTempo(); };
 	syncTempo();
 	$('#autoBtn').onclick = () => { if (S.auto) return stopAuto(); if (S.busy) return; buildAuto(); show('#autoMenu', true); };
@@ -421,8 +426,8 @@ function wire() {
 		// on blur a valid amount is tidied to the money decimals rule (2 places; more only below one unit when significant)
 		el.onchange = () => { const v = parseAmt(el.value); if (v > 0) { el.value = amountStr(v); readStops(); } };
 	});
-	$('#buyBtn').onclick = () => { buildBuy(); show('#buyConfirm', false); show('#buyMenu', true); };
-	$('#buyClose').onclick = () => { show('#buyMenu', false); show('#buyConfirm', false); };
+	$('#buyBtn').onclick = () => { sfx('ui_buy_open'); buildBuy(); show('#buyConfirm', false); show('#buyMenu', true); };
+	$('#buyClose').onclick = () => { sfx('ui_buy_close'); show('#buyMenu', false); show('#buyConfirm', false); };
 	$('#buyNo').onclick = () => show('#buyConfirm', false);
 	$('#menuBtn').onclick = () => { buildRules(); syncSettings(); show('#menu', true); };
 	initSettings();
@@ -438,6 +443,11 @@ function wire() {
 		if (e.repeat) return;
 		if (!$('#intro').classList.contains('hidden')) { ($('#intro .cont') as HTMLElement).click(); return; }
 		S.replay ? playReplay() : round(spinMode());
+	});
+	// plain button clicks (the buy menu, bet steps, mode arming and errors play their own sounds above)
+	document.addEventListener('click', (e) => {
+		const b = (e.target as Element)?.closest?.('#menuBtn,#menuClose,#turboBtn,#autoBtn,#autoClose,#autoStart,#advBtn,#buyNo,#msgOk,#replayPlay,.chip,#settings .sw,#stFeat') as HTMLButtonElement | null;
+		if (b && !b.disabled) sfx('ui_click');
 	});
 	addEventListener('resize', layout);
 	// iOS reports the new size late after a rotation: lay out again once it has settled
@@ -457,6 +467,7 @@ const IDLE = [['H1', 'L2', 'L4', 'H3'], ['L1', 'H2', 'L5', 'L3'], ['H4', 'L3', '
 
 export async function initGame() {
 	setLocale(url.lang);
+	initAudio(); // reads the sound switches; audio itself starts on the first tap
 	initLoader(); preloadArt();
 	// any tap lands a running count-up on its final value (the big-win banner handles its own taps)
 	startShimmer(); wireTapFx();
