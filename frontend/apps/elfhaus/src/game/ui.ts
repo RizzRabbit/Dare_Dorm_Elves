@@ -1,5 +1,6 @@
 // DOM renderer (ported from prototype/app.js). It only displays what book events say.
 import { sfx, loop, duck } from './audio';
+import { voice, VOICE } from './voice';
 import { frameHTML } from './wildframe';
 import ART_JSON from './art.generated.json';
 import { LINES, MAX_WIN_X, ROWS, REELS, SYMBOL_NAMES } from './config';
@@ -213,7 +214,7 @@ export async function bigWin(x: number, label?: string) {
 	(B.querySelector('.bwX') as HTMLElement).textContent = `${x.toLocaleString('en-US')}x`;
 	const amt = B.querySelector('.bwAmt') as HTMLElement; setAmount(amt, 0);
 	B.classList.remove('hidden'); B.classList.remove('chars'); fxHooks.start?.(B, x);
-	sfx('bigwin_sting'); duck(true); const cu = loop('bigwin_countup_loop');
+	sfx('bigwin_sting'); duck(true); const cu = loop('bigwin_countup_loop'); setTimeout(() => voice('bigwin'), VOICE.bigWinDelayMs);
 	let close = () => {}; const closed = new Promise<void>((r) => (close = r));
 	let landed = false, chars = false;
 	const tap = () => { if (!landed) skipCounts(); else close(); };

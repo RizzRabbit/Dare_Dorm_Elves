@@ -28,6 +28,7 @@
 // bakes the letters into its frames, so the letters layer is hidden while it plays. letters_ignite restarts with
 // stack_form (its leading blank frames wait for the build-up to finish).
 import { loadSheet, unloadSheet, play, hasSheet, stop, type Atlas, type Anim } from './sprite';
+import { voice } from './voice';
 
 export type StackAnim = 'stack_form' | 'merge_join' | 'letters_ignite' | 'merge_idle' | 'merge_win';
 const DIR = 'assets/stacks/', FREE_MS = 4000, PIN_MS = 20000;
@@ -223,7 +224,7 @@ export function stackReact(ov: HTMLElement, reel: number): Promise<void> {
 			if (!ov.isConnected || !hasStack('merge_idle', ov) || !hasSheet(id)) return st.done();
 			run('merge_idle', ov, 'body', { still: true }); // body holds frame 0 (merge_idle nudges the head a few px)
 			st.an = play(id, 'stack_react', ov, { cls: 'stk stk_react', rate: 1, onEnd: st.done });
-			if (!st.an) st.done();
+			if (!st.an) st.done(); else voice('stack', { reel });
 		};
 		if (hasSheet(id)) go();
 		else fetch(`${DIR}${id}.atlas.json`).then((r) => r.json() as Promise<Atlas>).then((at) => loadSheet(id, `${DIR}${id}.webp`, at)).then(go, (e) => { console.warn('stack react', id, e); st.done(); });

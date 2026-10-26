@@ -23,6 +23,7 @@ import { countTo, countMs, setAmount, skipCounts } from './countup';
 import { grab, combineInto } from './combine';
 import { tempo } from './tempo';
 import { sfx, loop, music, duck, duckFor, type Handle } from './audio';
+import { voice, voiceSpin } from './voice';
 // Pauses here use ui.wait: the old pace x ANIM_TEMPO, skippable by tap / Space (tempo.ts); turbo keeps its short values.
 
 const scattersOnBoard = (): Pos[] => S.sym.flatMap((col, reel) => col.map((n, row) => ({ reel, row, n }))).filter((c) => c.n === 'S').map(({ reel, row }) => ({ reel, row }));
@@ -86,7 +87,7 @@ export const bookEventHandlerMap: Handlers = {
 					const locked = lockedSingles.has(k(r, row));
 					renderCell(r, row, null);
 					cellEl(r, row).classList.toggle('locked', locked);
-					if (!locked && !fullLocked.has(r) && S.sym[r][row] === 'W') wildLand(cellEl(r, row));
+					if (!locked && !fullLocked.has(r) && S.sym[r][row] === 'W') { wildLand(cellEl(r, row)); voice('wild', { reel: r }); }
 					else if (S.sym[r][row] === 'S') symLand(cellEl(r, row));
 					if (!locked && !fullLocked.has(r)) landBump(cellEl(r, row));
 				}
@@ -183,7 +184,7 @@ export const bookEventHandlerMap: Handlers = {
 		const at0 = Math.max(T.resp, sinceStart() + 120);
 		await Promise.all(order.map((s, i) => stopMini(s.reel, s.row, at0 + i * T.cell, () => {
 			renderCell(s.reel, s.row, null); const c = cellEl(s.reel, s.row);
-			if (S.sym[s.reel][s.row] === 'W') wildLand(c); else if (S.sym[s.reel][s.row] === 'S') symLand(c);
+			if (S.sym[s.reel][s.row] === 'W') { wildLand(c); voice('wild', { reel: s.reel }); } else if (S.sym[s.reel][s.row] === 'S') symLand(c);
 		})));
 		markStopped();
 		await sleep(T.land);
@@ -200,7 +201,7 @@ export const bookEventHandlerMap: Handlers = {
 		await cardFlip(ev.result);
 	},
 	async freeSpinTrigger(ev) {
-		hideToast(); roxy('excited'); sfx('bonus_trigger'); duckFor(4000);
+		hideToast(); roxy('excited'); sfx('bonus_trigger'); duckFor(4000); voice('bonus');
 		// the trigger scatters light up on the board, the wilds that stay lock in place (Dare carries nothing);
 		// the board itself is never cleared or re-rendered, so a Mystery bonus continues on the Mystery board
 		await showScatters(ev.scatters, 1100);
@@ -213,7 +214,7 @@ export const bookEventHandlerMap: Handlers = {
 		const fx = I.querySelector<HTMLElement>('.bwFx'); featOpen(fx); featPop(I.querySelector('.tierName'));
 		// brief and skippable: a tap anywhere on the overlay continues
 		await Promise.race([wait(S.turbo ? 1400 : 2600), new Promise<void>((res) => (I.onclick = () => res()))]);
-		I.onclick = null; I.classList.add('hidden'); featClose(fx); unScatter();
+		I.onclick = null; I.classList.add('hidden'); featClose(fx); unScatter(); voice('fsstart', { tier: ev.tier });
 		showFsBar();
 		$('#fsTier').textContent = TL(ev.tier); $('#fsCount').textContent = `FREE SPIN 0 / ${ev.totalFs}`;
 	},
@@ -261,7 +262,7 @@ export const bookEventHandlerMap: Handlers = {
 	async mysteryStart() { await wait(200); },
 	async mysteryResult(ev) {
 		roxy(ev.outcome === 'none' ? 'disappointed' : 'excited');
-		if (ev.outcome !== 'none') { banner(`${TL(ev.outcome)}!`, 1500); sfx('bonus_trigger'); duckFor(3000); }
+		if (ev.outcome !== 'none') { banner(`${TL(ev.outcome)}!`, 1500); sfx('bonus_trigger'); duckFor(3000); voice('bonus'); }
 		await wait(ev.outcome === 'none' ? 500 : 1100);
 	},
 	async egwStart() { await wait(300); },
@@ -271,7 +272,7 @@ export const bookEventHandlerMap: Handlers = {
 };
 
 export async function playBookEvents(events: BookEvent[]) {
-	S.roundBase = 0;
+	S.roundBase = 0; voiceSpin();
 	// celebration sheets are lazy: start decoding them only once this round's book shows they're needed (the reels spin
 	// meanwhile); they're released again after the screen closes
 	if (events.some((e) => e.type === 'wincap')) void preloadMaxWin();
@@ -283,5 +284,5 @@ export async function playBookEvents(events: BookEvent[]) {
 		await h(ev);
 	}
 	// a tease that never turned into a bonus
-	if (roxyState() === 'anticipation') roxy('disappointed');
+	if (roxyState() === 'anticipation') { roxy('disappointed'); if (!(S.roundBase > 0)) voice('tease'); }
 }

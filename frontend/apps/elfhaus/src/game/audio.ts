@@ -5,6 +5,13 @@
 // wrapped so a failure (no Web Audio, blocked fetch, bad decode) leaves the game playing silently; nothing awaits audio.
 // Settings: Sound (master) / Music / Sound effects, persisted in localStorage elfhaus.snd / .mus / .sfx (default on).
 // A launch URL param (sound=0|off|false or mute=1|true) starts the game muted for that session without changing storage.
+// v3.9: a third bus for the elf voice lines + giggles (pack/voice, 35 files, loaded last). Voice switch elfhaus.vox
+// (default on; master Sound off / URL mute silence it too). STRICT one-at-a-time across every elf: while a clip plays,
+// and for VGAP ms after it ends, every new voice request is dropped (never queued), except that ONE high-priority line
+// (bonus trigger / max win) may wait in a single pending slot and plays after the gap if it is still within VPEND ms of
+// the current clip's end; otherwise it is dropped too. Nothing ever stops a clip early to start another, so two voice
+// clips can never sound together. The music bus ducks -8 dB under a line, -4 dB under a giggle (80 ms in, 300 ms out).
+// Which elf says what, cooldowns and turbo / autoplay rules live in voice.ts.
 const FILES = {
 	ui_click: 'assets/audio/ui_click.mp3', ui_bet_up: 'assets/audio/ui_bet_up.mp3', ui_bet_down: 'assets/audio/ui_bet_down.mp3',
 	ui_buy_open: 'assets/audio/ui_buy_open.mp3', ui_buy_close: 'assets/audio/ui_buy_close.mp3', ui_mode_arm: 'assets/audio/ui_mode_arm.mp3',
@@ -29,13 +36,25 @@ const LOOP_LEN: Partial<Record<Snd, number>> = { music_base_loop: 2454261, music
 const SR = 44100, LAME_DELAY = 1105;
 const MUSIC: Record<'base' | 'bonus', Snd> = { base: 'music_base_loop', bonus: 'music_bonus_loop' };
 const XFADE = 0.8, DUCK = 0.5; // 800 ms music crossfade; ~-6 dB duck
+const ELVES = ['roxy', 'jade', 'vi', 'coco', 'delilah'] as const;
+export type Elf = (typeof ELVES)[number];
+// vo_<elf>_<moment>_1 lines (INTEGRATION_PLAN.md section 6) + gig_<elf>_1..3
+export const VOICE_LINES: Record<Elf, string[]> = {
+	roxy: ['wild', 'bigwin', 'bonus', 'idle'], jade: ['wild', 'win', 'fsstart', 'tease'], vi: ['wild', 'win', 'tease', 'maxwin'],
+	coco: ['wild', 'bonus', 'tease', 'idle'], delilah: ['wild', 'fsstart', 'bigwin', 'maxwin'],
+};
+const VFILES: string[] = ELVES.flatMap((e) => [...VOICE_LINES[e].map((m) => `vo_${e}_${m}_1`), ...[1, 2, 3].map((n) => `gig_${e}_${n}`)]);
+const VGAP = 400, VPEND = 1000; // ms of silence between two clips; how long a pending high-priority line stays relevant
+const VDUCK_LINE = 0.398, VDUCK_GIG = 0.631; // -8 dB / -4 dB
+const CREATE_TRIES = 3; // AudioContext constructor attempts (one per tap) before giving up for the session
 
-type Pref = 'snd' | 'mus' | 'sfx';
-const prefs: Record<Pref, boolean> = { snd: true, mus: true, sfx: true };
+type Pref = 'snd' | 'mus' | 'sfx' | 'vox';
+const prefs: Record<Pref, boolean> = { snd: true, mus: true, sfx: true, vox: true };
 let urlMute = false;
 let ctx: AudioContext | null = null, master: GainNode | null = null, musicBus: GainNode | null = null, duckG: GainNode | null = null, sfxBus: GainNode | null = null;
-const buf = new Map<Snd, AudioBuffer>();
-let loading = false, hidden = false;
+let vduckG: GainNode | null = null, voxBus: GainNode | null = null;
+const buf = new Map<Snd, AudioBuffer>(), vbuf = new Map<string, AudioBuffer>();
+let loading = false, hidden = false, createFails = 0, gaveUp = false;
 let want: 'base' | 'bonus' | null = null;
 let cur: { name: 'base' | 'bonus'; s: AudioBufferSourceNode; g: GainNode } | null = null;
 let ducks = 0;
@@ -54,37 +73,41 @@ export function setAudioPref(k: Pref, v: boolean) {
 }
 function apply() {
 	if (!ctx) return;
-	ramp(master!.gain, on() ? 1 : 0); ramp(musicBus!.gain, prefs.mus ? 1 : 0); ramp(sfxBus!.gain, prefs.sfx ? 1 : 0);
+	ramp(master!.gain, on() ? 1 : 0); ramp(musicBus!.gain, prefs.mus ? 1 : 0); ramp(sfxBus!.gain, prefs.sfx ? 1 : 0); ramp(voxBus!.gain, prefs.vox ? 1 : 0);
+	if (!on() || !prefs.vox) stopVoice();
 	if (on()) load();
 	if (on() && prefs.mus) syncMusic(); else stopMusic(0.3);
 }
 
 /** Read the stored switches and the launch param; arm the first-tap unlock. Call once at boot (no audio work here). */
 export function initAudio() {
-	for (const k of ['snd', 'mus', 'sfx'] as Pref[]) safe(() => { const v = localStorage.getItem('elfhaus.' + k); if (v != null) prefs[k] = v !== '0'; });
+	for (const k of ['snd', 'mus', 'sfx', 'vox'] as Pref[]) safe(() => { const v = localStorage.getItem('elfhaus.' + k); if (v != null) prefs[k] = v !== '0'; });
 	safe(() => {
 		const q = new URLSearchParams(location.search), s = (q.get('sound') ?? q.get('audio') ?? '').toLowerCase(), m = (q.get('mute') ?? '').toLowerCase();
 		if (['0', 'off', 'false', 'no'].includes(s) || ['1', 'true', 'on', 'yes'].includes(m)) urlMute = true;
 	});
 	const evs = ['pointerdown', 'touchend', 'click', 'keydown'];
-	const tap = () => { unlock(); if (ctx?.state === 'running') evs.forEach((e) => document.removeEventListener(e, tap, true)); };
+	const tap = () => { unlock(); if (ctx?.state === 'running' || gaveUp) evs.forEach((e) => document.removeEventListener(e, tap, true)); };
 	evs.forEach((e) => document.addEventListener(e, tap, { capture: true, passive: true }));
 	document.addEventListener('visibilitychange', () => { hidden = document.visibilityState === 'hidden'; hidden ? suspend() : resume(); });
 	addEventListener('pagehide', () => { hidden = true; suspend(); });
 	addEventListener('pageshow', () => { hidden = document.visibilityState === 'hidden'; if (!hidden) resume(); });
 }
-const suspend = () => safe(() => { if (ctx && ctx.state === 'running') void ctx.suspend().catch(() => {}); });
+// a voice clip is stopped (not paused) on hide: its end timer keeps running, so a resumed clip could overlap the next one
+const suspend = () => safe(() => { stopVoice(); if (ctx && ctx.state === 'running') void ctx.suspend().catch(() => {}); });
 const resume = () => safe(() => { if (ctx && ctx.state !== 'running' && !hidden) void ctx.resume().catch(() => {}); });
 
 function unlock() {
-	if (!on()) return;
+	if (!on() || gaveUp) return;
 	safe(() => {
 		if (!ctx) {
-			const C: typeof AudioContext | undefined = (window as any).AudioContext || (window as any).webkitAudioContext; if (!C) return;
-			ctx = new C();
+			// v3.9: no Web Audio = give up at once; a throwing constructor is retried on at most CREATE_TRIES taps in total
+			const C: typeof AudioContext | undefined = (window as any).AudioContext || (window as any).webkitAudioContext; if (!C) { gaveUp = true; return; }
+			try { ctx = new C(); } catch (e) { if (++createFails >= CREATE_TRIES) gaveUp = true; throw e; }
 			master = ctx.createGain(); musicBus = ctx.createGain(); duckG = ctx.createGain(); sfxBus = ctx.createGain();
-			musicBus.connect(duckG); duckG.connect(master); sfxBus.connect(master); master.connect(ctx.destination);
-			master.gain.value = 1; musicBus.gain.value = prefs.mus ? 1 : 0; sfxBus.gain.value = prefs.sfx ? 1 : 0;
+			vduckG = ctx.createGain(); voxBus = ctx.createGain();
+			musicBus.connect(duckG); duckG.connect(vduckG); vduckG.connect(master); sfxBus.connect(master); voxBus.connect(master); master.connect(ctx.destination);
+			master.gain.value = 1; musicBus.gain.value = prefs.mus ? 1 : 0; sfxBus.gain.value = prefs.sfx ? 1 : 0; voxBus.gain.value = prefs.vox ? 1 : 0;
 			// old iOS: a silent one-sample buffer started inside the gesture unlocks output
 			const b = ctx.createBuffer(1, 1, 22050), s = ctx.createBufferSource(); s.buffer = b; s.connect(ctx.destination); s.start(0);
 			if (!want) want = document.body.classList.contains('inBonus') ? 'bonus' : 'base';
@@ -94,12 +117,19 @@ function unlock() {
 }
 function load() {
 	if (loading || !ctx) return; loading = true;
-	const one = (n: Snd) => fetch(FILES[n]).then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(r.status)))
+	const get = (url: string) => fetch(url).then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(r.status)))
 		// a decode that never settles (seen in headless Linux WebKit) must not hold up the next group: give up after 15 s
-		.then((ab) => new Promise<AudioBuffer>((res, rej) => { setTimeout(() => rej('timeout'), 15000); const p = ctx!.decodeAudioData(ab, res, rej); if (p && (p as any).catch) (p as Promise<AudioBuffer>).catch(rej); }))
+		// (v3.9: the timer is cleared as soon as the decode settles)
+		.then((ab) => new Promise<AudioBuffer>((res, rej) => {
+			const t = setTimeout(() => rej('timeout'), 15000);
+			const ok = (b: AudioBuffer) => { clearTimeout(t); res(b); }, no = (e: unknown) => { clearTimeout(t); rej(e); };
+			const p = ctx!.decodeAudioData(ab, ok, no); if (p && (p as any).catch) (p as Promise<AudioBuffer>).catch(no);
+		}));
+	const one = (n: Snd) => get(FILES[n])
 		.then((b) => { buf.set(n, b); if (n === MUSIC.base || n === MUSIC.bonus) syncMusic(); })
 		.catch(() => { /* this sound stays silent */ });
-	(async () => { for (const grp of ORDER) await Promise.all(grp.map(one)); })().catch(() => {});
+	const vone = (n: string) => get(`assets/audio/voice/${n}.mp3`).then((b) => { vbuf.set(n, b); }).catch(() => { /* this line is skipped */ });
+	(async () => { for (const grp of ORDER) await Promise.all(grp.map(one)); await Promise.all(VFILES.map(vone)); })().catch(() => {});
 }
 /** loopStart / loopEnd in seconds: if the decoder kept the mp3 encoder delay (buffer > true length + 20 ms), skip it. */
 function loopPoints(n: Snd, b: AudioBuffer) {
@@ -160,3 +190,64 @@ export function duck(hold: boolean) {
 }
 /** Dip the music for `ms` (one-shot stingers). */
 export function duckFor(ms: number) { duck(true); setTimeout(() => duck(false), ms); }
+
+// ---------------------------------------------------------------- voice (v3.9) ----------------------------------------------------------------
+export type VoicePri = 'high' | 'normal';
+let vcur: { s: AudioBufferSourceNode; g: GainNode } | null = null;
+let vBusyUntil = 0;   // performance.now() ms when the current clip ends (0 = none); new clips also wait VGAP after it
+let vPending: { name: string; until: number } | null = null, vPendT = 0;
+let vStarted = 0;     // clips started this session (smoke tests / debugging)
+const vlive = () => !!ctx && on() && prefs.vox && !hidden && ctx.state === 'running';
+/** true while a clip plays or within the 400 ms gap after it. */
+export const voiceBusy = () => vBusyUntil > 0 && performance.now() < vBusyUntil + VGAP;
+export const voiceReady = (name: string) => vbuf.has(name);
+export const voiceStats = () => ({ started: vStarted, busy: voiceBusy(), pending: vPending?.name ?? null });
+/**
+ * Play one voice clip (file stem, e.g. 'vo_roxy_bonus_1'). Returns true if it started now. While another clip plays (or
+ * in the gap after it) the request is dropped; a 'high' one instead takes the single pending slot (if empty) and
+ * plays after the gap only while still relevant (<= VPEND ms after the current clip ends).
+ */
+export function playVoice(name: string, pri: VoicePri = 'normal'): boolean {
+	return safe(() => {
+		if (!vlive() || !vbuf.has(name)) return false;
+		if (voiceBusy()) {
+			if (pri === 'high' && !vPending && vBusyUntil > 0) {
+				vPending = { name, until: vBusyUntil + VGAP + VPEND };
+				clearTimeout(vPendT); vPendT = window.setTimeout(firePending, Math.max(0, vBusyUntil + VGAP - performance.now()));
+			}
+			return false;
+		}
+		return startVoice(name);
+	}) ?? false;
+}
+function firePending() {
+	const p = vPending; vPending = null; if (!p) return;
+	if (performance.now() > p.until) return;
+	if (voiceBusy()) return; // something else got in (can't happen: every start goes through the busy check)
+	safe(() => { if (vlive()) startVoice(p.name); });
+}
+function startVoice(name: string): boolean {
+	const b = vbuf.get(name); if (!b || !ctx) return false;
+	const s = ctx.createBufferSource(), g = ctx.createGain(); s.buffer = b; g.gain.value = 1;
+	s.connect(g); g.connect(voxBus!); s.start(0);
+	const x = { s, g }; vcur = x; vStarted++;
+	vBusyUntil = performance.now() + b.duration * 1000 + 30;
+	if (vduckG) ramp(vduckG.gain, name.startsWith('gig_') ? VDUCK_GIG : VDUCK_LINE, 0.08);
+	const end = () => {
+		if (vcur !== x) return; vcur = null;
+		vBusyUntil = Math.min(vBusyUntil, performance.now());
+		if (vduckG) ramp(vduckG.gain, 1, 0.3);
+		safe(() => g.disconnect());
+	};
+	s.onended = end;
+	window.setTimeout(end, b.duration * 1000 + 60); // onended can stall while the context is suspended
+	return true;
+}
+/** Hard stop (switch off / mute / hidden): fade 60 ms, drop the pending line. The gap still applies afterwards. */
+export function stopVoice() {
+	vPending = null; clearTimeout(vPendT);
+	const x = vcur; if (!x) return; vcur = null; vBusyUntil = performance.now();
+	safe(() => { ramp(x.g.gain, 0, 0.06); x.s.stop(now() + 0.08); if (vduckG) ramp(vduckG.gain, 1, 0.3); });
+}
+/** Drop a waiting high-priority line (the moment it belonged to is over). */
+export function cancelPendingVoice() { vPending = null; clearTimeout(vPendT); }

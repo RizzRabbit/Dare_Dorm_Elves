@@ -14,6 +14,7 @@ import { money } from './format';
 import type { LineWin } from './typesBookEvent';
 import { T } from './tempo';
 import { sfx } from './audio';
+import { voice } from './voice';
 
 let cv: HTMLCanvasElement | null = null, ctx: CanvasRenderingContext2D | null = null, dpr = 1;
 let head: HTMLCanvasElement | null = null;
@@ -112,6 +113,7 @@ export async function playWins(wins: LineWin[], base: number) {
 	clearRace(); setWinMeter(tot);
 	// round win so far (x bet): < 2 small, 2-5 medium, 5-10 big; >= 10 gets the big-win sting instead; turbo = small only
 	if (n && tot < 10) sfx(turbo || tot < 2 ? 'win_small' : tot < 5 ? 'win_medium' : 'win_big');
+	if (n && !turbo && tot >= 2 && tot < 10) voice('win');
 	wins.forEach((w) => w.positions.forEach((p) => { ovWin(p.reel); const c = cellEl(p.reel, p.row); c.classList.remove('dim'); c.classList.add('win'); litOn(c); symWin(c); }));
 	if (!skipAll) await hold(turbo ? 200 : T(450));
 	active = false; skipAll = false;

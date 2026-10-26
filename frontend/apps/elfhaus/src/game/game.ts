@@ -21,6 +21,7 @@ import { BIGWIN_ELVES_MIN_X, preloadBigWinElves, bigWinElvesStart, bigWinElvesEn
 import { setBigWinFx } from './ui';
 import { initSettings, syncSettings } from './settings';
 import { initAudio, sfx } from './audio';
+import { initVoiceIdle, voice } from './voice';
 import { setSocial, isSocial, t } from './strings';
 import { $, S, ART, bet, buildCells, renderAll, renderOverlays, setOverlayHook, resetWinMeter, setWinMeter, banner, wait, waitRaw } from './ui';
 import { skipHolds, syncTempo } from './tempo';
@@ -71,6 +72,13 @@ function setArm(m: ModeKey | null, ante = false) {
 	tag.setAttribute('aria-label', on ? `${MODE_LABEL[mode]} active, tap to turn off` : '');
 	$('#spinBtn').setAttribute('aria-label', on ? `Spin: ${MODE_LABEL[mode]} at ${money(bet() * modeCost(mode))}` : 'Spin');
 	setStrip();
+}
+/** v3.9: a player's own bet-mode pick (buy card, Ante switch, armTag / card off = back to base). Any change to a
+ *  different mode of the 7 (base, ante, dare, double_dare, triple_dare, mystery, egw) gets one elf line or giggle
+ *  (voice.ts: no overlap, same mode within 20 s stays quiet). Bet up / down, replay, turbo and autoplay never call this. */
+function pickArm(m: ModeKey | null, ante = false) {
+	const was = spinMode(); setArm(m, ante); const now = spinMode();
+	if (now !== was) voice('mode', { mode: now });
 }
 function setStrip() {
 	$('#balance').textContent = S.replay ? '—' : money(S.balance);
@@ -278,11 +286,11 @@ function buildBuy() {
 	$('#buyCards').querySelectorAll<HTMLElement>('.bcard').forEach((b) => (b.onclick = () => {
 		const m = b.dataset.m as ModeKey;
 		if (b.classList.contains('off')) return;
-		if (armed === m) { setArm(null); sfx('ui_click'); return; } // tap the active card again to turn it off
+		if (armed === m) { pickArm(null); sfx('ui_click'); return; } // tap the active card again to turn it off
 		// One tap turns a bet mode on (user, live v3): no ACTIVATE / CANCEL step. Nothing is charged here - the mode is
 		// armed for the next spin and the spin button (price shown on the strip / armTag) is the one tap that spends.
 		// Tap the armed card again, or the armTag on the spin button, to go back to base.
-		show('#buyConfirm', false); setArm(m); sfx('ui_mode_arm'); show('#buyMenu', false);
+		show('#buyConfirm', false); pickArm(m); sfx('ui_mode_arm'); show('#buyMenu', false);
 		banner(`${MODE_LABEL[m].toUpperCase()} ON · ${money(modeCost(m) * bet())} ${isSocial() ? 'PER PLAY' : 'PER SPIN'}`, 1600);
 	}));
 	paintBuy();
@@ -412,8 +420,8 @@ function wire() {
 	$('#betDown').onclick = () => betStep(-1);
 	$('#bmUp').onclick = () => betStep(1);
 	$('#bmDown').onclick = () => betStep(-1);
-	$('#anteSw').onclick = () => { setArm(null, !S.ante); paintBuy(); sfx(S.ante ? 'ui_mode_arm' : 'ui_click'); };
-	$('#armTag').onclick = () => { if (!S.busy) { setArm(null); sfx('ui_click'); } };
+	$('#anteSw').onclick = () => { pickArm(null, !S.ante); paintBuy(); sfx(S.ante ? 'ui_mode_arm' : 'ui_click'); };
+	$('#armTag').onclick = () => { if (!S.busy) { pickArm(null); sfx('ui_click'); } };
 	$('#turboBtn').onclick = () => { S.turbo = !S.turbo; $('#turboBtn').classList.toggle('on', S.turbo); syncTempo(); };
 	syncTempo();
 	$('#autoBtn').onclick = () => { if (S.auto) return stopAuto(); if (S.busy) return; buildAuto(); show('#autoMenu', true); };
@@ -467,7 +475,7 @@ const IDLE = [['H1', 'L2', 'L4', 'H3'], ['L1', 'H2', 'L5', 'L3'], ['H4', 'L3', '
 
 export async function initGame() {
 	setLocale(url.lang);
-	initAudio(); // reads the sound switches; audio itself starts on the first tap
+	initAudio(); initVoiceIdle(); // reads the sound switches; audio itself starts on the first tap
 	initLoader(); preloadArt();
 	// any tap lands a running count-up on its final value (the big-win banner handles its own taps)
 	startShimmer(); wireTapFx();

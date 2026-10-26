@@ -46,6 +46,15 @@ for (const j of walk(OUT).filter((f) => f.endsWith('.json') && f.includes('/asse
 const missing = [...refs].filter((r) => !existsSync(join(OUT, r)));
 if (missing.length) fail(`${missing.length} referenced asset(s) missing from the package:\n  ` + missing.join('\n  '));
 console.log(`asset check: ${refs.size} referenced asset paths, all present`);
+// v3.9: voice clips are fetched by computed name (assets/audio/voice/<vo_|gig_>*.mp3, audio.ts VOICE_LINES): all 35 must ship
+if (outCode.includes('assets/audio/voice/')) {
+	const vdir = join(OUT, 'assets/audio/voice'), want = [];
+	const L = { roxy: ['wild', 'bigwin', 'bonus', 'idle'], jade: ['wild', 'win', 'fsstart', 'tease'], vi: ['wild', 'win', 'tease', 'maxwin'], coco: ['wild', 'bonus', 'tease', 'idle'], delilah: ['wild', 'fsstart', 'bigwin', 'maxwin'] };
+	for (const [e, ms] of Object.entries(L)) { ms.forEach((m) => want.push(`vo_${e}_${m}_1.mp3`)); [1, 2, 3].forEach((n) => want.push(`gig_${e}_${n}.mp3`)); }
+	const vmiss = want.filter((f) => !existsSync(join(vdir, f)));
+	if (vmiss.length) fail(`${vmiss.length} voice clip(s) missing:\n  ` + vmiss.join('\n  '));
+	console.log(`voice check: ${want.length} voice clips present`);
+}
 // No offline mock in a release (reviewer rule; Vault Breakers failed on it): no mock module, no fixture book names, no
 // mock switches, no mock fallback field - in any shipped file (code or data), not just disabled by a flag.
 {
