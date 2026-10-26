@@ -1166,3 +1166,19 @@ body.portrait .modal .mX{top:2px;right:2px}
 body.tb .cfHint{margin-top:calc(26px / (var(--s,1) * var(--tbm,1)))!important}
 body.portrait .modal.cf h2{font-size:22px}
 body.short:not(.portrait) .cfArt,body.tb .cfArt{width:min(120px,34%)}
+
+/* ---------- v3.14 (James): retrigger card "+X FREE SPINS" ----------
+   Same plum card family as the FS intro, smaller and lighter: light dim, no button, no burst, no rings.
+   Motion is WAAPI in bookEventHandlerMap.ts fsMoreCard (opacity + scale .92 -> 1 only). */
+#fsMore{background:#110F1640;cursor:pointer}
+#fsMore .card{text-align:center;background:linear-gradient(#24162EEB,#170E1FEB);border:1.5px solid #6E4A7E;border-radius:14px;
+  box-shadow:0 14px 30px -12px #000B;padding:18px 56px 22px;color:#F6ECF3;max-width:calc(80*var(--vw));will-change:transform,opacity}
+#fsMore .fmBig{font-family:"Cinzel",serif;font-weight:900;line-height:1.05;font-size:84px;letter-spacing:2px;
+  color:var(--tt-fill);-webkit-text-stroke:.09em var(--tt-ink);paint-order:stroke fill;
+  text-shadow:0 .04em 0 var(--tt-ink),0 0 .28em color-mix(in srgb,var(--tt-neon) 70%,transparent)}
+#fsMore[data-max="1"] .fmBig{font-size:60px}
+#fsMore .fmSub{font-family:"Nunito",sans-serif;font-weight:800;font-size:24px;letter-spacing:3px;color:#E9D6EE;margin-top:6px}
+body.portrait #fsMore .fmBig{font-size:52px} body.portrait #fsMore[data-max="1"] .fmBig{font-size:36px}
+body.portrait #fsMore .fmSub{font-size:16px} body.portrait #fsMore .card{padding:12px 30px 14px}
+/* landscape phones (body.tb: stage scale < .66): the same text boost as the intro/outro values */
+body.tb:not(.portrait) #fsMore .card{zoom:var(--tbs)}

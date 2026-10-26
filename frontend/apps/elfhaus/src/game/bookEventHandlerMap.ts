@@ -22,7 +22,7 @@ const warmStacks = () => stackPrefetch(S.sym.flatMap((c, r) => (!S.full.has(r) &
 import { featOpen, featPop, featClose } from './featfx';
 import { countTo, countMs, setAmount, skipCounts } from './countup';
 import { grab, combineInto } from './combine';
-import { tempo } from './tempo';
+import { tempo, hold } from './tempo';
 import { sfx, loop, music, duck, duckFor, type Handle } from './audio';
 import { voice, voiceSpin } from './voice';
 // Pauses here use ui.wait: the old pace x ANIM_TEMPO, skippable by tap / Space (tempo.ts); turbo keeps its short values.
@@ -39,6 +39,24 @@ async function showScatters(ps: Pos[], ms: number) {
 	ps.forEach((p) => { const c = cellEl(p.reel, p.row); c.classList.add('win'); symWin(c); });
 	await wait(S.turbo ? ms / 2 : ms);
 }
+/** v3.14 retrigger card: big "+X" over "FREE SPINS" ("MAX 20" when the cap swallows the whole retrigger). Small and
+ * light next to the FS intro. Opacity + a soft 0.92 -> 1 scale only: in 450 ms, out 350 ms (turbo: half). On screen
+ * hold(800) = 1.6 s at board tempo 2 (turbo 0.8 s); a tap anywhere ends it early (game.ts pointerdown -> skipHolds). */
+async function fsMoreCard(added: number) {
+	const O = $('#fsMore'), card = O.querySelector<HTMLElement>('.card')!, big = O.querySelector<HTMLElement>('.fmBig')!;
+	big.textContent = added > 0 ? `+${added}` : `MAX ${MAX_FS}`; O.dataset.max = added > 0 ? '' : '1';
+	const calm = !matchMedia('(prefers-reduced-motion: reduce)').matches, f = S.turbo ? 0.5 : 1;
+	const from = { opacity: 0, transform: calm ? 'scale(.92)' : 'none' }, to = { opacity: 1, transform: 'none' };
+	O.classList.remove('hidden');
+	O.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 450 * f, easing: 'ease-out' });
+	card.animate([from, to], { duration: 450 * f, easing: 'cubic-bezier(.2,.8,.3,1)' });
+	await Promise.race([hold(800), new Promise<void>((res) => (O.onclick = () => res()))]);
+	O.onclick = null;
+	const out = { duration: 350 * f, easing: 'ease-in', fill: 'forwards' as const };
+	O.animate([{ opacity: 1 }, { opacity: 0 }], out);
+	await card.animate([to, { opacity: 0, transform: calm ? 'scale(.96)' : 'none' }], out).finished.catch(() => {});
+	O.classList.add('hidden'); O.getAnimations().forEach((a) => a.cancel()); card.getAnimations().forEach((a) => a.cancel());
+}
 const unScatter = () => { document.querySelectorAll('.cell').forEach((c) => c.classList.remove('win', 'dim')); clearSymWins(); };
 /** Wilds that stay for the bonus: lock them in place on the current board (no re-render, so nothing jumps). */
 function lockCarried(l: Locked) {
@@ -46,7 +64,7 @@ function lockCarried(l: Locked) {
 	l.singles.forEach((s) => { const c = cellEl(s.reel, s.row); if (!c.classList.contains('locked')) { c.classList.add('locked'); lockFx(c); fresh = true; } });
 	if (fresh) sfx('wild_sticky_lock');
 }
-export const endBonusUi = () => { music('base'); setBg(false); document.body.classList.remove('inBonus'); $('#fsBar').classList.add('hidden'); $('#intro').classList.add('hidden'); S.inBonus = false; };
+export const endBonusUi = () => { music('base'); setBg(false); document.body.classList.remove('inBonus'); $('#fsBar').classList.add('hidden'); $('#intro').classList.add('hidden'); $('#fsMore').classList.add('hidden'); S.inBonus = false; };
 
 /** v3.10 EGW: the reels named by egwStart (reel -> stack value). The math sends them as already-locked full reels in the
  * next reveal, which used to pin them on the board before the spin even started ("drops the wilds like a ton of bricks").
@@ -267,9 +285,10 @@ export const bookEventHandlerMap: Handlers = {
 	},
 	async freeSpinRetrigger(ev) {
 		// 2 Dare Cards = +2, 3+ = +5, up to the 20-spin cap
+		// v3.14 (James): a brief "+X FREE SPINS" card over the lit Dare Cards; the fs counter updates as it appears
 		const hl = showScatters(ev.scatters, 900); sfx('bonus_trigger', { gain: 0.6 });
-		banner(ev.addedFs ? `+${ev.addedFs} SPINS` : `MAX ${MAX_FS} SPINS`, 1300);
-		setFsTotal(ev.totalFs); await hl; unScatter(); await wait(200);
+		setFsTotal(ev.totalFs);
+		await Promise.all([fsMoreCard(ev.addedFs), hl]); unScatter(); await wait(200);
 	},
 	async freeSpinEnd(ev) {
 		// outro: TOTAL WIN counts up over a burst + confetti; tap = jump to the amount, tap again (or wait) = close
