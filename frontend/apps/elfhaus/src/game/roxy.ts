@@ -127,30 +127,28 @@ function tick(t: number) {
 	}
 }
 /** Size and place Roxy: landscape = standing in the gutter left of the reels, ~full height, never over the
- *  reel frame; portrait = head to waist above the board, in front of the board's crown (marquee), cut off at the
- *  board's top edge so she never covers the reels or the HUD. */
+ *  reel frame; portrait = behind the whole game (as in v2), moved up so her head and upper body sit in the band
+ *  between the logo and the crown's arch; below the arch she reads through the semi-transparent reel plate (CSS). */
 export function placeRoxy(portrait: boolean, frameRect: DOMRect) {
 	if (!cv || !roxySize.h) return;
 	const W = ST.w, H = ST.h, ar = roxySize.w / roxySize.h;
 	let h: number, left: number;
 	let top: number | null = null;
-	// portrait: Roxy lives inside #app so she can sit above the crown (z-index) yet under the logo, HUD and overlays;
-	// landscape: back to her place before #app (behind the whole game column, as before).
+	// v3.3 moved her into #app (portrait); she lives before #app again in every orientation, behind the game.
 	const app = document.getElementById('app');
-	if (app) { if (portrait && cv.parentElement !== app) app.appendChild(cv); else if (!portrait && cv.parentElement === app) app.before(cv); }
+	if (app && cv.parentElement === app) app.before(cv);
 	const bEl = document.getElementById('board'); const bTop = bEl ? toStage(bEl.getBoundingClientRect()).top : frameRect.top + 10;
 	const cut = Math.min(bTop, frameRect.top + 10) - 1;
 	if (portrait) {
-		// Head to waist between the title and the board (user rule: on mobile Roxy is never hidden behind the board).
-		// Sheet fractions (idle): hair top ~3%, face ~14% (x ~43% of the width), waist ~43%, thong ~45%. Her waist sits on
-		// the cut line at the board's top edge (see clipPath below), so everything above it shows; she draws over the
-		// crown (z-index, CSS body.portrait #roxy) and under the logo, overlays and HUD.
+		// Sheet fractions (idle): hair top ~3%, face ~14% (x ~43% of the width), chest ~27%, waist ~43%.
+		// Top of her head (ponytail) ~8px below the logo (10 less her idle bob). Size: the smaller of "waist on the
+		// board's top edge" and "chest at the arch", so at least head and shoulders clear the crown on short screens.
 		const logoEl = document.getElementById('logo'); const logo = logoEl ? toStage(logoEl.getBoundingClientRect()) : null;
-		// she fills the band: the top of her head (ponytail) ~8px below the logo (10 less her idle bob), her waist on the cut line.
+		const crEl = document.getElementById('alcoveCrown'); const cr = crEl && crEl.offsetHeight ? toStage(crEl.getBoundingClientRect()) : null;
 		const y0 = logo && logo.height ? logo.bottom + 10 : 8;
-		const space = Math.max(60, cut - y0);
-		h = space / 0.41;
-		top = cut - h * 0.44;
+		const arch = cr ? cr.top + cr.height * 0.03 : cut - 85; // crown_portrait: arch top ~0-4% of its height near the middle
+		h = Math.max(120, Math.min((cut - y0) / 0.41, (arch - y0) / 0.24));
+		top = y0 - h * 0.03;
 		left = Math.min(W * 0.6 - h * ar * 0.43, W - h * ar * 0.62);
 	} else {
 		const gutter = frameRect.left - 8; // the sheet's left ~11% is empty, so it may hang off-screen a little
@@ -164,10 +162,10 @@ export function placeRoxy(portrait: boolean, frameRect: DOMRect) {
 	const sh = document.getElementById('roxySh');
 	if (sh) { const w = h * ar; sh.style.display = top == null && show ? 'block' : 'none';
 		sh.style.left = (left + w * 0.08) + 'px'; sh.style.width = (w * 0.76) + 'px'; sh.style.height = (h * 0.045) + 'px'; sh.style.top = (H - h * (0.022 + 0.0225)) + 'px'; }
-	// portrait: cut her off at the board frame's top edge, so she never covers the reels.
-	cv.style.clipPath = top == null ? '' : `inset(0 0 ${Math.max(0, h - (cut - top))}px 0)`;
-	// and fade the last 14px above the cut, so the waist crop doesn't look pasted on.
-	const mask = top == null ? '' : `linear-gradient(to bottom,#000 ${cut - top - 14}px,transparent ${cut - top}px)`;
+	// portrait: on tall screens her legs reach below the board; fade them out over the board's last 40px so nothing
+	// of her shows behind the HUD.
+	const bBot = bEl ? toStage(bEl.getBoundingClientRect()).bottom : H;
+	const mask = top != null && top + h > bBot ? `linear-gradient(to bottom,#000 ${bBot - top - 40}px,transparent ${bBot - top}px)` : '';
 	cv.style.setProperty('-webkit-mask-image', mask); cv.style.setProperty('mask-image', mask);
 }
 /** Starts Roxy: calls onReady as soon as the idle loop can show; resolves once every state's sheets are downloaded

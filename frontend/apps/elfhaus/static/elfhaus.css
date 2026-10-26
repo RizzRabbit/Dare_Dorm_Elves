@@ -274,7 +274,8 @@ body:not(.portrait).short #hud{max-width:none}
 /* ---------- full-body Roxy (animated sprite, roxy.ts) between the room and the game UI ---------- */
 #roxy{position:fixed;left:0;bottom:0;pointer-events:none;display:none;image-rendering:auto;transform-origin:56% 99%;will-change:transform}
 body.hasRoxy #roxy{display:block}
-body.portrait #roxy{z-index:2} /* portrait: inside #app, over the board's crown (z 1), under fsBar 4 / logo 5 / overlays */
+/* portrait: Roxy stands behind the game, so the reel plate (recess wall + board tint) is semi-transparent there */
+body.portrait.hasRoxy #alcoveRecess{opacity:.6} body.portrait.hasRoxy #board{background:transparent}
 
 /* ---- In-game title: ELFHAUS wordmark centered above the reel board ---- */
 #top{position:relative;top:auto;left:auto;right:auto;width:100%;height:auto;display:flex;justify-content:center;padding-top:6px;pointer-events:none;z-index:5}
