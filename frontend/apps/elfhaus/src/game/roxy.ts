@@ -148,7 +148,7 @@ export function placeRoxy(portrait: boolean, frameRect: DOMRect) {
 		const y0 = logo && logo.height ? logo.bottom + 10 : 8;
 		const arch = cr ? cr.top + cr.height * 0.03 : cut - 85; // crown_portrait: arch top ~0-4% of its height near the middle
 		h = Math.max(120, Math.min((cut - y0) / 0.41, (arch - y0) / 0.24));
-		top = y0 - h * 0.03;
+		top = y0 - h * 0.0265; // a hair lower on big sizes: her bob + hair tips reach ~0.3% above the 3% line
 		left = Math.min(W * 0.6 - h * ar * 0.43, W - h * ar * 0.62);
 	} else {
 		const gutter = frameRect.left - 8; // the sheet's left ~11% is empty, so it may hang off-screen a little
@@ -162,9 +162,9 @@ export function placeRoxy(portrait: boolean, frameRect: DOMRect) {
 	const sh = document.getElementById('roxySh');
 	if (sh) { const w = h * ar; sh.style.display = top == null && show ? 'block' : 'none';
 		sh.style.left = (left + w * 0.08) + 'px'; sh.style.width = (w * 0.76) + 'px'; sh.style.height = (h * 0.045) + 'px'; sh.style.top = (H - h * (0.022 + 0.0225)) + 'px'; }
-	// portrait: on tall screens her legs reach below the board; fade them out over the board's last 40px so nothing
-	// of her shows behind the HUD.
-	const bBot = bEl ? toStage(bEl.getBoundingClientRect()).bottom : H;
+	// portrait: she fades out over the 40px above the end of the board's second row, so her lower body never fills
+	// reels 3-4 or shows behind the HUD (tall screens; through the reels she is dimmed by CSS #board::before).
+	const bR = bEl ? toStage(bEl.getBoundingClientRect()) : null; const bBot = bR ? bR.top + bR.height * 0.5 : H;
 	const mask = top != null && top + h > bBot ? `linear-gradient(to bottom,#000 ${bBot - top - 40}px,transparent ${bBot - top}px)` : '';
 	cv.style.setProperty('-webkit-mask-image', mask); cv.style.setProperty('mask-image', mask);
 }
