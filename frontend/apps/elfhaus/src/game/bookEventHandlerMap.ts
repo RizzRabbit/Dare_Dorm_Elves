@@ -75,6 +75,8 @@ export const endBonusUi = () => { music('base'); setBg(false); document.body.cla
  * the stack value (egwParts.ts: under 4 the extra rows show no badge). No extra anticipation: the reveal's own math
  * anticipation flags apply, exactly as in the other modes. */
 let egwPending: Map<number, number> | null = null;
+/** v3.15g (James): set by wincap; the max-win screen already showed the capped total, so freeSpinEnd skips its TOTAL WIN outro */
+let capHit = false;
 
 async function formStack(ev: { reel: number; value: number; instant?: boolean }, react = true) {
 	// the four wild values ADD into the stack's value (SPEC: sum of the 4 cell values)
@@ -291,6 +293,7 @@ export const bookEventHandlerMap: Handlers = {
 		await Promise.all([fsMoreCard(ev.addedFs), hl]); unScatter(); await wait(200);
 	},
 	async freeSpinEnd(ev) {
+		if (capHit) { endBonusUi(); return; }   // v3.15g: after a capped max win go straight back to base (finalWin sets the meter)
 		// outro: TOTAL WIN counts up over a burst + confetti; tap = jump to the amount, tap again (or wait) = close
 		const O = $('#outro'), fx = O.querySelector<HTMLElement>('.bwFx'), amt = O.querySelector<HTMLElement>('.otAmt')!;
 		const total = Math.min(ev.amount / 100, MAX_WIN_X) * bet();
@@ -311,12 +314,12 @@ export const bookEventHandlerMap: Handlers = {
 	},
 	async egwStart(ev) { egwPending = new Map(ev.reels.map((r) => [r, ev.value])); },
 	async buyTriggerStart() { await wait(200); },
-	async wincap() { hideRespin(); setWinMeter(MAX_WIN_X); await maxWinCelebration(); },
+	async wincap() { capHit = true; hideRespin(); setWinMeter(MAX_WIN_X); await maxWinCelebration(); },
 	async finalWin(ev) { setWinMeter(Math.min(ev.amount / 100, MAX_WIN_X)); },
 };
 
 export async function playBookEvents(events: BookEvent[]) {
-	S.roundBase = 0; voiceSpin();
+	S.roundBase = 0; capHit = false; voiceSpin();
 	// celebration sheets are lazy: start decoding them only once this round's book shows they're needed (the reels spin
 	// meanwhile); they're released again after the screen closes
 	if (events.some((e) => e.type === 'wincap')) void preloadMaxWin();

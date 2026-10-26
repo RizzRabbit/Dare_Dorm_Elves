@@ -102,6 +102,28 @@ for (const file of bookFiles) {
 	if (!epics) { console.error('  FAIL: no Epic books found'); failedBooks++; }
 }
 
+// v3.15g: after a wincap the TOTAL WIN outro is skipped (freeSpinEnd returns early) and finalWin lands on the cap
+{
+	const src = readFileSync(join(appDir, 'src/game/bookEventHandlerMap.ts'), 'utf8');
+	console.log(`\n=== 1c. Max win skips the TOTAL WIN outro ===`);
+	const ok = /async wincap\(\) \{ capHit = true;/.test(src) && /async freeSpinEnd\(ev\) \{\s*if \(capHit\) \{ endBonusUi\(\); return; \}/.test(src) && /S\.roundBase = 0; capHit = false;/.test(src);
+	if (!ok) { console.error('  FAIL: capHit skip not wired in bookEventHandlerMap.ts'); failedBooks++; }
+	let caps = 0;
+	for (const dir of [booksDir, join(appDir, 'src/mock/books')]) for (const file of readdirSync(dir).filter((f) => f.endsWith('.json'))) {
+		const ev = JSON.parse(readFileSync(join(dir, file), 'utf8')).events || [];
+		const wi = ev.findIndex((e) => e.type === 'wincap');
+		if (wi < 0) continue;
+		caps++;
+		const fe = ev.findIndex((e) => e.type === 'freeSpinEnd'), fw = ev.filter((e) => e.type === 'finalWin').pop();
+		const errs = [];
+		if (fe >= 0 && fe < wi) errs.push('freeSpinEnd before wincap');
+		if (!fw || Math.min(fw.amount / 100, 50000) !== 50000) errs.push(`finalWin ${fw && fw.amount}`);
+		if (errs.length) { console.error(`  FAIL: ${file}: ${errs.join('; ')}`); failedBooks++; }
+		else console.log(`  PASS: ${file.padEnd(24)} outro ${fe >= 0 ? 'skipped' : 'n/a (no FS)'}, finalWin 50000x`);
+	}
+	if (!caps) { console.error('  FAIL: no wincap books found'); failedBooks++; }
+}
+
 console.log(`\n=== 2. Social-mode restricted word scan ===`);
 // Scan strings, rules, and UI text in social mode
 // Stake social casino banned list (approval guidelines, front-end communication / jurisdiction requirements) plus
