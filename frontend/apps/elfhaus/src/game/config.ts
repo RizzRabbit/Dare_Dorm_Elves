@@ -27,7 +27,8 @@ export const SYMBOL_NAMES: Record<string, string> = {
 	H1: 'Roxy', H2: 'Jade', H3: 'Vi', H4: 'Coco', L1: 'Bottle', L2: 'Lips', L3: 'Phone', L4: 'Red Cup', L5: 'Leaf', W: 'Wild', S: 'Dare Card',
 };
 
-export const START_FS = { dare: 8, double_dare: 10, triple_dare: 10, hidden: 12 } as const;
+export const START_FS = { dare: 8, double_dare: 10, triple_dare: 10, hidden: 14 } as const; // v3.15f: Epic 12 -> 14 (James)
+export const EPIC_STACK_X = 6; // v3.15f: Epic's guaranteed full-reel wilds start at x6 (math GUAR_MIN_VAL; display reads the book value)
 export const MYSTERY_ODDS = { none: 50, double_dare: 37, triple_dare: 10, hidden: 3 } as const;
 export type Tier = keyof typeof START_FS;
 export const TIER_LABEL: Record<Tier, string> = { dare: 'Dare', double_dare: 'Double Dare', triple_dare: 'Triple Dare', hidden: 'Epic' }; // math tier id 'hidden' = UI name Epic (EVENTS.md)

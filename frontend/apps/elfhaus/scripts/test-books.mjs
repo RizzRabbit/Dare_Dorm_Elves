@@ -78,6 +78,30 @@ for (const file of bookFiles) {
 	}
 }
 
+// v3.15f: Epic ('hidden') starts with START_FS.hidden free spins and its guaranteed stacks start at EPIC_STACK_X
+{
+	const cfg = readFileSync(join(appDir, 'src/game/config.ts'), 'utf8');
+	const startFs = Number(cfg.match(/START_FS = \{[^}]*hidden:\s*(\d+)/)[1]), stackX = Number(cfg.match(/EPIC_STACK_X = (\d+)/)[1]);
+	console.log(`\n=== 1b. Epic start: ${startFs} free spins, stacks from x${stackX} ===`);
+	if (startFs !== 14 || stackX !== 6) { console.error(`  FAIL: config START_FS.hidden=${startFs}, EPIC_STACK_X=${stackX} (want 14, 6)`); failedBooks++; }
+	let epics = 0;
+	for (const dir of [booksDir, join(appDir, 'src/mock/books')]) for (const file of readdirSync(dir).filter((f) => f.endsWith('.json'))) {
+		const ev = JSON.parse(readFileSync(join(dir, file), 'utf8')).events || [];
+		const trig = ev.find((e) => e.type === 'freeSpinTrigger' && e.tier === 'hidden');
+		if (!trig) continue;
+		epics++;
+		const g = ev.find((e) => e.type === 'guaranteedStacks' && e.tier === 'hidden'), ufs = ev.find((e) => e.type === 'updateFreeSpin');
+		const errs = [];
+		if (trig.totalFs !== startFs) errs.push(`freeSpinTrigger.totalFs ${trig.totalFs}`);
+		if (ufs && ufs.total !== startFs) errs.push(`first updateFreeSpin.total ${ufs.total}`);
+		if (g && g.stacks.some((st) => st.value < stackX)) errs.push(`guaranteedStacks values ${g.stacks.map((st) => st.value)}`);
+		if (g && g.stacks.some((st) => !g.locked.fullReels.some((f) => f.reel === st.reel && f.value === st.value))) errs.push('stack missing from locked.fullReels');
+		if (errs.length) { console.error(`  FAIL: ${file}: ${errs.join('; ')}`); failedBooks++; }
+		else console.log(`  PASS: ${file.padEnd(24)} totalFs=${trig.totalFs}, stacks x${g ? g.stacks.map((st) => st.value).join(', x') : '-'}`);
+	}
+	if (!epics) { console.error('  FAIL: no Epic books found'); failedBooks++; }
+}
+
 console.log(`\n=== 2. Social-mode restricted word scan ===`);
 // Scan strings, rules, and UI text in social mode
 // Stake social casino banned list (approval guidelines, front-end communication / jurisdiction requirements) plus

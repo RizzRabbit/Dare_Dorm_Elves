@@ -9,7 +9,7 @@ import { requestAuthenticate, requestBet, requestEndRound, requestReplay } from 
 import { API_AMOUNT_MULTIPLIER } from 'constants-shared/bet';
 import {
 	ANTE_COST, CONFIRM_ABOVE_X, fmtX, BUY_MODES, GAME_ID, LINES, MAX_WIN_X, MODES, MODE_LABEL, MYSTERY_ODDS, PAYTABLE,
-	SPIN_CAP, START_FS, SYMBOL_NAMES, VERSION, isProvisional, oneIn, type ModeKey,
+	SPIN_CAP, START_FS, EPIC_STACK_X, SYMBOL_NAMES, VERSION, isProvisional, oneIn, type ModeKey,
 } from './config';
 import { confirmCopy, controlsAuto, controlsBonus, controlsTurbo, costHeader, modeDesc, turboCopy, type CopyCtx, type CopyMode } from './copy';
 import { registerPanel, openPanel, closePanel, isOpen, anyOpen, measurePanel } from './panels';
@@ -378,7 +378,7 @@ function buildRules() {
 <p>Four wilds on one reel become a full-reel wild worth the sum of their multipliers. A stack completed by wilds that all landed on the same spin is an instant stack. Adjacent full-reel wilds merge into one wide wild worth the product of their values; non-adjacent ones add. A line's multiplier is the product of merged groups plus the sum of the other wilds it uses.</p>
 <h3>Dare Cards and free spins</h3>
 <p>The Dare Card is the scatter: at most one per reel, it never awards a win and can land on any spin or respin. 3 Dare Cards on the final board start Dare (${START_FS.dare} free spins), 4 start Double Dare (${START_FS.double_dare}). 5 flip the Dare Card: Triple Dare (${START_FS.triple_dare}) or Epic (${START_FS.hidden}).</p>
-<p>In Dare, wilds clear after each spin. From Double Dare up, the trigger spin's wilds stay in place for the bonus and all wilds stay locked. Triple Dare starts with at least 1 full-reel wild, Epic with at least 2 (guaranteed stacks are added if missing). During free spins, 2 Dare Cards add +2 spins and 3 or more add +5, up to ${SPIN_CAP} spins in total.</p>
+<p>In Dare, wilds clear after each spin. From Double Dare up, the trigger spin's wilds stay in place for the bonus and all wilds stay locked. Triple Dare starts with at least 1 full-reel wild, Epic with at least 2 (guaranteed stacks are added if missing; Epic's start at x${EPIC_STACK_X} or more). During free spins, 2 Dare Cards add +2 spins and 3 or more add +5, up to ${SPIN_CAP} spins in total.</p>
 <h3>Modes</h3>
 <p>${(['ante', ...BUY_MODES] as ModeKey[]).map((m) => `<b>${MODE_LABEL[m]}</b> (${mult(modeCost(m))}): ${modeDesc(m as CopyMode, cc)}`).join('<br>')}</p>
 <table><tr><th>Mode</th><th>${costHeader(isSocial())}</th><th>RTP</th><th>Max win</th></tr>${modeRows}</table>
