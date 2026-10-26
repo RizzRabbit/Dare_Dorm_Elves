@@ -27,6 +27,7 @@
 		<div id="frame" class:art={!!art.frame} style={art.frame ? `border-image: url(${art.frame}) 30 fill / 30px stretch` : ''}>
 			<div id="board">
 				<div id="strips"></div>
+				<div id="reelLines" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
 				<div id="cells"></div>
 				<div id="overlays"></div>
 				<canvas id="lines"></canvas>

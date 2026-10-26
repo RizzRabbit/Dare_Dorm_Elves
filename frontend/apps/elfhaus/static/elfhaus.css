@@ -864,6 +864,32 @@ body.alcove #app #hud,body.alcove.portrait #app #hud{background:none;border-colo
 body.alcove #app #hud::before{border-top-color:transparent}
 /* the free-spins bar hangs on the crown like a sign: above the crown layer in both orientations (landscape already z 4) */
 body.alcove.portrait #app #fsBar{position:relative;z-index:4}
+/* v3.12 (James 2026-10-26 "more glow ... on the frame and a very subtle pink glow along the reel lines").
+   Tuning knobs (one place):
+     --frameGlowOp      frame halo opacity at its peak (0 = off)
+     --frameGlowLo      breathe low point as a fraction of the peak (1 = no visible breathe)
+     --frameGlowAnim    fgBreathe | none   (breathe on / off; reduced motion + Calm force it off)
+     --frameGlowPeriod  one full breath (>= 4 s; calm pace)
+     --reelLineOp       reel divider opacity (0 = off)
+     --reelLineW        divider core width
+     --reelLineCol      divider colour (pink; the single wilds own gold #FFC83D)
+   Frame halo: one pre-rendered webp per orientation (scripts/gen-frame-glow.py), opacity only. z 0 + first in #app, so it
+   paints over the room (#bg is a positioned sibling in #root, which hides the alcove's negative-z layers) but under
+   #board (z 0, later) and the crown (z 1); its inside is cleared over the board opening.
+   Reel lines: four static 1px-ish gradients + a static soft blur box behind the symbols, nothing animates. */
+:root{--frameGlowOp:.8;--frameGlowLo:.6;--frameGlowAnim:fgBreathe;--frameGlowPeriod:7s;
+  --reelLineOp:.3;--reelLineW:2px;--reelLineCol:#FF8FD2}
+#alcoveGlow{position:absolute;left:0;top:0;pointer-events:none;display:none;z-index:0;background-size:100% 100%;background-repeat:no-repeat;
+  opacity:var(--frameGlowOp);animation:var(--frameGlowAnim) var(--frameGlowPeriod) ease-in-out infinite;will-change:opacity}
+body.alcove #alcoveGlow{display:block}
+@keyframes fgBreathe{0%,100%{opacity:var(--frameGlowOp)}50%{opacity:calc(var(--frameGlowOp)*var(--frameGlowLo))}}
+@media (prefers-reduced-motion:reduce){#alcoveGlow{animation:none}}
+body.calm #alcoveGlow{animation:none}
+#reelLines{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:var(--reelLineOp)}
+#reelLines>i{position:absolute;top:0;bottom:0;left:calc(var(--k)*(var(--cell) + var(--gap)) - var(--gap)/2);width:calc(var(--reelLineW)*7);transform:translateX(-50%);
+  background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--reelLineCol) 35%,transparent) 30%,var(--reelLineCol) calc(50% - var(--reelLineW)/2),var(--reelLineCol) calc(50% + var(--reelLineW)/2),color-mix(in srgb,var(--reelLineCol) 35%,transparent) 70%,transparent);
+  -webkit-mask:linear-gradient(transparent,#000 9%,#000 91%,transparent);mask:linear-gradient(transparent,#000 9%,#000 91%,transparent)}
+#reelLines>i:nth-child(1){--k:1} #reelLines>i:nth-child(2){--k:2} #reelLines>i:nth-child(3){--k:3} #reelLines>i:nth-child(4){--k:4}
 /* ===== end board frame B2 ===== */
 
 /* ===== wild frame (wildframe.ts): full-reel stacked + merged wilds ===== */

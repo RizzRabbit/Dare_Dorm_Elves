@@ -195,6 +195,12 @@
   "alcove_twinkle2_landscape": [
     "assets/final/webp/frame/b2_twinkle2_landscape.webp"
   ],
+  "alcove_glow_landscape": [
+    "assets/final/webp/frame/b2_glow_landscape.webp"
+  ],
+  "alcove_glow_portrait": [
+    "assets/final/webp/frame/b2_glow_portrait.webp"
+  ],
   "alcove_crown_portrait": [
     "assets/final/webp/frame/b2_crown_portrait.webp"
   ],

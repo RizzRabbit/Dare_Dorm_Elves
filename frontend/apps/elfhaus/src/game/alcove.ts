@@ -15,13 +15,16 @@ const F = {
 } as const;
 const PAD = 0.045, BLEED = 0.12;                   // opening padding and back-wall bleed under the lips, x cell
 const LEDGE = { top: 0.31, side: 0.40, bottom: 0.21 }; // border-image widths x cell (slices 100/130/69/130 of 2044x245)
-const ids = ['alcoveAmbient', 'alcoveRecess', 'alcoveLedge', 'alcoveCrown', 'alcoveRail'] as const;
+const ids = ['alcoveAmbient', 'alcoveRecess', 'alcoveLedge', 'alcoveCrown', 'alcoveRail', 'alcoveGlow'] as const;
+// v3.12 frame neon halo (scripts/gen-frame-glow.py): the crown png + PAD px on every side, so it's placed as the crown box grown by PAD x u
+const GLOW_PAD = 160;
 const RAIL = { x0: 100, x1: 1503, h: 48 }; // portrait rail: pilaster centre to centre and its height, in crown png px
 let built = false, orient = '';
 
 function build() {
 	const app = document.getElementById('app'), top = document.getElementById('top'); if (!app) return false;
 	const html = `<div id="alcoveAmbient"></div>`
+		+ `<div id="alcoveGlow"></div>`
 		+ `<div id="alcoveRecess"><i class="avBase"></i><i class="avFs"></i></div>`
 		+ `<div id="alcoveLedge"></div>`
 		+ `<div id="alcoveRail"></div>`
@@ -47,7 +50,7 @@ export function placeAlcove() {
 	document.body.classList.add('alcove');
 	const o = ST.portrait ? 'portrait' : 'landscape', f = F[o], cell = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cell')) || 100;
 	const $ = (id: string) => document.getElementById(id) as HTMLElement;
-	const [amb, rec, led, cr, rail] = ids.map($);
+	const [amb, rec, led, cr, rail, glow] = ids.map($);
 	if (o !== orient) {
 		orient = o;
 		const set = (el: HTMLElement, sel: string, k: string) => { (el.querySelector(sel) as HTMLElement).style.backgroundImage = url(k); };
@@ -55,12 +58,14 @@ export function placeAlcove() {
 		set(cr, '.avBase', `alcove_crown_${o}`); set(cr, '.avFs', `alcove_crown_fs_${o}`);
 		[0, 1, 2].forEach((i) => set(cr, `.tw${i}`, `alcove_twinkle${i}_${o}`));
 		led.style.borderImageSource = url('alcove_ledge');
+		glow.style.backgroundImage = url(`alcove_glow_${o}`);
 		rail.style.backgroundImage = o === 'portrait' ? url('alcove_rail_portrait') : 'none';
 	}
 	const b = toStage($('board').getBoundingClientRect()), h = toStage($('hud').getBoundingClientRect());
 	// crown (+ twinkles): uniform scale u, board_in_png aligned on #board
 	const u = b.width / f.board[2], cx = b.left - f.board[0] * u, cy = b.top - f.board[1] * u, cw = f.size[0] * u, ch = f.size[1] * u;
 	box(cr, cx, cy, cw, ch);
+	const gp = GLOW_PAD * u; box(glow, cx - gp, cy - gp, cw + 2 * gp, ch + 2 * gp);
 	// portrait bottom rail: right under the board (2 px onto its transparent 6 px border, the cells stay >= 4 px clear)
 	if (o === 'portrait') box(rail, cx + RAIL.x0 * u, b.bottom - 2, (RAIL.x1 - RAIL.x0) * u, RAIL.h * u);
 	// recess: board + pad + bleed on every side
