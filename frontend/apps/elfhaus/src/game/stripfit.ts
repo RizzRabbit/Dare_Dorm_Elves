@@ -11,8 +11,15 @@ export function fitValue(el: HTMLElement) {
 	if (!active()) return;
 	const cw = el.clientWidth, sw = el.scrollWidth;
 	if (!cw || sw <= cw + 0.5) return;
-	const base = parseFloat(getComputedStyle(el).fontSize);
-	el.style.fontSize = Math.max(base * FIT_FLOOR, Math.floor(base * (cw / sw) * 0.98 * 100) / 100) + 'px';
+	const base = parseFloat(getComputedStyle(el).fontSize), floor = base * FIT_FLOOR;
+	// v3.16h: re-measure after each step (letter-spacing does not scale with the font, and widths round to whole px),
+	// so a long 6-decimal value never keeps a 1px overflow (and its ellipsis) above the floor
+	let size = base, c = cw, w = sw;
+	for (let i = 0; i < 4 && w > c + 0.5 && size > floor; i++) {
+		size = Math.max(floor, Math.floor(size * (c / w) * 0.98 * 100) / 100);
+		el.style.fontSize = size + 'px';
+		c = el.clientWidth; w = el.scrollWidth;
+	}
 }
 export function fitStrip() { for (const q of IDS) { const el = document.querySelector<HTMLElement>(q); if (el) fitValue(el); } }
 let fitting = false;

@@ -1,10 +1,10 @@
 // Currency display (carried over from the Vault Breakers approval fixes, utils-shared/amount.ts):
 // Intl currency with the currency's own decimals, sub-unit amounts up to 6 places, social currencies
 // (XGC/XSC/XEC) as a suffix with no "$".
-// Decimals rule: the currency's own decimals by default (USD 2, JPY 0, KWD 3: Intl data, the web-sdk passes only the
-// ISO code). More places only for amounts below one unit whose value really has significance past the default
-// ($0.0025 -> 4, $0.025 -> 3), trailing zeros trimmed back to the default; anything >= 1 unit is rounded to the
-// default ($1,234.5678 -> $1,234.57). Float noise is removed first (rounded at 6 places), so 0.1+0.2 shows $0.30.
+// Decimals rule (v3.16h, #273): the exact value at every magnitude. At least the currency's own decimals (USD 2, JPY 0,
+// KWD 3: Intl data, the web-sdk passes only the ISO code); extra places only when they are nonzero, up to 6 (the RGS
+// integer precision): $1.212, $2.225, $1,234.5675, $50,400.00, $0.0025. Float noise is removed first (rounded at 6
+// places), then trailing zeros are trimmed back to the currency minimum, so 0.1+0.2 shows $0.30.
 const SOCIAL: Record<string, string> = { XGC: 'GC', XSC: 'SC', XEC: 'SC' };
 const MAX_DIGITS = 6;
 let currency = 'USD';
@@ -23,7 +23,7 @@ const decimalsOf = (c: string) => {
 /** Number of decimals `money()` uses for v in the current currency. */
 export const moneyDigits = (value: number) => {
 	const base = decimalsOf(currency), t = Number(Math.abs(Number(value) || 0).toFixed(MAX_DIGITS));
-	if (t >= 1 || t === 0) return base;
+	if (t === 0) return base; // v3.16h (#273): amounts >= 1 unit keep their nonzero places too (no rounding to the currency decimals)
 	for (let d = base; d <= MAX_DIGITS; d++) if (Number(t.toFixed(d)) === t) return d;
 	return MAX_DIGITS;
 };
