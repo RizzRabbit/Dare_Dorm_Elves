@@ -42,9 +42,6 @@ export const money = (value: number, digits?: number) => {
 	try { return nf({ style: 'currency', currency, minimumFractionDigits: d, maximumFractionDigits: d }).format(v).replace(/ /g, '\u00a0'); }
 	catch { return `${v.toFixed(d)}\u00a0${currency}`; }
 };
-/** v3.16f: an amount at the currency's own decimals, normal (half-up) rounding: the resume card's win, which can come
- *  from an off-level stake ($0.975 -> $0.98, $0.5625 -> $0.56). Float noise is removed first, like moneyDigits(). */
-export const moneyStd = (value: number) => money(Number((Number(value) || 0).toFixed(MAX_DIGITS)), decimalsOf(currency));
 /** Plain number for inputs (no symbol, no grouping), same decimals rule as money(). */
 export const amountStr = (v: number) => (Number(v) || 0).toFixed(moneyDigits(v));
 export const mult = (x: number) => `${nf({ maximumFractionDigits: 2 }).format(x)}x`;

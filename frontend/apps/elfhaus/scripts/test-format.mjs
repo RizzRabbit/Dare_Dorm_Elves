@@ -24,10 +24,10 @@ for (const [c, w] of [['XSC', true], ['XGC', true], ['xsc', true], ['XEC', true]
 // v3.16f: amount and currency code / symbol are joined by a no-break space, never a plain space
 { const f0 = fail; for (const c of ['XGC', 'XSC', 'XEC', 'USD', 'EUR', 'CHF', 'ZZZ']) { F.setCurrency(c); for (const v of [0, 22.8, 1234567.89]) { const m = F.money(v); if (/ /.test(m)) { fail++; console.error(`  FAIL plain space in ${c} ${JSON.stringify(m)}`); } } }
 if (fail === f0) console.log('  OK no plain space between amount and currency (7 currencies x 3 amounts)'); }
-// v3.16f: resume-card money (moneyStd) uses the currency's own decimals with normal rounding, never sub-cent places
-{ const f0 = fail; for (const [c, v, w] of [['USD', 0.975, '$0.98'], ['USD', 0.5625, '$0.56'], ['USD', 0.125, '$0.13'], ['USD', 0.0025, '$0.00'], ['USD', 1.005, '$1.01'], ['USD', 0.1 + 0.2, '$0.30'], ['USD', 1234.5678, '$1,234.57'], ['JPY', 0.5, '¥1'], ['XGC', 0.975, '0.98\u00a0GC'], ['XSC', 0.5625, '0.56\u00a0SC']]) {
-	F.setCurrency(c); const g = F.moneyStd(v); if (g !== w) { fail++; console.error(`  FAIL moneyStd ${c} ${v}: got ${JSON.stringify(g)} want ${JSON.stringify(w)}`); } }
-if (fail === f0) console.log('  OK moneyStd: currency decimals, half-up ($0.975 -> $0.98, $0.5625 -> $0.56, 0.98 GC)'); }
+// v3.16g (#273): sub-unit wins keep their exact places (the resume card, the HUD win and the RGS credit agree)
+{ const f0 = fail; for (const [c, v, w] of [['USD', 0.975, '$0.975'], ['USD', 0.5625, '$0.5625'], ['USD', 0.1 * 0.05, '$0.005'], ['USD', 0.001, '$0.001'], ['USD', 0.125, '$0.125'], ['USD', 1.005, '$1.01'], ['USD', 0.1 + 0.2, '$0.30'], ['USD', 1234.5678, '$1,234.57'], ['JPY', 0.075, '¥0.075'], ['XGC', 0.975, '0.975\u00a0GC'], ['XSC', 0.5625, '0.5625\u00a0SC']]) {
+	F.setCurrency(c); const g = F.money(v); if (g !== w) { fail++; console.error(`  FAIL exact sub-unit ${c} ${v}: got ${JSON.stringify(g)} want ${JSON.stringify(w)}`); } }
+if (fail === f0) console.log('  OK exact sub-unit amounts ($0.975, $0.5625, $0.005, $0.001, ¥0.075, 0.975 GC); >= 1 unit at currency decimals'); }
 F.setCurrency('USD');
 console.log(`Formatter: ${fail ? fail + ' failures' : `${cases.length + 12}/${cases.length + 12} passed`}`);
 process.exit(fail ? 1 : 0);

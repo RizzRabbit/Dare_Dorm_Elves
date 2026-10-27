@@ -1228,6 +1228,10 @@ body.tb:not(.portrait) #app #strip label{font-size:min(calc(13px*var(--tb)),21px
   body.tb:not(.portrait) #app #strip .m{flex-direction:column;align-items:center;gap:0;line-height:1.05;max-width:100%}
   body.tb:not(.portrait) #app #strip span{font-size:min(calc(20px*var(--tb)),36px);max-width:100%}
   body.tb:not(.portrait) #app #strip label{font-size:min(calc(13px*var(--tb)),27px)}
+  /* v3.16g (#194): the stacked readouts are taller than the strip row, so a slightly smaller spin button and a small
+     downward offset keep the spin ring off the PLAY label (static: no animation) */
+  body.tb:not(.portrait) #app #spinBtn{width:72px;height:72px} body.tb:not(.portrait) #app #spinBtn svg{width:40px;height:40px}
+  body.tb:not(.portrait) #app #strip .m{position:relative;top:3px}
 }
 /* v3.16e (#194): resume card line at least ~10 screen px on landscape phones / small iframes */
 body.tb #rcLine{font-size:max(14px,calc(10px / (var(--s,1) * var(--tbm,1))))}

@@ -13,7 +13,7 @@ import {
 } from './config';
 import { confirmCopy, resumeCopy, controlsAuto, controlsBonus, controlsTurbo, controlsUi, costHeader, errorText, errorTitle, modeDesc, turboCopy, type CopyCtx, type CopyMode } from './copy';
 import { registerPanel, openPanel, closePanel, isOpen, anyOpen, measurePanel } from './panels';
-import { money, mult, setCurrency, setLocale, isSocialCurrency, amountStr, moneyStd } from './format';
+import { money, mult, setCurrency, setLocale, isSocialCurrency, amountStr } from './format';
 import { skipCounts, setAmount } from './countup';
 import { tapLines } from './winlines';
 import { startShimmer, initWfExpand } from './wildfx';
@@ -250,9 +250,9 @@ async function resume(rd: any) {
 	// v3.16c (James): ask first. The round's final win (book finalWin, x100) at its own stake, when the book has one.
 	const fw = (rd.state as any[]).find((e) => e?.type === 'finalWin');
 	const X = fw && Number.isFinite(fw.amount) ? Math.min(fw.amount / 100, MAX_WIN_X) : null;
-	// v3.16f: the card shows the win at the currency's own decimals (no '$0.975'); a win that rounds to 0 uses the no-amount line
-	const card = X != null && X > 0 && amt > 0 ? moneyStd(X * amt) : null;
-	const pick = await askResume(card && /[1-9]/.test(card) ? card : null); // v3.16d: a 0 win uses the no-amount line
+	// v3.16g (#273): the card shows exactly the amount the HUD win shows after SKIP and the RGS credits (money(), sub-unit
+	// places kept: $0.975, $0.001, ¥0.075); only a 0x win uses the no-amount line (v3.16d)
+	const pick = await askResume(X != null && X > 0 && amt > 0 ? money(X * amt) : null);
 	try {
 		if (pick === 'resume') { banner('RESUMING YOUR LAST ROUND', 1600); await waitRaw(600); await playBookEvents(rd.state); await finishRound(rd); }
 		else { // SKIP: no animation; end-round credits the win, the HUD win shows the final payout at the round's stake
