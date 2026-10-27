@@ -13,7 +13,7 @@ import {
 } from './config';
 import { confirmCopy, resumeCopy, controlsAuto, controlsBonus, controlsTurbo, controlsUi, costHeader, errorText, errorTitle, modeDesc, turboCopy, type CopyCtx, type CopyMode } from './copy';
 import { registerPanel, openPanel, closePanel, isOpen, anyOpen, measurePanel } from './panels';
-import { money, mult, setCurrency, setLocale, isSocialCurrency, amountStr } from './format';
+import { money, mult, setCurrency, setLocale, isSocialCurrency, amountStr, moneyStd } from './format';
 import { skipCounts, setAmount } from './countup';
 import { tapLines } from './winlines';
 import { startShimmer, initWfExpand } from './wildfx';
@@ -34,6 +34,7 @@ import { setBg, warmBg } from './bg';
 import { placeAlcove } from './alcove';
 import { initLoader, preloadArt, track, loaderReady, hideLoader } from './loader';
 import { fitStage, toStage, ST } from './stage';
+import { fitStrip, initStripFit } from './stripfit';
 import { placeRespin } from './respin';
 import { loadAllFx } from './fx';
 import { startSpin, abortSpin, hurry } from './reels';
@@ -249,7 +250,9 @@ async function resume(rd: any) {
 	// v3.16c (James): ask first. The round's final win (book finalWin, x100) at its own stake, when the book has one.
 	const fw = (rd.state as any[]).find((e) => e?.type === 'finalWin');
 	const X = fw && Number.isFinite(fw.amount) ? Math.min(fw.amount / 100, MAX_WIN_X) : null;
-	const pick = await askResume(X != null && X > 0 && amt > 0 ? money(X * amt) : null); // v3.16d: a 0 win uses the no-amount line
+	// v3.16f: the card shows the win at the currency's own decimals (no '$0.975'); a win that rounds to 0 uses the no-amount line
+	const card = X != null && X > 0 && amt > 0 ? moneyStd(X * amt) : null;
+	const pick = await askResume(card && /[1-9]/.test(card) ? card : null); // v3.16d: a 0 win uses the no-amount line
 	try {
 		if (pick === 'resume') { banner('RESUMING YOUR LAST ROUND', 1600); await waitRaw(600); await playBookEvents(rd.state); await finishRound(rd); }
 		else { // SKIP: no animation; end-round credits the win, the HUD win shows the final payout at the round's stake
@@ -447,6 +450,7 @@ function hudGap() {
 export function layout() {
 	// one shared scale (stage.ts): lay out in stage design px; the stage is never 'short' any more
 	const st = fitStage(), W = st.w, H = st.h, portrait = st.portrait, short = false;
+	requestAnimationFrame(fitStrip); // v3.16f (#194): refit the HUD values once this layout has applied
 	document.body.classList.toggle('portrait', portrait);
 	document.body.classList.toggle('short', short && !portrait);
 	// Vertical budget: title + control panel + the fsBar/step-message rows that sit in the stage grid above and
@@ -551,6 +555,7 @@ function wire() {
 		if (b && !b.disabled) sfx('ui_click');
 	});
 	addEventListener('resize', layout);
+	initStripFit(); // v3.16f (#194): HUD values shrink to fit on landscape phones
 	// iOS reports the new size late after a rotation: lay out again once it has settled
 	addEventListener('orientationchange', () => { setTimeout(layout, 120); setTimeout(layout, 500); });
 	visualViewport?.addEventListener('resize', layout);

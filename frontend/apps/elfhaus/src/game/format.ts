@@ -37,10 +37,14 @@ const nf = (o: Intl.NumberFormatOptions) => {
 /** Format an amount; `digits` forces a fixed number of places (count-ups use the final value's places so the width holds). */
 export const money = (value: number, digits?: number) => {
 	const v = Number(value) || 0, d = digits ?? moneyDigits(v);
-	if (currency in SOCIAL) return `${nf({ minimumFractionDigits: d, maximumFractionDigits: d }).format(v)} ${SOCIAL[currency]}`;
-	try { return nf({ style: 'currency', currency, minimumFractionDigits: d, maximumFractionDigits: d }).format(v); }
-	catch { return `${v.toFixed(d)} ${currency}`; }
+	// v3.16f: a no-break space (U+00A0) between amount and code/symbol, so '22.80 GC' never wraps as '22.80 / GC'
+	if (currency in SOCIAL) return `${nf({ minimumFractionDigits: d, maximumFractionDigits: d }).format(v)}\u00a0${SOCIAL[currency]}`;
+	try { return nf({ style: 'currency', currency, minimumFractionDigits: d, maximumFractionDigits: d }).format(v).replace(/ /g, '\u00a0'); }
+	catch { return `${v.toFixed(d)}\u00a0${currency}`; }
 };
+/** v3.16f: an amount at the currency's own decimals, normal (half-up) rounding: the resume card's win, which can come
+ *  from an off-level stake ($0.975 -> $0.98, $0.5625 -> $0.56). Float noise is removed first, like moneyDigits(). */
+export const moneyStd = (value: number) => money(Number((Number(value) || 0).toFixed(MAX_DIGITS)), decimalsOf(currency));
 /** Plain number for inputs (no symbol, no grouping), same decimals rule as money(). */
 export const amountStr = (v: number) => (Number(v) || 0).toFixed(moneyDigits(v));
 export const mult = (x: number) => `${nf({ maximumFractionDigits: 2 }).format(x)}x`;

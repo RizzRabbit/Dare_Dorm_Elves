@@ -1221,6 +1221,8 @@ body.tb #popMenu{zoom:calc(var(--tbm)*1.25)} /* landscape phones: rows ~10px tex
 #app #strip label{flex:none}
 #app #strip span{overflow:hidden;text-overflow:ellipsis} #app #strip span:not(#win){min-width:0} #app #strip #win{min-width:min(7.5ch,100%)}
 body.tb:not(.portrait) #app #strip span{font-size:min(calc(20px*var(--tb)),28px)}
+/* v3.16f (#194): a small inner margin so neighbouring readouts never touch; values wider than the box shrink to fit (stripfit.ts) */
+body.tb:not(.portrait) #app #strip .m{padding:0 calc(4px*var(--tb));justify-self:stretch;width:100%;box-sizing:border-box}
 body.tb:not(.portrait) #app #strip label{font-size:min(calc(13px*var(--tb)),21px)}
 @media (orientation:landscape) and (max-height:300px){
   body.tb:not(.portrait) #app #strip .m{flex-direction:column;align-items:center;gap:0;line-height:1.05;max-width:100%}
