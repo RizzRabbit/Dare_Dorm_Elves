@@ -196,11 +196,13 @@ if (disclaimerMatch) {
 	}
 	for (const [k, v] of Object.entries(C.turboCopy(true))) texts.push(['turbo.' + k, v]);
 	texts.push(['costHeader', C.costHeader(true)], ['controlsBonus', C.controlsBonus(ctx)], ['controlsTurbo', C.controlsTurbo()], ['controlsAuto', C.controlsAuto(ctx)], ['controlsUi', C.controlsUi()]);
+	if (/unfinished/.test(C.controlsUi()) && /RESUME/.test(C.controlsUi()) && /SKIP/.test(C.controlsUi())) console.log('  OK controlsUi explains the unfinished-round card'); else { console.error('  VIOLATION: controlsUi lacks the unfinished-round card'); violations++; }
+	if (!/\$0\.00|collect/.test(C.resumeCopy(false, null).line)) console.log('  OK no-amount line: ' + C.resumeCopy(false, null).line); else { console.error('  VIOLATION: no-amount line'); violations++; }
 	// v3.16c: resume card, social side, with and without a known amount
 	for (const amt of ['22.80 GC', null]) for (const [k, v] of Object.entries(C.resumeCopy(true, amt))) texts.push([`resumeCopy social ${amt ?? 'none'}.${k}`, v]);
 	{
 		const r1 = C.resumeCopy(false, '$22.80'), r0 = C.resumeCopy(false, null), s1 = C.resumeCopy(true, '22.80 GC');
-		const ok = r1.title === 'Unfinished round' && r1.line === 'Resume to watch it, or skip to collect $22.80.' && r0.line === 'Resume or skip to collect.'
+		const ok = r1.title === 'Unfinished round' && r1.line === 'Resume to watch it, or skip to collect $22.80.' && r0.line === 'Resume or skip to finish.'
 			&& !/collect/i.test(s1.line) && s1.line.includes('22.80 GC') && r1.resume === 'RESUME' && r1.skip === 'SKIP';
 		if (ok) console.log('  OK resumeCopy wording (real with / without amount, social has no "collect")'); else { console.error('  VIOLATION: resumeCopy wording', JSON.stringify([r1, r0, s1])); violations++; }
 	}
@@ -244,8 +246,11 @@ if (disclaimerMatch) {
 		['#187 snap only after the resumed round', /finally \{\s*S\.roundBet = 0;[\s\S]{0,240}?if \(amt > 0 && S\.levels\.length\) S\.betIdx/.test(gameCode)],
 		['v3.16c resumed Ante / buy round ends back in base (no re-arm)', /finally \{\s*S\.roundBet = 0;\s*setArm\(null, false\);/.test(gameCode)],
 		['v3.16c resume card asks before anything plays', /const pick = await askResume\([^\n]*\n\ttry \{\n\t\tif \(pick === 'resume'\) \{[^\n]*playBookEvents\(rd\.state\)/.test(gameCode)],
-		['v3.16c SKIP: end-round, no animation, HUD win = final payout at round stake', /else \{[^\n]*\n\t\t\tawait finishRound\(\{ \.\.\.rd, active: true \}\);\n\t\t\tif \(X != null\) \{ S\.meterX = X; setAmount\(\$\('#win'\), X \* bet\(\)\); \}/.test(gameCode)],
+		['v3.16c SKIP: end-round, no animation, HUD win = final payout at round stake', /else \{[^\n]*\n\t\t\tawait finishRound\(rd\);\n\t\t\tif \(X != null\) \{ S\.meterX = X; setAmount\(\$\('#win'\), X \* bet\(\)\); \}/.test(gameCode)],
 		['v3.16c resume card: closable false, no X, excluded from the 2-tap skip', /registerPanel\('#resumeCard', \{ closable: false \}\)/.test(gameCode) && /#msg,#resumeCard'\)/.test(gameCode) && (() => { const sv = readFileSync(join(appDir, 'src/components/Game.svelte'), 'utf8'); const m = sv.match(/<div id="resumeCard"[\s\S]*?<\/div><\/div><\/div><\/div>/); return !!m && !/mX|Close/.test(m[0]) && /rcResume/.test(m[0]) && /rcSkip/.test(m[0]); })()],
+		['v3.16d #221 only an active round is resumed; end-round never forced', /async function resume\(rd: any\) \{\n\tif \(!rd\?\.active \|\| !rd\?\.state\?\.length\) return;/.test(gameCode) && !/finishRound\(\{ \.\.\.rd, active: true \}\)/.test(gameCode)],
+		['v3.16d 0x round: card uses the no-amount line', /askResume\(X != null && X > 0 && amt > 0 \? money\(X \* amt\) : null\)/.test(gameCode)],
+		['v3.16d #235 controls explain the unfinished-round card (Info, both modes)', /controlsUi\(\)/.test(gameCode.slice(gameCode.indexOf('function buildRules('), gameCode.indexOf('// ---------- layout')))],
 		['no other-game names in sources', !/Waylanders|Lilith/i.test(css + gameCode + cp)],
 	];
 	for (const [k, ok] of checks) { if (ok) console.log(`  OK ${k}`); else { console.error(`  VIOLATION: ${k}`); violations++; } }

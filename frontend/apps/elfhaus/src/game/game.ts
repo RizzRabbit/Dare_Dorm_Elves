@@ -238,7 +238,7 @@ async function authenticate() {
 	return a?.round;
 }
 async function resume(rd: any) {
-	if (!rd?.state?.length) return;
+	if (!rd?.active || !rd?.state?.length) return; // v3.16d (#221): only an open round is resumed; a settled one never gets end-round
 	// v3.16b (#187): round.amount is the BASE bet (the amount sent in /wallet/play; the RGS charges amount x the mode's
 	// costMultiplier, and payout = payoutMultiplier x amount: rgs-fetcher schema.ts:170, :195). The resumed round is shown
 	// and paid at exactly that stake; the bet level is snapped only for the next new spin, after the round ends.
@@ -249,11 +249,11 @@ async function resume(rd: any) {
 	// v3.16c (James): ask first. The round's final win (book finalWin, x100) at its own stake, when the book has one.
 	const fw = (rd.state as any[]).find((e) => e?.type === 'finalWin');
 	const X = fw && Number.isFinite(fw.amount) ? Math.min(fw.amount / 100, MAX_WIN_X) : null;
-	const pick = await askResume(X != null && amt > 0 ? money(X * amt) : null);
+	const pick = await askResume(X != null && X > 0 && amt > 0 ? money(X * amt) : null); // v3.16d: a 0 win uses the no-amount line
 	try {
-		if (pick === 'resume') { banner('RESUMING YOUR LAST ROUND', 1600); await waitRaw(600); await playBookEvents(rd.state); await finishRound({ ...rd, active: true }); }
+		if (pick === 'resume') { banner('RESUMING YOUR LAST ROUND', 1600); await waitRaw(600); await playBookEvents(rd.state); await finishRound(rd); }
 		else { // SKIP: no animation; end-round credits the win, the HUD win shows the final payout at the round's stake
-			await finishRound({ ...rd, active: true });
+			await finishRound(rd);
 			if (X != null) { S.meterX = X; setAmount($('#win'), X * bet()); }
 		}
 	}
