@@ -113,7 +113,7 @@ export async function mockBet(params: { currency: string; amount: number; mode: 
 			payoutMultiplier: book.payoutMultiplier,
 			payout: winAmount,
 			state: book.events,
-			active: false,
+			active: (book.payoutMultiplier ?? 0) > 0, // v3.16e (#221): like the RGS, a win comes back open (end-round pays it), 0x is closed
 		},
 	};
 }

@@ -208,6 +208,7 @@ if (disclaimerMatch) {
 	}
 	for (const e of C.ERROR_TEXTS) texts.push(['error text', e]); // v3.16 (#77): fixed RGS error strings
 	texts.push(['error fallback', C.errorText('ERR_XYZ')]);
+	for (const e of C.ERROR_TITLES) texts.push(['error title', e]); // v3.16e (FSD): per-code error titles
 	// rules template: drop every ${...} (balanced), keep the social side of `isSocial() ? 'a' : 'b'` branches
 	const fn = gameCode.slice(gameCode.indexOf('function buildRules('), gameCode.indexOf('// ---------- layout'));
 	const tpl = fn.slice(fn.indexOf("$('#rulesBody').innerHTML = `"));
@@ -230,6 +231,7 @@ if (disclaimerMatch) {
 {
 	const css = readFileSync(join(appDir, 'static/elfhaus.css'), 'utf8');
 	const cp = readFileSync(join(appDir, 'src/game/copy.ts'), 'utf8');
+	const C2 = await import('data:text/javascript;base64,' + Buffer.from((await (await import('vite')).transformWithEsbuild(cp, 'copy.ts', { loader: 'ts', format: 'esm' })).code).toString('base64'));
 	const checks = [
 		['#171 autoBtn handler ignores replay', /\$\('#autoBtn'\)\.onclick = \(\) => \{[^\n]*S\.replay\) return;/.test(gameCode)],
 		['#171 startAuto ignores replay', /function startAuto\(\) \{\s*if \(S\.replay\) return;/.test(gameCode)],
@@ -251,6 +253,12 @@ if (disclaimerMatch) {
 		['v3.16d #221 only an active round is resumed; end-round never forced', /async function resume\(rd: any\) \{\n\tif \(!rd\?\.active \|\| !rd\?\.state\?\.length\) return;/.test(gameCode) && !/finishRound\(\{ \.\.\.rd, active: true \}\)/.test(gameCode)],
 		['v3.16d 0x round: card uses the no-amount line', /askResume\(X != null && X > 0 && amt > 0 \? money\(X \* amt\) : null\)/.test(gameCode)],
 		['v3.16d #235 controls explain the unfinished-round card (Info, both modes)', /controlsUi\(\)/.test(gameCode.slice(gameCode.indexOf('function buildRules('), gameCode.indexOf('// ---------- layout')))],
+		['v3.16e #221 end-round only for an open round (normal play and resume)', /async function finishRound\(round: any\) \{\n\tif \(round\?\.active\) \{/.test(gameCode) && !/payoutMultiplier \?\? 0\) > 0 \|\| \(round\?\.payout/.test(gameCode)],
+		['v3.16e #221 mock RGS: wins come back active, 0x closed', /active: \(book\.payoutMultiplier \?\? 0\) > 0,/.test(readFileSync(join(appDir, 'src/mock/mockRgs.ts'), 'utf8'))],
+		['v3.16e #194 HUD readouts: label fixed, value ellipsis, tb caps, short-landscape stack', /#app #strip label\{flex:none\}/.test(css) && /#app #strip span\{overflow:hidden;text-overflow:ellipsis\}/.test(css) && /body\.tb:not\(\.portrait\) #app #strip span\{font-size:min\(calc\(20px\*var\(--tb\)\),28px\)\}/.test(css) && /@media \(orientation:landscape\) and \(max-height:300px\)\{\n  body\.tb:not\(\.portrait\) #app #strip \.m\{flex-direction:column/.test(css)],
+		['v3.16e #194 resume card line >= ~10 screen px on landscape phones', /body\.tb #rcLine\{font-size:max\(14px,calc\(10px \/ \(var\(--s,1\) \* var\(--tbm,1\)\)\)\)\}/.test(css)],
+		['v3.16e error titles per code (limit / location / maintenance / connection)', /message\(errorTitle\(code\), /.test(gameCode) && !/'CONNECTION PROBLEM', `\$\{text\}/.test(gameCode) && C2.errorTitle('ERR_GLE') === 'LIMIT REACHED' && C2.errorTitle('ERR_LOC') === 'NOT AVAILABLE HERE' && C2.errorTitle('ERR_MAINTENANCE') === 'BACK SOON' && C2.errorTitle('ERR_UE') === 'CONNECTION PROBLEM' && C2.errorTitle('ERR_IPB') === 'INSUFFICIENT BALANCE'],
+		['v3.16e bonus menu bet label has no hard-coded BET (set from t(betLabel) / PLAY AMOUNT)', /<span class="v"><small><\/small><b id="bmBetV">/.test(readFileSync(join(appDir, 'src/components/Game.svelte'), 'utf8')) && /\$\('#bmBet small'\)\.textContent = isSocial\(\) \? 'PLAY AMOUNT' : t\('betLabel'\)/.test(gameCode)],
 		['no other-game names in sources', !/Waylanders|Lilith/i.test(css + gameCode + cp)],
 	];
 	for (const [k, ok] of checks) { if (ok) console.log(`  OK ${k}`); else { console.error(`  VIOLATION: ${k}`); violations++; } }

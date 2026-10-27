@@ -11,7 +11,7 @@ import {
 	ANTE_COST, CONFIRM_ABOVE_X, fmtX, BUY_MODES, GAME_ID, LINES, MAX_WIN_X, MODES, MODE_LABEL, MYSTERY_ODDS, PAYTABLE,
 	SPIN_CAP, START_FS, EPIC_STACK_X, SYMBOL_NAMES, VERSION, isProvisional, oneIn, type ModeKey,
 } from './config';
-import { confirmCopy, resumeCopy, controlsAuto, controlsBonus, controlsTurbo, controlsUi, costHeader, errorText, modeDesc, turboCopy, type CopyCtx, type CopyMode } from './copy';
+import { confirmCopy, resumeCopy, controlsAuto, controlsBonus, controlsTurbo, controlsUi, costHeader, errorText, errorTitle, modeDesc, turboCopy, type CopyCtx, type CopyMode } from './copy';
 import { registerPanel, openPanel, closePanel, isOpen, anyOpen, measurePanel } from './panels';
 import { money, mult, setCurrency, setLocale, isSocialCurrency, amountStr } from './format';
 import { skipCounts, setAmount } from './countup';
@@ -106,7 +106,7 @@ function showError(error: any) {
 	const code = error?.error || 'ERR_UE';
 	// v3.16 (#77): fixed, social-safe text per RGS code; raw server messages only go to the console
 	const text = code === 'ERR_IPB' ? t('noFunds') : errorText(code);
-	message(code === 'ERR_IPB' ? 'INSUFFICIENT BALANCE' : 'CONNECTION PROBLEM', `${text} (${code})`, { reload: FATAL.has(code) });
+	message(errorTitle(code), `${text} (${code})`, { reload: FATAL.has(code) });
 }
 function setBusy(b: boolean) {
 	S.busy = b; $('#spinBtn').classList.toggle('busy', b);
@@ -173,7 +173,7 @@ function skipBoard(reels = true, lines = true) { skipCounts(); if (lines) tapLin
 
 // ---------- RGS round ----------
 async function finishRound(round: any) {
-	if (round?.active || (round?.payoutMultiplier ?? 0) > 0 || (round?.payout ?? 0) > 0) {
+	if (round?.active) { // v3.16e (#221): end-round only for an open round (the RGS returns wins active, 0x rounds already closed)
 		const end: any = import.meta.env.DEV && url.mock ? await (await import('../mock/mockRgs')).mockEndRound({}) : await requestEndRound({ sessionID: url.sessionID, rgsUrl: url.rgsUrl });
 		if (end?.error) throw end;
 		if (end?.balance) S.balance = end.balance.amount / API_AMOUNT_MULTIPLIER;

@@ -93,3 +93,11 @@ const ERR_TEXT: Record<string, string> = {
 };
 export const errorText = (code: string) => ERR_TEXT[code] || 'Something went wrong. Please check your connection and try again.';
 export const ERROR_TEXTS = Object.values(ERR_TEXT);
+/** v3.16e (FSD): a short, social-safe title per RGS code; anything unmapped is a connection problem. */
+const ERR_TITLE: Record<string, string> = {
+	ERR_IPB: 'INSUFFICIENT BALANCE', ERR_VAL: 'NOT ACCEPTED', ERR_IS: 'SESSION ENDED', ERR_ATE: 'SESSION ENDED',
+	ERR_GLE: 'LIMIT REACHED', ERR_LOC: 'NOT AVAILABLE HERE', ERR_MAINTENANCE: 'BACK SOON',
+	ERR_RGS_URL: 'CONNECTION PROBLEM', ERR_BET_LEVELS: 'LOADING PROBLEM', ERR_REPLAY: 'REPLAY UNAVAILABLE',
+};
+export const errorTitle = (code: string) => ERR_TITLE[code] || 'CONNECTION PROBLEM';
+export const ERROR_TITLES = [...new Set([...Object.values(ERR_TITLE), errorTitle('')])];

@@ -1213,3 +1213,19 @@ body.tb:not(.portrait) #fsMore .card{zoom:var(--tbs)}
 body.portrait #popMenu input[type=range]{width:128px}
 body.tb #popMenu{zoom:calc(var(--tbm)*1.25)} /* landscape phones: rows ~10px text, matched to the HUD labels */
 @media (prefers-reduced-motion:reduce){#popMenu,#popMenu.open,#popMenu .pmSlide,#popMenu .pmItem.open .pmSlide{transform:none}#popMenu .pmSlide{transform:translateY(-50%)!important}}
+
+/* v3.16e (#194): HUD readouts never run into each other. Under the landscape text boost (body.tb) the readout columns
+   are a fixed ~337 / 235 / 337 design px, so label and value get a design-px cap that fits "BALANCE 123,456.78 GC" and
+   "PLAY 1,000.00 GC" in them; in a short landscape iframe (<=300px tall) label and value stack, as in portrait. The label
+   keeps its size; a longer value is clipped with an ellipsis as a last resort. Desktop and portrait are unchanged. */
+#app #strip label{flex:none}
+#app #strip span{overflow:hidden;text-overflow:ellipsis} #app #strip span:not(#win){min-width:0} #app #strip #win{min-width:min(7.5ch,100%)}
+body.tb:not(.portrait) #app #strip span{font-size:min(calc(20px*var(--tb)),28px)}
+body.tb:not(.portrait) #app #strip label{font-size:min(calc(13px*var(--tb)),21px)}
+@media (orientation:landscape) and (max-height:300px){
+  body.tb:not(.portrait) #app #strip .m{flex-direction:column;align-items:center;gap:0;line-height:1.05;max-width:100%}
+  body.tb:not(.portrait) #app #strip span{font-size:min(calc(20px*var(--tb)),36px);max-width:100%}
+  body.tb:not(.portrait) #app #strip label{font-size:min(calc(13px*var(--tb)),27px)}
+}
+/* v3.16e (#194): resume card line at least ~10 screen px on landscape phones / small iframes */
+body.tb #rcLine{font-size:max(14px,calc(10px / (var(--s,1) * var(--tbm,1))))}
