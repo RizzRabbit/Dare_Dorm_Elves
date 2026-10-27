@@ -9,7 +9,7 @@ import type { Group, LineWin } from './typesBookEvent';
 import { DOTS } from './respin';
 import { mxBurst, lockIconCSS, symWin, clearSymWins } from './fx';
 import { countTo, countMs, setAmount, skipCounts, countTiers, BIG_TIERS, zipped, setZip } from './countup';
-import { hold, tempo } from './tempo';
+import { hold, tempo, gtempo } from './tempo';
 
 export const ART = ART_JSON as Record<string, string | null>;
 export const $ = <T extends HTMLElement = HTMLElement>(s: string) => document.querySelector(s) as T;
@@ -192,7 +192,7 @@ export function banner(txt: string, ms = 1400) {
 export function setWinMeter(x: number) {
 	const nx = Math.min(MAX_WIN_X, Math.max(S.meterX, x)), dx = nx - S.meterX;
 	S.meterX = nx;
-	if (dx > 0) countTo($('#win'), nx * bet(), countMs(dx, S.turbo) * tempo()); // x ANIM_TEMPO (turbo: 1)
+	if (dx > 0) countTo($('#win'), nx * bet(), countMs(dx, S.turbo) * gtempo()); // anim-v4: studio pace (was x ANIM_TEMPO); turbo halves it
 	else setAmount($('#win'), nx * bet());
 }
 export function resetWinMeter() { S.meterX = 0; setAmount($('#win'), 0); setZip(false); }

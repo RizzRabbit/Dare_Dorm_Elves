@@ -1235,3 +1235,24 @@ body.tb:not(.portrait) #app #strip label{font-size:min(calc(13px*var(--tb)),21px
 }
 /* v3.16e (#194): resume card line at least ~10 screen px on landscape phones / small iframes */
 body.tb #rcLine{font-size:max(14px,calc(10px / (var(--s,1) * var(--tbm,1))))}
+/* ===== anim-v4 gameplay tempo (src/game/tempo.ts GAME_TEMPO): --gt = 1 normal and turbo. Reviewer feedback
+   ("Poor animations x3"): win feedback and reel landings were stretched 2x by --at and read as sluggish. Win
+   highlights, the line amount label, dim / un-dim and the wild landing pop run at studio pace again; idle /
+   ambient loops (wild breathe, stacks, merges, feature cards) keep --at. Transform / opacity only. ===== */
+body{--gt:1}
+.wlAmt{animation-duration:calc(.42s*var(--gt))}
+.cell{transition-duration:calc(.16s*var(--gt))}
+.cell.dim{transition-duration:calc(.14s*var(--gt))}
+.cell.win .sym{transition-duration:calc(.18s*var(--gt))}
+.cell .symSh{transition-duration:calc(.18s*var(--gt)),calc(.2s*var(--gt))}
+.sym .olWin,.ov .ovWinO{transition-duration:calc(.15s*var(--gt))}
+.sym .symGlow{transition-duration:calc(.2s*var(--gt))}
+.cell.win .sym .symGlow{transition-duration:calc(.16s*var(--gt))}
+/* the win pulse: a quick punch-in, then a steady ~0.9 s beat (was 2.6 s per bob at --at 2) */
+.cell.win .sym.art>img,.cell.win .sym.art>.symGlow{animation:v4WinPunch calc(.32s*var(--gt)) cubic-bezier(.3,1.5,.5,1) both,aiSymBob calc(.45s*var(--gt)) ease-in-out calc(.32s*var(--gt)) infinite alternate}
+.cell.win .sym .symGlow img{animation:aiGlowPulse calc(.45s*var(--gt)) ease-in-out calc(.16s*var(--gt)) infinite alternate}
+@keyframes v4WinPunch{0%{transform:scale(1)}45%{transform:scale(1.12)}100%{transform:scale(1)}}
+.cell.wLand .sym{animation:wPop calc(.22s*var(--gt)) cubic-bezier(.3,1.6,.5,1)}
+@media (prefers-reduced-motion:reduce){.cell.win .sym.art>img,.cell.win .sym.art>.symGlow,.cell.win .sym .symGlow img{animation:none}}
+body:not(.turbo) #cells .cell.wLand .sym{animation:wPop .24s cubic-bezier(.3,1.6,.5,1)} /* was the calm .42s wSettle */
+/* ===== end anim-v4 gameplay tempo ===== */

@@ -44,10 +44,13 @@ export function symLand(cell: HTMLElement) {
 export function landBump(cell: HTMLElement) {
 	const sym = symOf(cell); if (!sym) return;
 	const n = symName(cell), heavy = n === 'W' || n === 'S';
-	// spinfix (calm landing): normal pace = ordinary symbols just arrive (the reel's own soft settle is the landing);
-	// wilds / scatters get one gentle breath (3% scale, ease-out, no overshoot, no impact burst). Turbo keeps the old hit.
+		// anim-v4: every symbol gets a quick squash-and-stretch on land in normal pace too (the reel's own bounce carries it,
+	// this adds weight); wilds / scatters hit harder. Still transform only, ~150-220 ms.
 	if (!document.body.classList.contains('turbo')) {
-		if (heavy) sym.animate([{ transform: 'scale(1.03)' }, { transform: 'none' }], { duration: 420, easing: 'cubic-bezier(.3,.6,.4,1)' });
+		sym.animate(heavy
+			? [{ transform: 'scale(1.1,.88)' }, { transform: 'scale(.96,1.05)', offset: .45 }, { transform: 'none' }]
+			: [{ transform: 'scale(1.04,.95)' }, { transform: 'scale(.99,1.01)', offset: .5 }, { transform: 'none' }],
+			{ duration: heavy ? 220 : 150, easing: 'ease-out' });
 		return;
 	}
 	sym.animate(heavy

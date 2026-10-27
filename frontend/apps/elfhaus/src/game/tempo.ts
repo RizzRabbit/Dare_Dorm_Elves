@@ -13,6 +13,13 @@ export const ANIM_TEMPO = 2;
 export const SPIN_TEMPO = 1.25; // reel spin + stop pacing (spec: at most 1.3x calmer)
 export const STOP_TEMPO = 1.1; // the brake / settle itself stays snappy
 export const tempo = () => (S.turbo ? 1 : ANIM_TEMPO);
+// anim-v4 (James, reviewer feedback "Poor animations"): gameplay feedback is NOT slowed any more. Reel spin / stops,
+// small-win line highlights and the WIN count-ups run at studio pace (GAME_TEMPO = 1); idle / ambient / feature
+// set pieces keep ANIM_TEMPO. Turbo keeps its own (faster) values everywhere.
+export const GAME_TEMPO = 1;
+export const gtempo = () => (S.turbo ? 1 : GAME_TEMPO);
+/** A gameplay-feedback duration (win lines, win highlights, count-ups): studio pace, not stretched. */
+export const TG = (ms: number) => Math.round(ms * gtempo());
 export const T = (ms: number) => Math.round(ms * tempo());
 /** Sprite playback-rate divisor for a host (board hosts only; HUD, banners and win screens keep their own pace). */
 export const spriteRate = (host: Element) => (host.closest('#board') ? tempo() : 1);
@@ -28,4 +35,4 @@ export function hold(ms: number) {
 /** Tap / Space: end every pending board pause now. */
 export function skipHolds() { [...holds].forEach((f) => f()); }
 /** Keep the CSS factor (--at on <body>) in step with turbo. */
-export function syncTempo() { document.body.classList.toggle('turbo', S.turbo); document.body.style.setProperty('--at', String(tempo())); }
+export function syncTempo() { document.body.classList.toggle('turbo', S.turbo); document.body.style.setProperty('--at', String(tempo())); document.body.style.setProperty('--gt', String(gtempo())); }

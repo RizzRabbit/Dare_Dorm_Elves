@@ -18,22 +18,21 @@ let bed: Handle | null = null;
 const spinSound = () => { sfx('reel_spin_start'); bed?.stop(); bed = S.turbo ? null : loop('reel_spin_loop'); };
 const bedOff = () => { bed?.stop(150); bed = null; };
 
-// Normal pace (spinfix, user: "still too fast and chaotic, especially when it lands"): a calm, readable spin. Slower
-// run speed (14 cells/s, was 23.6), soft 0.3 s spin-up, reels settle left to right exactly 0.28 s apart, each brakes over ~0.8 s
-// with a long ease-out tail, drifts ONE small overshoot (5% of a cell) past the row and eases back over 0.38 s: no
-// rebound, no snap. The brake is planned when the stop is issued (exact settle time, continuous speed, see stopReel).
-// The blur strip is lighter (it is a different picture from the tape, so a strong crossfade read as flicker).
-// Last reel settles 2.72 s after the press. Anticipation keeps its own (longer) hold and brake.
-// Turbo / quick spin keeps the old fast values exactly (and its old spring settle / blur).
+// Normal pace (anim-v4, James after the Stake review "Poor animations x3"): studio-style spin. A short wind-up nudge
+// (90 ms, 12% of a cell up), a quick 140 ms spin-up to 26 cells/s, reels land left to right 130 ms apart, each brakes
+// over ~0.36 s, overshoots the row by 14% of a cell and bounces back with ONE small damped rebound (0.24 s). The brake
+// is still planned when the stop is issued (exact settle time, continuous speed, see stopReel). Last reel settles
+// ~1.3 s after the press (was 2.72 s in spinfix). Anticipation reels keep a long glow hold and a slow brake, so the
+// tease reads against the snappy normal stops. Turbo / quick spin keeps the old fast values exactly.
 const sp = (ms: number) => Math.round(ms * SPIN_TEMPO);
 export const timing = () => (S.turbo
 	? { first: 420, gap: 70, ant: 450, antD: 420, resp: 380, land: 60, cell: 35 }
-	: { first: 1600, gap: 280, ant: sp(1150), antD: sp(1000), resp: sp(640), land: 220, cell: sp(90) });
+	: { first: 800, gap: 130, ant: sp(720), antD: sp(760), resp: sp(420), land: 90, cell: sp(70) });
 // acc: spin-up ms; v: cells/s; D: nominal brake ms; ov: overshoot (cells); set: settle ms; pw: brake ease-out power;
 // soft: one-way cosine settle (else the old damped spring); dMin/dMax: brake clamp; bl / td: blur strip max / tape dim
 const P = () => (S.turbo
 	? { wu: 0, amp: 0, acc: 70, v: 44, D: 220, ov: 0.14, set: 150, pw: 2, soft: false, smooth: false, dMin: 220, dMax: 900, bl: 0.95, td: 0.45 }
-	: { wu: 0, amp: 0, acc: 300, v: 14, D: 820, ov: 0.05, set: 380, pw: 2.2, soft: true, smooth: true, dMin: 450, dMax: 1100, bl: 0.6, td: 0.25 });
+	: { wu: 90, amp: 0.12, acc: 140, v: 26, D: 360, ov: 0.14, set: 240, pw: 2.2, soft: true, smooth: true, dMin: 260, dMax: 700, bl: 0.7, td: 0.3 });
 void STOP_TEMPO; // normal stops no longer derive from STOP_TEMPO (kept exported in tempo.ts for the respin mini cells)
 
 type Slot = HTMLElement & { n?: number };
@@ -117,7 +116,7 @@ function frame(now: number) {
 			if (td < st.D!) { const u = td / st.D!; s = st.s0 + st.dist! * (1 - Math.pow(1 - u, p.pw)); v = (p.pw * st.dist! * Math.pow(1 - u, p.pw - 1)) / (st.D! / 1000); }
 			else if (td < st.D! + p.set) {
 				const u = (td - st.D!) / p.set; v = 0;
-				s = p.soft ? st.sEnd! + p.ov * 0.5 * (1 + Math.cos(Math.PI * u)) // one soft ease back onto the row, no rebound
+				s = p.soft ? st.sEnd! + p.ov * Math.exp(-2.4 * u) * Math.cos(2 * Math.PI * u) * (1 - u) // anim-v4: back past the row, one small rebound, rest
 					: st.sEnd! + p.ov * Math.exp(-3.2 * u) * Math.cos(2.6 * Math.PI * u) * (1 - u); // turbo: damped spring
 			}
 			else { land(R); continue; }
@@ -190,10 +189,10 @@ export function stopReel(r: number, at: number, finals: string[], onLand: () => 
 		// (s(tD) + v*D/pw = sEnd + ov, D = at - set - tD, sEnd an integer >= the first row not yet visible). Else the generic plan.
 		const p = R.p;
 		if (p.soft && !slow) {
-			const E = at - p.set, lin = (t: number) => 3 - (p.v * p.acc) / 2000 + (p.v * t) / 1000, t0 = E - p.D;
+			const E = at - p.set, lin = (t: number) => 3 - p.amp - (p.v * p.acc) / 2000 - (p.v * p.wu) / 1000 + (p.v * t) / 1000, t0 = E - p.D; // run() after the wind-up + spin-up
 			const sEnd = Math.max(Math.round(lin(t0) + (p.v * p.D) / (p.pw * 1000) - p.ov), Math.floor(lin(t0)) + 5);
 			const tq = (sEnd + p.ov - lin(0) - (p.v * E) / (p.pw * 1000)) / ((p.v / 1000) * (1 - 1 / p.pw)), D = E - tq;
-			if (tq >= p.acc && R.t0 + tq >= performance.now() + 4 && D >= p.dMin && D <= p.dMax && sEnd >= Math.floor(lin(tq)) + 5) { R.stop.tD = R.t0 + tq; R.stop.plan = { sEnd, D }; }
+			if (tq >= p.wu + p.acc && R.t0 + tq >= performance.now() + 4 && D >= p.dMin && D <= p.dMax && sEnd >= Math.floor(lin(tq)) + 5) { R.stop.tD = R.t0 + tq; R.stop.plan = { sEnd, D }; }
 		}
 		if (slow) { const g = () => R.on && R.stop?.res === res && R.el.classList.add('ant'); const dt = R.t0 + glowAt - performance.now(); dt > 0 ? setTimeout(g, dt) : g(); }
 	});
@@ -203,7 +202,7 @@ export function hurry() {
 	const now = performance.now(); let i = 0;
 	reels.forEach((R) => {
 		const st = R.stop; if (!R.on || !st || st.s0 !== undefined) return;
-		if (!S.turbo) R.p = { ...R.p, dMax: Math.min(R.p.dMax, 650), set: Math.min(R.p.set, 280) }; // a skip lands briskly (still eased)
+		if (!S.turbo) R.p = { ...R.p, dMax: Math.min(R.p.dMax, 420), set: Math.min(R.p.set, 200) }; // a skip lands briskly (still bounces)
 		st.slow = undefined; st.plan = undefined; st.tD = Math.min(st.tD, now + 60 * i++); R.el.classList.remove('ant');
 	});
 }
@@ -245,7 +244,7 @@ export function stopMini(reel: number, row: number, at: number, onLand: () => vo
 		if (!minis.size) bedOff();
 		const sym = c?.querySelector<HTMLElement>('.sym'); // drop-in + squash and bounce (WAAPI, transform only, no reflow)
 		if (S.turbo) sym?.animate([{ transform: 'translateY(-28%) scale(.94,1.06)' }, { transform: 'translateY(4%) scale(1.07,.92)', offset: .45 }, { transform: 'translateY(-2%) scale(.98,1.02)', offset: .75 }, { transform: 'none' }], { duration: 160, easing: 'ease-out' });
-		else sym?.animate([{ transform: 'translateY(-14%)', opacity: 0.4 }, { transform: 'translateY(1.5%)', opacity: 1, offset: .7 }, { transform: 'none' }], { duration: 480, easing: 'cubic-bezier(.25,.6,.35,1)' }); // calm drop-in, one small settle
+		else sym?.animate([{ transform: 'translateY(-22%) scale(.96,1.04)', opacity: 0.5 }, { transform: 'translateY(3%) scale(1.05,.94)', opacity: 1, offset: .5 }, { transform: 'translateY(-1%) scale(.99,1.01)', offset: .78 }, { transform: 'none' }], { duration: 240, easing: 'ease-out' }); // anim-v4: quick drop-in with one bounce
 		res();
 	}, Math.max(0, t0 + at - performance.now())));
 }

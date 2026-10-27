@@ -22,7 +22,7 @@ const warmStacks = () => stackPrefetch(S.sym.flatMap((c, r) => (!S.full.has(r) &
 import { featOpen, featPop, featClose } from './featfx';
 import { countTo, countMs, setAmount, skipCounts } from './countup';
 import { grab, combineInto } from './combine';
-import { tempo, hold } from './tempo';
+import { tempo, hold, gtempo } from './tempo';
 import { sfx, loop, music, duck, duckFor, type Handle } from './audio';
 import { voice, voiceSpin, teaseOk } from './voice';
 // Pauses here use ui.wait: the old pace x ANIM_TEMPO, skippable by tap / Space (tempo.ts); turbo keeps its short values.
@@ -300,7 +300,7 @@ export const bookEventHandlerMap: Handlers = {
 		setAmount(amt, 0); O.classList.remove('hidden'); featOpen(fx); sfx('fs_outro'); duck(true); const cu = loop('bigwin_countup_loop');   // no star glints on the total-win screen (round 6)
 		let close = () => {}; const closed = new Promise<void>((r) => (close = r)); let landed = false;
 		O.onclick = () => (landed ? close() : skipCounts());
-		await countTo(amt, total, countMs(total / Math.max(bet(), 1e-9), S.turbo) * tempo());
+		await countTo(amt, total, countMs(total / Math.max(bet(), 1e-9), S.turbo) * gtempo()); // anim-v4: studio pace
 		landed = true; cu.stop(200);
 		await Promise.race([wait(S.turbo ? 900 : 1800), closed]);
 		duck(false);

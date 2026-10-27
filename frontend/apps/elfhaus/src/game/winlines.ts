@@ -3,7 +3,7 @@
 // ticks into the WIN field and a small amount label shows near the line's end. After the last line a short summary
 // highlights every winning symbol with no line over the board. Tap 1 = finish this line now and go to the next one;
 // tap 2 (any time in the same presentation, v3.15d) = zip to the end: no more lines, the WIN meter lands on the
-// step total, and a big-win banner that follows lands on its final tier/amount (countup.ts zip). Turbo plays a fast version. Normal pace = the old one x ANIM_TEMPO (tempo.ts).
+// step total, and a big-win banner that follows lands on its final tier/amount (countup.ts zip). Turbo plays a fast version. Normal pace = studio pace (anim-v4, tempo.ts TG; was x ANIM_TEMPO).
 // Cost: one canvas, three strokes per frame (wide faint glow, mid glow, bright core) plus a pre-rendered head stamp;
 // nothing animates filter/shadow, and the canvas is cleared and idle between lines.
 import { LINES, REELS } from './config';
@@ -13,7 +13,7 @@ import { ovWin, clearOvWins } from './mergefx';
 import { play } from './sprite';
 import { moneyWin } from './format';
 import type { LineWin } from './typesBookEvent';
-import { T } from './tempo';
+import { TG } from './tempo'; // anim-v4: win lines run at gameplay pace (not ANIM_TEMPO)
 import { sfx } from './audio';
 import { voice } from './voice';
 import { skipCounts, setZip } from './countup';
@@ -93,8 +93,8 @@ export async function playWins(wins: LineWin[], base: number) {
 	ensure(); active = true; skipAll = false; taps = 0; setZip(false);
 	const cells = document.querySelectorAll('.cell'); cells.forEach((c) => c.classList.add('dim'));
 	const n = wins.length, turbo = S.turbo;
-	// per line: race + hold; long lists get faster so a step never drags (old pace ~0.55 s/line, min ~0.3 s; x ANIM_TEMPO)
-	const race = turbo ? 150 : T(Math.max(220, Math.min(380, 2600 / n - 180))), keep = turbo ? 90 : Math.max(T(100), Math.min(T(260), race * .7));
+	// per line: race + hold; long lists get faster so a step never drags (~0.5 s/line, min ~0.3 s; anim-v4: no ANIM_TEMPO stretch)
+	const race = turbo ? 150 : TG(Math.max(200, Math.min(340, 2400 / n - 180))), keep = turbo ? 90 : Math.max(TG(120), Math.min(TG(300), race * .8));
 	let sum = 0, li = 0;
 	for (const w of wins) {
 		if (skipAll) break; skipLine = false;
@@ -106,7 +106,7 @@ export async function playWins(wins: LineWin[], base: number) {
 		const L = label(w.positions, moneyWin(w.win / 100 * bet()));
 		await run(race, (t) => draw(P, easeIO(t), 1));
 		await hold(keep);
-		await run(turbo ? 60 : T(110), (t) => draw(P, 1, 1 - t));
+		await run(turbo ? 60 : TG(100), (t) => draw(P, 1, 1 - t));
 		L.remove();
 	}
 	skipLine = false;
@@ -117,6 +117,6 @@ export async function playWins(wins: LineWin[], base: number) {
 	if (n && tot < 10) sfx(turbo || tot < 2 ? 'win_small' : tot < 5 ? 'win_medium' : 'win_big');
 	if (n && !turbo && tot >= 2 && tot < 10) voice('win');
 	wins.forEach((w) => w.positions.forEach((p) => { ovWin(p.reel); const c = cellEl(p.reel, p.row); c.classList.remove('dim'); c.classList.add('win'); litOn(c); symWin(c); }));
-	if (!skipAll) await hold(turbo ? 200 : T(450));
+	if (!skipAll) await hold(turbo ? 200 : TG(500));
 	active = false; skipAll = false;
 }
