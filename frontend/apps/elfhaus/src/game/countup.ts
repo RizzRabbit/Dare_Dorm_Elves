@@ -2,7 +2,7 @@
 // slows into the target and always lands exactly on it. Only textContent changes (tabular digits + a min-width box
 // in CSS, so nothing reflows around it). The places are fixed to the target's places for the whole count so the
 // width never jitters. Tap anywhere skips to the final value. Turbo halves the time.
-import { money, moneyDigits } from './format';
+import { moneyWin as money, moneyDigits } from './format'; // v3.16i: count-ups are wins only: exact amounts
 
 type Run = { raf: number; to: number; done: () => void };
 const runs = new Map<HTMLElement, Run>();

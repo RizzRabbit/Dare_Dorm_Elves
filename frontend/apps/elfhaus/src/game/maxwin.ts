@@ -12,7 +12,7 @@ import { sfx, loop, duck } from './audio';
 import { voice, VOICE } from './voice';
 import { $, bet } from './ui';
 import { MAX_WIN_X } from './config';
-import { money } from './format';
+import { moneyWin, moneyDigits } from './format';
 import { loadSheet, hasSheet, play, stop, unloadSheet, type Anim, type Atlas } from './sprite';
 import { ElfRig, TEMPO, type ElfCfg } from './elfrig';
 
@@ -98,8 +98,8 @@ export async function maxWinCelebration() {
 	// calm screen: no falling paper confetti over the max win (turbo/skip unchanged)
 	const xEl = M.querySelector('.mwX') as HTMLElement, amtEl = M.querySelector('.mwAmt') as HTMLElement, hint = M.querySelector('.mwHint') as HTMLElement;
 	const tier = M.querySelector('.mwTier') as HTMLElement; tier.classList.add('spr');
-	const total = MAX_WIN_X * bet(); let skipped = false;
-	xEl.textContent = '0x'; amtEl.textContent = money(0);
+	const total = MAX_WIN_X * bet(), dp = moneyDigits(total); let skipped = false;
+	xEl.textContent = '0x'; amtEl.textContent = moneyWin(0, dp);
 	hint.textContent = matchMedia('(pointer: coarse)').matches ? 'TAP TO CONTINUE' : 'CLICK TO CONTINUE';
 	M.classList.remove('hidden', 'held', 'out'); void M.offsetWidth; M.classList.add('on');
 	sfx('bigwin_sting'); duck(true); const cu = loop('bigwin_countup_loop'); setTimeout(() => voice('maxwin'), VOICE.bigWinDelayMs);
@@ -118,7 +118,7 @@ export async function maxWinCelebration() {
 		const tick = (now: number) => {
 			const k = skipped ? 1 : Math.max(0, Math.min(1, (now - t0) / COUNT_MS)), e = ease(k);
 			xEl.textContent = `${Math.round(MAX_WIN_X * e).toLocaleString('en-US')}x`;
-			amtEl.textContent = money(k < 1 ? Math.floor(total * e * 100) / 100 : total);
+			amtEl.textContent = moneyWin(k < 1 ? Math.floor(total * e * 10 ** dp) / 10 ** dp : total, dp); // v3.16i: fixed places, the last frame is the exact target
 			k < 1 ? requestAnimationFrame(tick) : res();
 		};
 		requestAnimationFrame(tick);

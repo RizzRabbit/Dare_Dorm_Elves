@@ -11,7 +11,7 @@ import { S, $, bet, cellEl, setWinMeter } from './ui';
 import { symWin, clearSymWins, litOn, burst } from './fx';
 import { ovWin, clearOvWins } from './mergefx';
 import { play } from './sprite';
-import { money } from './format';
+import { moneyWin } from './format';
 import type { LineWin } from './typesBookEvent';
 import { T } from './tempo';
 import { sfx } from './audio';
@@ -103,7 +103,7 @@ export async function playWins(wins: LineWin[], base: number) {
 		clearOvWins(); w.positions.forEach((p) => { ovWin(p.reel); const c = cellEl(p.reel, p.row); c.classList.remove('dim'); const fresh = !c.classList.contains('win'); c.classList.add('win'); litOn(c); symWin(c); if (fresh && !turbo) burst(c, 'pop'); });
 		const P = path(w.lineIndex); sum += w.win / 100;
 		setWinMeter(base + sum);
-		const L = label(w.positions, money(w.win / 100 * bet()));
+		const L = label(w.positions, moneyWin(w.win / 100 * bet()));
 		await run(race, (t) => draw(P, easeIO(t), 1));
 		await hold(keep);
 		await run(turbo ? 60 : T(110), (t) => draw(P, 1, 1 - t));
