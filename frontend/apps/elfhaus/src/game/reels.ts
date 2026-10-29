@@ -31,8 +31,8 @@ export const timing = () => (S.turbo
 // acc: spin-up ms; v: cells/s; D: nominal brake ms; ov: overshoot (cells); set: settle ms; pw: brake ease-out power;
 // soft: one-way cosine settle (else the old damped spring); dMin/dMax: brake clamp; bl / td: blur strip max / tape dim
 const P = () => (S.turbo
-	? { wu: 0, amp: 0, acc: 70, v: 44, D: 220, ov: 0.14, set: 150, pw: 2, soft: false, smooth: false, dMin: 220, dMax: 900, bl: 0.95, td: 0.45 }
-	: { wu: 90, amp: 0.12, acc: 140, v: 26, D: 360, ov: 0.14, set: 240, pw: 2.2, soft: true, smooth: true, dMin: 260, dMax: 700, bl: 0.7, td: 0.3 });
+	? { wu: 0, amp: 0, acc: 70, v: 44, D: 220, ov: 0.14, set: 150, pw: 2, soft: false, smooth: false, dMin: 220, dMax: 900, bl: 1, td: 1 }
+	: { wu: 90, amp: 0.12, acc: 140, v: 26, D: 360, ov: 0.14, set: 240, pw: 2.2, soft: true, smooth: true, dMin: 260, dMax: 700, bl: 1, td: 1 }); // re-audit M4: at speed the blur strip REPLACES the tape (was a 70/70 blend = double exposure)
 void STOP_TEMPO; // normal stops no longer derive from STOP_TEMPO (kept exported in tempo.ts for the respin mini cells)
 
 type Slot = HTMLElement & { n?: number };
@@ -128,7 +128,7 @@ function frame(now: number) {
 			sl.style.transform = `translate3d(0,${((s - n) * c).toFixed(2)}px,0)`;
 		}
 		R.slots.forEach((sl, i) => { if (!used.has(i) && sl.n !== -999) { sl.n = -999; sl.style.transform = `translate3d(0,${-2 * c}px,0)`; } });
-		const a = Math.max(0, Math.min(1, (v / p.v - 0.8) / 0.2)), per = 6 * c;
+		const a = Math.max(0, Math.min(1, (v / p.v - 0.88) / 0.1)), per = 6 * c; // short crossfade window, so the two layers barely overlap
 		const bA = Math.round(a * 50) / 50;
 		if (bA !== R.blurA) { R.blurA = bA; R.blur.style.opacity = String(p.bl * bA); R.tape.style.opacity = String(1 - p.td * bA); }
 		if (bA > 0) R.blur.style.transform = `translate3d(0,${(((s * c) % per) - per).toFixed(2)}px,0)`;
