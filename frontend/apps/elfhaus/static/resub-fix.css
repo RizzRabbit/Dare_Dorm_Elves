@@ -126,3 +126,8 @@ body.portrait #app #armTag{grid-area:2/5;align-self:center;justify-self:stretch;
 @keyframes wPop{0%{scale:1}45%{scale:1.14}100%{scale:1.04}}
 @keyframes wBreathe{0%,100%{scale:1.04}50%{scale:1.08}}
 @media (prefers-reduced-motion:reduce){#root .cell.win,#root .cell.win.pulse{animation:none}}
+
+/* ---- L9: "TAP / CLICK TO CONTINUE" never under 13 screen px (the max-win card is position:fixed, unscaled; body.short
+   and body.tb used to take it to 11 px on phones). ---- */
+#maxwin .mwHint,body.short #maxwin .mwHint,body.tb #maxwin .mwHint{font-size:max(13px,min(16px,calc(1.4*var(--vw))))}
+#outro .otHint,body.tb #outro .otHint{font-size:13px;opacity:.72}
