@@ -15,7 +15,7 @@ export let rig: RoxyAdapter | null = null;
 const room = new Container(), moteL = new Container(), roxyL = new Container(), fx = new Container();
 const roxyMask = new Graphics();
 let calm: Sprite | null = null;
-let now = 0, bonus = false, roomA = 1, roxyOn = true;
+let now = 0, bonus = false, roomA = 1, roxyOn = true, hold = false, free = false, last: [boolean, DOMRect] | null = null;
 /** where Roxy stands (stage design px) + scale; read by the intro */
 export const roxyAt = { x: 0, y: 0, s: 1, portrait: false };
 export const sceneNow = () => now;
@@ -59,6 +59,7 @@ const res = () => Math.min(2, Math.max(0.5, ST.s * (window.devicePixelRatio || 1
 /** Fit the room + Roxy to the DOM board frame (stage design px). Called from layout(). */
 export function placeScene(portrait: boolean, fr: DOMRect) {
 	if (!app || !rig) return;
+	last = [portrait, fr];
 	const W = ST.w, H = ST.h, cv = app.canvas as HTMLCanvasElement;
 	app.renderer.resize(W, H, res()); cv.style.width = W + 'px'; cv.style.height = H + 'px';
 	const R = rig, cutRow = R.rows.hips, hopTop = R.rows.hopTop;
@@ -70,8 +71,8 @@ export function placeScene(portrait: boolean, fr: DOMRect) {
 		const gut = W - fr.right, feet = Math.min(H - 6, fr.bottom + 34 * k);
 		let s = Math.min(1.3 * k, (gut - 24) / (R.srcW * 0.86), (feet - 4) / (R.srcH - hopTop));
 		const x = Math.min(fr.right + 272 * k, fr.right + gut / 2 + 12);
-		R.view.position.set(x, feet); R.view.scale.set(s);
-		roxyL.visible = s * R.srcH >= H * 0.42; roxyMask.clear().rect(-50, -400, W + 100, H + 800).fill(0xffffff);
+		if (!hold) { R.view.position.set(x, feet); R.view.scale.set(s); }
+		roxyL.visible = hold || s * R.srcH >= H * 0.42; roxyMask.clear().rect(-50, -400, W + 100, H + 800).fill(0xffffff);
 		R.shadow(true); R.setGrade({ cut: -1, res: ST.s * (window.devicePixelRatio || 1) });
 		Object.assign(roxyAt, { x, y: feet, s, portrait });
 	} else {
@@ -81,9 +82,10 @@ export function placeScene(portrait: boolean, fr: DOMRect) {
 		({ keys, cool } = buildFoyerPort(T, DH));
 		const rs = Math.min(2.4, Math.max(0.6, (T - 46) / (cutRow - hopTop)));
 		const feet = T + (R.srcH - cutRow) * rs, rx = Math.max(770 + Math.max(0, rs - 1.85) * 70, 1080 + 8 - (R.srcW / 2) * rs);
-		R.view.position.set(rx * kp, feet * kp); R.view.scale.set(rs * kp);
+		if (!hold) { R.view.position.set(rx * kp, feet * kp); R.view.scale.set(rs * kp); }
 		// the reel plate is see-through in this game: clip her at the frame top (the frame's bezel hides the edge)
-		roxyMask.clear().rect(-50, -400, W + 100, fr.top + 14 + 400).fill(0xffffff); roxyL.visible = true;
+		// (the intro holds her: no clip while she stands in the doorway / drops in)
+		roxyMask.clear().rect(-50, -400, W + 100, (hold && free ? H + 800 : fr.top + 14 + 400)).fill(0xffffff); roxyL.visible = true;
 		R.shadow(false); R.setGrade({ cut: cutRow / R.srcH, res: ST.s * (window.devicePixelRatio || 1) });
 		Object.assign(roxyAt, { x: rx * kp, y: feet * kp, s: rs * kp, portrait });
 	}
@@ -97,3 +99,9 @@ export function sceneBonus(on: boolean) { bonus = on; }
 /** Top-level overlay container for transient fx drawn over the room (unused by the base game). */
 export const sceneFx = fx;
 export const showRoxy = (on: boolean) => { roxyOn = on; roxyL.visible = on; };
+/** Intro: hold Roxy (the intro positions her; no portrait clip) / hand her back to the layout. */
+export function sceneHold(on: boolean, noClip = on) {
+	if (hold === on && free === noClip) return; hold = on; free = noClip;
+	if (last) placeScene(...last);
+	else if (on) { roxyMask.clear().rect(-5000, -5000, 10000, 10000).fill(0xffffff); roxyL.visible = true; }
+}
