@@ -7,6 +7,7 @@
 import { ART } from './ui';
 import { ST } from './stage';
 import { setAlcoveFs, warmAlcove } from './alcove';
+import { sceneBonus } from './scene/scene';
 
 const FADE_MS = 450;
 const ready = new Map<string, Promise<void>>();
@@ -23,6 +24,7 @@ const pick = (bonus: boolean, portrait: boolean) => {
 let cur = '', seq = 0; // cur = `${url}|${tinted}` currently shown
 /** Show the base or bonus background for the current orientation. Idempotent; fades only when the picture or tint changes. */
 export function setBg(bonus: boolean, fade = true) {
+	sceneBonus(bonus); // room layer (Pixi foyer) fades out so the free-spins painting shows; Roxy stays
 	setAlcoveFs(bonus); // board frame: _fs crown / recess fade in on opacity (alcove.ts), same timing as the plate
 	const bg = document.getElementById('bg'); if (!bg) return;
 	const { url, fs } = pick(bonus, ST.portrait);
