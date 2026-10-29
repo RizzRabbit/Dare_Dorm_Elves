@@ -30,7 +30,7 @@ const CARDS = [
   { key: 'egw', art: 'assets/intro/card_egw_WM2_R1-2.webp', title: 'Elves Gone Wild', line: 'Full wild reels side by side multiply.' },
 ];
 let app = null, state = 'off', t = 0, tt = 0, prog = 0, G = null, primed = false, roxyFree = false, faceOff = false, progFn = () => 0;
-let doneRes = () => {}, tapRes = () => {};
+let doneRes = () => {}, tapRes = () => {}, killed = false;
 const root = new Container(), ov = new Container();
 const tex = {};
 // Roxy through the adapter; her door points come back in the scene canvas, mapped through the camera into intro space
@@ -347,6 +347,7 @@ export async function initIntro(progress: () => number): Promise<boolean> {
     CARDS.forEach((c, i) => { tex['card_' + c.key] = cardT[i]; try { cardT[i].source.autoGenerateMipmaps = true; cardT[i].source.updateMipmaps(); } catch {} });
     try { title.source.autoGenerateMipmaps = true; title.source.updateMipmaps(); } catch {}
     tex.blob = softBlob(); tex.dot = glowDot(); tex.spill = spillTex();
+    if (killed || !$id('loader')) throw new Error('loader gone (error / skip) before the intro was up');
     a.stage.addChild(root); state = 'loading'; build(); update(0); a.render();
     a.ticker.add((tk) => { if (state !== 'done') update(Math.min(0.05, tk.deltaMS / 1000)); }); a.ticker.start();
     addEventListener('resize', onResize); visualViewport?.addEventListener('resize', onResize);
@@ -355,7 +356,7 @@ export async function initIntro(progress: () => number): Promise<boolean> {
     (window as any).__intro = { get state() { return state; }, get t() { return tt; }, T, skip };
     return true;
   } catch (e) {
-    console.warn('intro off (no WebGL?)', e); state = 'off';
+    if (!killed) console.warn('intro off (no WebGL?)', e); state = 'off';
     try { app?.destroy({ removeView: true }); } catch {} app = null; $id('introCv')?.remove(); return false;
   }
 }
@@ -374,7 +375,7 @@ export function introEnter(): Promise<void> {
   state = 'trans'; tt = 0; roxyFree = false; faceOff = false; return p;
 }
 /** Returning players ("Don't show this again") and errors: straight to the end state. */
-export function introSkip() { if (!app || state === 'done' || state === 'off') return; if (!primed) prime(); state = 'trans'; setGame(T.end); finish(); }
+export function introSkip() { if (!app || state === 'off') { killed = true; return; } if (state === 'done') return; if (!primed) prime(); state = 'trans'; setGame(T.end); finish(); }
 /** Run a layout pass with the intro's camera / drop styles lifted (DOM rects stay true), then re-apply the current pose. */
 export function introLayout(fn: () => void) {
   if (!primed || state === 'done' || state === 'off') { fn(); return; }
