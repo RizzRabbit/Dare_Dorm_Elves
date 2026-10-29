@@ -473,20 +473,23 @@ function layoutRaw() {
 	document.body.classList.toggle('short', short && !portrait);
 	// Vertical budget: title + control panel + the fsBar/step-message rows that sit in the stage grid above and
 	// below the board (the grid is symmetric, so reserve the larger of the two on both sides).
-	const top = short ? 0 : ($('#top').offsetHeight || 0), hud = $('#hud').offsetHeight || 0;
+	const phl = st.phl; // phone landscape (stage.ts): HUD lives in the side rails, so only the title sits above the board
+	const top = short ? 0 : ($('#top').offsetHeight || 0), hud = phl ? 0 : ($('#hud').offsetHeight || 0);
 	// fsBar is hidden (0 high) outside bonuses, so size its lane from the CSS font clamp (14-20px, 2.6vh) instead.
 	const fsH = Math.round(Math.min(20, Math.max(14, H * 0.026)) * 1.4 + 10) + 6;
 	// The landscape fsBar tucks 10px into the board's bezel; FRAME = bezel + padding around the 4 rows.
-	const lane = short ? 16 : portrait ? 42 : Math.max(fsH - 14, 26), FRAME = short || portrait ? 0 : 34;
-	const used = top + hud + 2 * lane + FRAME + (short ? 14 : portrait ? 30 : 12);
-	let cell = portrait ? Math.min((W - 40) / 5, (H - used) / 4) : Math.min((H - used) / 4, (W - 120) / 5);
+	const lane = phl ? 4 : short ? 16 : portrait ? 42 : Math.max(fsH - 14, 26), FRAME = short || portrait ? 0 : 34;
+	const used = top + hud + 2 * lane + FRAME + (short ? 14 : portrait ? 30 : phl ? 10 : 12);
+	// phone landscape: rails left / right plus a gutter for Roxy between the board and the right rail
+	const phlW = W - st.railL - st.railR - (phl ? Math.round(W * 0.2) : 0) - 70;
+	let cell = portrait ? Math.min((W - 40) / 5, (H - used) / 4) : phl ? Math.min((H - used) / 4, phlW / 5) : Math.min((H - used) / 4, (W - 120) / 5);
 	// Portrait: keep room for Roxy (head to waist) between the title and the board; on short phones (Stake in iPhone
 	// Safari, ~390x550 visible) the board gives way a little instead of covering her. Tall phones are unaffected.
 	if (portrait && document.body.classList.contains('hasRoxy')) cell = Math.min(cell, (H - used - 72) / 4);
 	// Landscape: always leave Roxy her gutter left of the board (placeRoxy shows her only at >= 45% of the stage
 	// height; sheet aspect ~0.495, left ~11% empty). Near-square windows (1024x1080, 1280x1024, iPad landscape) used to
 	// give the board the whole width and hide her; now the board gives way a little and she stays in the room.
-	if (!portrait && document.body.classList.contains('hasRoxy')) cell = Math.min(cell, (W - 2 * Math.ceil(H * 0.3 + 24)) / 5); // resub: rig Roxy in the right gutter (~0.3 H wide), symmetric so the board stays centred
+	if (!portrait && !phl && document.body.classList.contains('hasRoxy')) cell = Math.min(cell, (W - 2 * Math.ceil(H * 0.3 + 24)) / 5); // resub: rig Roxy in the right gutter (~0.3 H wide), symmetric so the board stays centred
 	cell = Math.max(1, Math.floor(cell)); // no px floor: it broke the board/Roxy/background proportion in small windows
 	document.documentElement.style.setProperty('--cell', cell + 'px');
 	S.cell = cell; renderAll();
@@ -495,7 +498,7 @@ function layoutRaw() {
 	// v3.6: the board's frame (crown + recess) ends at least HUD_GAP screen px above the HUD's top edge, counting the mode
 	// tag over the spin button (measured shown even when no mode is armed, so arming never moves the board); the board
 	// shrinks a little rather than overlap.
-	for (let i = 0; i < 8 && cell > 1; i++) {
+	for (let i = 0; i < 8 && cell > 1 && !phl; i++) {
 		const d = HUD_GAP - hudGap(); if (d <= 0) break;
 		cell = Math.max(1, cell - Math.max(1, Math.ceil(d / ST.s / 4)));
 		document.documentElement.style.setProperty('--cell', cell + 'px'); S.cell = cell; renderAll(); placeAlcove();

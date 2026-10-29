@@ -68,7 +68,7 @@ export function placeScene(portrait: boolean, fr: DOMRect) {
 		// mockup landscape: frame spans y 136..862 (726 tall), centre x 830; Roxy right of the board at (1536, 896) s 1.3
 		const k = fr.height / 726; room.scale.set(k); room.position.set(fr.left + fr.width / 2 - 830 * k, fr.top - 136 * k);
 		({ keys, cool } = buildFoyerLand());
-		const gut = W - fr.right, feet = Math.min(H - 6, fr.bottom + 34 * k);
+		const gut = W - fr.right - ST.railR, feet = Math.min(H - 6, fr.bottom + 34 * k);
 		let s = Math.min(1.3 * k, (gut - 24) / (R.srcW * 0.86), (feet - 4) / (R.srcH - hopTop));
 		const x = Math.min(fr.right + 272 * k, fr.right + gut / 2 + 12);
 		if (!hold) { R.view.position.set(x, feet); R.view.scale.set(s); }

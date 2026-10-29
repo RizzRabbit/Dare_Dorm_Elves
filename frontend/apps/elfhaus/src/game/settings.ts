@@ -26,7 +26,10 @@ function slide(k: K | null) {
 }
 function place() {
 	const r = toStage(btn().getBoundingClientRect()), P = pop(), z = parseFloat(getComputedStyle(P).zoom) || 1; // CSS zoom scales left/bottom too
-	P.style.left = Math.max(8, r.left) / z + 'px'; P.style.bottom = Math.max(8, ST.h - r.top + 10) / z + 'px';
+	P.style.left = Math.max(8, r.left) / z + 'px';
+	// phone landscape: the menu button sits at the top of the left rail, so the pop-out opens downward
+	if (ST.phl) { P.style.bottom = ''; P.style.top = (r.bottom + 10) / z + 'px'; P.style.transformOrigin = '0 0'; }
+	else { P.style.top = ''; P.style.bottom = Math.max(8, ST.h - r.top + 10) / z + 'px'; P.style.transformOrigin = ''; }
 }
 export function openPop() {
 	place(); slide(null); paint('mus'); paint('sfx');
