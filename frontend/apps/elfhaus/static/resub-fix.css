@@ -163,3 +163,15 @@ body.portrait #app #armTag{grid-area:2/5;align-self:center;justify-self:stretch;
 @keyframes idBreathe{0%,100%{scale:1}50%{scale:1.03}}
 @keyframes idGlow{0%,100%{opacity:0}50%{opacity:.5}}
 @media (prefers-reduced-motion:reduce){#board .sym>img,#board .sym>.symGlow{animation:none}}
+
+/* ---- M10: rules readability: body >= 15 screen px, tables / line list >= 14, paytable icons 44 px, a readable column,
+   gold section rules, a bold 48 px close. ---- */
+#menu .rules p,#menu .rules li{font-size:max(15px,calc(var(--t14)*1.1));line-height:1.6;max-width:72ch}
+#menu .rules table,#menu .rules td,#menu .rules th{font-size:max(14px,var(--t14))}
+#menu .rules td,#menu .rules th{padding:5px 10px}
+#menu .rules .lines{font-size:max(14px,var(--t14));line-height:1.8}
+#menu .rules .ri{width:44px;height:44px;margin-right:8px}
+#menu .rules h3{font-size:max(17px,calc(var(--t14)*1.25));margin:22px 0 8px;padding-top:12px;border-top:1px solid #ffc83d33}
+#menu .rules h3:first-of-type{border-top:0;padding-top:0}
+#menu .mX{width:var(--t48);height:var(--t48);min-width:48px;min-height:48px}
+#menu .mX svg{width:55%;height:55%;stroke-width:2.6}
