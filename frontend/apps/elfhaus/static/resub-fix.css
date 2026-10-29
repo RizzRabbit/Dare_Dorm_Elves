@@ -205,3 +205,9 @@ body:not(.phl) #app #strip label{font-size:max(12px,var(--t12));letter-spacing:.
 /* ---- M12: high-pay busts no longer end on a hard horizontal cut: a soft fade over the bottom 16 % of the art (mask only,
    the approved art is untouched); the recess backing (H4) now sits behind them. ---- */
 #cells .sym.H.art>img,#cells .sym.H.art>.symGlow{-webkit-mask:linear-gradient(#000 0,#000 80%,transparent 98%);mask:linear-gradient(#000 0,#000 80%,transparent 98%)}
+
+/* ---- L3: the "Don't show this again" row sits in its own strip below the cards (introPixi reserves it), 48px hit area,
+   gold check (no pink UI) ---- */
+#loader label.spSkip{min-height:max(48px,var(--t48,48px));bottom:max(8px,env(safe-area-inset-bottom));font-size:max(13px,var(--t12));gap:10px;white-space:nowrap}
+#loader label.spSkip input{accent-color:#FFC83D;width:max(20px,calc(var(--t12,12px)*1.6));height:max(20px,calc(var(--t12,12px)*1.6))}
+@media (orientation:landscape){#loader label.spSkip{left:auto;right:max(16px,env(safe-area-inset-right));translate:none}}

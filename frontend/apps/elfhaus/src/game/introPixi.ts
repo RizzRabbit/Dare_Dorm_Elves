@@ -197,7 +197,9 @@ function cardSlots() {
   if (!G.port) { const y0 = top - 110, h = 610, w = 400, gx = 710;
     return { s: 1, dir: 'x', slots: [{ x: cx - gx, y: y0, w, h: (h - 20) / 2, art: 150, side: -1 }, { x: cx - gx, y: y0 + (h - 20) / 2 + 20, w, h: (h - 20) / 2, art: 150, side: -1 },
       { x: cx + gx, y: y0, w, h, art: 420, side: 1 }] }; }
-  const w = 330, gap = 18, h = 400, yTop = G.btn.y + G.btn.h / 2 + 40, avail = DH - 24 - yTop, sc = Math.min(1, avail / h);
+  // L3: keep a free strip under the cards for the 48 px "Don't show this again" row (.spSkip, 48 screen px + 10 px inset)
+  const skipRow = (48 + 14) / G.k;
+  const w = 330, gap = 18, h = 400, yTop = G.btn.y + G.btn.h / 2 + 28, avail = DH - 12 - skipRow - yTop, sc = Math.min(1, avail / h);
   return { s: sc, dir: 'y', slots: [-1, 0, 1].map((i) => ({ x: cx + i * (w + gap) * sc, y: yTop + (avail - h * sc) / 2, w, h, art: 190, side: 0 })) };
 }
 function buildCards() {
