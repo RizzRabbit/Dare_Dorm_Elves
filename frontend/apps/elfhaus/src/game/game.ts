@@ -91,8 +91,20 @@ function replayLabel() {
 	const m = url.mode as ModeKey, name = MODE_LABEL[m] || url.mode;
 	return `${name} · ${t('betLabel')} ${money(bet())} × ${mult(replayCost)} = ${money(bet() * replayCost)}${replayNoAmt ? ' (sample)' : ''}`;
 }
+/** L5: portrait has no room above the logo: the replay bar takes the right half of the menu row (the bet / buy / auto
+ *  controls it stands in for are hidden in a replay) with a short label; landscape keeps the full label (CSS: top-left). */
+function placeReplayBar(portrait: boolean) {
+	if (!S.replay) return;
+	const b = $('#replayBar') as HTMLElement, m = $('#replayMode');
+	m.textContent = portrait ? `${MODE_LABEL[url.mode as ModeKey] || url.mode} · ${money(bet() * replayCost)}` : replayLabel();
+	if (!portrait) { b.style.top = ''; b.style.left = ''; return; }
+	const r = toStage($('#turboBtn').getBoundingClientRect());
+	b.style.top = (r.top + r.height / 2) + 'px'; b.style.left = (r.right + 10) + 'px';
+}
 function setStrip() {
-	$('#balance').textContent = S.replay ? '—' : money(S.balance);
+	// L5: a replay has no live balance; that slot shows what is being replayed (mode) instead of a bare dash
+	$('#balance').textContent = S.replay ? (MODE_LABEL[url.mode as ModeKey] || url.mode || 'Base') : money(S.balance);
+	if (S.replay) $('label[for="balance"]').textContent = 'REPLAY';
 	$('#bet').textContent = money(bet() * (S.replay ? replayCost : modeCost(spinMode())));
 	$('#betLabel').textContent = t('betLabel');
 	if (isOpen('#buyMenu')) paintBuy();
@@ -296,7 +308,7 @@ async function loadReplay() {
 		const d: any = await (await import('../mock/mockRgs')).mockReplay({ mode: url.mode, event: url.event || url.book || '' });
 		replayState = d.state; replayCost = Number(d.costMultiplier) || modeCost(url.mode as ModeKey) || 1;
 		$('#replayMode').textContent = replayLabel();
-		show('#replayBar', true); setStrip();
+		show('#replayBar', true); setStrip(); placeReplayBar(document.body.classList.contains('portrait'));
 		return;
 	}
 	if (!url.rgsUrl) throw { error: 'ERR_RGS_URL', message: 'Missing rgs_url: the replay cannot be loaded.' };
@@ -305,7 +317,7 @@ async function loadReplay() {
 	if (!d?.state?.length) throw { error: 'ERR_REPLAY', message: 'The replay returned no round data.' };
 	replayState = d.state; replayCost = Number(d.costMultiplier) || modeCost(url.mode as ModeKey) || 1;
 	$('#replayMode').textContent = replayLabel();
-	show('#replayBar', true); setStrip();
+	show('#replayBar', true); setStrip(); placeReplayBar(document.body.classList.contains('portrait'));
 }
 async function playReplay() {
 	if (S.busy) return;
@@ -519,7 +531,7 @@ function layoutRaw() {
 	const fr = toStage($('#frame').getBoundingClientRect());
 	document.documentElement.style.setProperty('--gutR', Math.max(0, W - fr.right) + 'px');
 	document.documentElement.style.setProperty('--frB', Math.round(fr.bottom) + 'px');
-	placeRoxy(portrait, fr);
+	placeRoxy(portrait, fr); placeReplayBar(portrait);
 	placeBuy(portrait, fr);
 	placeRespin();
 }

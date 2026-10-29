@@ -211,3 +211,14 @@ body:not(.phl) #app #strip label{font-size:max(12px,var(--t12));letter-spacing:.
 #loader label.spSkip{min-height:max(48px,var(--t48,48px));bottom:max(8px,env(safe-area-inset-bottom));font-size:max(13px,var(--t12));gap:10px;white-space:nowrap}
 #loader label.spSkip input{accent-color:#FFC83D;width:max(20px,calc(var(--t12,12px)*1.6));height:max(20px,calc(var(--t12,12px)*1.6))}
 @media (orientation:landscape){#loader label.spSkip{left:auto;right:max(16px,env(safe-area-inset-right));translate:none}}
+
+/* ---- L5: the replay bar never sits on the ELFHAUS logo: top-left corner in landscape, under the board in portrait
+   (the bet / buy / auto row it replaces is hidden in a replay); one compact line ---- */
+body.replay #replayBar{white-space:nowrap;padding:6px 8px 6px 14px;gap:12px}
+body.replay:not(.portrait) #replayBar{left:16px;transform:none;top:calc(10px + env(safe-area-inset-top))}
+body.replay.portrait #replayBar{transform:translateY(-50%);right:10px;width:auto;max-width:none;justify-content:space-between}
+#replayBar .rpPre{font-style:normal}
+body.replay.portrait #replayBar .rpPre{display:none}
+body.replay.portrait #replayBar>span{overflow:hidden;text-overflow:ellipsis;min-width:0}
+body.replay.portrait #replayBar{gap:8px;padding:6px 6px 6px 12px}
+body.replay.portrait #replayPlay{padding:0 14px!important;min-width:0}

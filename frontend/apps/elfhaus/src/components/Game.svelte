@@ -60,7 +60,7 @@
 	</footer>
 </div>
 
-<div id="replayBar" class="hidden"><span>REPLAY · <b id="replayMode"></b></span><button id="replayPlay">PLAY</button></div>
+<div id="replayBar" class="hidden"><span><i class="rpPre">REPLAY ·&nbsp;</i><b id="replayMode"></b></span><button id="replayPlay">PLAY</button></div>
 <div id="intro" class="overlay hidden"><div class="bwFx" aria-hidden="true"></div><div class="card"><div class="tierName"></div><div class="spins"></div><button class="cont">START</button></div></div>
 <div id="fsMore" class="overlay hidden" role="status" aria-live="polite"><div class="card"><div class="fmBig"></div><div class="fmSub">FREE SPINS</div></div></div>
 <div id="maxwin" class="hidden" role="dialog" aria-label="Max win"><div class="mwStage"><div class="mwBg"></div><div class="mwShade"></div></div><div class="mwText"><div class="mwTier">MAX WIN</div><div class="mwX">0x</div><div class="mwAmt"></div><div class="mwHint">CLICK TO CONTINUE</div></div></div>
