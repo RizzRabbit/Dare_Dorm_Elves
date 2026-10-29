@@ -1297,3 +1297,10 @@ body.portrait #app #strip .m:nth-child(1){grid-column:1/3} body.portrait #app #s
 body.portrait #app #buyBtn.plate:not(.side){grid-area:1/4/2/6;width:100%;height:48px;flex-direction:row;gap:8px;padding:0 10px;border-radius:14px;justify-self:stretch}
 body.portrait #app #buyBtn.plate:not(.side) .disc{width:40px;height:40px}
 body.portrait #app #buyBtn.plate:not(.side) .lbl{font-size:13px;white-space:nowrap}
+
+/* ===== resub: Pixi vestibule intro (introPixi.ts). #introCv sits just under #loader; the loader keeps the tap / Enter /
+   "Don't show this again" hooks but loses its DOM splash art, stays dark through the studio sting, then turns see-through. ===== */
+#introCv{position:absolute;left:0;top:0;z-index:199;pointer-events:none;display:block}
+#loader.px .spBg,#loader.px .spStage{display:none}
+#loader.px.pxOn.in{background:transparent}
+#loader.px .spSkip{z-index:2;color:#eee3f2;text-shadow:0 1px 3px #000}

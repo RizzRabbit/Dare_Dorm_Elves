@@ -33,6 +33,7 @@ import { initStacks, stackIdle } from './stacks';
 import { setBg, warmBg } from './bg';
 import { placeAlcove } from './alcove';
 import { initLoader, preloadArt, track, loaderReady, hideLoader } from './loader';
+import { introLayout } from './introPixi';
 import { fitStage, toStage, ST } from './stage';
 import { fitStrip, initStripFit } from './stripfit';
 import { placeRespin } from './respin';
@@ -462,7 +463,9 @@ function placeBuy(portrait: boolean, fr: DOMRect) {
 	r.setProperty('--pk', pk.toFixed(4));
 	r.setProperty('--buyL', (cx - w / 2 - hr.left).toFixed(1) + 'px'); r.setProperty('--buyT', (cy - 126 * pk - hr.top).toFixed(1) + 'px');
 }
-export function layout() {
+// the intro animates the game with CSS scale / translate: measure without them (introLayout re-applies its pose)
+export function layout() { introLayout(layoutRaw); }
+function layoutRaw() {
 	// one shared scale (stage.ts): lay out in stage design px; the stage is never 'short' any more
 	const st = fitStage(), W = st.w, H = st.h, portrait = st.portrait, short = false;
 	requestAnimationFrame(fitStrip); // v3.16f (#194): refit the HUD values once this layout has applied

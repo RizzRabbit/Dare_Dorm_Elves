@@ -2,6 +2,7 @@
 // the user gesture later sound needs). Progress counts every tracked promise: art images, Roxy sheets, RGS/mock auth.
 import { $, ART } from './ui';
 import { initSplash, stingDone, skipSplash } from './intro';
+import { initIntro, introLoaded, introEnter, introSkip } from './introPixi';
 
 // Card titles (checked by the social-mode word scan in scripts/test-books.mjs).
 // Feature-panel alt text, keyed by the panel art (splash_layout.json decides which panels show and where).
@@ -32,9 +33,14 @@ export function preloadArt() {
 	for (const src of new Set((Object.entries(ART).filter(([k, u]) => u && !/^(sym_|fx_)/.test(k)).map(([, u]) => u) as string[]).filter((u) => !/\.(webm|mp4)$/i.test(u)))) track(loadImg(src)).catch(() => console.warn('art missing', src));
 }
 
+let px: Promise<boolean> = Promise.resolve(false);
 export function initLoader() {
-	if (!document.getElementById('loader')) return;
+	const L = document.getElementById('loader'); if (!L) return;
 	initSplash(); progress();
+	// resub: the approved Pixi vestibule intro replaces the DOM splash art (the loader stays as the tap / key / checkbox
+	// layer, dark until the studio sting is done, then see-through). No WebGL -> the DOM splash shows as before.
+	L.classList.add('px');
+	px = initIntro(() => (total ? done / total : 0)).then((ok) => { if (!ok) L.classList.remove('px', 'pxOn'); return ok; });
 }
 /** Waits for everything tracked, then shows the continue button and resolves on the player's press. */
 export async function loaderReady() {
@@ -44,6 +50,8 @@ export async function loaderReady() {
 	for (let n = -1; n !== pending.length; ) { n = pending.length; await Promise.all(pending); }
 	done = total; progress();
 	await stingDone();
+	const pix = await px;
+	if (pix && !skipSplash()) await introLoaded();   // bar full, game primed behind the doors, TAP TO PARTY up
 	L.classList.add('ready');
 	// returning players who ticked "Don't show this again" go straight in once loading is done
 	if (!skipSplash()) await new Promise<void>((res) => {
@@ -54,11 +62,13 @@ export async function loaderReady() {
 		addEventListener('keydown', key, { capture: true });
 	});
 	hideLoader();
+	if (pix) await (skipSplash() ? (introSkip(), Promise.resolve()) : introEnter());   // doors -> push -> board + Roxy drop (tap skips)
 }
 /** Fade the loader out into the game (also used to get it out of the way of an error message). */
 export function hideLoader() {
 	const L = document.getElementById('loader');
 	if (!L || L.classList.contains('out')) return;
+	if (!L.classList.contains('ready')) introSkip();   // error before the tap: no half-open doors over the message
 	L.classList.add('out');
 	setTimeout(() => L.remove(), 700);
 }
