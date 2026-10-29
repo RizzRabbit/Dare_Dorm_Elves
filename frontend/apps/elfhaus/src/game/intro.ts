@@ -63,6 +63,11 @@ function layout() {
 	place(R.querySelector<HTMLElement>('.spBarWrap')!, { ...d.tap, w: d.tap.w * 0.9 });
 }
 
+// L1: the inline first-paint loader (#preL in app.html): hidden while the sting logo is up, back between the sting and
+// the foyer, removed once the splash / game shows (CSS also hides it on #loader.pxOn / .ready / .out)
+const preHold = (on: boolean) => document.getElementById('preL')?.classList.toggle('hold', on);
+export const preOut = () => { const p = document.getElementById('preL'); if (p) { p.classList.add('out'); setTimeout(() => p.remove(), 220); } };
+
 function runSting() {
 	const S = document.getElementById('sting'); if (!S) { stingRes(); return; }
 	const logo = S.querySelector<HTMLImageElement>('.stLogo')!, glow = S.querySelector<HTMLImageElement>('.stGlow')!, gl = S.querySelector<HTMLElement>('.stGlint')!, box = S.querySelector<HTMLElement>('.stBox')!;
@@ -71,11 +76,11 @@ function runSting() {
 	let ended = false; const timers: number[] = [];
 	const end = () => {
 		if (ended) return; ended = true; timers.forEach(clearTimeout);
-		S.animate([{ opacity: getComputedStyle(S).opacity }, { opacity: 0 }], { duration: 250, fill: 'forwards' }).finished.then(() => { S.remove(); stingRes(); });
+		preHold(false); S.animate([{ opacity: getComputedStyle(S).opacity }, { opacity: 0 }], { duration: 250, fill: 'forwards' }).finished.then(() => { S.remove(); stingRes(); });
 	};
 	S.addEventListener('pointerdown', end);
 	Promise.race([logo.decode().catch(() => {}), new Promise((r) => setTimeout(r, 600))]).then(() => {
-		if (ended) return;
+		if (ended) return; preHold(true);
 		const ease = 'cubic-bezier(.34,1.56,.64,1)';
 		box.animate([{ opacity: 0, transform: 'scale(.9)' }, { opacity: 1, transform: 'scale(1)', offset: 450 / 2300, easing: 'linear' }, { opacity: 1, transform: 'scale(1.01)', offset: 1800 / 2300 }, { opacity: 0, transform: 'scale(1.04)' }],
 			{ duration: 2300, fill: 'forwards' });

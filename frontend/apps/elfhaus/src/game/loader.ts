@@ -1,7 +1,7 @@
 // Loading screen: full ELFHAUS logo, feature-card carousel, progress bar, then CLICK/TAP TO CONTINUE (the press is
 // the user gesture later sound needs). Progress counts every tracked promise: art images, Roxy sheets, RGS/mock auth.
 import { $, ART } from './ui';
-import { initSplash, stingDone, skipSplash } from './intro';
+import { initSplash, stingDone, skipSplash, preOut } from './intro';
 import { initIntro, introLoaded, introEnter, introSkip } from './introPixi';
 
 // Card titles (checked by the social-mode word scan in scripts/test-books.mjs).
@@ -50,7 +50,7 @@ export async function loaderReady() {
 	for (let n = -1; n !== pending.length; ) { n = pending.length; await Promise.all(pending); }
 	done = total; progress();
 	await stingDone();
-	const pix = await px;
+	const pix = await px; if (!pix) preOut();   // DOM splash (no WebGL): the inline loader steps aside
 	if (pix && !skipSplash()) await introLoaded();   // bar full, game primed behind the doors, TAP TO PARTY up
 	L.classList.add('ready');
 	// returning players who ticked "Don't show this again" go straight in once loading is done
@@ -67,7 +67,7 @@ export async function loaderReady() {
 /** Fade the loader out into the game (also used to get it out of the way of an error message). */
 export function hideLoader() {
 	const L = document.getElementById('loader');
-	if (!L || L.classList.contains('out')) return;
+	preOut(); if (!L || L.classList.contains('out')) return;
 	if (!L.classList.contains('ready')) introSkip();   // error before the tap: no half-open doors over the message
 	L.classList.add('out');
 	setTimeout(() => L.remove(), 700);
