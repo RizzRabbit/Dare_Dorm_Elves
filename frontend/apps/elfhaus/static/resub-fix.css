@@ -188,3 +188,6 @@ body.portrait #app #armTag{grid-area:2/5;align-self:center;justify-self:stretch;
   background:linear-gradient(180deg,#FFF8E0 0%,#FFE08A 30%,#FFC83D 55%,#C8871A 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
   -webkit-text-stroke:0;text-shadow:none;filter:drop-shadow(0 4px 0 #3a2208) drop-shadow(0 0 20px #ffc83d66)}
 #bigwin .bwX{background:#120b16;border:1.5px solid #FFC83D;color:#FFC83D;font-size:max(15px,1.6vh);margin-top:12px}
+
+/* ---- L4: HUD labels >= 12 screen px everywhere (were 10 px at 390; phone landscape has its own rule above) ---- */
+body:not(.phl) #app #strip label{font-size:max(12px,var(--t12));letter-spacing:.6px}
