@@ -114,7 +114,7 @@ function showError(error: any) {
 	message(errorTitle(code), `${text} (${code})`, { reload: FATAL.has(code) || !sessionReady });
 }
 function setBusy(b: boolean) {
-	S.busy = b; $('#spinBtn').classList.toggle('busy', b);
+	S.busy = b; $('#spinBtn').classList.toggle('busy', b); $('#board').classList.toggle('busyB', b); // M13: idle loops only while idle
 	['#buyBtn', '#betUp', '#betDown', '#armTag', '#bmUp', '#bmDown'].forEach((s) => (($(s) as HTMLButtonElement).disabled = b || !sessionReady || S.replay));
 	($('#autoBtn') as HTMLButtonElement).disabled = S.replay || !sessionReady; // v3.16 (#171); stays live mid-round so it can stop autoplay
 	($('#menuBtn') as HTMLButtonElement).disabled = b; if (b) closePop();

@@ -149,3 +149,17 @@ body.portrait #app #armTag{grid-area:2/5;align-self:center;justify-self:stretch;
 .bMystQ svg{display:block;width:100%}
 .bMystQ circle{fill:#1a1020;stroke:#FFC83D;stroke-width:2.5}
 .bMystQ text{font-family:"Cinzel",serif;font-weight:800;font-size:24px;fill:#FFC83D}
+
+/* ---- M13: calm idle life on the board while it waits (never during a spin / win): high-pays breathe very slightly,
+   wilds and scatters glow softly, each reel offset in time so nothing pulses in unison. `scale` / opacity only. ---- */
+#board:not(.busyB) .cell:not(.win):not(.dim):not(.spinning) .sym.H.art>img,
+#board:not(.busyB) .cell:not(.win):not(.dim):not(.spinning) .sym.S.art>img{animation:idBreathe 3.6s ease-in-out infinite;transform-origin:50% 85%}
+#board:not(.busyB) .cell:not(.win):not(.dim):not(.spinning) .sym.W.art>.symGlow,
+#board:not(.busyB) .cell:not(.win):not(.dim):not(.spinning) .sym.S.art>.symGlow{animation:idGlow 3.2s ease-in-out infinite}
+#cells .cell:not(.win):nth-child(5n+2) .sym>img,#cells .cell:not(.win):nth-child(5n+2) .sym>.symGlow{animation-delay:-.7s}
+#cells .cell:not(.win):nth-child(5n+3) .sym>img,#cells .cell:not(.win):nth-child(5n+3) .sym>.symGlow{animation-delay:-1.4s}
+#cells .cell:not(.win):nth-child(5n+4) .sym>img,#cells .cell:not(.win):nth-child(5n+4) .sym>.symGlow{animation-delay:-2.1s}
+#cells .cell:not(.win):nth-child(5n) .sym>img,#cells .cell:not(.win):nth-child(5n) .sym>.symGlow{animation-delay:-2.8s}
+@keyframes idBreathe{0%,100%{scale:1}50%{scale:1.03}}
+@keyframes idGlow{0%,100%{opacity:0}50%{opacity:.5}}
+@media (prefers-reduced-motion:reduce){#board .sym>img,#board .sym>.symGlow{animation:none}}
