@@ -23,6 +23,7 @@
 		"vite": "6.2.0",
 		"@sveltejs/kit": "2.17.3",
 		"rgs-requests": "workspace:*",
-		"constants-shared": "workspace:*"
+		"constants-shared": "workspace:*",
+		"pixi.js": "8.21.0"
 	}
 }
