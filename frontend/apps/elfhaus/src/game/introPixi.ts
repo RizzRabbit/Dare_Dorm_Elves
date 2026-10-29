@@ -308,9 +308,17 @@ function finish() {   // end state (also the skip)
   if (app) { app.ticker.stop(); const c = app.canvas; app.destroy({ removeView: true }, { children: true }); c?.remove?.(); app = null; }
   document.body.classList.remove('introOn'); (window as any).ELFHAUS_INTRO_DONE = true; doneRes();
 }
-const skip = () => { if (state === 'trans') { setGame(T.end); finish(); } };
-function onKey(e) { if (state === 'trans' && (e.code === 'Space' || e.code === 'Enter')) { e.preventDefault(); e.stopPropagation(); skip(); } }
-function onDown() { if (state === 'trans' && tt > 0.12) skip(); }
+// L2: a user skip is no longer a hard cut: the game snaps to its end state underneath and the frozen vestibule frame
+// fades off it over 250 ms (instant under reduced motion, and for resize / programmatic skips)
+let fading = false;
+const skip = (soft = false) => { if (state !== 'trans' || fading) return; setGame(T.end);
+  const c = app?.canvas as HTMLCanvasElement | undefined;
+  if (!soft || !c || matchMedia('(prefers-reduced-motion: reduce)').matches) { finish(); return; }
+  fading = true; app.ticker.stop(); c.style.pointerEvents = 'none';
+  c.style.transition = 'opacity .25s ease-out'; void c.offsetWidth; c.style.opacity = '0';
+  setTimeout(() => { fading = false; finish(); }, 260); };   // timer, not transitionend: the end state must always land
+function onKey(e) { if (state === 'trans' && (e.code === 'Space' || e.code === 'Enter')) { e.preventDefault(); e.stopPropagation(); skip(true); } }
+function onDown() { if (state === 'trans' && tt > 0.12) skip(true); }
 
 // ---------------- update ----------------
 function update(dt) {
