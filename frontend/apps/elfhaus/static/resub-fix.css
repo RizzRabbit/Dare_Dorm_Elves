@@ -105,3 +105,9 @@ body.portrait #app #armTag{grid-area:2/5;align-self:center;justify-self:stretch;
    negative z inside #app; without a stacking context on #app they fell behind the room canvas at rest (desktop board with
    no backing, H4) but showed during the intro camera move (scale on #app makes one), which was the 2.0-2.6 s panel pop (H3). ---------- */
 #root #app{isolation:isolate}
+
+/* ---------- M9 error card: >= 16 px text, a 48 px+ full-width button ---------- */
+#msg .modal{min-width:min(420px,calc(92*var(--vw)));padding:22px 24px}
+#msg #msgTitle{font-size:calc(var(--t14)*22/14);letter-spacing:2px}
+#msg #msgBody{font-size:calc(var(--t14)*16/14);line-height:1.45;margin:12px 0 18px;color:#F4EEE6}
+#msg #msgOk{min-height:calc(var(--t48)*1.1);min-width:60%;font-size:calc(var(--t14)*17/14)}

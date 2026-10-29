@@ -12,7 +12,7 @@ import {
 	SPIN_CAP, START_FS, EPIC_STACK_X, SYMBOL_NAMES, VERSION, isProvisional, oneIn, type ModeKey,
 } from './config';
 import { confirmCopy, resumeCopy, controlsAuto, controlsBonus, controlsTurbo, controlsUi, costHeader, errorText, errorTitle, modeDesc, turboCopy, type CopyCtx, type CopyMode } from './copy';
-import { registerPanel, openPanel, closePanel, isOpen, anyOpen, measurePanel } from './panels';
+import { registerPanel, openPanel, closePanel, isOpen, anyOpen, measurePanel, setClosable } from './panels';
 import { money, moneyWin, mult, setCurrency, setLocale, isSocialCurrency, amountStr } from './format';
 import { skipCounts, setAmount } from './countup';
 import { tapLines } from './winlines';
@@ -101,6 +101,7 @@ function message(title: string, body: string, opts: { reload?: boolean } = {}) {
 	$('#msgTitle').textContent = title; $('#msgBody').textContent = body;
 	const b = $('#msgOk'); b.textContent = opts.reload ? 'RELOAD' : 'OK';
 	b.onclick = () => (opts.reload ? location.reload() : closePanel('#msg'));
+	setClosable('#msg', !opts.reload); $('#msg').classList.toggle('fatal', !!opts.reload);
 	openPanel('#msg');
 }
 const FATAL = new Set(['ERR_RGS_URL', 'ERR_IS', 'ERR_ATE', 'ERR_BET_LEVELS', 'ERR_REPLAY']);
@@ -109,7 +110,8 @@ function showError(error: any) {
 	const code = error?.error || 'ERR_UE';
 	// v3.16 (#77): fixed, social-safe text per RGS code; raw server messages only go to the console
 	const text = code === 'ERR_IPB' ? t('noFunds') : errorText(code);
-	message(errorTitle(code), `${text} (${code})`, { reload: FATAL.has(code) });
+	// re-audit M9: any error before the session exists (authenticate / network) is fatal too: OK would leave a dead $0.00 board
+	message(errorTitle(code), `${text} (${code})`, { reload: FATAL.has(code) || !sessionReady });
 }
 function setBusy(b: boolean) {
 	S.busy = b; $('#spinBtn').classList.toggle('busy', b);

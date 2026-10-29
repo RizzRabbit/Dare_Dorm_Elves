@@ -133,6 +133,8 @@ type Panel = { el: HTMLElement; scroller: Scroller | null; onClose?: () => void;
 const panels = new Map<string, Panel>();
 const order: string[] = []; // open panels, oldest first (Esc / keys go to the last)
 
+/** Re-audit M9: a fatal card (RELOAD only) must not close on Esc / backdrop and leave a dead board. */
+export function setClosable(sel: string, on: boolean) { const p = panels.get(sel); if (p) p.closable = on; }
 export function registerPanel(sel: string, opts: { onClose?: () => void; closable?: boolean } = {}) {
 	const el = document.querySelector(sel) as HTMLElement;
 	const view = el.querySelector<HTMLElement>('.mView'), track = view?.querySelector<HTMLElement>('.mTrack');
