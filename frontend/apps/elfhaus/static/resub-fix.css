@@ -178,3 +178,13 @@ body.portrait #app #armTag{grid-area:2/5;align-self:center;justify-self:stretch;
 
 /* ---- L6: one-tap mute row in the pop-out menu ---- */
 #pmMute .mOn{opacity:0;transition:opacity .15s} #pmMute.on .mOn{opacity:1} #pmMute.on{color:var(--k-gold,#ffc83d)}
+
+/* ---- M1: big-win tier presentation: dark scrim (was a pale wash), big gold amount with a deep drop, gold x chip,
+   title gets a gold halo, code particles (bwparticles.ts) between the scrim and the type. ---- */
+#bigwin{background:radial-gradient(ellipse 70% 60% at 50% 45%,#22132bd9,#08050cf0 75%)}
+#bigwin .bwP{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+#bigwin .bwTier{position:relative;z-index:2;filter:drop-shadow(0 0 22px #ffc83d55) drop-shadow(0 4px 0 #0008)}
+#bigwin .bwAmt,body.tb #bigwin .bwAmt,body.portrait #bigwin .bwAmt{font-family:"Cinzel",serif;font-weight:900;font-size:clamp(40px,min(7.5vw,11vh),104px);letter-spacing:.02em;
+  background:linear-gradient(180deg,#FFF8E0 0%,#FFE08A 30%,#FFC83D 55%,#C8871A 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
+  -webkit-text-stroke:0;text-shadow:none;filter:drop-shadow(0 4px 0 #3a2208) drop-shadow(0 0 20px #ffc83d66)}
+#bigwin .bwX{background:#120b16;border:1.5px solid #FFC83D;color:#FFC83D;font-size:max(15px,1.6vh);margin-top:12px}

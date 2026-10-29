@@ -1,4 +1,5 @@
 // DOM renderer (ported from prototype/app.js). It only displays what book events say.
+import { bwpStart, bwpTier, bwpEnd } from './bwparticles'; // re-audit M1: code particles on the big-win banner
 import { sfx, loop, duck } from './audio';
 import { voice, VOICE } from './voice';
 import { frameHTML } from './wildframe';
@@ -214,7 +215,7 @@ export async function bigWin(x: number, label?: string) {
 	T.textContent = label || ''; T.classList.toggle('on', !!label); T.classList.remove('spr'); delete T.dataset.tier; if (label) T.dataset.tier = 'label';
 	(B.querySelector('.bwX') as HTMLElement).textContent = `${x.toLocaleString('en-US')}x`;
 	const amt = B.querySelector('.bwAmt') as HTMLElement; setAmount(amt, 0);
-	B.classList.remove('hidden'); B.classList.remove('chars'); fxHooks.start?.(B, x);
+	B.classList.remove('hidden'); B.classList.remove('chars'); fxHooks.start?.(B, x); bwpStart(B, x);
 	sfx('bigwin_sting'); duck(true); const cu = loop('bigwin_countup_loop'); setTimeout(() => voice('bigwin'), VOICE.bigWinDelayMs);
 	let close = () => {}; const closed = new Promise<void>((r) => (close = r));
 	let landed = false, chars = false;
@@ -222,7 +223,7 @@ export async function bigWin(x: number, label?: string) {
 	B.addEventListener('pointerdown', tap);
 	const counted = countTiers(amt, x, bet(), {
 		turbo: S.turbo,
-		onTier: (i) => { if (label) return; T.textContent = BIG_TIERS[i].name; titleHook(T, BIG_TIERS[i].name); T.classList.add('on'); T.classList.remove('pop'); void T.offsetWidth; T.classList.add('pop'); fxHooks.tier?.(B, i); },
+		onTier: (i) => { if (label) return; T.textContent = BIG_TIERS[i].name; titleHook(T, BIG_TIERS[i].name); T.classList.add('on'); T.classList.remove('pop'); void T.offsetWidth; T.classList.add('pop'); fxHooks.tier?.(B, i); bwpTier(i); },
 		onX: (v) => { if (!chars && v >= 1000) { chars = true; B.classList.add('chars'); fxHooks.chars?.(B); } },
 	});
 	if (zipped()) { setZip(false); skipCounts(); } // v3.15d: 2 taps on the lines = land on the final tier + amount now
@@ -230,8 +231,9 @@ export async function bigWin(x: number, label?: string) {
 	landed = true; cu.stop(200);
 	await Promise.race([waitRaw(S.turbo ? 700 * 0.35 : x >= 1000 ? 2200 : 1500), closed]);
 	duck(false);
-	B.removeEventListener('pointerdown', tap); B.classList.add('hidden'); B.classList.remove('chars'); fxHooks.end?.(B);
+	B.removeEventListener('pointerdown', tap); B.classList.add('hidden'); B.classList.remove('chars'); fxHooks.end?.(B); bwpEnd();
 }
 type BwHooks = { start?: (B: HTMLElement, x: number) => void; tier?: (B: HTMLElement, i: number) => void; chars?: (B: HTMLElement) => void; end?: (B: HTMLElement) => void };
 const fxHooks: BwHooks = {};
 export function setBigWinFx(h: BwHooks) { Object.assign(fxHooks, h); }
+if (import.meta.env.DEV) (window as any).__bigWin = bigWin; // dev-only test hook (headless shots of the big-win tiers)
