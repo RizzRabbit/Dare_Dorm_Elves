@@ -111,3 +111,7 @@ body.portrait #app #armTag{grid-area:2/5;align-self:center;justify-self:stretch;
 #msg #msgTitle{font-size:calc(var(--t14)*22/14);letter-spacing:2px}
 #msg #msgBody{font-size:calc(var(--t14)*16/14);line-height:1.45;margin:12px 0 18px;color:#F4EEE6}
 #msg #msgOk{min-height:calc(var(--t48)*1.1);min-width:60%;font-size:calc(var(--t14)*17/14)}
+
+/* ---------- M6: the single-wild gem sits in the bottom-left corner (beside the legs), clear of the "WILD" lettering
+   across the hips; full-reel / merged stacks keep their top-left gem (hair / ceiling there) ---------- */
+.cell > .mx:not(.stack){top:auto;bottom:calc(3px - var(--mxdy,0)*var(--cell));transform-origin:14% 55%}
