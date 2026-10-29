@@ -468,7 +468,7 @@ export function layout() {
 	// Landscape: always leave Roxy her gutter left of the board (placeRoxy shows her only at >= 45% of the stage
 	// height; sheet aspect ~0.495, left ~11% empty). Near-square windows (1024x1080, 1280x1024, iPad landscape) used to
 	// give the board the whole width and hide her; now the board gives way a little and she stays in the room.
-	if (!portrait && document.body.classList.contains('hasRoxy')) cell = Math.min(cell, (W - 2 * Math.ceil(H * 0.46 * 0.495 * 0.89 + 24)) / 5);
+	if (!portrait && document.body.classList.contains('hasRoxy')) cell = Math.min(cell, (W - 2 * Math.ceil(H * 0.3 + 24)) / 5); // resub: rig Roxy in the right gutter (~0.3 H wide), symmetric so the board stays centred
 	cell = Math.max(1, Math.floor(cell)); // no px floor: it broke the board/Roxy/background proportion in small windows
 	document.documentElement.style.setProperty('--cell', cell + 'px');
 	S.cell = cell; renderAll();

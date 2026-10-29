@@ -272,8 +272,8 @@ body:not(.portrait).short #hud{max-width:none}
 .ov .badge{max-width:none;transform:none;translate:-50% 0;bottom:6px;font-size:max(11px,calc(var(--cell)*.12));padding:0 8px;z-index:3}
 
 /* ---------- full-body Roxy (animated sprite, roxy.ts) between the room and the game UI ---------- */
-#roxy{position:fixed;left:0;bottom:0;pointer-events:none;display:none;image-rendering:auto;transform-origin:56% 99%;will-change:transform}
-body.hasRoxy #roxy{display:block}
+/* resub: the room layer (scene/scene.ts, Pixi): foyer + motes + rig Roxy on ONE canvas sized to the design stage */
+#scene{position:fixed;left:0;top:0;pointer-events:none;display:block}
 /* portrait: Roxy stands behind the game, so the reel plate (recess wall + board tint) is semi-transparent there */
 body.portrait.hasRoxy #alcoveRecess{opacity:.6} body.portrait.hasRoxy #board{background:transparent}
 body.alcove.portrait.hasRoxy #frame{background:rgba(18,12,24,.75)} /* one dim layer under the board: dims her behind the reels and on the back-wall strip up to the crown (no seam); strips/cells/lines draw above */
@@ -1017,10 +1017,7 @@ html,body{background:#120C18}
 #buyCards .bcard:hover{border-color:#9A6FAE}
 #buyCards .bcard.armed{border-color:#F06AAE}
 #app #hud .ico.toggle.on,#app #hud #autoBtn.on{border-color:var(--gold)}
-/* ===== aifix: soft contact shadow under the side Roxy (roxy.ts places it under her soles; static, no animation) */
-#roxySh{position:fixed;display:none;pointer-events:none;border-radius:50%;opacity:.9;
-  background:radial-gradient(closest-side,#0b0610e6,#0b061066 55%,#0b061000)}
-body:not(.hasRoxy) #roxySh{display:none!important}
+/* (aifix #roxySh contact shadow retired: the rig draws its own contact + cast shadow) */
 
 /* ---------- aifix 12/13: FS intro/outro card + win-title type system ----------
    One title face (Cinzel 900) for every win/feature title: cream fill, plum ink line, one static neon halo per tier
@@ -1097,7 +1094,7 @@ body:not(.portrait) #bigwin.chars .bw{top:0;translate:0 calc(-17*var(--vh))}
    supposed to behave like absolute, but iOS WebKit can pin fixed layers to the viewport instead (background /
    Roxy / overlays drawn unscaled and out of step with the scaled UI layer). They are absolute now, so the background,
    Roxy, board, HUD and overlays always share #root's single transform and can never come apart. ---- */
-#root #bg,#root #bgFade,#root #roxy,#root #roxySh,#root #app,#root .overlay,#root #replayBar,#root #maxwin,#root #loader,
+#root #bg,#root #bgFade,#root #scene,#root #app,#root .overlay,#root #replayBar,#root #maxwin,#root #loader,
 #root #flyLayer,#root #flyLayer .mx,body.short:not(.portrait) #root #top,body.short:not(.portrait) #root #app #fsBar{position:absolute}
 /* v3.9: the whole settings row is the tap target (settings.ts forwards a row tap to its switch); the switch's own hit area
    also fills the row's padding. Nothing moves: no size, padding or position changes. */
