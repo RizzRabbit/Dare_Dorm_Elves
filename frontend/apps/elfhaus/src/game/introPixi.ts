@@ -110,7 +110,12 @@ function drawFloor(g, CX, HZ, FL, x0, x1, y1) {   // same one-point marble as th
 function build() {
   root.removeChildren().forEach(o => o.destroy({ children: true })); sconces = [];
   const W = ST.w, H = ST.h; G = geo(W, H); const { cx, FL, dw, dh, top, lint, DW, DH } = G;
-  root.scale.set(G.k); root.addChild(ov); ov.removeChildren();
+  root.scale.set(G.k); root.addChild(ov); ov.removeChildren(); ov.visible = true;
+  { // push scale at which the doorway hole covers the whole view (any aspect), and the push end a bit past it
+    const px = cx, py = top + dh / 2, sx = Math.max(px / (dw / 2), (DW - px) / (dw / 2)), sy = Math.max(py / (dh / 2), (DH - py) / (dh / 2));
+    G.sCover = Math.max(sx, sy) * 1.02;
+    // the push (inCubic) reaches sCover at 70% of T.push (~1.96 s), i.e. before the board drop starts at T.drop[0]
+    G.sMax = Math.max(4.8, 1 + (G.sCover - 1) / Math.pow(0.7, 3)); }
   const XL = cx - dw / 2, XR = cx + dw / 2;
   // doorway interior when the game is not attached yet: warm dark (never seen while closed)
   // leaves (behind the wall)
@@ -250,7 +255,19 @@ function camPt(q) { return { x: PV.x + cam * (q.x - PV.x), y: PV.y + cam * (q.y 
 const unCam = (x, y, c) => ({ x: PV.x + (x - PV.x) / c, y: PV.y + (y - PV.y) / c });         // intro px -> scene px
 function applyCam(c) { cam = c; for (const e of camEls()) { e.style.transformOrigin = `${PV.x}px ${PV.y}px`; e.style.scale = c === 1 ? '' : String(c); } }
 function setEl(id, dy, a) { const e = $id(id); if (!e) return; e.style.translate = dy ? `0 ${dy.toFixed(1)}px` : ''; e.style.opacity = a >= 1 ? '' : a.toFixed(3); }
+// re-audit H3: the alcove / board art are CSS backgrounds that sit at opacity 0 until the drop, so the browser only
+// decoded them on their first visible frame (the board showed bare, then "popped" its frame mid-drop). Decode them up front.
+const keep = [];
+function predecode() {
+  const urls = new Set();
+  for (const id of [...BOARD, 'top', 'hud', 'board']) { const e = $id(id); if (!e) continue;
+    for (const n of [e, ...e.querySelectorAll('*')]) { const cs = getComputedStyle(n);
+      for (const v of [cs.backgroundImage, cs.borderImageSource]) for (const m of (v || '').matchAll(/url\("?([^")]+)"?\)/g)) urls.add(m[1]);
+      if (n.tagName === 'IMG' && n.src) urls.add(n.src); } }
+  for (const u of urls) { const im = new Image(); im.src = u; keep.push(im); im.decode?.().catch(() => {}); }
+}
 function prime() {   // the game in its "behind the doors" state
+  predecode();
   PV = { x: G.cx * G.k, y: (G.top + G.dh * 0.5) * G.k };
   sceneHold(true); if (rig) { rig.doorReach(true, 0); rig.face('surprised', 0); }
   primed = true; setGame(0);
@@ -259,7 +276,7 @@ function setGame(tt) {   // all game objects driven from the intro clock (transf
   applyCam(lerp(CAM0, 1, seg(tt, ...T.cam, ease.inOutCubic)));
   const H = ST.h, dropH = H * 0.62;
   // board + Roxy drop in together: fall from above, land past the mark and spring back (outBack)
-  const kd = seg(tt, ...T.drop), dropY = (1 - ease.outBack(kd, 1.9)) * -dropH, dA = seg(tt, T.drop[0], T.drop[0] + 0.08);
+  const kd = seg(tt, ...T.drop), dropY = (1 - ease.outBack(kd, 1.9)) * -dropH, dA = tt >= T.drop[0] ? 1 : 0;   // H3: solid from the first frame (it enters from above the view), no half-alpha ghost
   for (const id of BOARD) setEl(id, dropY, dA);
   const kl = seg(tt, ...T.logo); setEl('top', -40 * (1 - ease.outBack(kl, 2)), seg(tt, T.logo[0], T.logo[0] + 0.1));
   const kh = seg(tt, ...T.hud, ease.outCubic); setEl('hud', 80 * (1 - kh), kh);
@@ -318,9 +335,13 @@ function update(dt) {
     logoS.alpha = logoBack.alpha = 1 - seg(tt, T.push[0], T.push[0] + 0.2); logoS.y = G.logo.y - 30 * seg(tt, T.push[0], T.push[0] + 0.2, ease.inCubic); logoBack.alpha *= 0.85;
     const aL = seg(tt, ...T.doorL, ease.inOutSine), aR = seg(tt, ...T.doorR, ease.inOutSine); setDoors(Math.min(aL, holdL()), aR);
     const open = Math.max(aL, aR); spill.alpha = 0.32 * open; glowL.alpha = 0.18 * open * (1 - seg(tt, ...T.push));
-    const kp = seg(tt, ...T.push, ease.inCubic), s = lerp(1, 4.8, kp);   // camera push: the vestibule flies past the lens
+    const kp = seg(tt, ...T.push, ease.inCubic), s = lerp(1, G.sMax, kp);   // camera push: the vestibule flies past the lens
     const px = G.cx, py = G.top + G.dh * 0.5; ov.pivot.set(px, py); ov.position.set(px, py); ov.scale.set(s);
-    ov.alpha = 1 - seg(tt, ...T.over);
+    // re-audit H3: no translucent crossfade of the vestibule over the game (that was the doubled staircase, the ghost
+    // Roxy and the panel edges). The walls stay opaque until the doorway fills the whole view, then they are simply gone;
+    // the open leaves (inside the doorway) fade early in the push so they never show as panels at the frame edges.
+    const lf = 1 - seg(tt, T.push[0], T.push[0] + 0.28); leafL.alpha = leafR.alpha = lf; spill.alpha *= lf;
+    ov.alpha = 1; ov.visible = s < G.sCover;
     setGame(tt);
     if (tt >= T.end) finish();
   }
@@ -353,7 +374,9 @@ export async function initIntro(progress: () => number): Promise<boolean> {
     addEventListener('resize', onResize); visualViewport?.addEventListener('resize', onResize);
     addEventListener('keydown', onKey, { capture: true }); document.addEventListener('pointerdown', onDown, { capture: true });
     document.body.classList.add('introOn'); L.classList.add('pxOn');
-    (window as any).__intro = { get state() { return state; }, get t() { return tt; }, T, skip };
+    (window as any).__intro = { get state() { return state; }, get t() { return tt; }, T, skip,
+      // test hook: freeze the transition at intro time x (seconds after the tap) for frame-exact shots
+      seek(x) { if (!app || state !== 'trans') return; app.ticker.stop(); tt = x; update(0); app.render(); } };
     return true;
   } catch (e) {
     if (!killed) console.warn('intro off (no WebGL?)', e); state = 'off';

@@ -100,3 +100,8 @@ body.phl #app #armTag{position:absolute;pointer-events:auto;grid-area:auto;trans
 /* portrait: the empty cell right of bet+ on the spin row (no overlap with the board, so the layout never moves) */
 body.portrait #app #armTag{grid-area:2/5;align-self:center;justify-self:stretch;translate:none;margin:0 2px;padding:4px 4px;flex-wrap:wrap;
   justify-content:center;white-space:normal;text-align:center;line-height:1.15;font-size:var(--t12);letter-spacing:.5px}
+
+/* ---------- H3 + H4: one stacking context for the board stack. The alcove recess (plum reel backing) and ledge sit at
+   negative z inside #app; without a stacking context on #app they fell behind the room canvas at rest (desktop board with
+   no backing, H4) but showed during the intro camera move (scale on #app makes one), which was the 2.0-2.6 s panel pop (H3). ---------- */
+#root #app{isolation:isolate}
