@@ -239,8 +239,15 @@ function bloomOver(over: HTMLElement) {
 	const b = document.createElement('div'), host = $('#board'); // outside #overlays: the cut re-renders that
 	let x = 0, y = 0; for (let e: HTMLElement | null = over; e && e !== host; e = e.offsetParent as HTMLElement | null) { x += e.offsetLeft; y += e.offsetTop; }
 	b.style.cssText = `position:absolute;left:${x}px;top:${y}px;width:${over.offsetWidth}px;height:${over.offsetHeight}px;z-index:40;pointer-events:none;opacity:0;` +
-		'border-radius:6px;background:radial-gradient(ellipse at 50% 58%,#FFFFFF 0%,#FFF1F8 38%,#FFC4E3 78%,#FF9FD0 100%);box-shadow:0 0 34px 14px #FF9FD099;will-change:opacity';
-	host.appendChild(b); return b;
+		'border-radius:6px;overflow:hidden;will-change:opacity';
+	// re-audit M3: no flat filled rect. A radial flash (hot white core, warm falloff, transparent edges) over slowly
+	// turning light rays, clipped to the merged reels' window; the core is opaque where the cut happens.
+	b.innerHTML = '<i class="mfRays"></i><i class="mfCore"></i>';
+	host.appendChild(b);
+	const [rays, core] = [...b.children] as HTMLElement[];
+	A(rays, [{ transform: 'scale(.8) rotate(0deg)' }, { transform: 'scale(1.25) rotate(24deg)' }], { duration: 900, easing: 'ease-out', fill: 'forwards' });
+	A(core, [{ transform: 'scale(.55)' }, { transform: 'scale(1.18)' }], { duration: 420, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'forwards' });
+	return b;
 }
 /** No merge_join sheet: the placeholder group art scales up from about a single's size (bottom anchored) with an elastic settle. */
 function growFromSingles(ov: HTMLElement, n: number) {

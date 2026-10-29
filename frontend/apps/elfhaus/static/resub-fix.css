@@ -131,3 +131,9 @@ body.portrait #app #armTag{grid-area:2/5;align-self:center;justify-self:stretch;
    and body.tb used to take it to 11 px on phones). ---- */
 #maxwin .mwHint,body.short #maxwin .mwHint,body.tb #maxwin .mwHint{font-size:max(13px,min(16px,calc(1.4*var(--vw))))}
 #outro .otHint,body.tb #outro .otHint{font-size:13px;opacity:.72}
+
+/* ---- M3: merge flash (mergefx.ts bloomOver): radial core + light rays, inside the reel window ---- */
+.mfRays,.mfCore{position:absolute;display:block;pointer-events:none} .mfRays{inset:-30% -70%} .mfCore{inset:0}
+.mfRays{background:repeating-conic-gradient(from 0deg at 50% 55%,#FFF6DA00 0deg,#FFF6DAb0 5deg,#FFF6DA00 11deg,#FFF6DA00 22deg);
+  -webkit-mask:radial-gradient(closest-side at 50% 55%,#000 15%,transparent 100%);mask:radial-gradient(closest-side at 50% 55%,#000 15%,transparent 100%);mix-blend-mode:screen}
+.mfCore{background:radial-gradient(ellipse 78% 52% at 50% 55%,#FFFFFF 0%,#FFFFFFf2 26%,#FFF3D6a0 46%,#FFD2EA3a 72%,#FFC4E300 100%)}
