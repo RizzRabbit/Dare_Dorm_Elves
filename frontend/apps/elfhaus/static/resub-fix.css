@@ -175,3 +175,6 @@ body.portrait #app #armTag{grid-area:2/5;align-self:center;justify-self:stretch;
 #menu .rules h3:first-of-type{border-top:0;padding-top:0}
 #menu .mX{width:var(--t48);height:var(--t48);min-width:48px;min-height:48px}
 #menu .mX svg{width:55%;height:55%;stroke-width:2.6}
+
+/* ---- L6: one-tap mute row in the pop-out menu ---- */
+#pmMute .mOn{opacity:0;transition:opacity .15s} #pmMute.on .mOn{opacity:1} #pmMute.on{color:var(--k-gold,#ffc83d)}

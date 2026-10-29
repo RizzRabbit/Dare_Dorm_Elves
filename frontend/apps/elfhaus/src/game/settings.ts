@@ -6,7 +6,7 @@
 // screen (Sound / Music / Sound effects / Voice switches). Turbo stays on the HUD lightning button + bonus menu.
 // The OS prefers-reduced-motion setting is still honoured in elfhaus.css.
 import { $ } from './ui';
-import { audioVol, setAudioVol } from './audio';
+import { audioVol, setAudioVol, audioPrefs, setAudioPref } from './audio';
 import { toStage, ST } from './stage';
 
 type K = 'mus' | 'sfx';
@@ -31,8 +31,11 @@ function place() {
 	if (ST.phl) { P.style.bottom = ''; P.style.top = (r.bottom + 10) / z + 'px'; P.style.transformOrigin = '0 0'; }
 	else { P.style.top = ''; P.style.bottom = Math.max(8, ST.h - r.top + 10) / z + 'px'; P.style.transformOrigin = ''; }
 }
+// re-audit L6: one-tap mute (master Sound switch; the volumes are kept for un-mute)
+const muted = () => { const p = audioPrefs(); return !p.snd || p.muted; };
+function paintMute() { const m = muted(), b = $('#pmMute'); b.setAttribute('aria-checked', String(m)); b.classList.toggle('on', m); b.querySelector('span')!.textContent = m ? 'Unmute' : 'Mute all'; }
 export function openPop() {
-	place(); slide(null); paint('mus'); paint('sfx');
+	place(); slide(null); paint('mus'); paint('sfx'); paintMute();
 	pop().classList.add('open'); pop().setAttribute('aria-hidden', 'false'); btn().setAttribute('aria-expanded', 'true');
 	$('#pmInfo').focus({ preventScroll: true });
 }
@@ -45,6 +48,7 @@ export function closePop(refocus = false) {
 export function initSettings(openInfo: () => void) {
 	btn().onclick = () => (popOpen() ? closePop() : openPop());
 	$('#pmInfo').onclick = () => { closePop(); openInfo(); };
+	$('#pmMute').onclick = () => { setAudioPref('snd', muted()); slide(null); paint('mus'); paint('sfx'); paintMute(); };
 	for (const it of items()) {
 		const k = it.dataset.k as K, r = range(k);
 		it.querySelector<HTMLElement>('.pmRow')!.onclick = () => slide(it.classList.contains('open') ? null : k);
