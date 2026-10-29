@@ -201,3 +201,7 @@ body:not(.phl) #app #strip label{font-size:max(12px,var(--t12));letter-spacing:.
 #intro .tierName,#outro .tierName{--tt-fill:#FFD45A;--tt-ink:#2a1606;--tt-neon:#FFC83D}
 #intro .spins{color:#F2E6C8;letter-spacing:2px}
 #intro .cont{min-height:var(--t48,48px);min-width:160px;font-size:max(15px,var(--t14));padding:12px 44px}
+
+/* ---- M12: high-pay busts no longer end on a hard horizontal cut: a soft fade over the bottom 16 % of the art (mask only,
+   the approved art is untouched); the recess backing (H4) now sits behind them. ---- */
+#cells .sym.H.art>img,#cells .sym.H.art>.symGlow{-webkit-mask:linear-gradient(#000 0,#000 80%,transparent 98%);mask:linear-gradient(#000 0,#000 80%,transparent 98%)}
