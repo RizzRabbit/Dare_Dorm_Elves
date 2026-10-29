@@ -191,3 +191,13 @@ body.portrait #app #armTag{grid-area:2/5;align-self:center;justify-self:stretch;
 
 /* ---- L4: HUD labels >= 12 screen px everywhere (were 10 px at 390; phone landscape has its own rule above) ---- */
 body:not(.phl) #app #strip label{font-size:max(12px,var(--t12));letter-spacing:.6px}
+
+/* ---- M8: feature trigger card flip: dark scrim (no pale wash) and the caption in the same gold display type as the
+   big-win amount and panel titles ---- */
+#cardFlip{background:radial-gradient(ellipse 65% 60% at 50% 48%,#1d1126d9,#07040bf2 78%)}
+#cardFlip .cfName{background:linear-gradient(180deg,#FFF8E0 0%,#FFE08A 35%,#FFC83D 60%,#C8871A 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
+  text-shadow:none;filter:drop-shadow(0 3px 0 #3a2208) drop-shadow(0 0 16px #ffc83d55)}
+#intro.overlay,#outro.overlay{background:radial-gradient(ellipse 70% 62% at 50% 46%,#1a0f22b8,#07040be8 80%)}
+#intro .tierName,#outro .tierName{--tt-fill:#FFD45A;--tt-ink:#2a1606;--tt-neon:#FFC83D}
+#intro .spins{color:#F2E6C8;letter-spacing:2px}
+#intro .cont{min-height:var(--t48,48px);min-width:160px;font-size:max(15px,var(--t14));padding:12px 44px}
