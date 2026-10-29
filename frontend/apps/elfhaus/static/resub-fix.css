@@ -1,0 +1,94 @@
+/* ==========================================================================================================
+   resub-fix (re-audit REAUDIT_resub.md). Loaded after elfhaus.css; everything here is an override.
+   --t48 / --t12 / --t14 = 48 / 12 / 14 SCREEN px expressed in stage design px (stage.ts), so the floors hold at
+   every window size under the one shared stage scale.
+   ========================================================================================================== */
+
+/* ---------- H2: touch targets >= 48 screen px at every size ---------- */
+body:not(.portrait):not(.phl){--hb:max(clamp(34px,calc(5.4*var(--vh)),56px),var(--t48));--sp:max(clamp(54px,calc(9*var(--vh)),96px),calc(var(--t48)*1.3))}
+body.portrait{--hb:max(48px,var(--t48));--sp:max(64px,calc(var(--t48)*1.3))}
+#app #hud{width:clamp(620px,calc(var(--cell)*5 + 220px),1100px)}
+/* switches: the button grows to a 48 px hit box with a transparent border; the visible track is the padding box */
+.sw,#anteRow .sw,#turboRow .sw,#stFeat{--swE:max(0px,calc((var(--t48) - 26px) / 2));width:calc(46px + 2*var(--swE));height:calc(26px + 2*var(--swE));
+  border:var(--swE) solid transparent!important;background-clip:padding-box!important;box-shadow:inset 0 0 0 1.5px #8A6A3A!important;margin:calc(-1*var(--swE)) calc(-1*var(--swE)) calc(-1*var(--swE)) 0}
+.sw::before{display:none}
+.chip,.advBtn,.go,#msgOk,#replayPlay,#popMenu .pmRow,#bmBet .ico,#autoMenu input{min-height:var(--t48)}
+#bmBet .ico{min-width:var(--t48)}
+.advBtn{padding:4px 18px;font-size:max(12px,var(--t12))}
+.modal .mX{width:var(--t48);height:var(--t48);top:2px;right:2px}
+.modal.hasX{padding-right:calc(var(--t48) + 6px)}
+#armTag{min-height:var(--t48)}
+label.spSkip{min-height:var(--t48);padding:0 16px;font-size:max(13px,var(--t12));left:50%;right:auto;translate:-50% 0;cursor:pointer}
+label.spSkip input{width:max(18px,calc(var(--t12)*1.4));height:max(18px,calc(var(--t12)*1.4))}
+#intro .cont,#outro .cont{min-height:var(--t48);min-width:calc(var(--t48)*2.5)}
+/* readable HUD labels (>= 12 screen px) */
+#app #strip label{font-size:max(clamp(10px,calc(1.5*var(--vh)),13px),var(--t12))}
+#app #strip span{font-size:max(clamp(14px,calc(2.3*var(--vh)),20px),calc(var(--t14)*1.05))}
+#popMenu .pmRow{font-size:max(15px,var(--t14))}
+
+/* panels + pop menu in landscape: one zoom (--mz, stage.ts) so the 13-15 px panel text is >= 12 screen px */
+body:not(.portrait) .modal{zoom:var(--mz);max-height:calc(92*var(--vh)/var(--mz));max-width:calc(96*var(--vw)/var(--mz))}
+body:not(.portrait) .modal.bm{width:min(860px,calc(94*var(--vw)/var(--mz)))}
+body:not(.portrait) #popMenu{zoom:var(--mz)}
+/* inside a zoomed panel 48 screen px is --t48 / --mz */
+body:not(.portrait) .modal{--t48:calc(48px / var(--s) / var(--mz));--t12:calc(12px / var(--s) / var(--mz));--t14:calc(14px / var(--s) / var(--mz))}
+body:not(.portrait) #popMenu{--t48:calc(48px / var(--s) / var(--mz));--t14:calc(14px / var(--s) / var(--mz))}
+
+/* ---------- H1: phone landscape (body.phl, visible height <= 500): 600-design-px stage (stage.ts), board fills the
+   height, left rail = menu / BUY plate / readouts, right rail = turbo / bet + / SPIN / bet - / autoplay. ---------- */
+body.phl{--hb:max(80px,var(--t48));--sp:136px;--mt:0px}
+body.phl #app #stage{padding:0 calc(var(--railR) + 20*var(--vw)) 0 var(--railL)}
+body.phl #app #top{height:auto;padding-top:6px}
+body.phl #app #logo.art{height:62px}
+body.phl #app #hud{position:absolute;inset:0;isolation:isolate;width:auto;max-width:none;margin:0;padding:0;display:block;background:none;border:0;box-shadow:none;pointer-events:none;z-index:6}
+body.phl #app #hud::before,body.phl #app #hud::after{content:"";position:absolute;z-index:-1;top:8px;bottom:8px;border-radius:18px;width:auto;border:2px solid #ffc83d66;
+  background:linear-gradient(180deg,#221a2bdd,#140e1add);box-shadow:inset 0 0 0 1px #000,0 8px 22px -8px #000c}
+body.phl #app #hud::before{left:8px;width:calc(var(--railL) - 16px);grid-row:auto;align-self:auto}
+body.phl #app #hud::after{right:8px;width:calc(var(--railR) - 16px)}
+body.phl #app #hud button{pointer-events:auto;position:absolute;margin:0;grid-area:auto!important}
+body.phl #app #menuBtn{left:calc((var(--railL) - var(--hb)) / 2);top:22px}
+body.phl #app #turboBtn{right:calc((var(--railR) - var(--hb)) / 2);top:22px}
+body.phl #app #betUp{right:calc((var(--railR) - var(--hb)) / 2);top:calc(50% - var(--sp) / 2 - var(--hb) - 14px)}
+body.phl #app #spinBtn{right:calc((var(--railR) - var(--sp)) / 2);top:calc(50% - var(--sp) / 2)}
+body.phl #app #betDown{right:calc((var(--railR) - var(--hb)) / 2);top:calc(50% + var(--sp) / 2 + 14px)}
+body.phl #app #autoBtn{right:calc((var(--railR) - var(--hb)) / 2);bottom:22px}
+body.phl #app #buyBtn.plate:not(.side){left:calc((var(--railL) - 180px) / 2);top:calc(50% - 100px);width:180px;height:200px;grid-area:auto}
+body.phl #app #strip .m{position:absolute;left:16px;width:calc(var(--railL) - 32px);display:flex;flex-direction:column;align-items:center;gap:0;line-height:1.1}
+body.phl #app #strip .m:nth-child(1){bottom:132px} body.phl #app #strip .m:nth-child(2){bottom:76px} body.phl #app #strip .m:nth-child(3){bottom:20px}
+body.phl #app #strip label{font-size:var(--t12)} body.phl #app #strip span{font-size:calc(var(--t14)*1.1)}
+body.phl #app #fsBar{position:absolute;left:auto;right:calc(var(--railR) + 8px);top:auto;bottom:10px;width:calc(20*var(--vw) - 10px);margin:0;
+  flex-wrap:wrap;justify-content:center;gap:0 10px;font-size:var(--t12);padding:4px 8px;z-index:6;translate:none!important}
+body.phl #app #stepToast{position:absolute;bottom:12px;left:50%;translate:-50% 0;margin:0;font-size:var(--t12)}
+body.phl #app #banner{font-size:var(--t14)}
+/* panels in phone landscape: zoom so text is >= 12 screen px; the rules are a full-screen sheet */
+body.phl .modal.bm{width:calc(92*var(--vw)/var(--mz))}
+body.phl .modal.rules{width:calc(96*var(--vw)/var(--mz));height:calc(96*var(--vh)/var(--mz));max-width:none}
+body.phl #maxwin .mwText{bottom:calc(3*var(--vh))}
+
+/* ---------- M11: one UI kit = black / gold / stone (BUY plate, intro cards, stone logo). Replaces the lavender-on-plum
+   panels and the pink accents (chips, switches, CONFIRM / START, close X, armed card, pop menu). No round pink UI. ---------- */
+:root{--k-gold:#ffc83d;--k-gold2:#e0ac3a;--k-goldHi:#ffe7a3;--k-line:#8a6a2c;--k-plate:linear-gradient(180deg,#2b2133 0%,#1f1727 55%,#151019 100%)}
+.modal,#popMenu,#popMenu .pmSlide,#stepToast,#banner,#fsBar,#intro .card,#outro .card,#fsMore .card{background:var(--k-plate)!important;border:2px solid var(--k-gold)!important;
+  box-shadow:inset 0 0 0 1.5px #120c16,inset 0 0 0 3px #ffe7a355,0 14px 30px -10px #000d!important;color:#F4EEE6}
+.modal{border-radius:16px}
+.modal h2,#rulesTitle,#buyTitle,#autoTitle,.rules h3,#msgTitle,#rcTitle{color:var(--k-gold)!important;text-shadow:0 1px 0 #000,0 0 10px #ffc83d33}
+.row,#app #hud .row,#buyCards .bcard,.chip,#bmBet .ico,.cfArt,.bArt{border-color:#5d4a2a!important}
+.row{background:#ffffff06}
+.chip{background:#17111c;color:#F4EEE6}
+.chip.on{border-color:var(--k-gold)!important;background:#2a1f0e!important;color:var(--k-goldHi);box-shadow:0 0 0 1px var(--k-gold)!important}
+#buyCards .bcard:hover{border-color:#b08a3a!important}
+#buyCards .bcard.armed{border-color:var(--k-gold)!important;background:#241a0d!important;box-shadow:0 0 0 1px var(--k-gold),0 0 14px #ffc83d44!important}
+.go,#msgOk,#intro .cont,#outro .cont,#replayPlay{background:linear-gradient(180deg,#ffe08a,#e0ac3a 55%,#b9861f)!important;color:#1a1322!important;border:2px solid #6b4d12!important;
+  border-radius:12px;font-weight:900;letter-spacing:2px;box-shadow:inset 0 1px 0 #fff6,0 6px 14px -6px #000c!important;text-shadow:none}
+.go:hover,#msgOk:hover{background:linear-gradient(180deg,#ffe9a8,#ebb847 55%,#c4912a)!important}
+.go:disabled{background:#3a3226!important;color:#9a8d78!important;border-color:#4a3e2a!important}
+.sw{background:#1a1320!important}
+.sw.on{background:linear-gradient(180deg,#ffd76a,#d9a02a)!important;box-shadow:inset 0 0 0 1.5px #6b4d12!important}
+.sw::after{border-radius:6px!important;background:#e9dfcf!important} .sw.on::after{background:#1a1322!important}
+.modal .mX svg{filter:drop-shadow(0 0 2px #ffc83d) drop-shadow(0 0 4px #ffc83d66)}
+.modal .mX .xb{fill:var(--k-goldHi);stroke:#1a1322}
+#popMenu .pmRow:focus-visible{outline-color:var(--k-gold)} #popMenu .pmItem.open .pmX{stroke:var(--k-gold)}
+#popMenu .pmRow:hover,#popMenu .pmRow:focus-visible,#popMenu .pmItem.open .pmRow{background:#ffc83d14}
+.rules td,.rules th{border-color:#ffc83d33!important}
+#fsTier{color:var(--k-gold)}
+#app #ctrlTop .ico.toggle.on,#app #autoBtn.on{border-color:var(--k-gold)!important}
