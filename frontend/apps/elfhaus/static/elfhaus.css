@@ -1253,3 +1253,47 @@ body{--gt:1}
 @media (prefers-reduced-motion:reduce){.cell.win .sym.art>img,.cell.win .sym.art>.symGlow,.cell.win .sym .symGlow img{animation:none}}
 body:not(.turbo) #cells .cell.wLand .sym{animation:wPop .24s cubic-bezier(.3,1.6,.5,1)} /* was the calm .42s wSettle */
 /* ===== end anim-v4 gameplay tempo ===== */
+
+/* ===== resub (approved PixiJS mockup): BUY BONUS = gold/black stone plate with the rabbit icon on a dark disc, label from
+   t('buyTitle') (social: GET BONUS). Calm ambient only: a slow breathe (3.2 s) and a soft shine sweep every 4.5 s.
+   Landscape: tall plate in the gutter left of the board (game.ts placeBuy sets --buyL/--buyT/--pk). Portrait / narrow
+   gutters: a rounded-rectangle plate in the HUD's bonus column spanning both rows (>= 48 px wide, ~90 px tall). ===== */
+#app #buyBtn.emblem.plate{position:relative;overflow:hidden;border-radius:14px;border:3px solid #ffc83d;color:#ffc83d;
+  background:linear-gradient(180deg,#30253a 0%,#241b2d 55%,#1a1322 100%);
+  box-shadow:inset 0 0 0 1.5px #1a0f24,inset 0 0 0 3px rgba(255,234,176,.55),inset 0 2px 0 3px rgba(255,255,255,.07),0 0 10px rgba(255,79,195,.28),0 6px 16px -6px #000c;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:4px 2px;
+  animation:buyBreathe 3.2s ease-in-out infinite}
+#app #buyBtn.plate .disc{display:flex;align-items:center;justify-content:center;border-radius:50%;background:#1a0f24;flex:0 0 auto;
+  width:calc(var(--sp)*.62);height:calc(var(--sp)*.62)}
+#app #buyBtn.plate .disc img,#app #buyBtn.plate .disc svg{width:100%!important;height:100%!important;margin:0}
+#app #buyBtn.plate .lbl{font:800 9px/1.02 Montserrat,system-ui,sans-serif;letter-spacing:.06em;color:#ffc83d;text-align:center;white-space:normal;
+  text-shadow:0 1px 0 #000;max-width:100%}
+#app #buyBtn.plate::after{content:"";position:absolute;inset:-20%;pointer-events:none;
+  background:linear-gradient(105deg,transparent 40%,rgba(255,236,190,.22) 50%,transparent 60%);transform:translateX(-120%);animation:buyShine 4.5s ease-in-out infinite}
+@keyframes buyBreathe{0%,100%{transform:scale(1)}50%{transform:scale(1.025)}}
+@keyframes buyShine{0%,70%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
+#app #buyBtn.plate:disabled{animation:none}
+#app #buyBtn.plate:disabled::after{animation:none;opacity:0}
+/* in the HUD (portrait + narrow landscape): span both HUD rows so the label fits */
+#app #buyBtn.plate:not(.side){grid-row:1/3;align-self:center;width:var(--bw);height:calc(var(--sp) + var(--mt) - 2px)}
+#app #strip .m:nth-child(3){grid-column:7/9}
+/* landscape gutter plate (216 x 240 at --pk 1.05 in the mockup's units) */
+#app #buyBtn.plate.side{position:absolute;grid-area:auto;left:var(--buyL);top:var(--buyT);width:calc(227px*var(--pk));height:calc(252px*var(--pk));
+  margin:0;border-width:calc(5px*var(--pk));border-radius:calc(30px*var(--pk));gap:calc(10px*var(--pk));padding:calc(14px*var(--pk))}
+#app #buyBtn.plate.side .disc{width:calc(132px*var(--pk));height:calc(132px*var(--pk))}
+#app #buyBtn.plate.side .lbl{font-size:calc(30px*var(--pk));letter-spacing:.05em;line-height:1.05}
+@media (prefers-reduced-motion:reduce){#app #buyBtn.plate,#app #buyBtn.plate::after{animation:none}}
+
+/* ===== resub (approved mockup, mobile): portrait HUD = 3 rows, every control >= 48 CSS px on a 390-wide phone.
+   row 1: [menu][turbo][autoplay] ........ [ BUY BONUS plate ];  row 2: [-] [SPIN] [+] on the centre line;  row 3: readouts ===== */
+body.portrait{--hb:48px;--sp:64px;--mt:30px}
+body.portrait #app #hud{grid-template-columns:repeat(5,minmax(0,1fr));grid-template-rows:48px var(--sp) var(--mt);row-gap:6px}
+body.portrait #app #menuBtn{grid-area:1/1} body.portrait #app #turboBtn{grid-area:1/2} body.portrait #app #autoBtn{grid-area:1/3}
+body.portrait #app #betDown{grid-area:2/2} body.portrait #app #spinBtn{grid-area:2/3} body.portrait #app #betUp{grid-area:2/4}
+body.portrait #armTag{grid-area:2/3}
+body.portrait #app #hud::before{grid-row:3}
+body.portrait #app #strip .m{grid-row:3}
+body.portrait #app #strip .m:nth-child(1){grid-column:1/3} body.portrait #app #strip .m:nth-child(2){grid-column:3/4} body.portrait #app #strip .m:nth-child(3){grid-column:4/6}
+body.portrait #app #buyBtn.plate:not(.side){grid-area:1/4/2/6;width:100%;height:48px;flex-direction:row;gap:8px;padding:0 10px;border-radius:14px;justify-self:stretch}
+body.portrait #app #buyBtn.plate:not(.side) .disc{width:40px;height:40px}
+body.portrait #app #buyBtn.plate:not(.side) .lbl{font-size:13px;white-space:nowrap}

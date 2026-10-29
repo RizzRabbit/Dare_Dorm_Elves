@@ -443,9 +443,24 @@ function hudGap() {
 	const hud = $('#hud'), tag = $('#armTag'), hid = tag.classList.contains('hidden');
 	if (hid) tag.classList.remove('hidden');
 	let top = hud.getBoundingClientRect().top;
-	hud.querySelectorAll('*').forEach((e) => { if (!vis(e)) return; const r = e.getBoundingClientRect(); if (r.width && r.height) top = Math.min(top, r.top); });
+	hud.querySelectorAll('*').forEach((e) => { if (!vis(e) || e.closest('#buyBtn.side')) return; const r = e.getBoundingClientRect(); if (r.width && r.height) top = Math.min(top, r.top); });
 	if (hid) tag.classList.add('hidden');
 	return top - bot;
+}
+/** BUY BONUS plate (approved mockup): landscape = the tall gold/black plate in the gutter LEFT of the board, about where
+ *  the mockup has it (centre ~160 frame-units left of the frame, 42% down it); too narrow a gutter -> it stays in the HUD. */
+function placeBuy(portrait: boolean, fr: DOMRect) {
+	const b = $('#buyBtn'), hud = $('#hud'), r = document.documentElement.style;
+	// the board's outer edge = the frame or the alcove art around it (crown posts / recess reach past #frame)
+	let edge = fr.left;
+	for (const id of ['alcoveCrown', 'alcoveRecess', 'alcoveRail']) { const e = document.getElementById(id); if (e && e.offsetWidth) edge = Math.min(edge, toStage(e.getBoundingClientRect()).left); }
+	const k = fr.height / 726, w = Math.min(227 * k, edge - 40), side = !portrait && w >= 120;
+	b.classList.toggle('side', side);
+	if (!side) return;
+	const hr = toStage(hud.getBoundingClientRect()), pk = w / 227;
+	const cx = Math.max(w / 2 + 14, Math.min(edge - 24 - w / 2, fr.left - 160 * k)), cy = fr.top + fr.height * 0.45;
+	r.setProperty('--pk', pk.toFixed(4));
+	r.setProperty('--buyL', (cx - w / 2 - hr.left).toFixed(1) + 'px'); r.setProperty('--buyT', (cy - 126 * pk - hr.top).toFixed(1) + 'px');
 }
 export function layout() {
 	// one shared scale (stage.ts): lay out in stage design px; the stage is never 'short' any more
@@ -487,6 +502,7 @@ export function layout() {
 	document.documentElement.style.setProperty('--gutR', Math.max(0, W - fr.right) + 'px');
 	document.documentElement.style.setProperty('--frB', Math.round(fr.bottom) + 'px');
 	placeRoxy(portrait, fr);
+	placeBuy(portrait, fr);
 	placeRespin();
 }
 
@@ -564,7 +580,7 @@ function applyJurisdiction() {
 	if (S.jur.disabledAutoplay) $('#autoBtn').style.visibility = 'hidden';
 	if (S.jur.disabledTurbo) $('#turboBtn').style.visibility = 'hidden';
 	$('#buyBtn').setAttribute('aria-label', t('buyAria')); $('#buyBtn').title = t('buyAria');
-	$('#buyTitle').textContent = t('buyTitle');
+	$('#buyTitle').textContent = t('buyTitle'); $('#buyLbl').textContent = t('buyTitle');
 	$('#betDown').setAttribute('aria-label', t('betDown')); $('#betUp').setAttribute('aria-label', t('betUp'));
 	$('#betLabel').textContent = t('betLabel');
 }

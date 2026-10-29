@@ -39,8 +39,9 @@
 			<div class="side">
 				<button id="turboBtn" class="ico toggle" aria-label="Turbo" title="Turbo"><svg viewBox="0 0 24 24"><path d="M13 2 4.5 13.5H11L10 22l8.5-11.5H12L13 2Z" /></svg></button>
 			</div>
-			<button id="buyBtn" class="ico emblem" aria-label="Get bonus" title="Get bonus">
-				{#if art.buy_icon}<img src={art.buy_icon} srcset={art.buy_icon_128 ? `${art.buy_icon_128} 128w, ${art.buy_icon} 256w` : undefined} sizes="42px" alt="" />{:else}<svg viewBox="0 0 40 40"><path class="g" d="M9 31C9 19 18 9 31 6c-2 11-8 20-18 26Z" /><path class="g" d="M13.5 26.5C17 20 22 15 27.5 11" /><path class="gf" d="M30 22l1.3 3.2 3.2 1.3-3.2 1.3L30 31l-1.3-3.2-3.2-1.3 3.2-1.3Z" /></svg>{/if}
+			<button id="buyBtn" class="ico emblem plate" aria-label="Get bonus" title="Get bonus">
+				<span class="disc" aria-hidden="true">{#if art.buy_icon}<img src={art.buy_icon} srcset={art.buy_icon_128 ? `${art.buy_icon_128} 128w, ${art.buy_icon} 256w` : undefined} sizes="96px" alt="" />{:else}<svg viewBox="0 0 40 40"><path class="g" d="M9 31C9 19 18 9 31 6c-2 11-8 20-18 26Z" /><path class="g" d="M13.5 26.5C17 20 22 15 27.5 11" /><path class="gf" d="M30 22l1.3 3.2 3.2 1.3-3.2 1.3L30 31l-1.3-3.2-3.2-1.3 3.2-1.3Z" /></svg>{/if}</span>
+				<span id="buyLbl" class="lbl" aria-hidden="true"></span>
 			</button>
 		</div>
 		<div id="bar">
