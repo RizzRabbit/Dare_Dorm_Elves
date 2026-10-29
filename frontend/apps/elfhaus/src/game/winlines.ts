@@ -30,7 +30,7 @@ function ensure() {
 	if (!head) { // baked soft head glow (drawn once)
 		head = document.createElement('canvas'); head.width = head.height = 64; const g = head.getContext('2d')!;
 		const rg = g.createRadialGradient(32, 32, 0, 32, 32, 32);
-		rg.addColorStop(0, '#FFFFFFFF'); rg.addColorStop(.18, '#FFE3F1F0'); rg.addColorStop(.45, '#F06AB070'); rg.addColorStop(1, '#C42A7800');
+		rg.addColorStop(0, '#FFFFFFFF'); rg.addColorStop(.18, '#FFF1C8F0'); rg.addColorStop(.45, '#FFC83D70'); rg.addColorStop(1, '#FFC83D00');
 		g.fillStyle = rg; g.fillRect(0, 0, 64, 64);
 	}
 }
@@ -49,14 +49,32 @@ function draw(P: ReturnType<typeof path>, p: number, alpha: number) {
 		const f = Math.min(1, left / P.seg[i]), a = P.pts[i], b = P.pts[i + 1];
 		pts.push([a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f]); left -= P.seg[i];
 	}
-	const k = S.cell / 78; // 2.5 px core on a ~78 px phone cell, proportional on desktop
+	stroke(g, pts, p, alpha);
+	g.globalAlpha = 1;
+}
+/** M1: thicker line with a gold glow (black-gold kit), drawn on progressively; the head stamp leads it. */
+function stroke(g: CanvasRenderingContext2D, pts: number[][], p: number, alpha: number) {
+	const k = S.cell / 78; // 4 px core on a ~78 px phone cell, proportional on desktop
 	g.lineCap = 'round'; g.lineJoin = 'round'; g.globalAlpha = alpha;
-	for (const [w, col] of [[9 * k, '#C42A7826'], [5 * k, '#F06AB066'], [2.5 * k, '#FFF2F8']] as const) {
+	for (const [w, col] of [[16 * k, '#FFC83D1c'], [9 * k, '#FFC83D55'], [5 * k, '#FFD86Acc'], [2.2 * k, '#FFF8E6']] as const) {
 		g.lineWidth = w; g.strokeStyle = col; g.beginPath(); g.moveTo(pts[0][0], pts[0][1]);
 		for (let i = 1; i < pts.length; i++) g.lineTo(pts[i][0], pts[i][1]);
 		g.stroke();
 	}
-	if (p < 1) { const h = pts[pts.length - 1], s = 26 * k; g.drawImage(head!, h[0] - s / 2, h[1] - s / 2, s, s); }
+	if (p < 1) { const h = pts[pts.length - 1], s = 30 * k; g.drawImage(head!, h[0] - s / 2, h[1] - s / 2, s, s); }
+}
+function cut(P: ReturnType<typeof path>, p: number) {
+	let left = P.len * p; const pts = [P.pts[0]];
+	for (let i = 0; i < P.seg.length && left > 0; i++) {
+		const f = Math.min(1, left / P.seg[i]), a = P.pts[i], b = P.pts[i + 1];
+		pts.push([a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f]); left -= P.seg[i];
+	}
+	return pts;
+}
+function drawAll(Ps: ReturnType<typeof path>[], p: number, alpha: number) {
+	const g = ctx!; g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, cv!.width, cv!.height);
+	if (alpha <= 0) return;
+	for (const P of Ps) stroke(g, cut(P, p), p, alpha);
 	g.globalAlpha = 1;
 }
 const frame = () => new Promise<number>((r) => requestAnimationFrame(r));
@@ -88,35 +106,47 @@ export function clearRace() {
 	document.querySelectorAll('.wlAmt').forEach((e) => e.remove());
 }
 
-/** Play the step's line wins one at a time. base = WIN meter value (x bet) before this step. */
+/** Re-audit M1/M2: every line of the step draws on at once (thick gold glow), every winning symbol pops while the
+ *  rest dim, and the WIN meter counts smoothly from the step's start to its total in one go (no per-line steps, no
+ *  jump). Then, when there is more than one line, each line is shown once on its own with its amount (a short cycle,
+ *  capped so a step never drags). Tap 1 = skip the draw-on / current cycle line, tap 2 = zip to the end (total now).
+ *  base = WIN meter value (x bet) before this step. */
 export async function playWins(wins: LineWin[], base: number) {
 	ensure(); active = true; skipAll = false; taps = 0; setZip(false);
 	const cells = document.querySelectorAll('.cell'); cells.forEach((c) => c.classList.add('dim'));
 	const n = wins.length, turbo = S.turbo;
-	// per line: race + hold; long lists get faster so a step never drags (~0.5 s/line, min ~0.3 s; anim-v4: no ANIM_TEMPO stretch)
-	const race = turbo ? 150 : TG(Math.max(200, Math.min(340, 2400 / n - 180))), keep = turbo ? 90 : Math.max(TG(120), Math.min(TG(300), race * .8));
-	let sum = 0, li = 0;
-	for (const w of wins) {
-		if (skipAll) break; skipLine = false;
-		if (!turbo || li === 0) sfx('winline_highlight'); li++;
-		clearSymWins(); document.querySelectorAll('.cell.win').forEach((c) => { c.classList.remove('win'); c.classList.add('dim'); });
-		clearOvWins(); w.positions.forEach((p) => { ovWin(p.reel); const c = cellEl(p.reel, p.row); c.classList.remove('dim'); const fresh = !c.classList.contains('win'); c.classList.add('win'); litOn(c); symWin(c); if (fresh && !turbo) burst(c, 'pop'); });
-		const P = path(w.lineIndex); sum += w.win / 100;
-		setWinMeter(base + sum);
-		const L = label(w.positions, moneyWin(w.win / 100 * bet()));
-		await run(race, (t) => draw(P, easeIO(t), 1));
-		await hold(keep);
-		await run(turbo ? 60 : TG(100), (t) => draw(P, 1, 1 - t));
-		L.remove();
+	const tot = base + wins.reduce((a, w) => a + w.win / 100, 0);
+	const Ps = wins.map((w) => path(w.lineIndex));
+	// 1) all at once: symbols pop, lines draw on together, the meter counts up to the step total
+	if (n) sfx('winline_highlight');
+	clearSymWins(); clearOvWins();
+	wins.forEach((w) => w.positions.forEach((p) => { ovWin(p.reel); const c = cellEl(p.reel, p.row); c.classList.remove('dim');
+		const fresh = !c.classList.contains('win'); c.classList.add('win'); litOn(c); symWin(c); if (fresh && !turbo) burst(c, 'pop'); }));
+	setWinMeter(tot);
+	const drawOn = turbo ? 160 : TG(420);
+	await run(drawOn, (t) => drawAll(Ps, easeIO(t), 1));
+	await hold(turbo ? 120 : TG(Math.min(900, 380 + 120 * n)));
+	// 2) cycle: each line alone with its amount (more than one line, not turbo / zipped); capped at ~2.4 s in total
+	if (n > 1 && !turbo && !skipAll) {
+		const per = TG(Math.max(240, Math.min(520, 2400 / n)));
+		for (let i = 0; i < n && !skipAll; i++) {
+			skipLine = false; const w = wins[i];
+			document.querySelectorAll('.cell.win').forEach((c) => c.classList.add('soft'));
+			w.positions.forEach((p) => { const c = cellEl(p.reel, p.row); c.classList.remove('soft'); c.classList.remove('pulse'); void (c as HTMLElement).offsetWidth; c.classList.add('pulse'); });
+			const L = label(w.positions, moneyWin(w.win / 100 * bet()));
+			await run(per * 0.3, (t) => draw(Ps[i], 1, t));
+			await hold(per * 0.7);
+			L.remove();
+		}
+		document.querySelectorAll('.cell.soft').forEach((c) => c.classList.remove('soft'));
 	}
 	skipLine = false;
-	// summary: every winning symbol highlighted, no line over the board
-	const tot = base + wins.reduce((a, w) => a + w.win / 100, 0);
 	clearRace(); setWinMeter(tot); if (skipAll) skipCounts(); // zipped: the WIN meter shows the step total now
 	// round win so far (x bet): < 2 small, 2-5 medium, 5-10 big; >= 10 gets the big-win sting instead; turbo = small only
 	if (n && tot < 10) sfx(turbo || tot < 2 ? 'win_small' : tot < 5 ? 'win_medium' : 'win_big');
 	if (n && !turbo && tot >= 2 && tot < 10) voice('win');
 	wins.forEach((w) => w.positions.forEach((p) => { ovWin(p.reel); const c = cellEl(p.reel, p.row); c.classList.remove('dim'); c.classList.add('win'); litOn(c); symWin(c); }));
 	if (!skipAll) await hold(turbo ? 200 : TG(500));
+	document.querySelectorAll('.cell.pulse').forEach((c) => c.classList.remove('pulse'));
 	active = false; skipAll = false;
 }

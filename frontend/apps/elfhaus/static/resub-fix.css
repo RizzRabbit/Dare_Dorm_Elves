@@ -115,3 +115,14 @@ body.portrait #app #armTag{grid-area:2/5;align-self:center;justify-self:stretch;
 /* ---------- M6: the single-wild gem sits in the bottom-left corner (beside the legs), clear of the "WILD" lettering
    across the hips; full-reel / merged stacks keep their top-left gem (hair / ceiling there) ---------- */
 .cell > .mx:not(.stack){top:auto;bottom:calc(3px - var(--mxdy,0)*var(--cell));transform-origin:14% 55%}
+
+/* ---- M1: win presentation. Non-winners dim to ~40 % (brightness, so stacked layers dim evenly), every winning symbol
+   pops once and then breathes; during the per-line cycle the other winners soften. `scale` (individual transform)
+   so it never fights the reel transforms. ---- */
+#root .cell.dim{opacity:.42}
+#root .cell.win{animation:wPop calc(.42s*var(--gt,1)) cubic-bezier(.3,1.6,.5,1) both,wBreathe calc(1.1s*var(--gt,1)) ease-in-out calc(.42s*var(--gt,1)) infinite}
+#root .cell.win.soft{opacity:.7;animation:none}
+#root .cell.win.pulse{opacity:1;animation:wPop calc(.36s*var(--gt,1)) cubic-bezier(.3,1.6,.5,1) both}
+@keyframes wPop{0%{scale:1}45%{scale:1.14}100%{scale:1.04}}
+@keyframes wBreathe{0%,100%{scale:1.04}50%{scale:1.08}}
+@media (prefers-reduced-motion:reduce){#root .cell.win,#root .cell.win.pulse{animation:none}}
