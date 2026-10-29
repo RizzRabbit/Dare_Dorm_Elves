@@ -92,3 +92,11 @@ body.phl #maxwin .mwText{bottom:calc(3*var(--vh))}
 .rules td,.rules th{border-color:#ffc83d33!important}
 #fsTier{color:var(--k-gold)}
 #app #ctrlTop .ico.toggle.on,#app #autoBtn.on{border-color:var(--k-gold)!important}
+
+/* ---------- M5 armed tag placement per layout (base rule in elfhaus.css: black-gold plate above the spin button) ---------- */
+#armTag{font-size:max(var(--t12),calc(var(--sp)*.13))}
+body.phl #app #armTag{position:absolute;pointer-events:auto;grid-area:auto;translate:none;left:12px;width:calc(var(--railL) - 24px);
+  top:calc(22px + var(--hb) + 12px);justify-content:center;white-space:normal;text-align:center;font-size:var(--t12)}
+/* portrait: the empty cell right of bet+ on the spin row (no overlap with the board, so the layout never moves) */
+body.portrait #app #armTag{grid-area:2/5;align-self:center;justify-self:stretch;translate:none;margin:0 2px;padding:4px 4px;flex-wrap:wrap;
+  justify-content:center;white-space:normal;text-align:center;line-height:1.15;font-size:var(--t12);letter-spacing:.5px}

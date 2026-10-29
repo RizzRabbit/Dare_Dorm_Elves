@@ -528,13 +528,14 @@ body{--bw:calc(var(--sp)*.86)}
 #app #autoBtn{grid-area:1/8} #app #buyBtn{grid-area:1/9}
 #app #strip .m:nth-child(1){grid-column:1/4} #app #strip .m:nth-child(2){grid-column:4/7} #app #strip .m:nth-child(3){grid-column:7/10}
 #app #spinBtn{position:relative}
-/* armed mode: pink ring + soft glow on the spin button, a small tag (mode + ×) sitting on its top edge */
-#app #spinBtn.armed{border-color:#F06AAE;box-shadow:0 0 0 2px #3A0F2C,0 0 14px #F06AAE88}
-#armTag{grid-area:1/5;align-self:start;justify-self:center;z-index:3;translate:0 -55%;display:inline-flex;align-items:center;gap:4px;
-  padding:2px 6px 2px 8px;font-size:max(9px,calc(var(--sp)*.13));line-height:1.2;letter-spacing:.8px;border-radius:99px;
-  background:linear-gradient(#4A2458,#2E1638);border:1.5px solid #F06AAE;color:#FFE6F2;box-shadow:0 0 8px #F06AAE66}
+/* armed mode (re-audit M5): no ring on the round spin button; a square-cornered black-gold plate (full mode name + ×)
+   sits above it with clearance */
+#app #spinBtn.armed{border-color:#46404F}
+#armTag{grid-area:1/5;align-self:start;justify-self:center;z-index:3;translate:0 calc(-100% - 6px);display:inline-flex;align-items:center;gap:6px;
+  padding:2px 8px 2px 10px;font-size:max(9px,calc(var(--sp)*.13));line-height:1.2;letter-spacing:1px;font-weight:900;white-space:nowrap;border-radius:5px;
+  background:linear-gradient(180deg,#30253a,#241b2d 55%,#1a1322);border:1.5px solid #ffc83d;color:#ffc83d;box-shadow:inset 0 0 0 1px #120c16,0 4px 10px -4px #000c}
 #armTag.hidden{display:none}
-#armTag svg{flex:none;width:.9em;height:.9em;stroke:#FFE6F2;stroke-width:2;fill:none}
+#armTag svg{flex:none;width:.9em;height:.9em;stroke:#ffc83d;stroke-width:2;fill:none}
 /* autoplay: spins left as a small number under the spin icon */
 #autoN{position:absolute;left:50%;bottom:9%;translate:-50% 0;font-size:max(10px,calc(var(--sp)*.15));font-weight:900;letter-spacing:.5px;color:#FFE6F2;
   font-variant-numeric:tabular-nums;pointer-events:none}
@@ -646,7 +647,7 @@ canvas.uiFill{position:absolute;inset:0;width:100%;height:100%}
 #spinBtn.pressed{animation:btnPress .22s cubic-bezier(.3,1.6,.5,1)}
 #hud button:active:not(#spinBtn){transform:scale(.94)}
 @keyframes btnPress{0%{transform:scale(.9)}100%{transform:none}}
-#app #spinBtn.armed{box-shadow:0 0 0 2px #3A0F2C}
+#app #spinBtn.armed{box-shadow:0 0 0 2px #0008,0 8px 16px -6px #000a}
 
 /* MAX WIN sprite layout. Group frame 1467x796 (round 6): Coco | Jade | Delilah | Roxy | Vi, full figures cropped at the thigh. */
 #maxwin .mwCrowd{position:absolute;inset:0;z-index:3;pointer-events:none;overflow:hidden}
@@ -1073,7 +1074,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:45;bac
 .pl polyline{filter:none}
 .wlAmt{text-shadow:0 1px 0 #2A1433,0 0 0 #0000;-webkit-text-stroke:3px #2A1433;paint-order:stroke fill}
 .rd i{box-shadow:0 0 0 1px #3A0F2C}
-#app #spinBtn.armed{box-shadow:0 0 0 2px #3A0F2C}
+#app #spinBtn.armed{box-shadow:0 0 0 2px #0008,0 8px 16px -6px #000a}
 .cell.locked::after{box-shadow:0 0 0 1px #1A1420}
 .ov.full.art::before{box-shadow:inset 0 0 0 2px #6E4A7E}
 .ov .ovWinO{box-shadow:inset 0 0 0 2px #FF5FAE,0 0 0 2px #2A1433}

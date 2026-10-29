@@ -46,7 +46,7 @@ export function confirmCopy(m: CopyMode, c: CopyCtx, name: string, amount: strin
 		amount,
 		per: c.social ? 'PER PLAY' : 'PER SPIN',
 		x: c.social ? `${x} play` : `${x} bet`,
-		note: 'Stays on for every spin until you turn it off.',
+		note: m === 'ante' ? 'Stays on for every spin until you turn it off.' : 'Buys one bonus on your next spin (or each spin of an autoplay run), then turns off.',
 		button: 'CONFIRM',
 		hint: 'Tap anywhere to cancel',
 	};
@@ -58,7 +58,7 @@ export const costHeader = (social: boolean) => (social ? 'Play for' : 'Cost');
 /** Rules "Controls": the bonus-menu sentence. anteX = '3x'. */
 export function controlsBonus(c: CopyCtx) {
 	return `The bonus button opens the bonus menu: tap Ante (${c.anteX}) or a bonus to see what it does, then confirm it to switch it on. ` +
-		`An active mode stays on for every spin (and autoplay) until you tap its tag above the spin button or switch it off in the bonus menu; ` +
+		`Ante stays on until you switch it off; a bought bonus is played on the next spin (or every spin of an autoplay run) and then turns itself off. Tap the tag above the spin button to turn a mode off early; ` +
 		(c.social ? `each spin is played for that mode's amount.` : `each spin costs that mode's price.`);
 }
 export const controlsTurbo = () => ' Turbo (the lightning button, or the switch in the bonus menu) speeds up animations.';

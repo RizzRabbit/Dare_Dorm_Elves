@@ -67,11 +67,12 @@ const modeCost = (m: ModeKey) => (m === 'ante' ? ANTE_COST : MODES[m]?.cost ?? 1
 // (and autoplay) until the player turns it off or picks another; buys and Ante are mutually exclusive.
 let armed: ModeKey | null = null;
 const spinMode = (): ModeKey => armed ?? (S.ante ? 'ante' : 'base');
-const SHORT: Partial<Record<ModeKey, string>> = { ante: 'ANTE', dare: 'DARE', double_dare: 'DOUBLE', triple_dare: 'TRIPLE', mystery: 'MYSTERY', egw: 'EGW' };
+// re-audit M5: the tag spells the full mode name ("DOUBLE" alone was ambiguous)
+const SHORT: Partial<Record<ModeKey, string>> = { ante: 'ANTE BET', dare: 'DARE', double_dare: 'DOUBLE DARE', triple_dare: 'TRIPLE DARE', mystery: 'MYSTERY SPIN', egw: 'ELVES GONE WILD' };
 function setArm(m: ModeKey | null, ante = false) {
 	armed = m; S.ante = !m && ante;
 	const mode = spinMode(), on = mode !== 'base';
-	$('#spinBtn').classList.toggle('armed', on); setArmedGlow($('#spinBtn'), on);
+	$('#spinBtn').classList.toggle('armed', on); setArmedGlow($('#spinBtn'), false); // M5: no halo ring (house rule: no pink UI circles); the black-gold tag is the indicator
 	const tag = $('#armTag'); tag.classList.toggle('hidden', !on);
 	($('#armTag .t') as HTMLElement).textContent = SHORT[mode] ?? '';
 	tag.setAttribute('aria-label', on ? `${MODE_LABEL[mode]} active, tap to turn off` : '');
@@ -182,6 +183,7 @@ async function finishRound(round: any) {
 	}
 	setStrip();
 }
+const isBuy = (m: ModeKey) => m !== 'base' && m !== 'ante';
 async function round(mode: ModeKey) {
 	if (S.replay) { stopAuto(); return; } // v3.16 (#171): a replay never leaves autoplay armed on the spin button
 	if (S.busy || !sessionReady) return;
@@ -211,6 +213,9 @@ async function round(mode: ModeKey) {
 		stopAuto(); endBonusUi(); abortSpin(); renderAll(); showError(e);
 	} finally { setBusy(false); }
 	if (S.auto > 0) { S.auto--; setAuto(); if (S.auto) setTimeout(() => { if (S.auto) round(spinMode()); }, 300); }
+	// re-audit M5: a bought bonus disarms once its round (or its autoplay run) is over, so the next tap is a normal
+	// spin at the base bet, never a silent second buy. Ante is a bet setting, not a buy: it stays on.
+	if (armed && !S.auto && isBuy(mode)) setArm(null, false);
 }
 
 // ---------- startup ----------
