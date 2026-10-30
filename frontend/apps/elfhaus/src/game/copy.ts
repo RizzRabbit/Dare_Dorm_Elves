@@ -52,7 +52,7 @@ export function confirmCopy(m: CopyMode, c: CopyCtx, name: string, amount: strin
 	};
 }
 
-export const turboCopy = (_social: boolean) => ({ label: 'TURBO', sub: 'faster animations', aria: 'Turbo' });
+export const turboCopy = (_social: boolean) => ({ label: 'TURBO', aria: 'Turbo' }); // v3.17: the 'faster animations' line is gone (James)
 /** Rules mode table, second column. */
 export const costHeader = (social: boolean) => (social ? 'Play for' : 'Cost');
 /** Rules "Controls": the bonus-menu sentence. anteX = '3x'. */

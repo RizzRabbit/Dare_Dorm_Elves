@@ -73,7 +73,7 @@
 	<div class="mHead"><h2 id="buyTitle">BONUS</h2></div>
 	<div id="bmBet" class="row"><!-- v3.15b (James): bet steps at the top of the bonus menu; HUD steps, limits and sync --><button id="bmDown" class="ico flat" aria-label="Decrease"><svg viewBox="0 0 24 24"><path d="M5 12h14" /></svg></button><span class="v"><small></small><b id="bmBetV">—</b></span><button id="bmUp" class="ico flat" aria-label="Increase"><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5v14" /></svg></button></div>
 	<div id="anteRow" class="row"><span class="lbl">ANTE <small id="anteCost">3x</small></span><button id="anteSw" class="sw" role="switch" aria-checked="false" aria-label="Ante"><i></i></button></div>
-	<div id="turboRow" class="row"><span class="lbl">TURBO <small id="turboSub">faster animations</small></span><button id="turboSw" class="sw" role="switch" aria-checked="false" aria-label="Turbo"><i></i></button></div>
+	<div id="turboRow" class="row"><span class="lbl">TURBO</span><!-- v3.17 (James): no description line under the turbo label --><button id="turboSw" class="sw" role="switch" aria-checked="false" aria-label="Turbo"><i></i></button></div>
 	<div id="buyCards"></div>
 	</div></div>
 </div></div>

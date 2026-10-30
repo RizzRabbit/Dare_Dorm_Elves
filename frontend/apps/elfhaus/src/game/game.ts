@@ -11,7 +11,7 @@ import {
 	ANTE_COST, CONFIRM_ABOVE_X, fmtX, BUY_MODES, GAME_ID, LINES, MAX_WIN_X, MODES, MODE_LABEL, MYSTERY_ODDS, PAYTABLE,
 	SPIN_CAP, START_FS, EPIC_STACK_X, SYMBOL_NAMES, VERSION, isProvisional, oneIn, type ModeKey,
 } from './config';
-import { confirmCopy, resumeCopy, controlsAuto, controlsBonus, controlsTurbo, controlsUi, costHeader, errorText, errorTitle, modeDesc, turboCopy, type CopyCtx, type CopyMode } from './copy';
+import { confirmCopy, resumeCopy, controlsAuto, controlsBonus, controlsTurbo, controlsUi, costHeader, errorText, errorTitle, modeDesc, type CopyCtx, type CopyMode } from './copy';
 import { registerPanel, openPanel, closePanel, isOpen, anyOpen, measurePanel, setClosable } from './panels';
 import { money, moneyWin, mult, setCurrency, setLocale, isSocialCurrency, amountStr } from './format';
 import { skipCounts, setAmount } from './countup';
@@ -405,7 +405,6 @@ function paintBuy() {
 	($('#bmUp') as HTMLButtonElement).disabled = S.busy || S.betIdx >= S.levels.length - 1;
 	const sw = $('#anteSw'); sw.setAttribute('aria-checked', String(S.ante)); sw.classList.toggle('on', S.ante);
 	$('#anteRow').classList.toggle('on', S.ante);
-	const tc = turboCopy(isSocial()); $('#turboSub').textContent = tc.sub;
 	$('#turboRow').classList.toggle('hidden', !!S.jur.disabledTurbo); syncTurbo();
 	$('#buyCards').querySelectorAll<HTMLElement>('.bcard').forEach((b) => {
 		const m = b.dataset.m as ModeKey, price = modeCost(m) * bet();
