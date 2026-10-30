@@ -56,6 +56,6 @@ export function setBg(bonus: boolean, fade = true) {
 }
 /** Warm the other state's picture (idle) so the first bonus swap is instant. */
 export function warmBg() {
-	const go = () => { for (const b of [true, false]) { const u = pick(b, ST.portrait).url; if (u) void preload(u); } warmAlcove(preload); };
+	const go = () => { for (const b of [true, false]) { const u = pick(b, ST.portrait).url; if (u) void preload(u); } if (!document.body.classList.contains('mk')) warmAlcove(preload); };
 	'requestIdleCallback' in window ? (window as any).requestIdleCallback(go, { timeout: 3000 }) : setTimeout(go, 1500);
 }

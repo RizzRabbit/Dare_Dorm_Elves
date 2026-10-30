@@ -132,7 +132,7 @@ function clearFoyer() {
 	shadG.clear(); roomG.clear(); anim = []; washes = []; sconces = []; archGlow = null;
 }
 /** landscape room (mockup buildLand, desktop mode). Returns the sconce + arch points (mockup space) for Roxy's light rig. */
-export function buildFoyerLand() {
+export function buildFoyerLand(scShift = 0) {   // scShift: phone landscape slides the left sconce off-screen (mockup compact: -200)
 	clearFoyer();
 	const D = FOY.land, { CX, HZ, FL } = D, X0 = -1600, X1 = 3600;
 	const gy = D.stair.y - (768 - 190) * D.stair.s + 34 * D.stair.s;
@@ -143,9 +143,10 @@ export function buildFoyerLand() {
 	addStairs(CX, D.stair, backL);
 	const gal = new P.Graphics(); drawGallery(gal, X0, X1, D.stair, CX); backL.addChildAt(gal, 0);
 	const lb = new P.Sprite(softBlob); lb.anchor.set(0.5); lb.tint = 0x0a0410; lb.position.set(CX, 150); lb.scale.set(3.4, 1.25); lb.alpha = 0.75; backL.addChild(lb);
-	addSconce(D.sconce[0].x, D.sconce[0].y, 0.54, false); addSconce(D.sconce[1].x, D.sconce[1].y, 0.54, true);
+	const scL = D.sconce[0].x + scShift;
+	addSconce(scL, D.sconce[0].y, 0.54, false); addSconce(D.sconce[1].x, D.sconce[1].y, 0.54, true);
 	shadG.ellipse(CX, D.stair.y - 6, 400 * D.stair.s, 24).fill({ color: INK, alpha: 0.32 });
-	return { keys: [mark(D.sconce[0].x, D.sconce[0].y), mark(D.sconce[1].x, D.sconce[1].y)], cool: mark(CX, FL - 300) };
+	return { keys: [mark(scL, D.sconce[0].y), mark(D.sconce[1].x, D.sconce[1].y)], cool: mark(CX, FL - 300) };
 }
 /** portrait room (mockup buildPort): T = board frame top in the 1080-wide design space */
 export function buildFoyerPort(T: number, DH: number) {

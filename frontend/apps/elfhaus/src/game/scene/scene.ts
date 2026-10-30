@@ -5,6 +5,7 @@
 // game falls back to the #bg painting with no Roxy (nothing else depends on this layer).
 import { Application, Container, Graphics, Sprite, type Texture } from 'pixi.js';
 import { ST } from '../stage';
+import { G as MKG, FW, FT, BW, BH } from '../mkboard';
 import { loadSheet } from './load';
 import { glowDot, softBlob } from './util';
 import { foyerRoot, initFoyer, buildFoyerLand, buildFoyerPort, updFoyer } from './foyer';
@@ -64,7 +65,40 @@ export function placeScene(portrait: boolean, fr: DOMRect) {
 	app.renderer.resize(W, H, res()); cv.style.width = W + 'px'; cv.style.height = H + 'px';
 	const R = rig, cutRow = R.rows.hips, hopTop = R.rows.hopTop;
 	let keys: Container[], cool: Container;
-	if (!portrait) {
+	const g = MKG, u = fr.width / FW;   // approved board (mkboard.ts): the mockup's own world fit
+	// mockup Roxy scales are for its 336 x 794 source box; the v7 rig's box is taller, and her figure fills it a little more:
+	// 0.91 matches her head-to-feet height to the mockup's at the same placement (measured on the 1920x1080 / 844x390 shots)
+	const f = 794 / R.srcH * 0.91;
+	if (!portrait && g && g.mode !== 'port') {
+		const k = g.k, X = (x: number) => g.ox + x * k, Y = (y: number) => g.oy + y * k;
+		let x: number, feet: number, s: number;
+		if (g.mode === 'cmp') {
+			// mockup compact: the room at c = 0.64 / 1.3, slid so its centre line (arch + split stair) sits behind the board
+			const c = g.cmp.s / 1.3, bcx = fr.left + fr.width / 2;
+			room.scale.set(k * c); room.position.set(bcx - 830 * c * k, Y(g.cmp.y - 896 * c));
+			({ keys, cool } = buildFoyerLand(-200));
+			x = X(g.cmp.x); feet = Y(g.cmp.y); s = g.cmp.s * f * k;
+		} else {
+			const kf = fr.height / 726; room.scale.set(kf); room.position.set(fr.left + fr.width / 2 - 830 * kf, fr.top - 136 * kf);
+			({ keys, cool } = buildFoyerLand());
+			x = X(1536); feet = Y(896); s = 1.3 * f * k;
+		}
+		if (!hold) { R.view.position.set(x, feet); R.view.scale.set(s); }
+		roxyL.visible = true; roxyMask.clear().rect(-50, -400, W + 100, H + 800).fill(0xffffff);
+		R.shadow(true); R.setGrade({ cut: -1, res: ST.s * (window.devicePixelRatio || 1) });
+		Object.assign(roxyAt, { x, y: feet, s, portrait });
+	} else if (portrait && g && g.mode === 'port') {
+		// mockup portrait: she peeks over the board, hips at the frame's top edge, behind the board
+		const k = g.k, T = (fr.top - g.oy) / k, DH = g.D.h;
+		room.scale.set(k); room.position.set(g.ox, g.oy);
+		({ keys, cool } = buildFoyerPort(T, DH));
+		const rs = g.loose ? 2.4 * f : Math.min(2.4 * f, Math.max(0.6 * f, (T - 46) / (cutRow - hopTop)));
+		const feet = T + (R.srcH - cutRow) * rs, rx = Math.max(770 + Math.max(0, rs / f - 1.85) * 70, 1080 + 8 - (R.srcW / 2) * rs) - 47;   // -47: the v7 figure sits right of the mockup's in its box
+		if (!hold) { R.view.position.set(g.ox + rx * k, g.oy + feet * k); R.view.scale.set(rs * k); }
+		roxyMask.clear().rect(-50, -400, W + 100, (hold && free ? H + 800 : fr.top + 14 + 400)).fill(0xffffff); roxyL.visible = true;
+		R.shadow(false); R.setGrade({ cut: cutRow / R.srcH, res: ST.s * (window.devicePixelRatio || 1) });
+		Object.assign(roxyAt, { x: g.ox + rx * k, y: g.oy + feet * k, s: rs * k, portrait });
+	} else if (!portrait) {
 		// mockup landscape: frame spans y 136..862 (726 tall), centre x 830; Roxy right of the board at (1536, 896) s 1.3
 		const k = fr.height / 726; room.scale.set(k); room.position.set(fr.left + fr.width / 2 - 830 * k, fr.top - 136 * k);
 		({ keys, cool } = buildFoyerLand());
@@ -89,10 +123,11 @@ export function placeScene(portrait: boolean, fr: DOMRect) {
 		R.shadow(false); R.setGrade({ cut: cutRow / R.srcH, res: ST.s * (window.devicePixelRatio || 1) });
 		Object.assign(roxyAt, { x: rx * kp, y: feet * kp, s: rs * kp, portrait });
 	}
-	if (calm) { calm.position.set(fr.left + fr.width / 2, fr.top + fr.height / 2); calm.scale.set(fr.width / 150, fr.height / 165); calm.visible = !portrait; }
+	if (calm && g) { calm.position.set(fr.left + fr.width / 2, fr.top + (FT + BH / 2) * u); calm.scale.set(BW * u / 150, (g.mode === 'cmp' ? BW : BH * 150 / 165) * u / 150); calm.visible = !portrait; }
+	else if (calm) { calm.position.set(fr.left + fr.width / 2, fr.top + fr.height / 2); calm.scale.set(fr.width / 150, fr.height / 165); calm.visible = !portrait; }
 	const gp = (c: Container) => { const p = c.getGlobalPosition(); return { x: p.x, y: p.y }; };
 	R.setGrade({ keys: keys.map(gp), cool: gp(cool) });
-	if (mW !== W || mH !== H) { mW = W; mH = H; setMotes(W, H, portrait ? 12 : 18); }
+	if (mW !== W || mH !== H) { mW = W; mH = H; setMotes(W, H, portrait ? 12 : g && g.mode === 'cmp' ? 7 : 18); }
 }
 /** Bonus: fade the room out (the free-spins painting on #bg shows through); Roxy stays. */
 export function sceneBonus(on: boolean) { bonus = on; }

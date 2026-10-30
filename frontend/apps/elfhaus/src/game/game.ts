@@ -32,6 +32,7 @@ import { initRoxy, placeRoxy } from './roxy';
 import { initStacks, stackIdle } from './stacks';
 import { setBg, warmBg } from './bg';
 import { placeAlcove } from './alcove';
+import { mkCell, mkPlace } from './mkboard';
 import { initLoader, preloadArt, track, loaderReady, hideLoader } from './loader';
 import { introLayout } from './introPixi';
 import { fitStage, toStage, ST } from './stage';
@@ -489,6 +490,7 @@ function placeBuy(portrait: boolean, fr: DOMRect) {
 }
 // the intro animates the game with CSS scale / translate: measure without them (introLayout re-applies its pose)
 export function layout() { introLayout(layoutRaw); }
+const MK = true; // approved mockup board (mkboard.ts); false = the old B2 alcove board
 function layoutRaw() {
 	// one shared scale (stage.ts): lay out in stage design px; the stage is never 'short' any more
 	const st = fitStage(), W = st.w, H = st.h, portrait = st.portrait, short = false;
@@ -497,6 +499,21 @@ function layoutRaw() {
 	document.body.classList.toggle('short', short && !portrait);
 	// Vertical budget: title + control panel + the fsBar/step-message rows that sit in the stage grid above and
 	// below the board (the grid is symmetric, so reserve the larger of the two on both sides).
+	// Approved board (James 2026-10-28): the mockup's frame, tiles, HUD bar, controls and BUY plate (mkboard.ts) replace the
+	// B2 alcove + grid HUD. Board, logo, HUD and plate come straight from the mockup layout, so no gap / gutter fitting here.
+	if (MK) {
+		document.body.classList.add('mk'); document.body.classList.remove('alcove');
+		const cell = mkCell();
+		document.documentElement.style.setProperty('--cell', cell + 'px');
+		S.cell = cell; renderAll();
+		mkPlace(cell);
+		setBg(S.inBonus); warmBg();
+		const fr = toStage($('#frame').getBoundingClientRect());
+		document.documentElement.style.setProperty('--gutR', Math.max(0, W - fr.right) + 'px');
+		document.documentElement.style.setProperty('--frB', Math.round(fr.bottom) + 'px');
+		placeRoxy(portrait, fr); placeReplayBar(portrait); placeRespin();
+		return;
+	}
 	const phl = st.phl; // phone landscape (stage.ts): HUD lives in the side rails, so only the title sits above the board
 	const top = short ? 0 : ($('#top').offsetHeight || 0), hud = phl ? 0 : ($('#hud').offsetHeight || 0);
 	// fsBar is hidden (0 high) outside bonuses, so size its lane from the CSS font clamp (14-20px, 2.6vh) instead.

@@ -1,0 +1,120 @@
+/* ==== Approved board + HUD (James 2026-10-28, mockup /workspace/elfhaus-mockup) ====
+   Positions come from src/game/mkboard.ts (inline, stage px, the mockup's own layout); this file is the look.
+   Loaded last so it outranks the B2 alcove + grid-HUD layers in elfhaus.css / resub-fix.css. */
+@font-face{font-family:"Montserrat";src:url(fonts/Montserrat-VF.ttf) format("truetype");font-weight:100 900;font-display:block}
+
+/* the old stage arch / alcove is gone */
+body.mk [id^="alcove"]{display:none!important}
+body.mk #reelLines{display:none!important}
+
+/* ---- frame: canvases #mkFrame (frame, well, one tile per cell, studs) + #mkNeon (pink neon edge) ---- */
+body.mk #app #stage{z-index:2;flex:none!important;overflow:visible!important;background:none!important;box-shadow:none!important;border:0!important}
+body.mk #app #frame{isolation:isolate;overflow:visible!important;background:none!important;box-shadow:none!important;border-image:none!important;outline:0!important}
+body.mk #app #frame::before,body.mk #app #frame::after{display:none!important}
+body.mk #mkFrame{z-index:-1;pointer-events:none;display:block}
+body.mk #mkNeon{z-index:3;pointer-events:none;display:block;mix-blend-mode:plus-lighter;opacity:.72;animation:mkNeon 4.5s linear infinite}
+@keyframes mkNeon{0%,100%{opacity:.72}12.5%{opacity:.79}25%{opacity:.82}37.5%{opacity:.79}50%{opacity:.72}62.5%{opacity:.65}75%{opacity:.62}87.5%{opacity:.65}}
+body.mk #app #board{z-index:1;background:transparent!important;border:0!important;box-shadow:none!important;outline:0!important;border-radius:0!important;padding:0!important}
+body.mk #app #board::before,body.mk #app #board::after{display:none!important}
+/* symbols at the mockup's 148 / 160 of a cell */
+body.mk #app .sym.art{inset:3.75%!important}
+
+/* ---- logo ---- */
+body.mk #app #top{z-index:5;pointer-events:none;background:none!important;border:0!important;box-shadow:none!important}
+body.mk #app #top #logo{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;margin:0!important;padding:0!important;transform:none!important}
+body.mk #app #top #logo img{display:block;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;object-fit:contain;margin:0!important}
+
+/* ---- HUD bar ---- */
+body.mk #app #hud{display:block!important;z-index:6;overflow:visible!important;box-sizing:border-box!important;
+  background:linear-gradient(rgba(255,255,255,.035) 0 50%,transparent 50%) no-repeat,rgba(11,7,19,.94)!important;
+  border:max(1px,calc(1.5px*var(--mkk))) solid rgba(138,115,166,.45)!important;box-shadow:none!important;backdrop-filter:none!important;
+  grid-template:none!important;gap:0!important}
+body.mk #app #hud::before{content:""!important;display:block!important;position:absolute!important;left:calc(30px*var(--mkk))!important;right:calc(30px*var(--mkk))!important;
+  top:0!important;bottom:auto!important;width:auto!important;height:max(1px,calc(1.5px*var(--mkk)))!important;background:rgba(255,255,255,.18)!important;
+  border:0!important;border-radius:0!important;box-shadow:none!important;z-index:0!important;pointer-events:none;transform:none!important}
+body.mk #app #hud::after{display:none!important}
+body.mk #app #ctrlTop,body.mk #app #ctrlTop .side,body.mk #app #bar,body.mk #app #strip{display:contents!important}
+
+/* buttons: the mockup's paintBtn (dark rounded square, faint sheen over the top 45 %, plum edge; SPIN = plum + pink neon) */
+body.mk #app #hud :is(#menuBtn,#turboBtn,#autoBtn,#betDown,#betUp,#spinBtn){display:flex!important;align-items:center!important;justify-content:center!important;
+  box-sizing:border-box!important;min-width:0!important;min-height:0!important;grid-area:auto!important;transform:none;z-index:2;
+  background:linear-gradient(rgba(255,255,255,.05) 0 45%,transparent 45%) no-repeat,rgba(29,20,41,.95)!important;
+  border-style:solid!important;border-color:#6f5a86!important;box-shadow:none!important;color:#fff!important;opacity:1;filter:none!important;
+  transition:transform .12s ease-out}
+body.mk #app #hud :is(#menuBtn,#turboBtn,#autoBtn,#betDown,#betUp,#spinBtn)::before{display:none!important}
+body.mk #app #hud #spinBtn{background:linear-gradient(rgba(255,255,255,.08) 0 45%,transparent 45%) no-repeat,rgba(58,23,71,.95)!important;border-color:#ff9ee0!important;
+  box-shadow:0 0 0 calc(var(--bh)*.0435) rgba(255,79,195,.22),0 0 0 calc(var(--bh)*.087) rgba(255,79,195,.10)!important}
+body.mk #app #hud :is(#menuBtn,#turboBtn,#autoBtn,#betDown,#betUp,#spinBtn):active:not(:disabled){transform:scale(.94)}
+body.mk #app #hud :is(#turboBtn,#autoBtn).on,body.mk #app #hud #autoBtn[aria-pressed="true"],body.mk #app #hud #turboBtn[aria-pressed="true"]{border-color:#ffc83d!important;
+  box-shadow:0 0 0 calc(var(--bh)*.04) rgba(255,200,61,.28)!important}
+body.mk #app #hud button:disabled{opacity:.45}
+body.mk #app #hud svg.mkI{display:block!important;flex:none!important;width:calc(100px*var(--icS))!important;height:calc(100px*var(--icS))!important;
+  overflow:visible!important;margin:0!important;stroke:none;fill:#fff;filter:none!important}
+body.mk #app #hud svg.mkI *{vector-effect:none!important}
+body.mk #app #hud #spinBtn svg.mkI path[style*="stroke:#fff"]{stroke-width:6px!important}
+
+/* readouts: label (lilac, tracked) over value (white), Montserrat, left aligned at the mockup's field origin */
+body.mk #app #strip .m{display:flex!important;flex-direction:column!important;align-items:flex-start!important;justify-content:flex-start!important;gap:0!important;
+  background:none!important;border:0!important;box-shadow:none!important;text-align:left!important;right:auto!important;bottom:auto!important;max-width:none!important;
+  box-sizing:border-box!important;line-height:1!important;z-index:1;pointer-events:none}
+body.mk #app #strip label{display:block!important;font:700 var(--ls)/1.3 Montserrat,Nunito,system-ui,sans-serif!important;letter-spacing:calc(var(--ls)*.2)!important;
+  color:#b9a6cf!important;margin:0!important;padding:0!important;height:calc(var(--ls)*1.3)!important;white-space:nowrap!important;opacity:1!important;text-shadow:none!important}
+html body.mk #app #strip .m span{display:block!important;text-align:left!important;font-family:Montserrat,Nunito,system-ui,sans-serif!important;font-weight:800!important;font-size:var(--vs);line-height:1.22!important;color:#fff!important;letter-spacing:0!important;
+  white-space:nowrap!important;overflow:hidden;text-overflow:ellipsis;max-width:100%!important;margin:0!important;text-shadow:none!important}
+
+/* ---- BUY BONUS plate (paintBonus: stone, gold ring, dark disc under the chip icon, gold label, breathing neon halo, shine every 4.5 s) ---- */
+body.mk #app #hud #buyBtn.plate{display:block!important;overflow:hidden!important;z-index:3;box-sizing:border-box!important;
+  border:calc(5px*var(--ps)) solid #ffc83d!important;color:#ffc83d!important;grid-area:auto!important;
+  background:linear-gradient(180deg,rgba(184,166,200,.10) 0 48%,transparent 48% 62%,rgba(0,0,0,.22) 62% 97%,transparent 97%) no-repeat,rgba(36,27,45,.97)!important;
+  box-shadow:inset 0 0 0 calc(1.25px*var(--ps)) rgba(36,27,45,.97),inset 0 0 0 calc(2.75px*var(--ps)) rgba(255,234,176,.55)!important;
+  animation:none!important;transform:none;transition:transform .2s cubic-bezier(.34,1.56,.64,1)}
+body.mk #app #hud #buyBtn.plate:active:not(:disabled){transform:scale(.94);transition-duration:.05s}
+body.mk #app #hud #buyBtn.plate .disc{position:absolute!important;margin:0!important;display:block!important;border-radius:50%!important;background:#1a0f24!important;box-shadow:none!important;border:0!important;overflow:visible!important}
+body.mk #app #hud #buyBtn.plate .disc img,body.mk #app #hud #buyBtn.plate .disc svg{position:absolute!important;width:123.08%!important;height:123.08%!important;left:-11.54%!important;top:-22.6%!important;
+  max-width:none!important;margin:0!important;object-fit:contain;animation:mkBuyIcon 4.5s linear infinite}
+body.mk #app #hud #buyBtn.plate.mkV .disc{width:calc(118.8px*var(--ps))!important;height:calc(118.8px*var(--ps))!important;left:calc(48.6px*var(--ps) - 5px*var(--ps))!important;top:calc(34.6px*var(--ps) - 5px*var(--ps))!important}
+body.mk #app #hud #buyBtn.plate.mkP .disc{width:calc(126px*var(--ps))!important;height:calc(126px*var(--ps))!important;left:calc(33px*var(--ps) - 5px*var(--ps))!important;top:calc(25px*var(--ps) - 5px*var(--ps))!important}
+body.mk #app #hud #buyBtn.plate .lbl{position:absolute!important;margin:0!important;max-width:none!important;white-space:nowrap!important;
+  font:900 var(--pf)/1 Montserrat,Nunito,system-ui,sans-serif!important;letter-spacing:var(--pl)!important;color:#ffc83d!important;text-shadow:0 2px 3px rgba(0,0,0,.6)!important;
+  translate:-50% -50%;text-align:center}
+body.mk #app #hud #buyBtn.plate.mkV .lbl{left:calc(50% + var(--pl)/2)!important;top:calc(200px*var(--ps) - 5px*var(--ps))!important}
+body.mk #app #hud #buyBtn.plate.mkP .lbl{left:calc(367px*var(--ps) - 5px*var(--ps) + var(--pl)/2)!important;top:calc(91px*var(--ps) - 5px*var(--ps))!important}
+body.mk #app #hud #buyBtn.plate::after{content:""!important;position:absolute!important;inset:auto!important;left:0!important;top:calc(var(--ph)/2 - var(--pS)/2 - 5px*var(--ps))!important;
+  width:var(--pS)!important;height:var(--pS)!important;pointer-events:none;mix-blend-mode:plus-lighter;
+  background:linear-gradient(90deg,transparent 44%,rgba(255,255,255,.41) 50%,transparent 56%)!important;
+  animation:mkShine 4.5s linear infinite!important;opacity:0}
+@keyframes mkShine{
+  0%{opacity:1;transform:translateX(calc(-.6*var(--pw) - var(--pS)/2)) rotate(-.5rad);animation-timing-function:cubic-bezier(.37,0,.63,1)}
+  20%{opacity:1;transform:translateX(calc(1.6*var(--pw) - var(--pS)/2)) rotate(-.5rad)}
+  20.01%,100%{opacity:0;transform:translateX(calc(1.6*var(--pw) - var(--pS)/2)) rotate(-.5rad)}}
+@keyframes mkBuyIcon{0%{transform:scale(1)}6.67%{transform:scale(1.035)}13.33%{transform:scale(1.05)}20%{transform:scale(1.035)}26.67%,100%{transform:scale(1)}}
+#mkBuyGlow{display:none}
+body.mk #app #hud #mkBuyGlow{display:block;z-index:2;pointer-events:none;background:none;
+  box-shadow:0 0 0 calc(6.5px*var(--ps)) rgba(255,79,195,.32),0 0 0 calc(10.5px*var(--ps)) rgba(255,79,195,.18),0 0 0 calc(16.5px*var(--ps)) rgba(255,79,195,.10),0 0 0 calc(24.5px*var(--ps)) rgba(255,79,195,.06);
+  animation:mkGlow 3.2s ease-in-out infinite}
+@keyframes mkGlow{0%,100%{opacity:.775}25%{opacity:1}75%{opacity:.55}}
+body.mk #app #hud:has(#buyBtn:disabled) #mkBuyGlow{animation:none;opacity:.55}
+body.mk #app #hud #buyBtn.plate:disabled{opacity:.6}
+body.mk #app #hud #buyBtn.plate:disabled::after,body.mk #app #hud #buyBtn.plate:disabled .disc img{animation:none!important;opacity:0}
+body.mk #app #hud #buyBtn.plate:disabled .disc img{opacity:1}
+body.replay.mk #app #hud #mkBuyGlow,body.mk #app #hud:has(#buyBtn.hidden) #mkBuyGlow,body.mk #app #hud:has(#buyBtn[hidden]) #mkBuyGlow{display:none}
+@media (prefers-reduced-motion:reduce){body.mk #mkNeon,body.mk #app #hud #mkBuyGlow,body.mk #app #hud #buyBtn.plate::after,body.mk #app #hud #buyBtn.plate .disc img{animation:none!important}}
+
+/* ---- game-only pieces ---- */
+/* replay bar (landscape): right of the menu button, centred on it */
+body.mk.replay:not(.portrait) #replayBar{left:calc(var(--mkMenuR) + 14px)!important;top:var(--mkMenuY)!important;transform:translateY(-50%)!important;right:auto!important;bottom:auto!important}
+/* free-spins bar on the sill; banner + toast over the board */
+body.mk #app #fsBar{right:auto!important;bottom:auto!important;width:auto!important;max-width:calc(100% - 40px)!important;white-space:nowrap}
+body.mk #app #banner,body.mk #app #stepToast{right:auto!important;bottom:auto!important;max-width:calc(100% - 40px)!important}
+body.mk #app #armTag{z-index:8;white-space:nowrap}
+/* mkboard.ts sets left / top / width / height; drop the old right / bottom insets so no box is over-constrained
+   (abspos boxes honour justify-self / align-self when they are, which shifted the old grid-placed controls) */
+body.mk #app :is(#stage,#top,#hud,#frame,#board,#fsBar,#banner,#stepToast,#armTag,#mkBuyGlow),
+body.mk #app #hud button,body.mk #app #strip .m{right:auto!important;bottom:auto!important;justify-self:auto!important;align-self:auto!important;inset-inline-end:auto!important;inset-block-end:auto!important}
+/* keyboard focus on the approved buttons: a tight gold ring (the browser default ring read as a stray box) */
+html body.mk #app :is(#menuBtn,#hud button,#strip button):focus-visible{outline:2px solid #ffd25a!important;outline-offset:2px!important}
+html body.mk #app :is(#menuBtn,#hud button,#strip button):focus:not(:focus-visible){outline:none!important}
+/* no browser tap flash on the approved controls (mobile Chrome paints a blue box over a tapped button) */
+html body.mk #app :is(#menuBtn,#hud button,#strip button,#armTag){-webkit-tap-highlight-color:transparent!important}
+/* the old round-button press / tap ring sprites (fx_btn) are circles: off on the square approved buttons (mockup press = scale only) */
+html body.mk #app #hud :is(.uiRing,.uiTap,.uiHalo){display:none!important}

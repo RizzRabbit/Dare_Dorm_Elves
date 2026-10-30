@@ -37,7 +37,7 @@
 	<footer id="hud">
 		<div id="ctrlTop">
 			<div class="side">
-				<button id="turboBtn" class="ico toggle" aria-label="Turbo" title="Turbo"><svg viewBox="0 0 24 24"><path d="M13 2 4.5 13.5H11L10 22l8.5-11.5H12L13 2Z" /></svg></button>
+				<button id="turboBtn" class="ico toggle" aria-label="Turbo" title="Turbo"><svg viewBox="-50 -50 100 100" class="mkI" aria-hidden="true"><path style="fill:#ffd25a;stroke:none" d="M3 -16 -9 3 0 3 -3 16 9 -3 0 -3Z" /></svg></button>
 			</div>
 			<button id="buyBtn" class="ico emblem plate" aria-label="Get bonus" title="Get bonus">
 				<span class="disc" aria-hidden="true">{#if art.buy_icon}<img src={art.buy_icon} srcset={art.buy_icon_128 ? `${art.buy_icon_128} 128w, ${art.buy_icon} 256w` : undefined} sizes="96px" alt="" />{:else}<svg viewBox="0 0 40 40"><path class="g" d="M9 31C9 19 18 9 31 6c-2 11-8 20-18 26Z" /><path class="g" d="M13.5 26.5C17 20 22 15 27.5 11" /><path class="gf" d="M30 22l1.3 3.2 3.2 1.3-3.2 1.3L30 31l-1.3-3.2-3.2-1.3 3.2-1.3Z" /></svg>{/if}</span>
@@ -45,12 +45,12 @@
 			</button>
 		</div>
 		<div id="bar">
-			<button id="menuBtn" class="ico flat" aria-label="Menu" title="Menu" aria-haspopup="menu" aria-expanded="false" aria-controls="popMenu"><svg viewBox="0 0 24 24"><path d="M4 6.5h16M4 12h16M4 17.5h16" /></svg></button>
-			<button id="betDown" class="ico flat" aria-label="Decrease"><svg viewBox="0 0 24 24"><path d="M5 12h14" /></svg></button>
-			<button id="spinBtn" aria-label="Spin"><svg viewBox="0 0 48 48"><path d="M37.5 24a13.5 13.5 0 1 1-4-9.6" /><path d="M34.5 7.5v7.5H27" /></svg><span id="autoN" aria-hidden="true"></span></button>
+			<button id="menuBtn" class="ico flat" aria-label="Menu" title="Menu" aria-haspopup="menu" aria-expanded="false" aria-controls="popMenu"><svg viewBox="-50 -50 100 100" class="mkI" aria-hidden="true"><rect x="-12" y="-10" width="24" height="4.5" rx="2" style="fill:#fff;stroke:none" /><rect x="-12" y="-2.25" width="24" height="4.5" rx="2" style="fill:#fff;stroke:none" /><rect x="-12" y="5.5" width="24" height="4.5" rx="2" style="fill:#fff;stroke:none" /></svg></button>
+			<button id="betDown" class="ico flat" aria-label="Decrease"><svg viewBox="-50 -50 100 100" class="mkI" aria-hidden="true"><rect x="-10" y="-2.5" width="20" height="5" style="fill:#fff;stroke:none" /></svg></button>
+			<button id="spinBtn" aria-label="Spin"><svg viewBox="-50 -50 100 100" class="mkI" aria-hidden="true"><path style="fill:none;stroke:#fff;stroke-width:6px;stroke-linecap:round;vector-effect:none" d="M-18.97 -11.38A22 22 0 0 1 19.31 10.55" /><path style="fill:none;stroke:#fff;stroke-opacity:.55;stroke-width:6px;stroke-linecap:round;vector-effect:none" d="M18.73 11.54A22 22 0 0 1 -19.08 -10.95" /><path style="fill:#fff;stroke:none" d="M28.31 2.55 8.31 8.55 24.31 22.55Z" /></svg><span id="autoN" aria-hidden="true"></span></button>
 			<button id="armTag" class="hidden" aria-label=""><span class="t"></span><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 3l6 6M9 3l-6 6" /></svg></button>
-			<button id="betUp" class="ico flat" aria-label="Increase"><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5v14" /></svg></button>
-			<button id="autoBtn" class="ico flat" aria-label="Autoplay" title="Autoplay"><svg viewBox="0 0 24 24"><path d="M19 10A7.5 7.5 0 0 0 5.8 7.6M5 14a7.5 7.5 0 0 0 13.2 2.4" /><path d="M5.5 4v3.9h3.9M18.5 20v-3.9h-3.9" /><path d="M10.5 9.5v5l4-2.5Z" /></svg></button>
+			<button id="betUp" class="ico flat" aria-label="Increase"><svg viewBox="-50 -50 100 100" class="mkI" aria-hidden="true"><rect x="-10" y="-2.5" width="20" height="5" style="fill:#fff;stroke:none" /><rect x="-2.5" y="-10" width="5" height="20" style="fill:#fff;stroke:none" /></svg></button>
+			<button id="autoBtn" class="ico flat" aria-label="Autoplay" title="Autoplay"><svg viewBox="-50 -50 100 100" class="mkI" aria-hidden="true"><path style="fill:#fff;stroke:none" d="M-7 -11 11 0 -7 11Z" /><rect x="-17" y="-11" width="4" height="22" style="fill:#fff;fill-opacity:.6;stroke:none" /></svg></button>
 		</div>
 		<div id="strip">
 			<div class="m"><label for="balance">BALANCE</label><span id="balance">—</span></div>

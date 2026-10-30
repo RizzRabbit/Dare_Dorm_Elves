@@ -14,7 +14,8 @@ Branch `final` is the integration branch. It holds **only** work the user has ap
 | Item | Source (path / commit) | Approved |
 |---|---|---|
 | Lounge background, base + free spins (with FS swap) | `/workspace/elfhaus-bg/final_lounge`; commits 4652153, 4aa1fc4 (in base 0b51f91) | 2026-10-25 ~12:45 PM |
-| Board frame B2 "Lounge Alcove" | `/workspace/elfhaus-bg/board_frame/r2`; commit 0b51f91 | 2026-10-25 ~1:25 PM |
+| ~~Board frame B2 "Lounge Alcove"~~ (superseded 2026-10-28 by the mockup board below; alcove art kept on disk, hidden) | `/workspace/elfhaus-bg/board_frame/r2`; commit 0b51f91 | 2026-10-25 ~1:25 PM |
+| Mockup board + HUD (`/workspace/elfhaus-mockup` main.js): slim dark frame with breathing pink neon edge, rounded cell tiles, BUY BONUS stone plate with turbo/autoplay under it (left of board; portrait: wide plate in the row above the HUD), full-width bottom HUD bar (BALANCE / BET -,+ / WIN / big square SPIN), logo and Roxy placed as in the mockup, desktop + phone layouts. Code-drawn (canvas frame + CSS), Montserrat (OFL) bundled | branch resub-board: `src/game/mkboard.ts`, `static/board.css`, `src/game/scene/scene.ts` | 2026-10-28 (James approved the new board and symbols from the mockup) |
 | Stone ELFHAUS logo, unchanged | already in base (frontend-elfhaus) | 2026-10-25 (user: "the stone title can stay") |
 | Merge animation motion: lean-in, flash cut, group scale-up, letters ignite | 0e83f90 lineage (in base) | 2026-10-25 1:01 PM |
 | Stacks r8d sheets (cutout halos removed, one ink colour per group; 60 ids, 363.5 MB decoded total, 11.7 MB webp; WM5 join + idle + letters 29.2 MB peak). Replaces round 8c | `/workspace/elfhaus-frameless/stacks_anim/out/sheets` (report.json 16:28) copied into `static/assets/stacks` (index.json unchanged, same 60 ids). Status: **in** | 2026-10-25 4:44 PM ("It all looks good to me") |

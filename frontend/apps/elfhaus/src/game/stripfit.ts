@@ -13,7 +13,7 @@ const IDS = ['#balance', '#bet', '#win'];
 const SPARE = 1; // layout px kept free inside the box
 const SNUG = 0.93; // a fitting value smaller than its CSS size is left alone while it fills >= 93% of the room
 // (text width is not linear in font-size: glyph advances snap per size, measured up to ~5% off, so a tighter band oscillates)
-const active = () => document.body.classList.contains('tb') && !document.body.classList.contains('portrait');
+const active = () => document.body.classList.contains('mk') || (document.body.classList.contains('tb') && !document.body.classList.contains('portrait')); // mk: the approved HUD's fixed-width readouts always fit
 /** Counters (also on window.__elfhausFit for the measure scripts): value changes handled, measures (forced layouts), writes. */
 export const fitStats = { changes: 0, measures: 0, writes: 0 };
 (globalThis as any).__elfhausFit = fitStats;

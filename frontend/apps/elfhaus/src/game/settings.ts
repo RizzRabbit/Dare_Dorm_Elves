@@ -27,8 +27,8 @@ function slide(k: K | null) {
 function place() {
 	const r = toStage(btn().getBoundingClientRect()), P = pop(), z = parseFloat(getComputedStyle(P).zoom) || 1; // CSS zoom scales left/bottom too
 	P.style.left = Math.max(8, r.left) / z + 'px';
-	// phone landscape: the menu button sits at the top of the left rail, so the pop-out opens downward
-	if (ST.phl) { P.style.bottom = ''; P.style.top = (r.bottom + 10) / z + 'px'; P.style.transformOrigin = '0 0'; }
+	// the menu button sits at the top of the stage (approved board: top-left corner; phone landscape rail): open downward
+	if (ST.phl || r.top + r.height / 2 < ST.h / 2) { P.style.bottom = ''; P.style.top = (r.bottom + 10) / z + 'px'; P.style.transformOrigin = '0 0'; }
 	else { P.style.top = ''; P.style.bottom = Math.max(8, ST.h - r.top + 10) / z + 'px'; P.style.transformOrigin = ''; }
 }
 // re-audit L6: one-tap mute (master Sound switch; the volumes are kept for un-mute)
