@@ -80,6 +80,7 @@ export async function mockAuthenticate(params: { language?: string; currency?: s
 export async function mockBet(params: { currency: string; amount: number; mode: string; forcedBook?: string }) {
 	const q = typeof location !== 'undefined' ? new URLSearchParams(location.search) : null;
 	const bookName = params.forcedBook || q?.get('book');
+	if (typeof window !== 'undefined') ((window as any).__mockBets ??= []).push(params.mode); // scripts/e2e-arm.mjs: which mode each press bet
 
 	let book: MockBook | undefined;
 	if (bookName && books[bookName]) {

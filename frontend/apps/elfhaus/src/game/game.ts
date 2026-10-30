@@ -198,7 +198,6 @@ async function finishRound(round: any) {
 	}
 	setStrip();
 }
-const isBuy = (m: ModeKey) => m !== 'base' && m !== 'ante';
 async function round(mode: ModeKey) {
 	if (S.replay) { stopAuto(); return; } // v3.16 (#171): a replay never leaves autoplay armed on the spin button
 	if (S.busy || !sessionReady) return;
@@ -228,9 +227,10 @@ async function round(mode: ModeKey) {
 		stopAuto(); endBonusUi(); abortSpin(); renderAll(); showError(e);
 	} finally { setBusy(false); }
 	if (S.auto > 0) { S.auto--; setAuto(); if (S.auto) setTimeout(() => { if (S.auto) round(spinMode()); }, 300); }
-	// re-audit M5: a bought bonus disarms once its round (or its autoplay run) is over, so the next tap is a normal
-	// spin at the base bet, never a silent second buy. Ante is a bet setting, not a buy: it stays on.
-	if (armed && !S.auto && isBuy(mode)) setArm(null, false);
+	// v3.17 LOCKED James rule (overrides re-audit M5's 'disarm after the round'): a confirmed mode (dare, double_dare,
+	// triple_dare, mystery, egw, ante) stays armed for every spin press and autoplay until the player turns it off (active
+	// card, armTag, Ante switch) or picks another mode. Nothing here disarms; only resume() goes back to base. A press the
+	// balance can't cover shows INSUFFICIENT BALANCE above and never falls back to a base spin.
 }
 
 // ---------- startup ----------
