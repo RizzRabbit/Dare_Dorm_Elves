@@ -25,6 +25,7 @@ import { grab, combineInto } from './combine';
 import { tempo, hold, gtempo } from './tempo';
 import { sfx, loop, music, duck, duckFor, type Handle } from './audio';
 import { voice, voiceSpin, teaseOk } from './voice';
+import { payoutFlow } from './payoutFlow';
 // Pauses here use ui.wait: the old pace x ANIM_TEMPO, skippable by tap / Space (tempo.ts); turbo keeps its short values.
 
 const scattersOnBoard = (): Pos[] => S.sym.flatMap((col, reel) => col.map((n, row) => ({ reel, row, n }))).filter((c) => c.n === 'S').map(({ reel, row }) => ({ reel, row }));
@@ -248,7 +249,7 @@ export const bookEventHandlerMap: Handlers = {
 		const x = ev.amount / 100, lvl = winLevel(ev);
 		if (BIG_TIERS.length && lvl >= BIG_TIERS[0].level && lvl < maxLevel() && x < MAX_WIN_X) { roxy('win'); await bigWin(x, undefined, lvl); }
 	},
-	async setTotalWin(ev) { const x = Math.min(ev.amount / 100, MAX_WIN_X); setWinMeter(x); S.roundBase = x; },
+	async setTotalWin(ev) { const x = Math.min(ev.amount / 100, MAX_WIN_X); setWinMeter(x, !!(ev as { payout?: boolean }).payout); S.roundBase = x; },
 	async cardFlip(ev) {
 		await showScatters(scattersOnBoard(), 900);
 		unScatter(); roxy('excited');
@@ -337,7 +338,7 @@ export const bookEventHandlerMap: Handlers = {
 	async egwStart(ev) { egwPending = new Map(ev.reels.map((r) => [r, ev.value])); },
 	async buyTriggerStart() { await wait(200); },
 	async wincap(ev) { const capX = Number.isFinite(ev.amount) ? ev.amount / 100 : MAX_WIN_X; capHit = true; hideRespin(); setWinMeter(capX); await maxWinCelebration(capX); },
-	async finalWin(ev) { setWinMeter(Math.min(ev.amount / 100, MAX_WIN_X)); },
+	async finalWin(ev) { setWinMeter(Math.min(ev.amount / 100, MAX_WIN_X), true); },   // the paid amount (payoutMultiplier), may sit 0.05x under the running total
 };
 
 /** v3.17: EGW runs the base / ante flow. The math sends egwStart (reels + value) and then a reveal that already holds
@@ -367,7 +368,7 @@ export const winLevel = (ev: { amount: number; winLevel?: number }) => {
 	return lv;
 };
 export async function playBookEvents(events: BookEvent[]) {
-	events = egwFlow(events);
+	events = payoutFlow(egwFlow(events));   // the closing amounts land on the paid (0.1x-rounded) finalWin
 	S.roundBase = 0; capHit = false; voiceSpin();
 	// celebration sheets are lazy: start decoding them only once this round's book shows they're needed (the reels spin
 	// meanwhile); they're released again after the screen closes

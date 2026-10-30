@@ -59,14 +59,13 @@ for (const file of bookFiles) {
 			meterX = Math.min(MAX_WIN_X, Math.max(meterX, x));
 		} else if (ev.type === 'setTotalWin') {
 			const x = Math.min(ev.amount / 100, MAX_WIN_X);
-			meterX = Math.min(MAX_WIN_X, Math.max(meterX, x));
+			meterX = ev.payout ? x : Math.min(MAX_WIN_X, Math.max(meterX, x));   // payoutFlow: the paid total may sit 0.05x under
 			roundBase = x;
 		} else if (ev.type === 'wincap') {
 			meterX = MAX_WIN_X;
 			reachedWincap = true;
 		} else if (ev.type === 'finalWin') {
-			const x = Math.min(ev.amount / 100, MAX_WIN_X);
-			meterX = Math.min(MAX_WIN_X, Math.max(meterX, x));
+			meterX = Math.min(ev.amount / 100, MAX_WIN_X);   // the paid amount (payoutMultiplier, rounded down to 0.1x)
 		}
 	}
 

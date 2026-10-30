@@ -4,7 +4,7 @@
 // Writes math-snapshot/game_config.json from game_calculations.py (paytable PAY, LINES, CAP_C, SPIN_CAP, MAX_RESPINS,
 // START_FS, GUARANTEE, GUAR_MIN_VAL, GROW_STEP, MYSTERY_ODDS, retrigger_spins, EGW stack value, win_level edges) and reel_params.json
 // (costs), and copies index.json + stats_summary.json from the publish files (default <game dir>/library/publish_files,
-// stats from <game dir>/library). Then run `node scripts/sync-config.mjs` (pnpm test / pnpm build do) to regenerate
+// stats from next to it, its ../summary, or <game dir>/library). Then run `node scripts/sync-config.mjs` (pnpm test / pnpm build do) to regenerate
 // src/game/modes.generated.json. Fails loudly when a value can't be read, so a stale value never ships silently.
 import { readFileSync, writeFileSync, existsSync, copyFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -63,7 +63,7 @@ writeFileSync(join(snap, 'game_config.json'), '{\n' + Object.entries(cfg).map(([
 const pub = process.argv[3] ? resolve(process.argv[3]) : join(dir, 'library/publish_files');
 if (existsSync(join(pub, 'index.json'))) {
 	copyFileSync(join(pub, 'index.json'), join(snap, 'index.json'));
-	for (const f of [join(pub, 'stats_summary.json'), join(dir, 'library/stats_summary.json')]) if (existsSync(f)) { copyFileSync(f, join(snap, 'stats_summary.json')); break; }
+	for (const f of [join(pub, 'stats_summary.json'), join(pub, '../stats_summary.json'), join(pub, '../summary/stats_summary.json'), join(dir, 'library/stats_summary.json')]) if (existsSync(f)) { copyFileSync(f, join(snap, 'stats_summary.json')); break; }
 	const idx = JSON.parse(readFileSync(join(snap, 'index.json'), 'utf8'));
 	for (const m of idx.modes) if (Number(m.cost) !== Number(cfg.costs[m.name])) throw new Error(`math: index cost ${m.name} ${m.cost} != reel_params ${cfg.costs[m.name]}`);
 	console.log('math-snapshot: index.json + stats_summary.json from', pub);

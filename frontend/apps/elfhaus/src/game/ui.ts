@@ -193,10 +193,13 @@ export function banner(txt: string, ms = 1400) {
 }
 // C17: the round's win meter only counts up and never exceeds the 50,000x cap.
 /** WIN field: counts up smoothly from what it shows to the new total (duration scaled by the step's size). */
-export function setWinMeter(x: number): Promise<void> {
-	const nx = Math.min(MAX_WIN_X, Math.max(S.meterX, x)), dx = nx - S.meterX;
+/** `payout`: the round's paid amount (finalWin / payoutFlow), which may sit up to 0.05x under the running total; the
+ *  meter then settles on it (the only time it steps down). */
+export function setWinMeter(x: number, payout = false): Promise<void> {
+	const nx = Math.min(MAX_WIN_X, payout ? Math.max(0, x) : Math.max(S.meterX, x)), dx = nx - S.meterX;
 	S.meterX = nx;
 	if (dx > 0) return countTo($('#win'), nx * bet(), countMs(dx, S.turbo) * gtempo()); // anim-v4: studio pace (was x ANIM_TEMPO); turbo halves it
+	if (dx < 0) return countTo($('#win'), nx * bet(), 120);   // payout settle: a short step down to the paid amount
 	if (!isCounting($('#win'))) setAmount($('#win'), nx * bet()); // v3.17: never cut a running count short (staged skip)
 	return Promise.resolve();
 }
