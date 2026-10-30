@@ -1,6 +1,6 @@
 // Roxy adapter contract. The game, the foyer scene and the intro only talk to Roxy through this interface, so a new rig
-// (v7) drops in by swapping ONE module: src/game/roxy/index.ts re-exports `createRoxy` from the current rig file.
-// Everything is transforms / opacity / hard face swaps on painted layers (no video, no mesh warps).
+// drops in by swapping ONE module: src/game/roxyrig/index.ts re-exports `createRoxy` from the current rig file.
+// Everything is code tweens / hard face swaps on whole painted generations (no video).
 import type { Container, Point } from 'pixi.js';
 
 export type RoxyFace = 'half' | 'closed' | 'wink' | 'surprised' | 'lookL' | 'lookR';
@@ -27,11 +27,10 @@ export interface RoxyAdapter {
 	readonly rows: { headTop: number; hopTop: number; hips: number };
 	update(dt: number): void;
 	idle(): void;                       // back to the calm idle loop
-	hop(): void;                        // one snappy win hop
-	win(): void;                        // win reaction (hop + happy face)
+	win(kind?: 'bonus' | 'win'): void; // win reaction: 'bonus' = excited face, 'win' = smile + wink (v7: both with a small hip shake)
 	surprised(on: boolean): void;       // wide-eyed face pop (eases back through a blink)
 	anticipate(on: boolean): void;      // tense lean + eyes toward the board
-	disappointed(): void;               // short sigh, half-lidded, then idle
+	disappointed(): void;               // tease that missed (v7: ease straight back to idle, no face)
 	doorReach(on: boolean, aimDeg?: number): void;   // intro: door-reach arm on the handle (+ lean)
 	doorPts(): { sh: Point; hand: Point; r: number } | null;
 	face(name: RoxyFace, k: number): void;           // painted face variant on (k >= 0.5) / off

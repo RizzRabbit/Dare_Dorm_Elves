@@ -232,7 +232,7 @@ export const bookEventHandlerMap: Handlers = {
 		if (ev.step > 0) endRespin();
 		await wait(350);
 	},
-	async setWin(ev) { const x = ev.amount / 100; if (x >= 10 && x < MAX_WIN_X) await bigWin(x); },
+	async setWin(ev) { const x = ev.amount / 100; if (x >= 10 && x < MAX_WIN_X) { roxy('win'); await bigWin(x); } },
 	async setTotalWin(ev) { const x = Math.min(ev.amount / 100, MAX_WIN_X); setWinMeter(x); S.roundBase = x; },
 	async cardFlip(ev) {
 		await showScatters(scattersOnBoard(), 900);

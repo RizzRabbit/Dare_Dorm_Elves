@@ -238,7 +238,7 @@ export async function createRoxy(): Promise<RoxyAdapter> {
 		else if (RX.base === name) { if (name === 'surprised') blink(); RX.base = 'open'; }
 	};
 	update(1 / 60);
-	const A: RoxyAdapter = {
+	const A: RoxyAdapter & { hop(): void } = {
 		view, srcW: SRC_W, srcH: SRC_H, height: SRC_H - RIG_BOX.y0, offsetX: (RIG_BOX.x0 + RIG_BOX.x1) / 2 - SRC_W / 2,
 		rows: { headTop: 151, hopTop: 95, hips: 470 },
 		update,

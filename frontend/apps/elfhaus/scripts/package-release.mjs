@@ -9,7 +9,9 @@ const SRC = 'build', OUT = process.argv[2] || 'release/elfhaus-frontend';
 const UNUSED = [/^assets\/atlases\/H\d_idle\.(webp|json)$/, /^assets\/atlases\/symbols_\d\.(webp|json)$/, /^assets\/atlases\/bg_[^/]+\.(webp|json)$/, /^assets\/atlases\/README\.md$/,
 	// re-audit L7: the old keyed Roxy sheets are no longer loaded (roxy.ts; Roxy now comes through roxyrig/RoxyAdapter). They stay in
 	// static/ untouched (scripts/import-art.mjs roxy still writes there); only the release package leaves them out.
-	/^assets\/atlases\/roxy_full_[a-z]+_\d+\.(webp|json)$/];
+	/^assets\/atlases\/roxy_full_[a-z]+_\d+\.(webp|json)$/,
+	// Roxy v7: the v6 rig sheet stays in static/ for rollback (roxyrig/rigV6.ts) but ships only if rigV6 is the active rig
+	/^assets\/rig\/roxy_rig\.(webp|json)$/];
 const walk = (d) => readdirSync(d).flatMap((f) => { const p = join(d, f); return statSync(p).isDirectory() ? walk(p) : [p]; });
 const fail = (m) => { console.error('package-release: ' + m); process.exit(1); };
 
