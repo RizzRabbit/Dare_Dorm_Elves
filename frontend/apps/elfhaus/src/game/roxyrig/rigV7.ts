@@ -9,7 +9,7 @@
 //  - events: anticipate(on) = "ooh" face + slight tense lean toward the board; win() = hip shake + smile + wink, or the
 //    excited face + hip shake when it lands out of a 2-scatter anticipation (bonus hit); a miss eases straight back to idle.
 // Face changes are hard swaps of whole heads (never patched). ?roxyfast=1 shortens the cosmetic intervals (review only).
-import { BlurFilter, AlphaFilter, Container, Matrix, MeshSimple, Sprite, type Texture } from 'pixi.js';
+import { BlurFilter, AlphaFilter, Container, Matrix, Mesh, MeshSimple, Sprite, Texture } from 'pixi.js';
 import type { RoxyAdapter, RoxyFace, RoxyGrade } from './types';
 import { loadSheet } from '../scene/load';
 import { ctex } from '../scene/util';
@@ -84,7 +84,29 @@ export async function createRoxy(): Promise<RoxyAdapter> {
 	const head = grid(TX.head_base, hx, hy, hw, hh, 14, 4, ponyW);
 	const fig = new Container(); fig.addChild(body.mesh, head.mesh);
 	const finger = new Sprite(TX.finger); finger.scale.set(1 / F); const fingerC = new Container(); finger.position.set(fx - OX, fy - GROUND); fingerC.addChild(finger); fig.addChild(fingerC); const fingerM = new Matrix();
-	view.addChild(fig);
+	// free-spins party light (setParty): a night key = a mild pink-lilac vertex tint on the figure (k = 0 leaves the tint white,
+	// so her base look and approved skin are exactly as before), and a flat magenta rim = the same meshes (shared geometry, so
+	// they follow every tween) drawn as a silhouette just behind her, nudged toward the party light. No filter / no extra pass:
+	// 3 extra draws, and only while k > 0. The silhouette atlas is made once, on the first bonus.
+	const rim = new Container(); rim.visible = false; view.addChild(rim, fig);
+	let rimBody: Mesh | null = null, rimHead: Mesh | null = null, rimFingerC: Container | null = null, silHeads: Record<string, Texture> = {}, rimSide = -1;
+	function buildRim() {
+		const src = TX.body.source, res: any = src.resource, cv = document.createElement('canvas'); cv.width = src.pixelWidth; cv.height = src.pixelHeight;
+		const g = cv.getContext('2d')!; g.drawImage(res, 0, 0); g.globalCompositeOperation = 'source-in'; g.fillStyle = '#fff'; g.fillRect(0, 0, cv.width, cv.height);
+		const sil = Texture.from(cv).source, sub = (t: Texture) => new Texture({ source: sil, frame: t.frame.clone(), orig: t.orig.clone(), trim: t.trim?.clone() });
+		rimBody = new Mesh({ geometry: body.mesh.geometry, texture: sub(TX.body) });
+		for (const h of Object.keys(heads)) silHeads[h] = sub(heads[h as Head]);
+		rimHead = new Mesh({ geometry: head.mesh.geometry, texture: silHeads.base });
+		const rf = new Sprite(sub(TX.finger)); rf.scale.set(1 / F); rf.position.set(fx - OX, fy - GROUND); rimFingerC = new Container(); rimFingerC.addChild(rf);
+		rim.addChild(rimBody, rimHead, rimFingerC); rim.tint = 0xff3fae;
+	}
+	const lerpC = (a: number, b: number, k: number) => { let o = 0; for (const sh of [16, 8, 0]) o |= Math.round(((a >> sh) & 255) + ((((b >> sh) & 255) - ((a >> sh) & 255)) * k)) << sh; return o; };
+	function setParty(k: number, side?: number) {
+		if (side) rimSide = side;
+		fig.tint = k > 0 ? lerpC(0xffffff, 0xd9c0e2, k) : 0xffffff;   // dimmer night key with a slight pink cast
+		if (k > 0 && !rimBody) { try { buildRim(); } catch (e) { console.warn('roxy party rim off', e); } }
+		rim.visible = k > 0 && !!rimBody; rim.alpha = 0.9 * k; rim.position.set(5.5 * rimSide, -3);
+	}
 	const heads = {} as Record<Head, Texture>; for (const h of ['base', 'blink_half', 'blink_closed', 'wink', 'm_smile', 'm_oo', 'excited'] as Head[]) heads[h] = TX['head_' + h];
 
 	// ---- state ----
@@ -141,6 +163,7 @@ export async function createRoxy(): Promise<RoxyAdapter> {
 			else if (t > X.nextBlink) { X.blinkT = 0; X.nextBlink = t + rand(2.4, 5.6); }
 		}
 		if (head.mesh.texture !== heads[f]) head.mesh.texture = heads[f];
+		if (rim.visible && rimHead) { if (rimHead.texture !== silHeads[f]) rimHead.texture = silHeads[f]; rimFingerC!.setFromMatrix(fingerM); }
 		perfAcc += performance.now() - t0; perfN++;
 		if (perfN >= 120) { (window as any).__roxyPerf = { msPerFrame: perfAcc / perfN, verts: (body.rest.length + head.rest.length) / 2 }; perfAcc = 0; perfN = 0; }
 	}
@@ -170,6 +193,7 @@ export async function createRoxy(): Promise<RoxyAdapter> {
 			if (k >= 0.5) X.forced = h; else if (X.forced === h) X.forced = null;
 		},
 		release() { X.door = false; X.forced = null; X.nextBlink = X.t + 1.5; cacheShadow(); },
+		setParty,
 		setGrade(_g: RoxyGrade) { /* v7: no per-frame grade pass (keeps her skin from warming toward orange, and saves a filter pass) */ },
 		shadow(on) { shadows.visible = on; if (on) cacheShadow(); },
 		destroy() { view.destroy({ children: true }); },

@@ -1,14 +1,16 @@
 // The room layer (approved PixiJS mockup, ported): ONE Pixi app on canvas#scene inside #root, behind #app.
 // Draws the grand foyer (painted split stair + sconces from assets/foyer, wall / floor / arch / gallery in code), slow motes,
 // and Roxy (the swappable rig adapter, ../roxyrig). The DOM board / HUD stay on top; the room is fitted to the DOM frame rect.
-// Bonus: the room fades out so the free-spins painting on #bg shows (Roxy stays). No WebGL -> the app never starts and the
+// Bonus: the same room crossfades to its night "party" version (party.ts, baked once per layout) and Roxy picks up the
+// matching party light (rig setParty: tint + one-side magenta rim, no filter pass). No WebGL -> the app never starts and the
 // game falls back to the #bg painting with no Roxy (nothing else depends on this layer).
 import { Application, Container, Graphics, Sprite, type Texture } from 'pixi.js';
 import { ST } from '../stage';
 import { G as MKG, FW, FT, BW, BH } from '../mkboard';
 import { loadSheet } from './load';
 import { glowDot, softBlob } from './util';
-import { foyerRoot, initFoyer, buildFoyerLand, buildFoyerPort, updFoyer, bakeFoyer } from './foyer';
+import { foyerRoot, initFoyer, buildFoyerLand, buildFoyerPort, updFoyer, bakeFoyer, setPartyK, LAY, sconcePts, archShape, foyerTex } from './foyer';
+import { buildParty, updParty } from './party';
 import { createRoxy, type RoxyAdapter } from '../roxyrig';
 
 export let app: Application | null = null;
@@ -16,7 +18,7 @@ export let rig: RoxyAdapter | null = null;
 const room = new Container(), moteL = new Container(), roxyL = new Container(), fx = new Container();
 const roxyMask = new Graphics();
 let calm: Sprite | null = null;
-let now = 0, bonus = false, roomA = 1, roxyOn = true, hold = false, free = false, last: [boolean, DOMRect] | null = null;
+let now = 0, bonus = false, partyK = 0, snap = false, roxyOn = true, hold = false, free = false, last: [boolean, DOMRect] | null = null;
 /** where Roxy stands (stage design px) + scale; read by the intro */
 export const roxyAt = { x: 0, y: 0, s: 1, portrait: false };
 export const sceneNow = () => now;
@@ -49,8 +51,11 @@ export async function initScene(): Promise<boolean> {
 		calm = new Sprite(softBlob()); calm.anchor.set(0.5); calm.tint = 0x10051a; calm.alpha = 0.5;
 		a.stage.addChild(room, calm, moteL, roxyL, fx); room.addChild(foyerRoot);
 		a.ticker.add((t) => { const dt = Math.min(0.05, t.deltaMS / 1000); now += dt;
-			roomA += ((bonus ? 0 : 1) - roomA) * Math.min(1, dt * 5); room.alpha = roomA; if (calm) calm.alpha = 0.5 * roomA; moteL.alpha = 0.6 + 0.4 * roomA;
-			updFoyer(now); updMotes(dt); if (roxyOn) r.update(dt); });
+			// free spins crossfade: ~0.9 s ease (calm ambient change), room and Roxy's light on the same curve
+			const tk = bonus ? 1 : 0, pk = partyK;
+			if (snap) { partyK = tk; snap = false; } else if (partyK !== tk) { partyK += Math.sign(tk - partyK) * Math.min(Math.abs(tk - partyK), dt / 0.9); }
+			if (partyK !== pk) { const e = partyK * partyK * (3 - 2 * partyK); setPartyK(e); r.setParty?.(e); if (calm) calm.alpha = 0.5 + 0.15 * e; }
+			if (partyK < 1) updFoyer(now); if (partyK > 0) updParty(now, dt); updMotes(dt); if (roxyOn) r.update(dt); });
 		document.body.classList.add('hasScene');
 		(window as any).__scene = { app: a, rig: r, roxyAt, roxyL, room };
 		return true;
@@ -133,11 +138,17 @@ export function placeScene(portrait: boolean, fr: DOMRect) {
 	else if (calm) { calm.position.set(fr.left + fr.width / 2, fr.top + fr.height / 2); calm.scale.set(fr.width / 150, fr.height / 165); calm.visible = !portrait; }
 	const gp = (c: Container) => { const p = c.getGlobalPosition(); return { x: p.x, y: p.y }; };
 	R.setGrade({ keys: keys.map(gp), cool: gp(cool) });
+	{	// party layer: screen + board frame in room design px
+		const sx = room.scale.x, ox = room.position.x, oy = room.position.y, D = (x: number, y: number) => [(x - ox) / sx, (y - oy) / sx];
+		const [vx0, vy0] = D(0, 0), [vx1, vy1] = D(W, H), [bx0, by0] = D(fr.left, fr.top), [bx1, by1] = D(fr.right, fr.bottom), T = foyerTex();
+		buildParty(LAY, sconcePts(), archShape, { x0: vx0, y0: vy0, x1: vx1, y1: vy1 }, { x0: bx0, y0: by0, x1: bx1, y1: by1 }, sx, portrait, T.blob, T.dot);
+		R.setParty?.(partyK * partyK * (3 - 2 * partyK), Math.sign(gp(cool).x - R.view.x) || -1);
+	}
 	bakeFoyer(app.renderer, room, W, H, app.renderer.resolution);   // static room -> 2 textures (PERF)
 	if (mW !== W || mH !== H) { mW = W; mH = H; setMotes(W, H, portrait ? 12 : g && g.mode === 'cmp' ? 7 : 18); }
 }
-/** Bonus: fade the room out (the free-spins painting on #bg shows through); Roxy stays. */
-export function sceneBonus(on: boolean) { bonus = on; }
+/** Bonus: crossfade the room to its party version (and Roxy's light with it). instant = restore without a fade (reload into a bonus). */
+export function sceneBonus(on: boolean, instant = false) { if (instant && on !== bonus) snap = true; bonus = on; }
 /** Top-level overlay container for transient fx drawn over the room (unused by the base game). */
 export const sceneFx = fx;
 export const showRoxy = (on: boolean) => { roxyOn = on; roxyL.visible = on; };

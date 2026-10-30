@@ -36,6 +36,8 @@ export interface RoxyAdapter {
 	face(name: RoxyFace, k: number): void;           // painted face variant on (k >= 0.5) / off
 	release(): void;                    // hand back to idle after the intro
 	setGrade(g: RoxyGrade): void;
+	/** free-spins party light, 0 = base look (untouched) .. 1 = full; side = which way the party light comes from (-1 left, 1 right) */
+	setParty?(k: number, side?: number): void;
 	shadow(on: boolean): void;          // cast + contact shadow (landscape floor); off in the portrait peek
 	destroy(): void;
 }

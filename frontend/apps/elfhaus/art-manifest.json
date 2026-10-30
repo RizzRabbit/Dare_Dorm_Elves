@@ -152,17 +152,6 @@
     "assets/final/background_base_portrait.jpg",
     "assets/final/background_base_portrait.png"
   ],
-  "background_fs": [
-    "assets/final/webp/bg_freespins_1920x1080.webp",
-    "assets/final/background_fs.jpg",
-    "assets/final/background_fs.png"
-  ],
-  "background_fs_portrait": [
-    "assets/final/webp/bg_freespins_mobile_1080x1920.webp",
-    "assets/final/bg_freespins_mobile_1080x1920.png",
-    "assets/final/background_fs_portrait.jpg",
-    "assets/final/background_fs_portrait.png"
-  ],
   "logo": [
     "assets/final/webp/logo.webp",
     "assets/final/logo.png"

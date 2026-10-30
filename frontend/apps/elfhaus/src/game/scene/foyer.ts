@@ -4,8 +4,11 @@
 // (landscape world 1920x1080, portrait width 1080); scene.ts maps that onto the game's DOM board rect.
 import * as P from 'pixi.js';
 import { ctex, softBlob as _sb, glowDot as _gd } from './util';
+import { statP, partyLive } from './party';
 let ST: Record<string, P.Texture> = {};
 let softBlob, glowDot, archTex;
+/** arch opening outline (shared with party.ts) */
+export let archShape: (g: P.Graphics, CX: number, w: number, top: number, FL: number) => void;
 const INK = 0x1a0b24;
 const roomG = new P.Graphics(), wallL = new P.Container(), shadG = new P.Graphics(), backL = new P.Container(), floorL = new P.Container();
 const amb = new P.Container();
@@ -24,6 +27,10 @@ const PAL = { wall: 0x2e1a40, wallHi: 0x3a2350, wallLo: 0x24132f, stone: 0xa597b
   marble: 0xb7adc6, marbleBack: 0x7b6f92, inlay: 0x4a2768, amber: 0xffb455, sconce: 0xffc46a };
 const FOY = { land: { CX: 830, HZ: 160, FL: 720, stair: { y: 800, s: 0.96 }, sconce: [{ x: 66, y: 400 }, { x: 1854, y: 400 }], arch: { w: 470, top: 300 } } };
 let anim = [], washes = [], sconces = [], archGlow = null;
+/** layout facts the free-spins party layer (party.ts) hangs its decor on (room design px) */
+export const LAY = { CX: 830, FL: 720, archW: 470, archTop: 300, yR: 95, s: 0.96, step: 42 };
+export const sconcePts = () => sconces.map((c) => ({ x: c.halo.x, y: c.halo.y, s: c.s }));
+export const foyerTex = () => ({ blob: softBlob, dot: glowDot });
 function wallPanels(g, x0, x1, top, FL, CX, pw = 230, gap = 46, pTop = top + 130) {
   // straight-on back wall: stone dado + baseboard, tall upper panels and short lower panels in stone mouldings with a thin gold inner line
   const dado = FL - 150;
@@ -130,9 +137,23 @@ function gallerySlab(g, x0, x1, st) {
   for (const y of [yF, yB, yS]) g.moveTo(x0, y).lineTo(x1, y).stroke({ width: y === yS ? 2.4 : 1.8, color: GINK, alpha: 0.9 });
 }
 export const foyerRoot = new P.Container();
-foyerRoot.addChild(bakeA, wallLive, floorL, poolL, bakeC, amb);
+// FREE SPINS "party mode" (party.ts): the same room re-lit for the night. bakeP = the whole room (statA + statC) with the
+// night grade and the flat party decor on top, baked ONCE per layout into one more screen-sized texture; partyLive = the few
+// live party glows + confetti. While the bonus is fully in, the base layers are hidden, so the bonus draws ONE room quad
+// (the base draws two); both sets are drawn only during the crossfade.
+const bakeP = new P.Sprite(P.Texture.EMPTY), partyRoot = new P.Container();
+partyRoot.addChild(bakeP, partyLive); partyRoot.visible = false;
+let rtP: P.RenderTexture | null = null;
+const baseLayers = [bakeA, wallLive, floorL, poolL, bakeC, amb];
+foyerRoot.addChild(...baseLayers, partyRoot);
+/** 0 = base foyer, 1 = party foyer; in between = crossfade (partyRoot over the base, on alpha) */
+export function setPartyK(k: number) {
+	partyRoot.visible = k > 0.001; partyRoot.alpha = Math.min(1, k);
+	const base = k < 0.999; for (const l of baseLayers) l.visible = base;
+}
 export function initFoyer(tex: Record<string, P.Texture>) {
 	ST = tex; softBlob = _sb(); glowDot = _gd();
+	archShape = (g, CX, w, top, FL) => { const r = w / 2; g.moveTo(CX - r, FL).lineTo(CX - r, top + r).arc(CX, top + r, r, Math.PI, 0).lineTo(CX + r, FL).closePath(); };
 	archTex = ctex(128, 256, (g) => { let gr = g.createLinearGradient(0, 0, 0, 256); gr.addColorStop(0, '#5a2f52'); gr.addColorStop(0.45, '#c9813f'); gr.addColorStop(0.8, '#ffd27a'); gr.addColorStop(1, '#ffe7b0');
 		g.fillStyle = gr; g.fillRect(0, 0, 128, 256); gr = g.createLinearGradient(0, 0, 128, 0); gr.addColorStop(0, 'rgba(40,14,40,0.55)'); gr.addColorStop(0.3, 'rgba(40,14,40,0)');
 		gr.addColorStop(0.7, 'rgba(40,14,40,0)'); gr.addColorStop(1, 'rgba(40,14,40,0.55)'); g.fillStyle = gr; g.fillRect(0, 0, 128, 256); });
@@ -151,7 +172,8 @@ export function buildFoyerLand(scShift = 0) {   // scShift: phone landscape slid
 	drawFloor(roomG, CX, HZ, FL, X0, X1, 2600);
 	archGlow = [addPool(PAL.amber, CX, FL - 260, 4.4, 0.20, 1.1, amb), addPool(0xffd27a, CX, FL + 70, 3.6, 0.30, 0.22)];
 	addStairs(CX, D.stair, backL);
-	const gal = new P.Graphics(); drawGallery(gal, X0, X1, D.stair, CX); backL.addChildAt(gal, 0);
+	const gal = new P.Graphics(), G = drawGallery(gal, X0, X1, D.stair, CX); backL.addChildAt(gal, 0);
+	Object.assign(LAY, { CX, FL, archW: D.arch.w, archTop: D.arch.top, yR: G.yR, s: D.stair.s, step: 44 * D.stair.s });
 	const lb = new P.Sprite(softBlob); lb.anchor.set(0.5); lb.tint = 0x0a0410; lb.position.set(CX, 150); lb.scale.set(3.4, 1.25); lb.alpha = 0.75; backL.addChild(lb);
 	const scL = D.sconce[0].x + scShift;
 	addSconce(scL, D.sconce[0].y, 0.54, false); addSconce(D.sconce[1].x, D.sconce[1].y, 0.54, true);
@@ -169,6 +191,7 @@ export function buildFoyerPort(T: number, DH: number) {
 	archGlow = [addPool(PAL.amber, CX, T - 260, 4.0, 0.22, 1.2, amb)];
 	addStairs(CX, st, backL);
 	const gal = new P.Graphics(), G = drawGallery(gal, -1400, 2500, st, CX); backL.addChildAt(gal, 0);
+	Object.assign(LAY, { CX, FL, archW: 420, archTop: gS + 60, yR: G.yR, s, step: 44 * s });
 	const pb = G.yR - 40, pt = Math.max(-200, pb - 520);
 	for (let i = -3; i <= 3; i++) { const pw = 210, x = CX - pw / 2 + i * (pw + 40);
 		roomG.rect(x, pt, pw, pb - pt).fill(PAL.wallHi).stroke({ width: 12, color: PAL.stone, alignment: 0.5 });
@@ -184,11 +207,15 @@ export function bakeFoyer(renderer: P.Renderer, room: P.Container, W: number, H:
 		if (t && t.width === W && t.height === H && t.source.resolution === res) return t;
 		t?.destroy(true); return P.RenderTexture.create({ width: W, height: H, resolution: res, antialias: true });
 	};
-	rtA = rt(rtA); rtC = rt(rtC);
+	rtA = rt(rtA); rtC = rt(rtC); rtP = rt(rtP);
 	const sx = room.scale.x, sy = room.scale.y, m = new P.Matrix(sx, 0, 0, sy, room.position.x, room.position.y);
 	renderer.render({ container: statA, target: rtA, clear: true, clearColor: [0, 0, 0, 0], transform: m });
 	renderer.render({ container: statC, target: rtC, clear: true, clearColor: [0, 0, 0, 0], transform: m });
-	for (const [b, t] of [[bakeA, rtA], [bakeC, rtC]] as const) {   // screen-space quads inside the room's transform
+	// party room: the same two static layers, then the night grade + decor (party.ts buildParty, called before this)
+	renderer.render({ container: statA, target: rtP, clear: true, clearColor: [0, 0, 0, 0], transform: m });
+	renderer.render({ container: statC, target: rtP, clear: false, transform: m });
+	renderer.render({ container: statP, target: rtP, clear: false, transform: m });
+	for (const [b, t] of [[bakeA, rtA], [bakeC, rtC], [bakeP, rtP]] as const) {   // screen-space quads inside the room's transform
 		b.texture = t; b.position.set(-room.position.x / sx, -room.position.y / sy); b.scale.set(1 / sx, 1 / sy); }
 }
 /** ambient: candle breathe + arch glow breathe (mockup updScene minus motes; motes live in scene.ts) */

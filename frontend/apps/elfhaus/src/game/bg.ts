@@ -1,7 +1,6 @@
-// Room background: base painting, or the dedicated free-spins painting while S.inBonus.
-//   landscape bonus: ART.background_fs; portrait bonus: ART.background_fs_portrait. #bg gets class `fs` with a dedicated
-//   image, so the `body.inBonus #bg:not(.fs)` tint drops off. No dedicated image for the orientation (e.g. the portrait
-//   bonus file not imported yet) -> the base painting stays and keeps the tint.
+// Room background. Free spins no longer swap in a separate painting (audit M11): the Pixi foyer crossfades to its own
+// night "party" version (scene/party.ts) via sceneBonus(). #bg only shows when WebGL is unavailable: then it is the base
+// painting, and in the bonus the `body.inBonus #bg:not(.fs)` tint eases in on it.
 // No flash: the target image is preloaded + decoded before the swap, and the old picture (with the filter it had) is held
 // on #bgFade above #bg and faded out on opacity only. Call setBg(next) BEFORE toggling body.inBonus.
 import { ART } from './ui';
@@ -18,13 +17,12 @@ export const preload = (url: string) => {
 	return p;
 };
 const pick = (bonus: boolean, portrait: boolean) => {
-	const fs = bonus ? (portrait ? ART.background_fs_portrait : ART.background_fs) : null;
-	return fs ? { url: fs, fs: true } : { url: (portrait && ART.background_portrait) || ART.background || null, fs: false };
+	void bonus; return { url: (portrait && ART.background_portrait) || ART.background || null, fs: false };
 };
 let cur = '', seq = 0; // cur = `${url}|${tinted}` currently shown
 /** Show the base or bonus background for the current orientation. Idempotent; fades only when the picture or tint changes. */
 export function setBg(bonus: boolean, fade = true) {
-	sceneBonus(bonus); // room layer (Pixi foyer) fades out so the free-spins painting shows; Roxy stays
+	sceneBonus(bonus, !cur || !fade); // room layer (Pixi foyer) crossfades to its party version; instant on first paint
 	setAlcoveFs(bonus); // board frame: _fs crown / recess fade in on opacity (alcove.ts), same timing as the plate
 	const bg = document.getElementById('bg'); if (!bg) return;
 	const { url, fs } = pick(bonus, ST.portrait);
