@@ -230,3 +230,6 @@ body.replay.portrait #replayPlay{padding:0 14px!important;min-width:0}
 #bigwin .bwWarm>div{position:absolute;inset:0;background:center/contain no-repeat}
 #bigwin{transition:opacity .22s ease-out} #bigwin.out{opacity:0}
 #bigwin .bwAmt{will-change:transform}
+
+/* v3.18 intro card carousel: swipes on the intro are ours (no browser pan / pull-to-refresh while the vestibule is up) */
+body.introOn #loader{touch-action:none;user-select:none;-webkit-user-select:none}

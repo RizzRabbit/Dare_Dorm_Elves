@@ -2,7 +2,7 @@
 // the user gesture later sound needs). Progress counts every tracked promise: art images, Roxy sheets, RGS/mock auth.
 import { $, ART } from './ui';
 import { initSplash, stingDone, skipSplash, preOut } from './intro';
-import { initIntro, introLoaded, introEnter, introSkip } from './introPixi';
+import { initIntro, introLoaded, introEnter, introSkip, introEatClick } from './introPixi';
 
 // Card titles (checked by the social-mode word scan in scripts/test-books.mjs).
 // Feature-panel alt text, keyed by the panel art (splash_layout.json decides which panels show and where).
@@ -56,7 +56,7 @@ export async function loaderReady() {
 	// returning players who ticked "Don't show this again" go straight in once loading is done
 	if (!skipSplash()) await new Promise<void>((res) => {
 		const btn = $('#lGo'); btn.focus({ preventScroll: true });
-		const go_ = (e?: Event) => { if ((e?.target as Element)?.closest?.('.spSkip')) return; removeEventListener('keydown', key, true); L.removeEventListener('click', go_); res(); };
+		const go_ = (e?: Event) => { if ((e?.target as Element)?.closest?.('.spSkip')) return; if (e && introEatClick(e)) return; /* v3.18: swipes / taps on the card carousel never enter */ removeEventListener('keydown', key, true); L.removeEventListener('click', go_); res(); };
 		const key = (e: KeyboardEvent) => { if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); e.stopPropagation(); go_(); } };
 		L.addEventListener('click', go_); // tap anywhere on the splash
 		addEventListener('keydown', key, { capture: true });

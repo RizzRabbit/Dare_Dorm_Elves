@@ -25,9 +25,13 @@ export const T = { cards: [0.0, 0.42], doorL: [0.40, 1.30], doorR: [0.50, 1.40],
   cam: [1.55, 2.17], drop: [1.99, 2.37], logo: [2.15, 2.45], hud: [2.17, 2.47], btn: [2.23, 2.55], face: [3.01, 3.13], end: 3.25 };
 // the build's own feature cards (same titles + lines as the old splash), restyled black / gold
 const CARDS = [
-  { key: 'modes', art: 'assets/intro/card_modes_S.webp', title: '4 Bonus Modes', line: 'Dare, Double, Triple or a Mystery Spin.' },
-  { key: 'sticky', art: 'assets/intro/card_sticky_W_R2_card.webp', title: 'Sticky Wilds', line: 'Wilds lock in place and grow every respin.' },
-  { key: 'egw', art: 'assets/intro/card_egw_WM2_R1-2.webp', title: 'Elves Gone Wild', line: 'Full wild reels side by side multiply.' },
+// v3.18 carousel (James 2026-10-30): each card swipes in with a little more detail (facts as in the rules; no amounts)
+  { key: 'modes', art: 'assets/intro/card_modes_S.webp', title: '4 Bonus Modes',
+    line: '3, 4 or 5 Dare Cards start Dare, Double Dare or Triple Dare free spins. A Mystery Spin always lands 2 Dare Cards and the other reels reveal the result.' },
+  { key: 'sticky', art: 'assets/intro/card_sticky_W_R2_card.webp', title: 'Sticky Wilds',
+    line: 'In Double Dare and Triple Dare the wilds lock in place and keep growing every free spin. Triple Dare guarantees at least one full-reel wild.' },
+  { key: 'egw', art: 'assets/intro/card_egw_WM2_R1-2.webp', title: 'Elves Gone Wild',
+    line: 'One supercharged spin: 2 to 5 reels land wilds that grow into full-reel wilds (x4 each), then respins. Full wild reels side by side multiply.' },
 ];
 let app = null, state = 'off', t = 0, tt = 0, prog = 0, G = null, primed = false, roxyFree = false, faceOff = false, progFn = () => 0;
 let doneRes = () => {}, tapRes = () => {}, killed = false;
@@ -86,32 +90,32 @@ function geo(W, H) {   // W, H: stage px (ST.w / ST.h); the card + skip-strip bu
   W *= S; H *= S;   // work in screen px; ks = design -> screen, k = design -> stage
   // intro cards (v3.17): sized in SCREEN px so they stay readable on phones (the old design-px cards shrank to ~80 px wide
   // under the doors at portrait); the door scene gives up the room they need instead
-  if (!port) {   // feature cards in a column on each side of the doorway (sconces reach ~490 design px from the centre)
-    const m = 12, CMIN = 180, CMAX = 300, half = 490;
-    let ks = Math.min(W / 1920, H / 1080);
-    const free = (W - 2 * half * ks) / 2 - 2 * m;
-    if (free < CMIN) ks = Math.min(ks, (W - 2 * (CMIN + 2 * m)) / (2 * half));
-    const cw = Math.max(CMIN, Math.min(CMAX, (W - 2 * half * ks) / 2 - 2 * m)), k = ks / S, DW = W / ks, DH = H / ks, cx = DW / 2;
+  // v3.18: the feature cards are a swipe carousel centred on screen over the doorway (active card centred, the two
+  // neighbours peeking in at the edges); the scene no longer gives up room for them. Card sizes are SCREEN px.
+  const DOTS = 22, m = 10;
+  if (!port) {
+    const ks = Math.min(W / 1920, H / 1080), k = ks / S, DW = W / ks, DH = H / ks, cx = DW / 2;
     const FL = DH / 2 + 400, dw = 520, dh = 580, top = FL - dh;
     const lbh = Math.max(100, 46 / ks);   // TAP TO PARTY keeps a >= 46 screen-px plate on small landscape phones
-    const skip = 62, ch = Math.min(600, H - 2 * m - skip), y0 = Math.max(m, (H - skip - ch) / 2 + 6);
-    const colX = (W - 2 * half * ks) / 4;   // centre of each free side band (screen px from the edge)
-    return { port, k, ks, Ws: W, DW, DH, cx, FL, dw, dh, top, lint: 64, logo: { y: top - 64 - 122, w: 560 }, bar: { y: FL + 64, w: 560, h: 40 }, btn: { y: FL + 64, w: 470 * lbh / 100, h: lbh }, sc: { dx: 400, y: top + 150, s: 0.6 }, F: 1500,
-      pc: { cw, ch, y0, colX, gap: 12 } }; }
-  // portrait: logo + doors + TAP TO PARTY on top, the three cards as full-width rows under them, the skip strip last
+    const logo = { y: top - 64 - 122, w: 560 }, btn = { y: FL + 64, w: 470 * lbh / 100, h: lbh };
+    const ar = tex.title ? tex.title.height / tex.title.width : 0.56;
+    const yA = (logo.y + logo.w * ar * 0.42) * ks + m, yB = (btn.y - btn.h / 2) * ks - m - DOTS;   // between logo and button (screen px)
+    const ch = Math.max(150, Math.min(340, yB - yA)), cw = Math.min(W * 0.52, 560, ch * 2.1);
+    return { port, k, ks, Ws: W, Hs: H, DW, DH, cx, FL, dw, dh, top, lint: 64, logo, bar: { y: FL + 64, w: 560, h: 40 }, btn, sc: { dx: 400, y: top + 150, s: 0.6 }, F: 1500,
+      pc: { cw, ch, cy: (yA + yB) / 2, row: true } }; }
+  // portrait: the scene keeps its full width scale and sits centred above the skip strip; the carousel overlays the doors
   const dw = 540, dh = 780, lint = 64, ar = tex.title ? tex.title.height / tex.title.width : 0.56, logoW = 800;
-  const above = dh + lint + 210 + logoW * ar / 2 + 14, btnY = 130;
-  const rw = Math.min(W - 24, 520), rh = Math.round(Math.max(62, Math.min(96, H * 0.1))), gap = Math.round(Math.max(6, Math.min(12, H * 0.012)));
-  const cardsH = 3 * rh + 2 * gap, skip = 62, budget = H - cardsH - skip - 10;
-  // TAP TO PARTY keeps a >= 46 screen-px plate when the scene scales down on short phones
+  const above = dh + lint + 210 + logoW * ar / 2 + 14, btnY = 130, skip = 62, budget = H - skip - 10;
   let bh = 132, ks = Math.min(W / 1080, budget / (above + btnY + bh / 2 + 14));
   for (let i = 0; i < 3; i++) { bh = Math.max(132, 46 / ks); ks = Math.min(W / 1080, budget / (above + btnY + bh / 2 + 14)); }
   const below = btnY + bh / 2 + 14, k = ks / S, DW = W / ks, DH = H / ks, cx = DW / 2;
-  const sceneH = ks * (above + below), spare = Math.max(0, budget - sceneH), sy = Math.min(spare * 0.45, 40) + 4;
+  const sceneH = ks * (above + below), sy = Math.max(4, (budget - sceneH) / 2);
   const FL = sy / ks + above, top = FL - dh;
-  const sBot = sy + sceneH, y0 = sBot + Math.max(4, (H - skip - sBot - cardsH) / 2);
-  return { port, k, ks, Ws: W, DW, DH, cx, FL, dw, dh, top, lint, logo: { y: top - 64 - 210, w: logoW }, bar: { y: FL + btnY, w: 640, h: 46 }, btn: { y: FL + btnY, w: 620 * bh / 132, h: bh }, sc: { dx: 400, y: top + 210, s: 0.72 }, F: 1700,
-    pc: { rw, rh, gap, y0 } };
+  const logo = { y: top - 64 - 210, w: logoW }, btn = { y: FL + btnY, w: 620 * bh / 132, h: bh };
+  const yA = (logo.y + logo.w * ar * 0.42) * ks + m, yB = (btn.y - btn.h / 2) * ks - m - DOTS;
+  const cw = Math.min(W * 0.74, 360), ch = Math.max(200, Math.min(cw * 1.3, yB - yA));
+  return { port, k, ks, Ws: W, Hs: H, DW, DH, cx, FL, dw, dh, top, lint, logo, bar: { y: FL + btnY, w: 640, h: 46 }, btn, sc: { dx: 400, y: top + 210, s: 0.72 }, F: 1700,
+    pc: { cw, ch, cy: (yA + yB) / 2, row: false } };
 }
 
 // ---------------- build ----------------
@@ -214,60 +218,90 @@ function build() {
   buildCards();
   setDoors(0, 0);
 }
-// card slots: positions in design px, sizes in screen px (each card container is scaled 1/k).
-// Landscape: two square-art cards stacked in the free band left of the doorway, the tall merged-pair card on the right
-// (its column stops above the bottom-right "Don't show this again" strip). Portrait: three full-width rows under TAP TO PARTY.
-function cardSlots() {
-  const { ks: k, pc } = G;
-  if (!G.port) { const { cw, ch, y0, colX, gap } = pc, hh = (ch - gap) / 2, xl = colX / k, xr = (G.Ws - colX) / k;
-    return { dir: 'x', slots: [{ x: xl, y: y0 / k, w: cw, h: hh, side: -1 }, { x: xl, y: (y0 + hh + gap) / k, w: cw, h: hh, side: -1 },
-      { x: xr, y: y0 / k, w: cw, h: ch, side: 1 }] }; }
-  const { rw, rh, gap, y0 } = pc;
-  return { dir: 'y', slots: [0, 1, 2].map((i) => ({ x: G.cx, y: (y0 + i * (rh + gap)) / k, w: rw, h: rh, side: 0, row: true })) };
-}
-function cardText(c, size, wrapW, maxH) {   // title + line, shrinking the line until it fits maxH (screen px)
+// ---------------- feature card carousel (v3.18) ----------------
+// One card centred, its two neighbours peeking in at the screen edges (smaller, darkened, never faded). Swipe / drag
+// (touch + mouse), tap a side card, or Left / Right keys; wraps around. `pos` is the continuous index at the centre.
+const CAR = { pos: 0, from: 0, to: 0, t0: -1, dur: 0.24, drag: null as any, eatUntil: 0 };
+let dotsG = null;
+function cardSpacing() { const { cw } = G.pc; return Math.max(G.Ws / 2 + 0.235 * cw, 0.925 * cw + 14); }   // screen px between card centres
+function cardText(c, size, wrapW, maxH) {   // title + detail, shrinking the detail until it fits maxH (screen px)
   const ti = new Text({ text: c.title.toUpperCase(), style: { fontFamily: FONT, fontWeight: '900', fontSize: size.t, fill: GOLD, letterSpacing: 0.5, align: size.al,
     dropShadow: { color: 0x000000, alpha: 0.6, blur: 2, distance: 1.5, angle: Math.PI / 2 } } });
   let fl = size.l, ln;
-  for (;;) { ln?.destroy(); ln = new Text({ text: c.line, style: { fontFamily: FONT, fontWeight: '700', fontSize: fl, fill: 0xeee3f2, align: size.al, wordWrap: true, wordWrapWidth: wrapW, lineHeight: Math.round(fl * 1.25) } });
-    if (ti.height + 4 + ln.height <= maxH || fl <= 11) break; fl -= 0.5; }
+  for (;;) { ln?.destroy(); ln = new Text({ text: c.line, style: { fontFamily: FONT, fontWeight: '700', fontSize: fl, fill: 0xeee3f2, align: size.al, wordWrap: true, wordWrapWidth: wrapW, lineHeight: Math.round(fl * 1.3) } });
+    if (ti.height + 6 + ln.height <= maxH || fl <= 11) break; fl -= 0.5; }
   if (ti.width > wrapW) ti.scale.set(wrapW / ti.width);
   return { ti, ln };
 }
 function buildCards() {
-  cardsC = new Container(); root.addChild(cardsC); cardEls = [];
-  const L = cardSlots();
-  CARDS.forEach((c, i) => { const q = L.slots[i], C = new Container(); C.scale.set(1 / G.ks); cardsC.addChild(C);
-    const { w, h } = q, R = 14, g = new Graphics();
-    for (const [sw, a] of [[16, 0.04], [10, 0.08], [6, 0.14], [3, 0.26]]) g.roundRect(-w / 2 - 1.5, -1.5, w + 3, h + 3, R + 1.5).stroke({ width: sw, color: GOLD, alpha: a });
-    g.roundRect(-w / 2, 0, w, h, R).fill({ color: 0x000000, alpha: 0.7 }).roundRect(-w / 2 + 3, 3, w - 6, Math.min(56, h * 0.2), R - 3).fill({ color: 0xffffff, alpha: 0.04 })
-      .roundRect(-w / 2, 0, w, h, R).stroke({ width: 2, color: GOLD }).roundRect(-w / 2 + 5, 5, w - 10, h - 10, R - 4).stroke({ width: 1, color: 0xffeab0, alpha: 0.45 });
+  cardsC = new Container(); cardsC.sortableChildren = true; root.addChild(cardsC); cardEls = [];
+  const { cw: w, ch: h, row } = G.pc;
+  CARDS.forEach((c, i) => { const C = new Container(); C.scale.set(1 / G.ks); cardsC.addChild(C);
+    const R = 16, g = new Graphics();
+    for (const [sw, a] of [[16, 0.04], [10, 0.08], [6, 0.14], [3, 0.26]]) g.roundRect(-w / 2 - 1.5, -h / 2 - 1.5, w + 3, h + 3, R + 1.5).stroke({ width: sw, color: GOLD, alpha: a });
+    g.roundRect(-w / 2, -h / 2, w, h, R).fill({ color: 0x000000, alpha: 0.82 }).roundRect(-w / 2 + 3, -h / 2 + 3, w - 6, Math.min(56, h * 0.2), R - 3).fill({ color: 0xffffff, alpha: 0.04 })
+      .roundRect(-w / 2, -h / 2, w, h, R).stroke({ width: 2, color: GOLD }).roundRect(-w / 2 + 5, -h / 2 + 5, w - 10, h - 10, R - 4).stroke({ width: 1, color: 0xffeab0, alpha: 0.45 });
     C.addChild(g);
     const art = new Sprite(tex['card_' + c.key]); art.anchor.set(0.5); const tw = art.texture.width, th = art.texture.height;
-    if (q.row) {   // art left, text right
-      const ah = h - 14, aw = Math.min(ah * 1.3, w * 0.3), fit = Math.min(aw / tw, ah / th);
-      art.scale.set(fit); const artW = tw * fit; art.position.set(-w / 2 + 12 + artW / 2, h / 2); C.addChild(art);
-      const tx = -w / 2 + 12 + artW + 12, wrapW = w / 2 - 14 - tx;
-      const { ti, ln } = cardText(c, { t: Math.max(14, Math.min(21, h * 0.24)), l: Math.max(12, Math.min(16, h * 0.19)), al: 'left' }, wrapW, h - 12);
-      const bh = ti.height + 4 + ln.height, y = (h - bh) / 2;
-      ti.anchor.set(0, 0); ti.position.set(tx, y); ln.anchor.set(0, 0); ln.position.set(tx, y + ti.height + 4); C.addChild(ti, ln);
-    } else {        // art on top, title + line under it
-      const { ti, ln } = cardText(c, { t: Math.max(15, Math.min(22, w * 0.075)), l: Math.max(12.5, Math.min(16, w * 0.056)), al: 'center' }, w - 28, h * 0.55);
-      const textH = ti.height + 4 + ln.height, ab = Math.max(40, h - 12 - textH - 12 - 10), fit = Math.min((w - 28) / tw, ab / th);
-      art.scale.set(fit); art.position.set(0, 12 + ab / 2); C.addChild(art);
-      ti.anchor.set(0.5, 0); ti.position.set(0, 12 + ab + 8); ln.anchor.set(0.5, 0); ln.position.set(0, ti.y + ti.height + 4); C.addChild(ti, ln);
+    if (row) {   // landscape: art left, title + detail right
+      const ah = h - 24, aw = w * 0.36, fit = Math.min(aw / tw, ah / th);
+      art.scale.set(fit); const artW = tw * fit; art.position.set(-w / 2 + 14 + aw / 2, 0); C.addChild(art);
+      const tx = -w / 2 + 14 + aw + 14, wrapW = w / 2 - 16 - tx;
+      const { ti, ln } = cardText(c, { t: Math.max(16, Math.min(26, h * 0.1)), l: Math.max(12.5, Math.min(18, h * 0.065)), al: 'left' }, wrapW, h - 28);
+      const bh = ti.height + 6 + ln.height, y = -bh / 2;
+      ti.position.set(tx, y); ln.position.set(tx, y + ti.height + 6); C.addChild(ti, ln);
+    } else {     // portrait: art on top, title + detail under it
+      const { ti, ln } = cardText(c, { t: Math.max(17, Math.min(24, w * 0.072)), l: Math.max(12.5, Math.min(15.5, w * 0.047)), al: 'center' }, w - 30, h * 0.56);
+      const textH = ti.height + 6 + ln.height, ab = Math.max(50, h - 14 - textH - 14 - 10), fit = Math.min((w - 30) / tw, ab / th);
+      art.scale.set(fit); art.position.set(0, -h / 2 + 14 + ab / 2); C.addChild(art);
+      ti.anchor.set(0.5, 0); ti.position.set(0, -h / 2 + 14 + ab + 8); ln.anchor.set(0.5, 0); ln.position.set(0, ti.y + ti.height + 6); C.addChild(ti, ln);
     }
-    cardEls.push({ C, q, L, i }); });
+    const shade = new Graphics().roundRect(-w / 2 - 2, -h / 2 - 2, w + 4, h + 4, R + 2).fill(0x000000); shade.alpha = 0; C.addChild(shade);   // darkens the neighbours
+    cardEls.push({ C, i, shade }); });
+  dotsG = new Graphics(); root.addChild(dotsG);
   placeCards(0, 0);
 }
-function placeCards(inK, outT) {   // inK: global clock for the calm staggered fade-in; outT: seconds since tap (snappy staggered exit)
-  for (const e of cardEls) { const { C, q, L, i } = e;
-    const a = seg(inK, 0.15 + i * 0.12, 0.5 + i * 0.12), rise = (1 - ease.outCubic(a)) * 24;
-    const ko = seg(outT, T.cards[0] + i * 0.07, T.cards[0] + i * 0.07 + 0.28, ease.inBack), far = 900;
-    let x = q.x, y = q.y + rise;
-    if (L.dir === 'x') x += q.side * far * ko; else y += (far + 200 * i) * ko;
-    C.position.set(x, y); C.alpha = a * (1 - seg(outT, T.cards[0] + i * 0.07 + 0.18, T.cards[0] + i * 0.07 + 0.3)); }
+const wrapRel = (r) => { const n = CARDS.length; return ((((r + n / 2) % n) + n) % n) - n / 2; };
+export const carIndex = () => ((Math.round(CAR.pos) % CARDS.length) + CARDS.length) % CARDS.length;
+function carGo(to) { CAR.from = CAR.pos; CAR.to = to; CAR.t0 = t; }
+function carStep() { if (CAR.t0 < 0 || CAR.drag?.on) return; const k = Math.min(1, (t - CAR.t0) / CAR.dur);
+  CAR.pos = lerp(CAR.from, CAR.to, ease.outCubic(k)); if (k >= 1) { CAR.pos = CAR.to; CAR.t0 = -1; } }
+function placeCards(inK, outT) {   // inK: global clock for the calm fade-in; outT: seconds since tap (snappy exit)
+  if (!cardEls.length) return;
+  const { ch: h, cy } = G.pc, ks = G.ks, d = cardSpacing(), cxS = G.Ws / 2;
+  const a = seg(inK, 0.15, 0.5), rise = (1 - ease.outCubic(a)) * 24, ko = seg(outT, T.cards[0], T.cards[0] + 0.3, ease.inCubic);
+  cardsC.alpha = dotsG.alpha = a * (1 - ko);
+  for (const e of cardEls) { const r = wrapRel(e.i - CAR.pos), ar = Math.min(1, Math.abs(r));
+    e.C.position.set((cxS + r * d) / ks, (cy + rise + 40 * ko) / ks); e.C.scale.set(lerp(1, 0.86, ar) * (1 - 0.06 * ko) / ks);
+    e.shade.alpha = 0.55 * ar; e.C.zIndex = 10 - Math.round(Math.abs(r) * 4); e.C.visible = Math.abs(r) < 1.6; }
+  // page dots: small gold pills under the card (no pink circles)
+  const idx = carIndex(), y = (cy + h / 2 + 13 + rise) / ks, gap = 16 / ks;
+  dotsG.clear(); dotsG.roundRect(G.cx - 34 / ks, y - 8 / ks, 68 / ks, 16 / ks, 8 / ks).fill({ color: 0x000000, alpha: 0.55 });
+  CARDS.forEach((_, i) => { const on = i === idx, x = G.cx + (i - 1) * gap, rw = (on ? 14 : 7) / ks, rh = 7 / ks;
+    dotsG.roundRect(x - rw / 2, y - rh / 2, rw, rh, rh / 2).fill({ color: on ? GOLD : 0xffeab0, alpha: on ? 1 : 0.35 }); });
 }
+// pointer: the transparent #loader sits over the canvas, so listen on the document and map client -> screen px
+function toScreen(e) { const r = app?.canvas?.getBoundingClientRect?.(); if (!r || !r.width) return null; return { x: (e.clientX - r.left) / r.width * G.Ws, y: (e.clientY - r.top) / r.height * G.Hs }; }
+const carLive = () => !!app && (state === 'loading' || state === 'tap') && !fading;
+function inBand(q) { const { ch: h, cy } = G.pc; return q && Math.abs(q.y - cy) <= h / 2 + 8; }
+function carDown(e) { if (!carLive() || (e.button ?? 0) !== 0 || e.target?.closest?.('.spSkip')) return; const q = toScreen(e); if (!inBand(q)) return;
+  CAR.t0 = -1; CAR.drag = { on: true, id: e.pointerId, x0: q.x, x: q.x, p0: CAR.pos, moved: false, hist: [[performance.now(), q.x]] }; }
+function carMove(e) { const D = CAR.drag; if (!D?.on || e.pointerId !== D.id) return; const q = toScreen(e); if (!q) return;
+  D.x = q.x; if (Math.abs(q.x - D.x0) > 8) D.moved = true;
+  if (D.moved) { CAR.pos = D.p0 - (q.x - D.x0) / cardSpacing(); e.preventDefault?.(); }
+  D.hist.push([performance.now(), q.x]); if (D.hist.length > 6) D.hist.shift(); }
+function carUp(e) { const D = CAR.drag; if (!D?.on || e.pointerId !== D.id) return; D.on = false; CAR.eatUntil = performance.now() + 400;
+  if (D.moved) { const h = D.hist, [t0, x0] = h[0], [t1, x1] = h[h.length - 1], v = t1 > t0 ? (x1 - x0) / (t1 - t0) * 1000 : 0;   // screen px / s
+    const dp = CAR.pos - D.p0, fl = -v / Math.max(1, G.Ws);   // a 15% drag or a flick (> ~0.35 screen widths / s) commits one card
+    const dir = Math.abs(fl) > 0.35 ? Math.sign(fl) : Math.abs(dp) > 0.15 ? Math.sign(dp) : 0; carGo(Math.round(D.p0) + dir); return; }
+  // a tap (no drag): a side card comes to the centre; the centre card stays
+  const q = toScreen(e); if (!q) return; const r = (q.x - G.Ws / 2) / cardSpacing(), { cw } = G.pc;
+  if (Math.abs(q.x - G.Ws / 2) > cw / 2) carGo(Math.round(CAR.pos) + Math.sign(r)); }
+function carCancel() { if (CAR.drag?.on) { CAR.drag.on = false; carGo(Math.round(CAR.pos)); } }
+/** loader.ts: true when this click belonged to the carousel (a drag, or a tap on the cards); it must not enter the game. */
+export function introEatClick(e?: Event) { if (!app || state === 'done' || state === 'off') return false;
+  if (performance.now() < CAR.eatUntil) { CAR.eatUntil = 0; return true; }
+  const q = e && 'clientX' in e ? toScreen(e) : null; return !!(q && (e as any).detail !== 0 && inBand(q)); }
 function setDoors(aL, aR) {   // 0 = closed, 1 = ~80 deg open, swinging INTO the foyer (away from the guest)
   G.aL = aL;
   const { cx, dw, dh, top, FL, F } = G, w = dw / 2, XL = cx - dw / 2, XR = cx + dw / 2, HZ = top + dh * 0.33, VX = cx;
@@ -356,7 +390,8 @@ const skip = (soft = false) => { if (state !== 'trans' || fading) return; setGam
   fading = true; app.ticker.stop(); c.style.pointerEvents = 'none';
   c.style.transition = 'opacity .25s ease-out'; void c.offsetWidth; c.style.opacity = '0';
   setTimeout(() => { fading = false; finish(); }, 260); };   // timer, not transitionend: the end state must always land
-function onKey(e) { if (state === 'trans' && (e.code === 'Space' || e.code === 'Enter')) { e.preventDefault(); e.stopPropagation(); skip(true); } }
+function onKey(e) { if (carLive() && (e.code === 'ArrowLeft' || e.code === 'ArrowRight')) { e.preventDefault(); carGo(Math.round(CAR.t0 >= 0 ? CAR.to : CAR.pos) + (e.code === 'ArrowRight' ? 1 : -1)); return; }
+  if (state === 'trans' && (e.code === 'Space' || e.code === 'Enter')) { e.preventDefault(); e.stopPropagation(); skip(true); } }
 function onDown() { if (state === 'trans' && tt > 0.12) skip(true); }
 
 // ---------------- update ----------------
@@ -371,7 +406,7 @@ function update(dt) {
   const fw = Math.max(bh - 12, (bw - 12) * prog); barFill.roundRect(-bw / 2 + 6, -bh / 2 + 6, fw, bh - 12, (bh - 12) / 2).fill({ color: GOLD, alpha: 0.95 })
     .roundRect(-bw / 2 + 8, -bh / 2 + 7, fw - 4, (bh - 12) * 0.4, (bh - 12) / 4).fill({ color: 0xfff1c4, alpha: 0.5 });
   barGlow.alpha = 0.6 + 0.4 * br;
-  if (state !== 'trans') placeCards(t, 0);
+  carStep(); if (state !== 'trans') placeCards(t, 0);
   if (state === 'tap') { tt += dt; barC.alpha = 1 - seg(tt, 0, 0.18); const k = seg(tt, 0.08, 0.4);
     btnC.alpha = seg(tt, 0.08, 0.2); const pulse = 0.5 + 0.5 * Math.sin((tt - 0.4) * Math.PI * 2 / 1.6);
     btnC.scale.set(k < 1 ? lerp(0.85, 1, ease.outBack(k, 2.2)) : 1 + 0.015 * pulse); btnGlow.alpha = k < 1 ? 1 : 0.55 + 0.45 * pulse;
@@ -422,8 +457,11 @@ export async function initIntro(progress: () => number): Promise<boolean> {
     a.ticker.add((tk) => { if (state !== 'done') update(Math.min(0.05, tk.deltaMS / 1000)); }); a.ticker.start();
     addEventListener('resize', onResize); visualViewport?.addEventListener('resize', onResize);
     addEventListener('keydown', onKey, { capture: true }); document.addEventListener('pointerdown', onDown, { capture: true });
+    document.addEventListener('pointerdown', carDown, { capture: true }); addEventListener('pointermove', carMove, { capture: true, passive: false });
+    addEventListener('pointerup', carUp, { capture: true }); addEventListener('pointercancel', carCancel, { capture: true });
     document.body.classList.add('introOn'); L.classList.add('pxOn');
-    (window as any).__intro = { get state() { return state; }, get t() { return tt; }, T, skip,
+    (window as any).__intro = { get state() { return state; }, get t() { return tt; }, T, skip, get card() { return carIndex(); }, get carPos() { return CAR.pos; },
+      get btnY() { const r = app?.canvas?.getBoundingClientRect?.(); return r ? r.top + G.btn.y * G.ks / G.Hs * r.height : 0; }, get cardY() { const r = app?.canvas?.getBoundingClientRect?.(); return r ? r.top + G.pc.cy / G.Hs * r.height : 0; },
       // test hook: freeze the transition at intro time x (seconds after the tap) for frame-exact shots
       seek(x) { if (!app || state !== 'trans') return; app.ticker.stop(); tt = x; update(0); app.render(); } };
     return true;
