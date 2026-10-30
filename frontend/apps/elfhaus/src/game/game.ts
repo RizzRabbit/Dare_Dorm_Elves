@@ -45,7 +45,7 @@ import { hideRespin } from './respin';
 import type { BookEvent } from './typesBookEvent';
 
 const DISCLAIMER =
-	'Malfunction voids all wins and plays. A consistent internet connection is required. In the event of a disconnection, reload the game to finish any uncompleted rounds. The expected return is calculated over many plays. The game display is not representative of any physical device and is for illustrative purposes only. Winnings are settled according to the amount received from the Remote Game Server and not from events within the web browser. TM and © 2026 Rizzin Games.';
+	'Malfunction voids all wins and plays. A consistent internet connection is required. In the event of a disconnection, reload the game to finish any uncompleted rounds. The expected return is calculated over many plays. The game display is not representative of any physical device and is for illustrative purposes only. Winnings are settled according to the amount received from the Remote Game Server and not from events within the web browser. © 2026 Rizzin Games.';
 
 const q = new URLSearchParams(location.search);
 const url = {
