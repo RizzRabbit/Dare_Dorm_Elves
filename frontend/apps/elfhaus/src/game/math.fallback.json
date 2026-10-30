@@ -12,5 +12,6 @@
  "growStep": {"default": 1, "hidden": 2},
  "epic": {"stackX": 16, "step": 2},
  "retrigger": {"two": 2, "threePlus": 5},
- "egwStackX": 4
+ "egwStackX": 4,
+ "winLevels": {"standard": [0.1, 1, 2, 5, 15, 30, 50, 100, 50000], "endFeature": [1, 5, 10, 20, 50, 100, 500, 2000, 50000]}
 }

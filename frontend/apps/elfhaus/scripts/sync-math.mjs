@@ -2,7 +2,7 @@
 //   node scripts/sync-math.mjs <math game dir> [publish_files dir]
 //   e.g. node scripts/sync-math.mjs /workspace/elfhaus-math-retune/math/games/elfhaus
 // Writes math-snapshot/game_config.json from game_calculations.py (paytable PAY, LINES, CAP_C, SPIN_CAP, MAX_RESPINS,
-// START_FS, GUARANTEE, GUAR_MIN_VAL, GROW_STEP, MYSTERY_ODDS, retrigger_spins, EGW stack value) and reel_params.json
+// START_FS, GUARANTEE, GUAR_MIN_VAL, GROW_STEP, MYSTERY_ODDS, retrigger_spins, EGW stack value, win_level edges) and reel_params.json
 // (costs), and copies index.json + stats_summary.json from the publish files (default <game dir>/library/publish_files,
 // stats from <game dir>/library). Then run `node scripts/sync-config.mjs` (pnpm test / pnpm build do) to regenerate
 // src/game/modes.generated.json. Fails loudly when a value can't be read, so a stale value never ships silently.
@@ -34,6 +34,8 @@ function lit(name) {
 }
 const need = (v, what) => { if (v === undefined || v === null || Number.isNaN(v)) throw new Error(`math: ${what} missing`); return v; };
 const retrig = py.match(/def retrigger_spins\(n\):[\s\S]*?return (\d+) if n >= (\d+) else (\d+) if n == (\d+) else 0/);
+// Stake Engine standard win levels: win_level(c, key) edges in x bet; level = 1 + index of the first edge above the win
+const wl = py.match(/def win_level\(c, key\):[\s\S]*?if key == "standard":\s*edges = (\[[^\]]*\])\s*else:\s*edges = (\[[^\]]*\])/);
 const egwVal = py.match(/emit\("egwStart",[^\n]*value=(\d+)\)/);
 const params = JSON.parse(readFileSync(join(dir, 'reel_params.json'), 'utf8'));
 let commit = 'unknown';
@@ -55,6 +57,7 @@ const cfg = {
 	epic: { stackX: need(guarMin.hidden, 'GUAR_MIN_VAL.hidden'), step: need(grow.hidden, 'GROW_STEP.hidden') },
 	retrigger: { two: retrig ? Number(retrig[3]) : need(null, 'retrigger_spins'), threePlus: Number(retrig[1]) },
 	egwStackX: egwVal ? Number(egwVal[1]) : need(null, 'egwStart value'),
+	winLevels: wl ? { standard: JSON.parse(wl[1]), endFeature: JSON.parse(wl[2]) } : need(null, 'win_level edges'),
 };
 writeFileSync(join(snap, 'game_config.json'), '{\n' + Object.entries(cfg).map(([k, v]) => ` ${JSON.stringify(k)}: ${JSON.stringify(v).replace(/,/g, ', ').replace(/":/g, '": ')}`).join(',\n') + '\n}\n');
 const pub = process.argv[3] ? resolve(process.argv[3]) : join(dir, 'library/publish_files');
@@ -67,7 +70,7 @@ if (existsSync(join(pub, 'index.json'))) {
 } else console.warn('math-snapshot: no index.json at', pub, '(kept the old one)');
 writeFileSync(join(snap, 'README.md'), `Snapshot of the Elfhaus math (${cfg.source}). Written by scripts/sync-math.mjs; do not edit by hand.
 - game_config.json: paytable, lines, max win, spin cap, respins, free-spin counts, guarantees, Epic stack start / step,
-  wild grow steps, Mystery odds, retrigger spins, EGW stack value, mode costs.
+  wild grow steps, Mystery odds, retrigger spins, EGW stack value, win-level edges (standard / endFeature), mode costs.
 - index.json, stats_summary.json: the publish files' index and the run's stats (RTP, max win, bonus odds).
 Re-sync: node scripts/sync-math.mjs <math games/elfhaus dir> [publish_files dir] && node scripts/sync-config.mjs
 `);

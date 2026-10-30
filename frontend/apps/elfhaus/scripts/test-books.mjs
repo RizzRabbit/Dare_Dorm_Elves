@@ -352,6 +352,7 @@ let mathErrors = 0;
 		[/MAX_WIN_X\s*(:\s*number)?\s*=\s*\d/, 'MAX_WIN_X literal'], [/EPIC_STACK_X\s*(:\s*number)?\s*=\s*\d/, 'EPIC_STACK_X literal'],
 		[/PAYTABLE[^=\n]*=\s*\{/, 'PAYTABLE literal'], [/SPIN_CAP\s*(:\s*number)?\s*=\s*\d/, 'SPIN_CAP literal'], [/START_FS[^=\n]*=\s*\{/, 'START_FS literal'],
 		[/MYSTERY_ODDS[^=\n]*=\s*\{/, 'MYSTERY_ODDS literal'], [/gains \+1\b|\(x4 each\)|add \+2 spins|add \+5\b|Up to 3 respins/, 'math value typed in player text'],
+		[/BIG_TIERS\s*=\s*\[\s*\{\s*x:/, 'big-win tier thresholds typed (use the math win levels)'], [/BIGWIN_ELVES_MIN_X\s*=\s*\d/, 'elves x threshold typed (use the win level)'],
 	];
 	for (const f of readdirSync(join(appDir, 'src/game')).filter((x) => x.endsWith('.ts'))) {
 		const src = readFileSync(join(appDir, 'src/game', f), 'utf8');
@@ -366,7 +367,16 @@ let mathErrors = 0;
 			if (e.totalWin !== sum) { console.error(`  ${file}: winInfo step ${e.step} totalWin ${e.totalWin} != line sum ${sum}`); mathErrors++; }
 		}
 	}
-	console.log(`  ${mathErrors ? 'FAIL' : 'OK'} no typed win values in src/game; ${steps} winInfo steps total = line sum`);
+	// every setWin / freeSpinEnd winLevel in the books is the math's level for its amount (standard / endFeature edges)
+	const lvl = (x, edges) => { const i = edges.findIndex((e) => x < e); return i < 0 ? edges.length + 1 : i + 1; };
+	let lv = 0;
+	for (const dir of [booksDir, join(appDir, 'src/mock/books')]) for (const file of readdirSync(dir).filter((x) => x.endsWith('.json'))) {
+		for (const e of JSON.parse(readFileSync(join(dir, file), 'utf8')).events || []) if ((e.type === 'setWin' || e.type === 'freeSpinEnd') && e.winLevel !== undefined) {
+			lv++; const want = lvl(e.amount / 100, MATH.winLevels[e.type === 'setWin' ? 'standard' : 'endFeature']);
+			if (e.winLevel !== want) { console.error(`  ${file}: ${e.type} ${e.amount} winLevel ${e.winLevel} != math ${want}`); mathErrors++; }
+		}
+	}
+	console.log(`  ${mathErrors ? 'FAIL' : 'OK'} no typed win values in src/game; ${steps} winInfo steps total = line sum; ${lv} book winLevels match the synced edges`);
 }
 console.log(`\n=== Summary ===`);
 console.log(`Books: ${bookFiles.length - failedBooks}/${bookFiles.length} passed`);

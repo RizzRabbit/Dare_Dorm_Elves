@@ -78,12 +78,30 @@ export const isCounting = (el: HTMLElement) => runs.has(el);
 // HOLD the exact threshold ~0.25 s while onTier pops the new title, then JUMP well ahead (+30-60% of the threshold,
 // capped below the next crawl zone and below the final amount) and race on. After the top tier for this win it races
 // to the final amount, eases the last unit and stops. Closed-form on rAF time; tap skips to the end; turbo = 0.45x.
-export const BIG_TIERS = [
-	{ x: 10, name: 'BIG WIN' }, { x: 25, name: 'MEGA WIN' }, { x: 50, name: 'SUPER WIN' }, { x: 100, name: 'EPIC WIN' }, { x: 1000, name: 'LEGENDARY WIN' },
-] as const;
+// v3.19 (James 2026-10-30 18:02 CDT): the stages come from the math's win levels (Stake Engine standard winLevel, carried
+// by every setWin book event; the edges are synced from the math into modes.generated.json). The frontend only maps
+// a level to an approved stage visual (presentation, no thresholds of its own):
+//   levels 1-5 (< 15x)  a normal win (line presentation, no banner)
+//   level 6 (15-30x) BIG WIN · 7 (30-50x) MEGA WIN · 8 (50-100x) SUPER WIN · 9 (100x up to the cap) EPIC WIN
+//   level 10 (the cap) the MAX WIN screen (wincap event, maxwin.ts). LEGENDARY WIN has no math level and is not shown.
+export const STAGE_OF_LEVEL: Record<number, string> = { 6: 'BIG WIN', 7: 'MEGA WIN', 8: 'SUPER WIN', 9: 'EPIC WIN' };
+export type BigTier = { x: number; name: string; level: number };
+/** Math win level of x (x bet) for a level-edge table: 1 + the index of the first edge above it (math win_level). */
+export function levelOf(x: number, edges: readonly number[]) { for (let i = 0; i < edges.length; i++) if (x < edges[i]) return i + 1; return edges.length + 1; }
+/** The banner stages from the math's edges: level L starts at edges[L - 2] (x bet). */
+export function buildBigTiers(edges: readonly number[]): BigTier[] {
+	return Object.entries(STAGE_OF_LEVEL).map(([l, name]) => ({ level: +l, name, x: edges[+l - 2] }))
+		.filter((t) => Number.isFinite(t.x)).sort((a, b) => a.level - b.level);
+}
+/** Set from the synced math (ui.ts calls setWinLevels(MATH.winLevels.standard) at load). */
+export let BIG_TIERS: BigTier[] = [];
+export let WIN_EDGES: readonly number[] = [];
+export function setWinLevels(edges: readonly number[]) { WIN_EDGES = edges; BIG_TIERS = buildBigTiers(edges); }
+/** The max-win level (one past the last edge): the wincap screen, never the banner. */
+export const maxLevel = () => WIN_EDGES.length + 1;
 type Key = { t0: number; t1: number; v0: number; v1: number; ease: (u: number) => number; tier?: number; kind?: string };
 const CRAWL_FRAC = 0.01;                                   // crawl zone = last 1% of each threshold
-const CRAWL_MS = [1000, 1100, 1200, 1350, 1500];           // per tier (Big .. Legendary)
+const CRAWL_MS = [1000, 1100, 1200, 1350, 1500];           // per stage (Big, Mega, Super, Epic; a 5th is spare)
 const JUMP = [0.6, 0.5, 0.45, 0.5, 0.3];                   // jump after the pop, fraction of the threshold
 // v3.17: the hold on the exact threshold is only as long as the title pop (no dead pause); the time it gave up goes to
 // the race so a win still runs the same overall length.
@@ -92,11 +110,13 @@ const race = (u: number) => 1 - Math.pow(1 - u, 1.6);     // fast, a light brake
 const raceIn = (u: number) => u * (0.35 + 0.65 * u);       // first leg, from 0
 const crawlOut = (u: number) => 1 - Math.pow(1 - u, 1.6); // eases into exactly the threshold
 const settle = (u: number) => 1 - Math.pow(1 - u, 3);
-/** Build the timeline (ms) for a win of X times the bet. */
-export function tierPlan(X: number, turbo = false) {
+/** Build the timeline (ms) for a win of X times the bet at math win level `level` (the book's winLevel; from the
+ *  synced edges when absent). The stages shown are the ones at or below that level. */
+export function tierPlan(X: number, turbo = false, level?: number) {
 	const k = turbo ? 0.45 : 1, keys: Key[] = [];
 	let t = 0, v = 0;
-	const tiers = BIG_TIERS.map((b, i) => ({ ...b, i })).filter((b) => b.x <= X);
+	const lvl = Number.isFinite(level) ? level! : levelOf(X, WIN_EDGES);
+	const tiers = BIG_TIERS.map((b, i) => ({ ...b, i })).filter((b) => b.level <= lvl && b.x <= X);
 	const push = (dur: number, v1: number, ease: (u: number) => number, kind: string, tier?: number) => {
 		keys.push({ t0: t, t1: t + dur, v0: v, v1, ease, kind, tier }); t += dur; v = v1;
 	};
@@ -132,9 +152,9 @@ export type TierCount = Promise<void> & {
 };
 /** Run the tier count on `el`; values shown are x * unit (money). The whole part follows the curve; the decimals churn
  *  (churnValue) and land exactly on each threshold and on the final amount. */
-export function countTiers(el: HTMLElement, X: number, unit: number, opts: { turbo?: boolean; onTier?: (i: number) => void; onX?: (x: number) => void; onLand?: () => void } = {}): TierCount {
+export function countTiers(el: HTMLElement, X: number, unit: number, opts: { turbo?: boolean; level?: number; onTier?: (i: number) => void; onX?: (x: number) => void; onLand?: () => void } = {}): TierCount {
 	const prev = runs.get(el); if (prev) { cancelAnimationFrame(prev.raf); runs.delete(el); prev.done(); }
-	const { keys, total } = tierPlan(X, opts.turbo), d = moneyDigits(X * unit);
+	const { keys, total } = tierPlan(X, opts.turbo, opts.level), d = moneyDigits(X * unit);
 	let t0 = performance.now(), fired = -1, lastX = 0;
 	let warp: { w0: number; x0: number; tc: number; xc: number; dur: number } | null = null;
 	const fire = (upto: number) => { for (const kk of keys) if (kk.tier !== undefined && kk.tier > fired && kk.t1 <= upto) { fired = kk.tier; opts.onTier?.(kk.tier); } };

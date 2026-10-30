@@ -1,11 +1,11 @@
 // One handler per design/EVENTS.md event (ported from prototype/app.js H). Handlers only display.
-import { MAX_WIN_X, ROWS, REELS, TIER_LABEL, SPIN_CAP as MAX_FS, type Tier } from './config';
+import { MAX_WIN_X, ROWS, REELS, WIN_LEVELS, TIER_LABEL, SPIN_CAP as MAX_FS, type Tier } from './config';
 import { egwParts } from './egwParts';
 import { money } from './format';
 import type { BookEvent, BookEventOf, BookEventType, Locked, Pos } from './typesBookEvent';
 import { roxy, roxyState } from './roxy';
 import { maxWinCelebration, preloadMaxWin } from './maxwin';
-import { BIGWIN_ELVES_MIN_X, preloadBigWinElves } from './bigwinElves';
+import { elvesLevel, preloadBigWinElves } from './bigwinElves';
 import { showRespin, endRespin, hideRespin } from './respin';
 import { mxBurst, lockFx, clearSymWins, symLand, symWin, landBump } from './fx';
 import { cardFlip } from './cardflip';
@@ -20,7 +20,7 @@ import { frameIn } from './wildframe';
 /** stack_form sheets decode ahead for reels with 2+ wilds that are not full yet (stacks.ts loads sheets on demand). */
 const warmStacks = () => stackPrefetch(S.sym.flatMap((c, r) => (!S.full.has(r) && c.filter((x) => x === 'W').length >= 2 ? [r] : [])));
 import { featOpen, featPop, featClose } from './featfx';
-import { countTo, countMs, setAmount, skipCounts, BIG_TIERS } from './countup';
+import { countTo, countMs, setAmount, skipCounts, BIG_TIERS, levelOf, maxLevel } from './countup';
 import { grab, combineInto } from './combine';
 import { tempo, hold, gtempo } from './tempo';
 import { sfx, loop, music, duck, duckFor, type Handle } from './audio';
@@ -242,7 +242,12 @@ export const bookEventHandlerMap: Handlers = {
 		if (ev.step > 0) endRespin();
 		await wait(350);
 	},
-	async setWin(ev) { const x = ev.amount / 100; if (x >= BIG_TIERS[0].x && x < MAX_WIN_X) { roxy('win'); await bigWin(x); } },
+	// v3.19: the banner and its stages follow the math's winLevel on the event (synced standard edges if it is missing);
+	// below the first banner level is a normal win, the max level is the wincap screen
+	async setWin(ev) {
+		const x = ev.amount / 100, lvl = winLevel(ev);
+		if (BIG_TIERS.length && lvl >= BIG_TIERS[0].level && lvl < maxLevel() && x < MAX_WIN_X) { roxy('win'); await bigWin(x, undefined, lvl); }
+	},
 	async setTotalWin(ev) { const x = Math.min(ev.amount / 100, MAX_WIN_X); setWinMeter(x); S.roundBase = x; },
 	async cardFlip(ev) {
 		await showScatters(scattersOnBoard(), 900);
@@ -353,13 +358,15 @@ export function egwFlow(events: BookEvent[]): BookEvent[] {
 	return out;
 }
 
+/** Math win level of a setWin: the book's winLevel, else from the synced standard edges. */
+const winLevel = (ev: { amount: number; winLevel?: number }) => (Number.isFinite(ev.winLevel) ? ev.winLevel! : levelOf(ev.amount / 100, WIN_LEVELS.standard));
 export async function playBookEvents(events: BookEvent[]) {
 	events = egwFlow(events);
 	S.roundBase = 0; capHit = false; voiceSpin();
 	// celebration sheets are lazy: start decoding them only once this round's book shows they're needed (the reels spin
 	// meanwhile); they're released again after the screen closes
 	if (events.some((e) => e.type === 'wincap')) void preloadMaxWin();
-	else if (events.some((e) => e.type === 'setWin' && (e as { amount?: number }).amount! / 100 >= BIGWIN_ELVES_MIN_X)) void preloadBigWinElves();
+	else if (events.some((e) => e.type === 'setWin' && elvesLevel(winLevel(e as { amount: number; winLevel?: number })))) void preloadBigWinElves();
 	if (roxyState() === 'anticipation') roxy('idle');
 	for (const ev of events) {
 		const h = (bookEventHandlerMap as any)[ev.type];

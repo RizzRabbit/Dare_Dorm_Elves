@@ -16,7 +16,7 @@ import type { LineWin } from './typesBookEvent';
 import { TG } from './tempo'; // anim-v4: win lines run at gameplay pace (not ANIM_TEMPO)
 import { sfx } from './audio';
 import { voice } from './voice';
-import { skipCounts } from './countup';
+import { skipCounts, levelOf, WIN_EDGES, BIG_TIERS, maxLevel } from './countup';
 import { presenting, stage } from './winstage';
 
 let cv: HTMLCanvasElement | null = null, ctx: CanvasRenderingContext2D | null = null, dpr = 1;
@@ -153,9 +153,11 @@ export async function playWins(wins: LineWin[], base: number, stepTotal?: number
 	let skipC = false;
 	await stage('c', () => { skipC = true; skipCounts(); }, async () => {
 		await meter;
-		// round win so far (x bet): < 2 small, 2-5 medium, 5-10 big; >= 10 gets the big-win sting instead; turbo = small only
-		if (n && tot < 10) sfx(turbo || tot < 2 ? 'win_small' : tot < 5 ? 'win_medium' : 'win_big');
-		if (n && !turbo && tot >= 2 && tot < 10) voice('win');
+		// v3.19: by the round's math win level (standard edges): up to the level below 2x small, the next medium, the one
+		// below the first banner level big; banner levels get the big-win sting instead; turbo = small only
+		const lv = levelOf(tot, WIN_EDGES), bl = BIG_TIERS[0]?.level ?? maxLevel(), medL = bl - 2;
+		if (n && lv < bl) sfx(turbo || lv < medL ? 'win_small' : lv === medL ? 'win_medium' : 'win_big');
+		if (n && !turbo && lv >= medL && lv < bl) voice('win');
 		wins.forEach((w) => w.positions.forEach((p) => { ovWin(p.reel); const c = cellEl(p.reel, p.row); c.classList.remove('dim'); c.classList.add('win'); litOn(c); symWin(c); }));
 		if (!skipC) { const t0 = performance.now(), ms = turbo ? 200 : TG(500); while (performance.now() - t0 < ms && !skipC) await frame(); }
 	});

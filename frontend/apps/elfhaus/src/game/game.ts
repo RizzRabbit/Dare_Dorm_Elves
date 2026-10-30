@@ -20,7 +20,7 @@ import { winPresenting, skipStage, noteTap } from './winstage';
 import { startShimmer, initWfExpand } from './wildfx';
 import { setArmedGlow, wireTapFx } from './uifx';
 import { featOpen, featClose } from './featfx';
-import { BIGWIN_ELVES_MIN_X, preloadBigWinElves, bigWinElvesStart, bigWinElvesEnd } from './bigwinElves';
+import { BIGWIN_ELVES_LEVEL, elvesLevel, preloadBigWinElves, bigWinElvesStart, bigWinElvesEnd } from './bigwinElves';
 import { setBigWinFx } from './ui';
 import { initSettings, popOpen, closePop } from './settings';
 import { initAudio, sfx } from './audio';
@@ -657,13 +657,13 @@ export async function initGame() {
 	initLoader(); preloadArt();
 	// any tap lands a running count-up on its final value (the big-win banner handles its own taps)
 	startShimmer(); wireTapFx();
-	// big-win banner moments: burst + confetti on open (no star glints on the tier titles), the character layer from 1000x
+	// big-win banner moments: burst + confetti on open (no star glints on the tier titles), the character layer on the top math win level
 	setBigWinFx({
 		// backup trigger for the lazy elf sheets (playBookEvents normally started the decode when the book arrived)
-		start: (B, x) => { featOpen(B.querySelector('.bwFx')); if (x >= BIGWIN_ELVES_MIN_X) void preloadBigWinElves(); },
+		start: (B, _x, level) => { featOpen(B.querySelector('.bwFx')); if (elvesLevel(level)) void preloadBigWinElves(); },
 		tier: () => {},                                                // round 6: no star glints on the win screens
-		// the Vi / Roxy / Coco group (bigwinElves.ts, BIGWIN_ELVES_MIN_X = 1000) rises in as the count crosses 1000x
-		chars: (B) => bigWinElvesStart(B, 1000),
+		// the Vi / Roxy / Coco group (bigwinElves.ts) rises in as the top-level stage (math level BIGWIN_ELVES_LEVEL, EPIC WIN) lands
+		chars: (B) => bigWinElvesStart(B, BIGWIN_ELVES_LEVEL),
 		end: (B) => { featClose(B.querySelector('.bwFx')); bigWinElvesEnd(); },
 	});
 	// v3.15d: taps on a menu / panel / confirm card (or that close one) do not count toward the win lines' 2-tap zip

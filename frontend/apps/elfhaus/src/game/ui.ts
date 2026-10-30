@@ -4,12 +4,14 @@ import { sfx, loop, duck } from './audio';
 import { voice, VOICE } from './voice';
 import { frameHTML } from './wildframe';
 import ART_JSON from './art.generated.json';
-import { LINES, MAX_WIN_X, ROWS, REELS, SYMBOL_NAMES } from './config';
+import { LINES, MAX_WIN_X, ROWS, REELS, SYMBOL_NAMES, WIN_LEVELS } from './config';
+import { elvesLevel } from './bigwinElves';
 import { money } from './format';
 import type { Group, LineWin } from './typesBookEvent';
 import { DOTS } from './respin';
 import { mxBurst, lockIconCSS, symWin, clearSymWins } from './fx';
-import { countTo, countMs, setAmount, countTiers, BIG_TIERS, tierPlan, isCounting } from './countup';
+import { countTo, countMs, setAmount, countTiers, BIG_TIERS, tierPlan, isCounting, setWinLevels, levelOf } from './countup';
+setWinLevels(WIN_LEVELS.standard); // v3.19: banner stages from the math's standard win levels
 import { presenting, beginStage, endStage, skipStage } from './winstage';
 import { hold, tempo, gtempo } from './tempo';
 
@@ -201,7 +203,7 @@ export function setWinMeter(x: number): Promise<void> {
 export function resetWinMeter() { S.meterX = 0; setAmount($('#win'), 0); }
 /** Big-win banner. The amount climbs through the tiers (countup.ts countTiers paced2: races between tiers, crawls the last 1% into each
  *  threshold for ~1 s, holds while the tier title pops (overshoot + glow burst), jumps ahead and races on; eased into the
- *  exact amount). At 1000x the character layer fades in behind the amount (bigwinElves.ts, the Vi / Roxy / Coco POV group). Tap once = jump to the
+ *  exact amount). On the top math level (EPIC WIN) the character layer fades in behind the amount (bigwinElves.ts, the Vi / Roxy / Coco POV group). Tap once = jump to the
  *  end, tap again (or wait) = close. Turbo shortens everything. featfx.ts adds burst / confetti / pop sheets. */
 /** aifix 12: win-title type system hook. Sets data-tier (big|mega|super|epic|legendary) for the CSS type ramp and,
  *  when the hand-lettered sprite exists (manifest key title_<tier>win, from elfhaus-brand-v3/titles), swaps the text
@@ -260,10 +262,12 @@ function tierHit(T: HTMLElement, amt: HTMLElement, name: string, first: boolean,
 	r.glow.animate([{ opacity: 0, transform: 'translateX(-50%) scale(.4)' }, { opacity: 0.95, transform: 'translateX(-50%) scale(1.05)', offset: 0.25 }, { opacity: 0, transform: 'translateX(-50%) scale(1.35)' }], { duration: 700 * at, easing: 'ease-out' });
 	amt.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.06)', offset: 0.35 }, { transform: 'scale(1)' }], { duration: 200 * at, easing: 'ease-out' });
 }
-export async function bigWin(x: number, label?: string) {
+/** `level` = the book's math winLevel (setWin); from the synced edges when absent (dev hook). */
+export async function bigWin(x: number, label?: string, level?: number) {
 	const B = $('#bigwin'), T = B.querySelector('.bwTier') as HTMLElement;
 	const at = S.turbo ? 0.6 : 1;
-	const { tiers } = tierPlan(x, S.turbo), idx = tiers.map((t) => t.i);
+	const lvl = Number.isFinite(level) ? level! : levelOf(x, WIN_LEVELS.standard), top = elvesLevel(lvl);
+	const { tiers } = tierPlan(x, S.turbo, lvl), idx = tiers.map((t) => t.i);
 	T.textContent = label || ''; T.classList.toggle('on', !!label); T.classList.remove('spr', 'pop'); delete T.dataset.tier; if (label) T.dataset.tier = 'label';
 	(B.querySelector('.bwX') as HTMLElement).textContent = `${x.toLocaleString('en-US')}x`;
 	const amt = B.querySelector('.bwAmt') as HTMLElement; setAmount(amt, 0);
@@ -275,19 +279,19 @@ export async function bigWin(x: number, label?: string) {
 	// geometry for the glow, read once (not at the hit)
 	{ const h = T.offsetHeight || 100; rig!.glow.style.top = `${T.offsetTop - h * 0.7}px`; rig!.glow.style.height = `${h * 2.4}px`;
 		const g = rig!.ghost.style; g.position = 'absolute'; g.left = '0'; g.right = '0'; g.top = `${T.offsetTop}px`; g.opacity = '0'; g.pointerEvents = 'none'; }
-	fxHooks.start?.(B, x); bwpStart(B, x);
+	fxHooks.start?.(B, x, lvl); bwpStart(B, x);
 	sfx('bigwin_sting'); duck(true); const cu = loop('bigwin_countup_loop'); setTimeout(() => voice('bigwin'), VOICE.bigWinDelayMs);
 	let close = () => {}; const closed = new Promise<void>((r) => (close = r));
 	let chars = false, stIx = 0;
 	// stages (winstage.ts): one per tier checkpoint, then the run to the final amount, then the landed banner
 	const names = [...(label ? [] : idx.map((i) => 'bw:' + BIG_TIERS[i].name)), 'bw:final'];
 	const counted = countTiers(amt, x, bet(), {
-		turbo: S.turbo,
+		turbo: S.turbo, level: lvl,
 		onTier: (i) => {
 			endStage(names[stIx]); stIx++; beginStage(names[stIx] ?? 'bw:final', () => counted.next());
 			if (label) return; tierHit(T, amt, BIG_TIERS[i].name, i === idx[0], at); fxHooks.tier?.(B, i); bwpTier(i);
+			if (!chars && top && elvesLevel(BIG_TIERS[i].level)) { chars = true; B.classList.add('chars'); fxHooks.chars?.(B); }
 		},
-		onX: (v) => { if (!chars && v >= 1000) { chars = true; B.classList.add('chars'); fxHooks.chars?.(B); } },
 	});
 	beginStage(names[0], () => counted.next());
 	const tap = () => { skipStage(); };
@@ -298,7 +302,7 @@ export async function bigWin(x: number, label?: string) {
 	amt.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.12)', offset: 0.4 }, { transform: 'scale(1)' }], { duration: 280 * at, easing: EASE_BACK });
 	cu.stop(200);
 	beginStage('bw:landed', () => close());
-	await Promise.race([waitRaw(S.turbo ? 700 * 0.35 : x >= 1000 ? 2200 : 1500), closed]);
+	await Promise.race([waitRaw(S.turbo ? 700 * 0.35 : top ? 2200 : 1500), closed]);
 	endStage('bw:landed');
 	duck(false);
 	B.removeEventListener('pointerdown', tap);
@@ -307,7 +311,7 @@ export async function bigWin(x: number, label?: string) {
 	B.classList.add('hidden'); B.classList.remove('out', 'chars'); fxHooks.end?.(B); bwpEnd(); rig?.warm && (rig.warm.textContent = '');
 	presenting(false);
 }
-type BwHooks = { start?: (B: HTMLElement, x: number) => void; tier?: (B: HTMLElement, i: number) => void; chars?: (B: HTMLElement) => void; end?: (B: HTMLElement) => void };
+type BwHooks = { start?: (B: HTMLElement, x: number, level: number) => void; tier?: (B: HTMLElement, i: number) => void; chars?: (B: HTMLElement) => void; end?: (B: HTMLElement) => void };
 const fxHooks: BwHooks = {};
 export function setBigWinFx(h: BwHooks) { Object.assign(fxHooks, h); }
 if (import.meta.env.DEV) (window as any).__bigWin = bigWin; // dev-only test hook (headless shots of the big-win tiers)

@@ -25,6 +25,34 @@ const run = (ms) => { const end = now + ms; while (now < end) tick(); };
 const W = await load('winstage.ts');
 const C = await load('countup.ts', (s) => s.replace(/import \{ moneyWin as money, moneyDigits \} from '\.\/format';[^\n]*/, () => `const money = (v, d = 2) => '$' + Number(v).toFixed(d); const moneyDigits = () => 2;`));
 
+// v3.19: the banner stages come from the math's standard win levels (synced into modes.generated.json)
+const GEN = JSON.parse(readFileSync(new URL('../src/game/modes.generated.json', import.meta.url), 'utf8'));
+const EDGES = GEN.math.winLevels.standard; C.setWinLevels(EDGES);
+// the math's own win_level (game_calculations.py): first edge above x, 1-based; past the last edge = max level
+const mathLevel = (x) => { const i = EDGES.findIndex((e) => x < e); return i < 0 ? EDGES.length + 1 : i + 1; };
+
+console.log('\n=== big-win stages follow the math win levels ===');
+ok(EDGES.length >= 5 && EDGES.every((e, i) => !i || e > EDGES[i - 1]), `synced standard edges: ${EDGES.join(', ')}`);
+const probes = [0, ...EDGES.flatMap((e) => [e - 0.01, e, e + 0.01]), EDGES.at(-1) * 2];
+ok(probes.every((x) => C.levelOf(x, EDGES) === mathLevel(x)), 'levelOf matches the math win_level at every edge');
+const top = EDGES.length + 1;
+ok(C.maxLevel() === top, `max level ${top} (wincap screen, not a banner stage)`);
+ok(C.BIG_TIERS.every((t) => t.x === EDGES[t.level - 2] && C.STAGE_OF_LEVEL[t.level] === t.name), 'each stage starts at its level\'s lower math edge: ' + C.BIG_TIERS.map((t) => `L${t.level} ${t.name} >= ${t.x}x`).join(' | '));
+ok(!C.BIG_TIERS.some((t) => t.level >= top), 'no banner stage on the max level');
+ok(C.BIG_TIERS.map((t) => t.level).join() === Object.keys(C.STAGE_OF_LEVEL).map(Number).sort((a, b) => a - b).join(), 'every mapped level has a stage');
+for (let L = 1; L < top; L++) {
+	const lo = L === 1 ? 0 : EDGES[L - 2], hi = EDGES[L - 1], xs = [lo, (lo + hi) / 2, hi - 0.01].filter((x) => x >= 0 && mathLevel(x) === L);
+	const want = C.BIG_TIERS.filter((t) => t.level <= L).map((t) => t.name).join();
+	ok(xs.every((x) => C.tierPlan(x, false, L).tiers.map((t) => t.name).join() === want && C.tierPlan(x).tiers.map((t) => t.name).join() === want), `level ${L} (${lo}x-${hi}x): ${want || 'normal win, no banner'}`);
+}
+// the book's winLevel decides, not the amount: a level-6 event shows BIG only even if the amount sits higher
+ok(C.tierPlan(EDGES[6] + 1, false, 6).tiers.map((t) => t.name).join() === C.BIG_TIERS[0].name, 'the event winLevel decides the stages (level 6 at a higher amount = BIG WIN only)');
+ok(C.tierPlan(EDGES[4] - 1, false, 9).tiers.every((t) => t.x <= EDGES[4] - 1), 'never crawls past the amount even if the level says more');
+const bwe = readFileSync(new URL('../src/game/bigwinElves.ts', import.meta.url), 'utf8');
+ok(/BIGWIN_ELVES_LEVEL = Math\.max\(\.\.\.Object\.keys\(STAGE_OF_LEVEL\)/.test(bwe) && !/MIN_X\s*=\s*\d/.test(bwe), 'the elves layer is tied to the top banner level (no x threshold)');
+const ui = readFileSync(new URL('../src/game/ui.ts', import.meta.url), 'utf8'), bem = readFileSync(new URL('../src/game/bookEventHandlerMap.ts', import.meta.url), 'utf8'), cu = readFileSync(new URL('../src/game/countup.ts', import.meta.url), 'utf8');
+ok(!/x:\s*(10|25|50|100|1000)\b/.test(cu) && !/>=\s*1000\b/.test(ui) && /bigWin\(x, undefined, lvl\)/.test(bem) && /ev\.winLevel/.test(bem), 'no frontend win thresholds; setWin passes the book winLevel');
+
 console.log('\n=== win stages: coalescing ===');
 W._resetStages(); W.presenting(true);
 let s1 = 0; W.beginStage('a', () => s1++);
