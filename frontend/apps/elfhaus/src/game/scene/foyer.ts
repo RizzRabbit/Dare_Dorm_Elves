@@ -10,6 +10,16 @@ const INK = 0x1a0b24;
 const roomG = new P.Graphics(), wallL = new P.Container(), shadG = new P.Graphics(), backL = new P.Container(), floorL = new P.Container();
 const amb = new P.Container();
 const poolL = new P.Container();
+// PERF: everything here is static except the sconce halo/core breathe and the two arch glow pools (updFoyer). Redrawing the
+// big anti-aliased Graphics (wall panels, floor perspective, gallery), the arch's stencil mask and the large add-blend blobs
+// every frame was the scene's dominant GPU cost. The static layers live OFF stage (statA / statC) and are rendered once per
+// layout into two screen-sized render textures (bakeFoyer); the stage draws those two quads plus the few live glow sprites,
+// in the same order as before (wall+arch+sconces | halos/cores + floor pool | stair shadow + gallery/stairs | arch glow).
+const wallLive = new P.Container();
+const statA = new P.Container(), statC = new P.Container();
+statA.addChild(roomG, wallL); statC.addChild(shadG, backL);
+const bakeA = new P.Sprite(P.Texture.EMPTY), bakeC = new P.Sprite(P.Texture.EMPTY);
+let rtA: P.RenderTexture | null = null, rtC: P.RenderTexture | null = null;
 const PAL = { wall: 0x2e1a40, wallHi: 0x3a2350, wallLo: 0x24132f, stone: 0xa597b8, stoneHi: 0xd2c6dd, stoneSh: 0x6f6286, gold: 0xe0ac3a, goldHi: 0xffe08a,
   marble: 0xb7adc6, marbleBack: 0x7b6f92, inlay: 0x4a2768, amber: 0xffb455, sconce: 0xffc46a };
 const FOY = { land: { CX: 830, HZ: 160, FL: 720, stair: { y: 800, s: 0.96 }, sconce: [{ x: 66, y: 400 }, { x: 1854, y: 400 }], arch: { w: 470, top: 300 } } };
@@ -64,8 +74,8 @@ function addPool(c, x, y, r, a, sy = 1, L = poolL) { const sp = new P.Sprite(sof
 function addSconce(x, y, s, flip) {
   const sp = new P.Sprite(ST.sconce); sp.anchor.set(0.5, 0.5); sp.position.set(x, y); sp.scale.set(s * (flip ? -1 : 1), s); wallL.addChild(sp);
   const gx = x + (flip ? 1 : -1) * 22 * s, gy = y - 46 * s;     // flame position in the sprite
-  const halo = addPool(PAL.sconce, gx, gy, 2.2 * s, 0.32, 1, wallL), core = new P.Sprite(glowDot); core.anchor.set(0.5); core.blendMode = 'add'; core.tint = 0xffe2a0;
-  core.position.set(gx, gy); core.scale.set(1.6 * s); wallL.addChild(core);
+  const halo = addPool(PAL.sconce, gx, gy, 2.2 * s, 0.32, 1, wallLive), core = new P.Sprite(glowDot); core.anchor.set(0.5); core.blendMode = 'add'; core.tint = 0xffe2a0;
+  core.position.set(gx, gy); core.scale.set(1.6 * s); wallLive.addChild(core);
   sconces.push({ halo, core, ph: sconces.length * 1.7, s });
 }
 function addStairs(CX, st, L) {   // left half from the atlas (its right edge = the centre line); right half = the same texture mirrored
@@ -120,7 +130,7 @@ function gallerySlab(g, x0, x1, st) {
   for (const y of [yF, yB, yS]) g.moveTo(x0, y).lineTo(x1, y).stroke({ width: y === yS ? 2.4 : 1.8, color: GINK, alpha: 0.9 });
 }
 export const foyerRoot = new P.Container();
-foyerRoot.addChild(roomG, wallL, floorL, poolL, shadG, backL, amb);
+foyerRoot.addChild(bakeA, wallLive, floorL, poolL, bakeC, amb);
 export function initFoyer(tex: Record<string, P.Texture>) {
 	ST = tex; softBlob = _sb(); glowDot = _gd();
 	archTex = ctex(128, 256, (g) => { let gr = g.createLinearGradient(0, 0, 0, 256); gr.addColorStop(0, '#5a2f52'); gr.addColorStop(0.45, '#c9813f'); gr.addColorStop(0.8, '#ffd27a'); gr.addColorStop(1, '#ffe7b0');
@@ -128,7 +138,7 @@ export function initFoyer(tex: Record<string, P.Texture>) {
 		gr.addColorStop(0.7, 'rgba(40,14,40,0)'); gr.addColorStop(1, 'rgba(40,14,40,0.55)'); g.fillStyle = gr; g.fillRect(0, 0, 128, 256); });
 }
 function clearFoyer() {
-	for (const c of [wallL, backL, floorL, amb, poolL]) c.removeChildren().forEach((o) => o.destroy());
+	for (const c of [wallL, wallLive, backL, floorL, amb, poolL]) c.removeChildren().forEach((o) => o.destroy());
 	shadG.clear(); roomG.clear(); anim = []; washes = []; sconces = []; archGlow = null;
 }
 /** landscape room (mockup buildLand, desktop mode). Returns the sconce + arch points (mockup space) for Roxy's light rig. */
@@ -166,6 +176,20 @@ export function buildFoyerPort(T: number, DH: number) {
 		roomG.rect(x + 16, pt + 16, pw - 32, pb - pt - 32).stroke({ width: 1.6, color: PAL.gold, alpha: 0.85 }); }
 	const sy = G.yR - 170; addSconce(170, sy, 0.66, false); addSconce(910, sy, 0.66, true);
 	return { keys: [mark(170, sy), mark(910, sy)], cool: mark(CX, T - 300) };
+}
+/** Render the static room layers once into screen-sized textures. `room` = foyerRoot's parent (scale + position only, on
+ *  the stage root); W x H = renderer size in stage px, res = renderer resolution. Call after every buildFoyer*. */
+export function bakeFoyer(renderer: P.Renderer, room: P.Container, W: number, H: number, res: number) {
+	const rt = (t: P.RenderTexture | null) => {
+		if (t && t.width === W && t.height === H && t.source.resolution === res) return t;
+		t?.destroy(true); return P.RenderTexture.create({ width: W, height: H, resolution: res, antialias: true });
+	};
+	rtA = rt(rtA); rtC = rt(rtC);
+	const sx = room.scale.x, sy = room.scale.y, m = new P.Matrix(sx, 0, 0, sy, room.position.x, room.position.y);
+	renderer.render({ container: statA, target: rtA, clear: true, clearColor: [0, 0, 0, 0], transform: m });
+	renderer.render({ container: statC, target: rtC, clear: true, clearColor: [0, 0, 0, 0], transform: m });
+	for (const [b, t] of [[bakeA, rtA], [bakeC, rtC]] as const) {   // screen-space quads inside the room's transform
+		b.texture = t; b.position.set(-room.position.x / sx, -room.position.y / sy); b.scale.set(1 / sx, 1 / sy); }
 }
 /** ambient: candle breathe + arch glow breathe (mockup updScene minus motes; motes live in scene.ts) */
 export function updFoyer(now: number) {

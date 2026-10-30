@@ -8,7 +8,7 @@ import { ST } from '../stage';
 import { G as MKG, FW, FT, BW, BH } from '../mkboard';
 import { loadSheet } from './load';
 import { glowDot, softBlob } from './util';
-import { foyerRoot, initFoyer, buildFoyerLand, buildFoyerPort, updFoyer } from './foyer';
+import { foyerRoot, initFoyer, buildFoyerLand, buildFoyerPort, updFoyer, bakeFoyer } from './foyer';
 import { createRoxy, type RoxyAdapter } from '../roxyrig';
 
 export let app: Application | null = null;
@@ -45,7 +45,7 @@ export async function initScene(): Promise<boolean> {
 		const [{ sheet }, r] = await Promise.all([loadSheet('assets/foyer/', 'foyer'), createRoxy()]);
 		initFoyer(sheet.textures as Record<string, Texture>);
 		rig = r; app = a;
-		roxyL.addChild(r.view, roxyMask); roxyL.mask = roxyMask;
+		roxyL.addChild(r.view, roxyMask); clipRoxy(null);
 		calm = new Sprite(softBlob()); calm.anchor.set(0.5); calm.tint = 0x10051a; calm.alpha = 0.5;
 		a.stage.addChild(room, calm, moteL, roxyL, fx); room.addChild(foyerRoot);
 		a.ticker.add((t) => { const dt = Math.min(0.05, t.deltaMS / 1000); now += dt;
@@ -55,6 +55,12 @@ export async function initScene(): Promise<boolean> {
 		(window as any).__scene = { app: a, rig: r, roxyAt, roxyL, room };
 		return true;
 	} catch (e) { console.warn('scene off (no WebGL?)', e); cv.style.display = 'none'; return false; }
+}
+/** Clip Roxy at stage y (portrait: the frame top; the reel plate is see-through). null = no clip: the stencil mask is dropped
+ *  entirely (PERF: a full-screen stencil rect every frame cost ~25% of the frame on low-end GPUs and clipped nothing). */
+function clipRoxy(y: number | null) {
+	if (y === null || y >= ST.h) { roxyL.mask = null; roxyMask.visible = false; return; }
+	roxyMask.visible = true; roxyMask.clear().rect(-50, -400, ST.w + 100, y + 400).fill(0xffffff); roxyL.mask = roxyMask;
 }
 const res = () => Math.min(2, Math.max(0.5, ST.s * (window.devicePixelRatio || 1)));
 /** Fit the room + Roxy to the DOM board frame (stage design px). Called from layout(). */
@@ -84,7 +90,7 @@ export function placeScene(portrait: boolean, fr: DOMRect) {
 			x = X(1536); feet = Y(896); s = 1.3 * f * k;
 		}
 		if (!hold) { R.view.position.set(x, feet); R.view.scale.set(s); }
-		roxyL.visible = true; roxyMask.clear().rect(-50, -400, W + 100, H + 800).fill(0xffffff);
+		roxyL.visible = true; clipRoxy(null);
 		R.shadow(true); R.setGrade({ cut: -1, res: ST.s * (window.devicePixelRatio || 1) });
 		Object.assign(roxyAt, { x, y: feet, s, portrait });
 	} else if (portrait && g && g.mode === 'port') {
@@ -95,7 +101,7 @@ export function placeScene(portrait: boolean, fr: DOMRect) {
 		const rs = g.loose ? 2.4 * f : Math.min(2.4 * f, Math.max(0.6 * f, (T - 46) / (cutRow - hopTop)));
 		const feet = T + (R.srcH - cutRow) * rs, rx = Math.max(770 + Math.max(0, rs / f - 1.85) * 70, 1080 + 8 - (R.srcW / 2) * rs) - 47;   // -47: the v7 figure sits right of the mockup's in its box
 		if (!hold) { R.view.position.set(g.ox + rx * k, g.oy + feet * k); R.view.scale.set(rs * k); }
-		roxyMask.clear().rect(-50, -400, W + 100, (hold && free ? H + 800 : fr.top + 14 + 400)).fill(0xffffff); roxyL.visible = true;
+		clipRoxy(hold && free ? null : fr.top + 14); roxyL.visible = true;
 		R.shadow(false); R.setGrade({ cut: cutRow / R.srcH, res: ST.s * (window.devicePixelRatio || 1) });
 		Object.assign(roxyAt, { x: g.ox + rx * k, y: g.oy + feet * k, s: rs * k, portrait });
 	} else if (!portrait) {
@@ -106,7 +112,7 @@ export function placeScene(portrait: boolean, fr: DOMRect) {
 		let s = Math.min(1.3 * k, (gut - 24) / (R.srcW * 0.86), (feet - 4) / (R.srcH - hopTop));
 		const x = Math.min(fr.right + 272 * k, fr.right + gut / 2 + 12);
 		if (!hold) { R.view.position.set(x, feet); R.view.scale.set(s); }
-		roxyL.visible = hold || s * R.srcH >= H * 0.42; roxyMask.clear().rect(-50, -400, W + 100, H + 800).fill(0xffffff);
+		roxyL.visible = hold || s * R.srcH >= H * 0.42; clipRoxy(null);
 		R.shadow(true); R.setGrade({ cut: -1, res: ST.s * (window.devicePixelRatio || 1) });
 		Object.assign(roxyAt, { x, y: feet, s, portrait });
 	} else {
@@ -119,7 +125,7 @@ export function placeScene(portrait: boolean, fr: DOMRect) {
 		if (!hold) { R.view.position.set(rx * kp, feet * kp); R.view.scale.set(rs * kp); }
 		// the reel plate is see-through in this game: clip her at the frame top (the frame's bezel hides the edge)
 		// (the intro holds her: no clip while she stands in the doorway / drops in)
-		roxyMask.clear().rect(-50, -400, W + 100, (hold && free ? H + 800 : fr.top + 14 + 400)).fill(0xffffff); roxyL.visible = true;
+		clipRoxy(hold && free ? null : fr.top + 14); roxyL.visible = true;
 		R.shadow(false); R.setGrade({ cut: cutRow / R.srcH, res: ST.s * (window.devicePixelRatio || 1) });
 		Object.assign(roxyAt, { x: rx * kp, y: feet * kp, s: rs * kp, portrait });
 	}
@@ -127,6 +133,7 @@ export function placeScene(portrait: boolean, fr: DOMRect) {
 	else if (calm) { calm.position.set(fr.left + fr.width / 2, fr.top + fr.height / 2); calm.scale.set(fr.width / 150, fr.height / 165); calm.visible = !portrait; }
 	const gp = (c: Container) => { const p = c.getGlobalPosition(); return { x: p.x, y: p.y }; };
 	R.setGrade({ keys: keys.map(gp), cool: gp(cool) });
+	bakeFoyer(app.renderer, room, W, H, app.renderer.resolution);   // static room -> 2 textures (PERF)
 	if (mW !== W || mH !== H) { mW = W; mH = H; setMotes(W, H, portrait ? 12 : g && g.mode === 'cmp' ? 7 : 18); }
 }
 /** Bonus: fade the room out (the free-spins painting on #bg shows through); Roxy stays. */
@@ -138,5 +145,5 @@ export const showRoxy = (on: boolean) => { roxyOn = on; roxyL.visible = on; };
 export function sceneHold(on: boolean, noClip = on) {
 	if (hold === on && free === noClip) return; hold = on; free = noClip;
 	if (last) placeScene(...last);
-	else if (on) { roxyMask.clear().rect(-5000, -5000, 10000, 10000).fill(0xffffff); roxyL.visible = true; }
+	else if (on) { clipRoxy(null); roxyL.visible = true; }
 }

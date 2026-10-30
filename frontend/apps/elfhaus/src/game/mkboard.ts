@@ -160,7 +160,7 @@ function canvasIn(id: string, before: boolean) {
 }
 let drawn = '';
 function drawFrame(u: number) {
-	const dpr = Math.min(2.5, (window.devicePixelRatio || 1) * ST.s), key = `${u.toFixed(4)}|${dpr.toFixed(3)}`;
+	const dpr = Math.min(2, (window.devicePixelRatio || 1) * ST.s), key = `${u.toFixed(4)}|${dpr.toFixed(3)}`;
 	const fc = canvasIn('mkFrame', true), nc = canvasIn('mkNeon', false);
 	const cw = (FW + 2 * M) * u, ch = (FH + 2 * M) * u;
 	for (const c of [fc, nc]) css(c, { position: 'absolute', left: -M * u, top: -M * u, width: cw, height: ch });
