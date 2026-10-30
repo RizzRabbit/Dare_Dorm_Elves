@@ -104,6 +104,15 @@ function css(el: HTMLElement | null, o: Record<string, string | number>) {
 /** Board cell (stage px, whole px for the strip engine) for this layout. */
 export function mkCell() { G = mkGeo(); return Math.max(1, Math.floor(CELL * G.bs * G.k)); }
 
+/** v3.17: armTag label: the full mode name if it fits the pill's room next to SPIN, else its abbreviation (data-short). */
+export function fitArmTag() {
+	const tag = document.getElementById('armTag'), t = tag?.querySelector('.t') as HTMLElement | null;
+	if (!tag || !t || tag.classList.contains('hidden')) return;
+	t.textContent = tag.dataset.full || t.textContent;
+	if (tag.scrollWidth > tag.clientWidth + 1)
+		t.textContent = tag.dataset.short || t.textContent;
+}
+
 /** Lay the board, logo, HUD bar, controls and BUY plate out (stage px). cell = the integer cell layoutRaw applied. */
 export function mkPlace(cell: number) {
 	const g = G || mkGeo(); G = g;
@@ -156,20 +165,24 @@ export function mkPlace(cell: number) {
 	const ms = Math.max(L(g.mode === 'port' ? 144 : g.mode === 'cmp' ? 64 : 88), Math.ceil(48 / ST.s) + 2), m0 = g.mode === 'port' ? 12 : 16;
 	css($('#menuBtn'), { position: 'absolute', left: m0 - hx, top: m0 - hy, width: ms, height: ms, margin: '0', padding: '0', 'border-radius': (ms * 0.28) + 'px', 'border-width': bwPx(Math.max(2, ms / g.k / 40) * g.k), '--icS': String(ms * 0.0155) });
 	r.setProperty('--mkMenuR', (m0 + ms) + 'px'); r.setProperty('--mkMenuY', (m0 + ms / 2) + 'px');
-	// armed-mode tag: a compact gold chip (>= 48 screen px tall to tap off). Landscape: just over SPIN; portrait: straddling the
-	// frame's sill above the BUY plate (the gap under the BUY row is too thin for it without covering SPIN)
-	const tag = $('#armTag'), tf = Math.max(L(g.mode === 'cmp' ? 16 : 24), 12 / ST.s);
-	const tagBase = { position: 'absolute', bottom: 'auto', right: 'auto', width: 'auto', 'min-width': '0', 'max-width': 'none', margin: '0', 'font-size': tf + 'px',
-		'min-height': (Math.ceil(48 / ST.s) + 1) + 'px', height: 'auto', padding: '0 ' + tf * 0.8 + 'px', 'grid-area': 'auto' };
-	if (g.mode === 'port') css(tag, { ...tagBase, left: bp.x, top: fy + fh - hy, translate: '-50% -50%' });
-	else if (g.mode === 'land' && ST.tb > 1.001) {
-		// v3.17 phones in landscape: over SPIN the boosted chip covered Roxy's feet; it sits in the free space under the
-		// autoplay / turbo pair instead (left column, clear of the board and Roxy)
-		const ab = Math.max(L(g.auto.s), 1), colB = Y(g.auto.y) + ab / 2, hudT = Y(g.hud.y);
-		const cw = L(2 * (Math.abs(g.turbo.x - g.auto.x) / 2 + g.auto.s / 2));   // autoplay..turbo width: two lines if needed
-		css(tag, { ...tagBase, left: X(g.bonus.x) - hx, top: (colB + hudT) / 2 - hy, translate: '-50% -50%', 'max-width': cw + 'px', 'white-space': 'normal', 'text-align': 'center', 'line-height': '1.1' });
-	}
-	else css(tag, { ...tagBase, left: sp.x + sp.s / 2 - hx, top: sp.y - 8 - hy, translate: '-50% -100%' });
+	// armed-mode tag (v3.17, James 02:32): the ONLY armed indicator. A slim single-line pill (about 22 screen px tall on phones,
+	// 36 design px on desktop) with the mode name and a small x, right next to SPIN: inside the HUD bar, right-aligned to
+	// SPIN's left edge, on the WIN label's row (landscape/desktop) or on the bet row right of [+] (portrait). Its tap target is padded invisibly to 44 px
+	// (::after, board.css). fitArmTag() abbreviates the name (e.g. EGW) when the full one doesn't fit.
+	const tag = $('#armTag'), wl = rel(g.fWin.x, g.fWin.y), lsz = Math.max(L(g.fWin.ls), 12 / ST.s);
+	const hP = Math.max(L(36), 22 / ST.s), tf = Math.max(L(16), 10.5 / ST.s), right = sp.x - hx - Math.max(L(14), 6 / ST.s);
+	// portrait: the WIN label row is too thin for the pill, so it sits on the bet row instead, in the empty gap between [+]
+	// and SPIN (vertically centred on [+]); it can never touch the WIN value however long that gets
+	const pl = g.mode === 'port' ? rel(g.plus.x + g.plus.s / 2, g.plus.y) : null;
+	const left0 = pl ? pl.x : wl.x + lsz * 2.8;
+	const maxW = Math.max(hP * 2, right - (left0 + Math.max(L(14), 6 / ST.s)));
+	const cy = pl ? pl.y : Math.max(hP / 2 + Math.max(L(6), 3 / ST.s), wl.y + lsz * 0.6);
+	css(tag, { position: 'absolute', left: 'auto', right: (L(h.w) - right) + 'px', top: cy + 'px', bottom: 'auto',
+		translate: '0 -50%', width: 'auto', 'min-width': '0', 'max-width': maxW + 'px', 'min-height': '0', height: hP + 'px', margin: '0',
+		padding: '0 ' + tf * 0.6 + 'px', 'font-size': tf + 'px', 'line-height': '1', 'letter-spacing': '0.04em', 'white-space': 'nowrap', overflow: 'visible',
+		gap: tf * 0.4 + 'px', 'border-radius': hP / 2 + 'px', 'border-width': bwPx(Math.max(1, 1.2 / ST.s)), 'grid-area': 'auto', 'align-items': 'center',
+		'--tagPad': Math.max(0, (Math.ceil(44 / ST.s) - hP) / 2) + 'px', '--tagMax': maxW + 'px' });
+	fitArmTag();
 	// free-spins bar on the frame's sill, banner over the top row, step toast at the board's foot
 	css($('#fsBar'), { position: 'absolute', left: '50%', top: (fh - FB * u / 2) + 'px', translate: '-50% -50%', margin: '0', 'z-index': '6' });
 	css($('#banner'), { position: 'absolute', left: '50%', top: (FT * u + cell * 0.12) + 'px', translate: '-50% 0', transform: 'none', margin: '0' });

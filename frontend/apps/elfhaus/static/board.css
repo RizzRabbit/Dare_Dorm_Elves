@@ -120,7 +120,12 @@ html body.mk #app :is(#menuBtn,#hud button,#strip button,#armTag){-webkit-tap-hi
 html body.mk #app #hud :is(.uiRing,.uiTap,.uiHalo){display:none!important}
 /* v3.17 (James 03:04/03:06): the phone see-through panel is drawn in mkboard.ts drawFrame (well + tiles at 78%, frame 100%).
    Layer order: #bg room < canvas#scene (Roxy) < #mkFrame < #cells symbols/wilds/stacks < win lines/FX < HUD/UI. */
+/* v3.17 (James 02:32): the armed tag is a slim single-line pill by SPIN (size / place inline from mkboard.ts); the visible
    pill stays ~22 px on phones, its tap target is padded invisibly to 44 px */
+body.mk #app #armTag{position:absolute;box-sizing:border-box;text-transform:uppercase;font-weight:800;box-shadow:0 2px 6px -2px #000a}
+body.mk #app #armTag::after{content:"";position:absolute;left:-4px;right:-4px;top:calc(-1 * var(--tagPad, 0px));bottom:calc(-1 * var(--tagPad, 0px))}
+body.mk #app #armTag .t{overflow:visible}
+body.mk #app #armTag svg{width:.85em;height:.85em}
 /* v3.17 (James 02:28, 03:04): on phones Roxy's lower half stands BEHIND the see-through board (z: #scene canvas <
    #mkFrame panel at 24% < #cells), so symbols must stay fully opaque there: the win "dim" of non-winning cells (and the ante
    preview dim) darkens with a filter instead of fading alpha, so she never shows through a symbol. Desktop is unchanged. */

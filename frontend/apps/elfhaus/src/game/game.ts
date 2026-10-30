@@ -32,7 +32,7 @@ import { initRoxy, placeRoxy } from './roxy';
 import { initStacks, stackIdle } from './stacks';
 import { setBg, warmBg } from './bg';
 import { placeAlcove } from './alcove';
-import { mkCell, mkPlace } from './mkboard';
+import { mkCell, mkPlace, fitArmTag } from './mkboard';
 import { initLoader, preloadArt, track, loaderReady, hideLoader } from './loader';
 import { introLayout } from './introPixi';
 import { fitStage, toStage, ST } from './stage';
@@ -70,12 +70,15 @@ let armed: ModeKey | null = null;
 const spinMode = (): ModeKey => armed ?? (S.ante ? 'ante' : 'base');
 // re-audit M5: the tag spells the full mode name ("DOUBLE" alone was ambiguous)
 const SHORT: Partial<Record<ModeKey, string>> = { ante: 'ANTE BET', dare: 'DARE', double_dare: 'DOUBLE DARE', triple_dare: 'TRIPLE DARE', mystery: 'MYSTERY SPIN', egw: 'ELVES GONE WILD' };
+/** v3.17 armTag abbreviations when the full name doesn't fit the slim pill next to SPIN. */
+const ABBR: Partial<Record<ModeKey, string>> = { ante: 'ANTE', dare: 'DARE', double_dare: '2X DARE', triple_dare: '3X DARE', mystery: 'MYSTERY', egw: 'EGW' };
 function setArm(m: ModeKey | null, ante = false) {
 	armed = m; S.ante = !m && ante;
 	const mode = spinMode(), on = mode !== 'base';
 	$('#spinBtn').classList.toggle('armed', on); setArmedGlow($('#spinBtn'), false); // M5: no halo ring (house rule: no pink UI circles); the black-gold tag is the indicator
 	const tag = $('#armTag'); tag.classList.toggle('hidden', !on);
 	($('#armTag .t') as HTMLElement).textContent = SHORT[mode] ?? '';
+	tag.dataset.full = SHORT[mode] ?? ''; tag.dataset.short = ABBR[mode] ?? SHORT[mode] ?? ''; fitArmTag();   // v3.17 slim pill: abbreviated if needed
 	tag.setAttribute('aria-label', on ? `${MODE_LABEL[mode]} active, tap to turn off` : '');
 	$('#spinBtn').setAttribute('aria-label', on ? `Spin: ${MODE_LABEL[mode]} at ${money(bet() * modeCost(mode))}` : 'Spin');
 	setStrip();
@@ -367,11 +370,12 @@ const copyCtx = (): CopyCtx => ({
 	fs: { dare: START_FS.dare, double_dare: START_FS.double_dare, triple_dare: START_FS.triple_dare }, odds: { ...MYSTERY_ODDS },
 });
 /** What CONFIRM (or a tap on a mode at or under CONFIRM_ABOVE_X) does: the old one-tap selection. Voice fires here
- *  (pickArm), never on the preview. A bonus closes the menu with the banner; Ante switches on in place. */
+ *  (pickArm), never on the preview. A bonus closes the menu (no banner, v3.17: the armTag by SPIN is the indicator); Ante switches on in place. */
 function activate(m: ModeKey) {
 	if (m === 'ante') { pickArm(null, true); paintBuy(); sfx('ui_mode_arm'); return; }
 	pickArm(m); sfx('ui_mode_arm'); closePanel('#buyMenu', true);
-	banner(`${MODE_LABEL[m].toUpperCase()} ON · ${money(modeCost(m) * bet())} ${isSocial() ? 'PER PLAY' : 'PER SPIN'}`, 1600);
+	// v3.17 (James 02:32): no on-board 'MODE ON · $x PER SPIN' banner; the only armed indicator is the small armTag by SPIN
+	// (mode name + x); the price is in the HUD bet and on the confirm card
 }
 let confirming: ModeKey | null = null;
 /** CONFIRM on the bonus confirm card (only from the click handler on #bmConfirm, v3.13e). */
