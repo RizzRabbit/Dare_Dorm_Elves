@@ -688,6 +688,8 @@ body.portrait #maxwin .mwTier.spr{width:calc(80*var(--vw))}
 	transform: translate(-50%, 0);           /* round 4: the elves rise in individually (elfrig.ts) */
 }
 #bigwin .bwGroup.in { transform: translate(-50%, 0); opacity: 1; }
+/* v3.19 LEGENDARY WIN: the four younger elves on the max-win cast sheets, re-grouped frame 1237x796 (bigwinElves.ts L_GROUP) */
+#bigwin .bwGroup.bwLegend { aspect-ratio: 1237 / 796; }
 #bigwin .bwSpr { position: absolute; inset: 0; width: 100%; height: 100%; }
 body.portrait #bigwin .bwGroup { height: auto; width: calc(100*var(--vw)); bottom: calc(-7*var(--vh)); }   /* smaller + sunk: covers less of the board */
 /* landscape: smaller + sunk group, and the title block lifted clear of the heads while the group is up */

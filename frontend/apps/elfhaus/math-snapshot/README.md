@@ -1,4 +1,4 @@
-Snapshot of the Elfhaus math (math a4e33bb game_calculations.py + reel_params.json). Written by scripts/sync-math.mjs; do not edit by hand.
+Snapshot of the Elfhaus math (math 9f9b4e4 game_calculations.py + reel_params.json). Written by scripts/sync-math.mjs; do not edit by hand.
 - game_config.json: paytable, lines, max win, spin cap, respins, free-spin counts, guarantees, Epic stack start / step,
   wild grow steps, Mystery odds, retrigger spins, EGW stack value, win-level edges (standard / endFeature), mode costs.
 - index.json, stats_summary.json: the publish files' index and the run's stats (RTP, max win, bonus odds).

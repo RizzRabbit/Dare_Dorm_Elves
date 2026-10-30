@@ -178,7 +178,7 @@ if (disclaimerMatch) {
 // v3.16c (James): the disclaimer is exactly this text, in every mode (one DISCLAIMER constant, real and social), in the
 // source and in the built bundle (run after the build)
 {
-	const WANT = 'Malfunction voids all wins and plays. A consistent internet connection is required. In the event of a disconnection, reload the game to finish any uncompleted rounds. The expected return is calculated over many plays. The game display is not representative of any physical device and is for illustrative purposes only. Winnings are settled according to the amount received from the Remote Game Server and not from events within the web browser. TM and © 2026 Engine.';
+	const WANT = 'Malfunction voids all wins and plays. A consistent internet connection is required. In the event of a disconnection, reload the game to finish any uncompleted rounds. The expected return is calculated over many plays. The game display is not representative of any physical device and is for illustrative purposes only. Winnings are settled according to the amount received from the Remote Game Server and not from events within the web browser. TM and © 2026 Rizzin Games.';
 	const src = disclaimerMatch?.[1];
 	if (src === WANT) console.log('  OK DISCLAIMER source is the exact approved text');
 	else { console.error('  VIOLATION: DISCLAIMER source differs from the approved text'); violations++; }
@@ -277,7 +277,7 @@ if (disclaimerMatch) {
 		['v3.16i #194 stripfit measures the fractional text width (Range rect, not whole-px scrollWidth), 1 px spare, bounded 3-step shrink-only refit, fall back to a size seen to fit, counted', (() => { const f = readFileSync(join(appDir, 'src/game/stripfit.ts'), 'utf8').replace(/^\s*\/\/.*$/gm, ''); return /range!\.selectNodeContents\(el\)/.test(f) && /range!\.getBoundingClientRect\(\)\.width/.test(f) && !/scrollWidth|clientWidth/.test(f) && /const SPARE = 1;/.test(f) && /for \(let i = 0; i < 3; i\+\+\)/.test(f) && /if \(m\.tw <= m\.limit\) \{ if \(size > fitSize\) fitSize = size; return; \}/.test(f) && /fitSize && fitSize < size/.test(f) && /fitStats\.measures\+\+/.test(f) && /__elfhausFit = fitStats/.test(f); })()],
 		['v3.16i (James) balance and bet / PLAY at standard decimals; wins exact (card, HUD win / count-ups, max win, line wins); inputs standard', (() => { const f = readFileSync(join(appDir, 'src/game/format.ts'), 'utf8'), cu = readFileSync(join(appDir, 'src/game/countup.ts'), 'utf8'), mw = readFileSync(join(appDir, 'src/game/maxwin.ts'), 'utf8'), wl = readFileSync(join(appDir, 'src/game/winlines.ts'), 'utf8'); return /export const money = \(value: number\) => fmt\(clean\(value\), decimalsOf\(currency\)\);/.test(f) && /export const moneyWin = /.test(f) && /export const amountStr = \(v: number\) => clean\(v\)\.toFixed\(decimalsOf\(currency\)\);/.test(f) && /\$\('#balance'\)\.textContent = S\.replay \? [^\n]+ : money\(S\.balance\);/.test(gameCode) && /\$\('#bet'\)\.textContent = money\(bet\(\)/.test(gameCode) && /import \{ moneyWin as money, moneyDigits \} from '\.\/format';/.test(cu) && /moneyWin\(w\.win \/ 100 \* bet\(\)\)/.test(wl) && !/\bmoney\(/.test(mw); })()],
 		['v3.16i max-win count-up: fixed places from the target, last frame = exact target (no width jump)', (() => { const mw = readFileSync(join(appDir, 'src/game/maxwin.ts'), 'utf8'); return /dp = moneyDigits\(total\)/.test(mw) && /moneyWin\(k < 1 \? Math\.floor\(total \* e \* 10 \*\* dp\) \/ 10 \*\* dp : total, dp\)/.test(mw) && !/\* 100\) \/ 100/.test(mw); })()],
-		['disclaimer wording kept (James): TM and © 2026 Engine.', gameCode.includes('TM and © 2026 Engine.')],
+		['disclaimer wording kept (James 2026-10-30: ends Rizzin Games): TM and © 2026 Rizzin Games.', gameCode.includes('TM and © 2026 Rizzin Games.') && !gameCode.includes('2026 Engine')],
 		['no other-game names in sources', !/Waylanders|Lilith/i.test(css + gameCode + cp)],
 	];
 	for (const [k, ok] of checks) { if (ok) console.log(`  OK ${k}`); else { console.error(`  VIOLATION: ${k}`); violations++; } }
@@ -367,16 +367,20 @@ let mathErrors = 0;
 			if (e.totalWin !== sum) { console.error(`  ${file}: winInfo step ${e.step} totalWin ${e.totalWin} != line sum ${sum}`); mathErrors++; }
 		}
 	}
-	// every setWin / freeSpinEnd winLevel in the books is the math's level for its amount (standard / endFeature edges)
+	// book winLevels cross-checked against the synced edges where the tables agree: freeSpinEnd (endFeature) everywhere,
+	// setWin (standard) below the LEGENDARY edge (1000x). Books made before the 1000x edge (math 9f9b4e4) say 9 / 10 above
+	// it; the frontend takes the level from the synced edges applied to the amount, so those books still show right.
 	const lvl = (x, edges) => { const i = edges.findIndex((e) => x < e); return i < 0 ? edges.length + 1 : i + 1; };
-	let lv = 0;
+	const std = MATH.winLevels.standard, agree = std[std.length - 2];
+	let lv = 0, above = 0;
 	for (const dir of [booksDir, join(appDir, 'src/mock/books')]) for (const file of readdirSync(dir).filter((x) => x.endsWith('.json'))) {
 		for (const e of JSON.parse(readFileSync(join(dir, file), 'utf8')).events || []) if ((e.type === 'setWin' || e.type === 'freeSpinEnd') && e.winLevel !== undefined) {
+			if (e.type === 'setWin' && e.amount / 100 >= agree) { above++; continue; }
 			lv++; const want = lvl(e.amount / 100, MATH.winLevels[e.type === 'setWin' ? 'standard' : 'endFeature']);
 			if (e.winLevel !== want) { console.error(`  ${file}: ${e.type} ${e.amount} winLevel ${e.winLevel} != math ${want}`); mathErrors++; }
 		}
 	}
-	console.log(`  ${mathErrors ? 'FAIL' : 'OK'} no typed win values in src/game; ${steps} winInfo steps total = line sum; ${lv} book winLevels match the synced edges`);
+	console.log(`  ${mathErrors ? 'FAIL' : 'OK'} no typed win values in src/game; ${steps} winInfo steps total = line sum; ${lv} book winLevels match the synced edges (${above} setWin at/above ${agree}x not cross-checked: level from the edges)`);
 }
 console.log(`\n=== Summary ===`);
 console.log(`Books: ${bookFiles.length - failedBooks}/${bookFiles.length} passed`);

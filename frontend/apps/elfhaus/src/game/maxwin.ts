@@ -15,6 +15,7 @@ import { MAX_WIN_X } from './config';
 import { moneyWin, moneyDigits } from './format';
 import { loadSheet, hasSheet, play, stop, unloadSheet, type Anim, type Atlas } from './sprite';
 import { ElfRig, TEMPO, type ElfCfg } from './elfrig';
+import { TRANS, TRANS_RX, FX, BLUSH } from './maxwinCast'; // the cast's in-betweens / fx / blush (shared with the LEGENDARY layer)
 
 // atlases live outside ./fx/ on purpose so fx.ts doesn't load them on the loading screen
 const ATL = import.meta.glob('./maxwin/*.json', { eager: true, import: 'default' }) as Record<string, Atlas>;
@@ -58,17 +59,6 @@ function swap(old: Anim | null, id: string, name: string, host: Element, o: Para
 	}
 	return a;
 }
-// Expression in-betweens (state, frames at 30 fps) for every change: anticipation squint/giggle ('ant'),
-// half-rolled eyes + half-open mouth ('half'), half-lids ('blinkh'). Never a cross-fade of two faces.
-const TRANS: Record<string, [string, number][]> = {
-	'gawk>blink': [['blinkh', 1]], 'blink>gawk': [['blinkh', 1]],
-	'gawk>peak': [['blinkh', 1], ['ant', 2]], 'peak>ahe': [['ant', 2], ['half', 2]], 'ahe>peak': [['half', 2], ['ant', 1]],
-	'peak>gawk': [['ant', 1], ['blinkh', 2]], 'ahe>gawk': [['half', 2], ['blinkh', 1]], 'gawk>ahe': [['ant', 2], ['half', 2]],
-};
-// Roxy's ecstatic face is her 'peak' layer, so her gawk<->peak runs through the ahegao in-betweens
-const TRANS_RX = { ...TRANS, 'gawk>peak': [['blinkh', 1], ['ant', 2], ['half', 2]], 'peak>gawk': [['half', 2], ['blinkh', 1]] } as typeof TRANS;
-const FX: ElfCfg['fx'] = { peak: ['squash', 'tilt', 'giggle'], ahe: ['squash', 'tilt', 'hop'], gawk: ['squash', 'tilt0'] };
-const BLUSH = { ant: 0.35, half: 0.8, ahe: 1, peak: 0.55 };
 const ELVES = ['coco', 'jade', 'delilah', 'roxy', 'vi'];
 const CO = 0, JA = 1, DL = 2, RX = 3, VI = 4;
 // The peak, ms after the count lands. Irregular on purpose: Roxy breaks first, Coco + Jade almost together, Delilah

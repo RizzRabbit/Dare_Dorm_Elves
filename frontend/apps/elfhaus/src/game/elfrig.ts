@@ -11,7 +11,8 @@ import { sheetOf } from './sprite';
 export type Step = [state: string, frames: number];
 export type Fx = 'squash' | 'tilt' | 'tilt0' | 'hop' | 'giggle';
 export type ElfCfg = { id: string; trans: Record<string, Step[]>; fx: Record<string, Fx[]>; blush?: Record<string, number>; heartOn?: string;
-	blink?: [string, string, number, number]; base: string };     // blink: [state, base, minMs, maxMs]
+	blink?: [string, string, number, number]; base: string;       // blink: [state, base, minMs, maxMs]
+	at?: [x: number, y: number]; group?: [w: number, h: number] }; // v3.19: optional placement override (same size) for a re-grouped cast
 type Meta = { anims: Record<string, { frames: number[][]; canvas?: [number, number] }>; box: [number, number, number, number]; group: [number, number]; z: number; head: [number, number]; states: string[] };
 type Ev = { k: Fx; t: number; a: number };
 const FPS = 30, FMS = 1000 / FPS;
@@ -52,7 +53,7 @@ class Elf {
 	lastMs = 0; tilt0 = 0; tilt1 = 0; tiltT = -1e9; sign: number; enterAt = 1e9; nextBlink = 0; ph: number[]; lastTf = '';
 	constructor(public c: ElfCfg, host: HTMLElement, i: number) {
 		const sh = sheetOf(c.id)!; this.m = sh.atlas as unknown as Meta; this.img = sh.img;
-		const [bx, by, bw, bh] = this.m.box, [GW, GH] = this.m.group;
+		const [bw, bh] = [this.m.box[2], this.m.box[3]], [bx, by] = c.at ?? this.m.box, [GW, GH] = c.group ?? this.m.group;
 		const el = (this.el = document.createElement('div')); el.className = 'elf';
 		el.style.cssText = `left:${(bx / GW) * 100}%;top:${(by / GH) * 100}%;width:${(bw / GW) * 100}%;height:${(bh / GH) * 100}%;z-index:${this.m.z + 1};` +
 			`transform-origin:${this.m.head[0] * 100}% 72%;opacity:0`;

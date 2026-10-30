@@ -1,68 +1,119 @@
-// Big-win top-level character layer (math win level 9, the EPIC WIN stage; the math has no level at 1000x): Vi | Roxy | Coco packed shoulder to shoulder, leaning over the player
-// (first-person POV) behind the amount. Round 4: one sheet PER ELF (bigwin_elf_{vi,roxy,coco}: base / mid / kiss
-// (+ Roxy's wink) frames + a blush overlay) driven by elfrig.ts: staggered ease-out-back rise-in, idle bob/sway,
-// squash + head tilt on each kiss/wink, a little hop on Roxy's wink. Expressions step on a 30 fps grid through the drawn
-// half-lidded / half-pucker 'mid' frame; transform/opacity-only motion on one rAF clock. ~3.9 MB decoded for the three.
-// Lazy: decoded only when a top-level win is detected (playBookEvents scans the book, the banner's start hook as a backup),
-// released (ImageBitmap.close) when the banner closes. If the decode isn't done when the EPIC WIN stage lands, the entrance
-// waits for it instead of popping in.
-// Drop-in: sheets -> src/assets/bigwin/bigwin_elf_*.webp, atlases -> src/game/bigwin/bigwin_elf_*.json.
+// Big-win character layers, one per top stage, packed shoulder to shoulder and leaning over the player (first-person
+// POV) behind the amount, transform/opacity-only motion on one rAF clock (elfrig.ts):
+//  - EPIC WIN (math level 9, 100-1000x): Vi | Roxy | Coco (bigwin_elf_*: base / mid / kiss (+ Roxy's wink) + blush),
+//    a calm kiss cycle. ~3.9 MB decoded.
+//  - LEGENDARY WIN (math level 10, 1000x up to the cap): the four younger elves Coco | Jade | Roxy | Vi on the max-win
+//    cast sheets (maxwin_elf_*, the same rig config as maxwin.ts via maxwinCast.ts; Delilah, the house mom, stays out),
+//    re-grouped without her gap, same lean-in rise and hold as the EPIC layer, a gawk / peak cycle. ~7 MB decoded.
+//  - MAX WIN keeps all five (maxwin.ts, unchanged).
+// On a LEGENDARY win the EPIC group rises at EPIC WIN, then hands over to the four at LEGENDARY WIN (short fade).
+// Lazy: each level's sheets decode only when the round's book has a win at that level (playBookEvents, the banner's
+// start hook as a backup) and are released (ImageBitmap.close) when the banner closes. If a decode isn't done when the
+// stage lands, the entrance waits for it instead of popping in.
 import { loadSheet, hasSheet, unloadSheet } from './sprite';
 import { ElfRig, TEMPO, type ElfCfg } from './elfrig';
 import { STAGE_OF_LEVEL } from './countup';
+import { TRANS as MW_TRANS, TRANS_RX as MW_TRANS_RX, FX as MW_FX, BLUSH as MW_BLUSH } from './maxwinCast';
 
-// v3.19: tied to the math win level, not an x threshold. The standard table has no edge at or near 1000x (level 9 runs
-// from 100x up to the cap), so the layer sits on the top banner level (EPIC WIN); level 10 is the max-win screen.
-export const BIGWIN_ELVES_LEVEL = Math.max(...Object.keys(STAGE_OF_LEVEL).map(Number));
-export const elvesLevel = (level: number) => level >= BIGWIN_ELVES_LEVEL;
-const NAMES = ['vi', 'roxy', 'coco'], IDS = NAMES.map((n) => 'bigwin_elf_' + n);
+const levelNamed = (name: string) => Number(Object.entries(STAGE_OF_LEVEL).find(([, n]) => n === name)?.[0]);
+/** v3.19: the layers follow the math win level (no x threshold): EPIC WIN = 3 elves, LEGENDARY WIN = 4. */
+export const EPIC_ELVES_LEVEL = levelNamed('EPIC WIN'), LEGEND_ELVES_LEVEL = levelNamed('LEGENDARY WIN');
+export const BIGWIN_ELVES_LEVEL = EPIC_ELVES_LEVEL;           // the first level with a character layer
+export type ElvesGroup = 'epic' | 'legendary';
+/** Which layer a stage level shows (null = none). */
+export function elvesFor(level: number): ElvesGroup | null { return level > LEGEND_ELVES_LEVEL ? null : level === LEGEND_ELVES_LEVEL ? 'legendary' : level >= EPIC_ELVES_LEVEL ? 'epic' : null; } // above LEGENDARY = the max-win screen (its own five)
+export const elvesLevel = (level: number) => elvesFor(level) !== null;
+/** The layers a win at `level` passes through on its way up (what to preload). */
+export function elvesGroupsUpTo(level: number): ElvesGroup[] { return elvesFor(level) ? (['epic', 'legendary'] as const).filter((g) => level >= (g === 'epic' ? EPIC_ELVES_LEVEL : LEGEND_ELVES_LEVEL)) : []; }
+
+const bwAtl = import.meta.glob('./bigwin/*.json', { eager: true, import: 'default' }) as Record<string, any>;
+const bwImg = import.meta.glob('../assets/bigwin/*.webp', { eager: true, query: '?url', import: 'default' }) as Record<string, string>;
+const mwAtl = import.meta.glob('./maxwin/maxwin_elf_*.json', { eager: true, import: 'default' }) as Record<string, any>;
+const mwImg = import.meta.glob('../assets/maxwin/maxwin_elf_*.webp', { eager: true, query: '?url', import: 'default' }) as Record<string, string>;
+const find = (m: Record<string, any>, id: string, ext: string) => Object.entries(m).find(([k]) => k.endsWith(`/${id}.${ext}`))?.[1];
+const url = (id: string): string | undefined => find(bwImg, id, 'webp') ?? find(mwImg, id, 'webp');
+const atlas = (id: string) => find(bwAtl, id, 'json') ?? find(mwAtl, id, 'json');
+
+// EPIC: Vi | Roxy | Coco (unchanged from the approved 1000x layer)
+const E_NAMES = ['vi', 'roxy', 'coco'];
 const VI = 0, RX = 1, CO = 2;
-const atlases = import.meta.glob('./bigwin/*.json', { eager: true, import: 'default' }) as Record<string, any>;
-const urls = import.meta.glob('../assets/bigwin/*.webp', { eager: true, query: '?url', import: 'default' }) as Record<string, string>;
-const url = (id: string) => Object.entries(urls).find(([k]) => k.endsWith(`/${id}.webp`))?.[1];
-const atlas = (id: string) => Object.entries(atlases).find(([k]) => k.endsWith(`/${id}.json`))?.[1];
+const E_TRANS: ElfCfg['trans'] = { 'base>kiss': [['mid', 3]], 'kiss>base': [['mid', 2]], 'base>wink': [['mid', 2]], 'wink>base': [['mid', 2]] };
+const E_FX: ElfCfg['fx'] = { kiss: ['squash', 'tilt'], wink: ['squash', 'tilt', 'hop'], base: ['tilt0'] };
+// one kiss/wink beat per elf, NOT on a grid: ms offsets inside a 3.4 s cycle
+const E_CYCLE: [number, string, number, number][] = [[CO, 'kiss', 350, 620], [RX, 'kiss', 1350, 560], [VI, 'kiss', 1900, 640], [RX, 'wink', 2700, 470]];
+// LEGENDARY: Coco | Jade | Roxy | Vi on the max-win sheets. Their boxes sit in the five-elf frame (1467x796) with Delilah
+// in the middle; here the left pair moves right and the right pair left by 114 px each (Jade / Roxy overlap like the
+// others) and the frame is cropped to 1237x796. Sizes, z order and art unchanged.
+const L_NAMES = ['coco', 'jade', 'roxy', 'vi'];
+const LC = 0, LJ = 1, LR = 2, LV = 3;
+export const L_GROUP: [number, number] = [1237, 796];
+export const L_AT: Record<string, [number, number]> = { coco: [0, 218], jade: [213, 1], roxy: [518, 69], vi: [813, 121] };
+const L_CYCLE: [number, string, number, number][] = [[LC, 'peak', 350, 620], [LR, 'peak', 1150, 560], [LJ, 'peak', 1750, 600], [LV, 'peak', 2450, 640]];
+const CYCLE_MS = 3400;   // all beats are stretched by elfrig TEMPO (the elves are up ~2.7 s: one calm beat each)
 
-let loading: Promise<unknown> | null = null;
-/** Start decoding the three sheets (idempotent; returns the pending decode). Call when a win at BIGWIN_ELVES_LEVEL is detected. */
-export function preloadBigWinElves(): Promise<unknown> {
-	return (loading ??= Promise.all(IDS.map((id) => (hasSheet(id) || !url(id) || !atlas(id) ? 0 : loadSheet(id, url(id)!, atlas(id)).catch((e) => console.warn('bigwin sheet', id, e))))));
+type Def = { ids: string[]; cls: string; cfg: () => ElfCfg[]; order: number[]; cycle: typeof E_CYCLE; base: string };
+const DEFS: Record<ElvesGroup, Def> = {
+	epic: { ids: E_NAMES.map((n) => 'bigwin_elf_' + n), cls: 'bwGroup in', order: [RX, VI, CO], cycle: E_CYCLE, base: 'base',
+		cfg: () => E_NAMES.map((n) => ({ id: 'bigwin_elf_' + n, base: 'base', trans: E_TRANS, fx: E_FX, blush: { mid: 0.35, kiss: 0.75, wink: 0.5 } })) },
+	legendary: { ids: L_NAMES.map((n) => 'maxwin_elf_' + n), cls: 'bwGroup bwLegend in', order: [LR, LJ, LV, LC], cycle: L_CYCLE, base: 'gawk',
+		cfg: () => L_NAMES.map((n, i) => ({ id: 'maxwin_elf_' + n, base: 'gawk', trans: i === LR ? MW_TRANS_RX : MW_TRANS,
+			fx: i === LR ? { ...MW_FX, peak: ['squash', 'tilt', 'hop'] } : MW_FX, blush: i === LR ? { ...MW_BLUSH, peak: 1 } : MW_BLUSH,
+			blink: ['blink', 'gawk', 2300, 4200], at: L_AT[n], group: L_GROUP })) },
+};
+/** Sheet ids a layer needs (for tests / preload). */
+export const elvesSheets = (g: ElvesGroup) => DEFS[g].ids.slice();
+
+const loading = new Map<ElvesGroup, Promise<unknown>>(), mine = new Set<string>();
+/** Start decoding the sheets for every layer a win at `level` shows (idempotent). */
+export function preloadBigWinElves(level: number = LEGEND_ELVES_LEVEL): Promise<unknown> {
+	return Promise.all(elvesGroupsUpTo(level).map((g) => {
+		let p = loading.get(g);
+		if (!p) {
+			p = Promise.all(DEFS[g].ids.map((id) => (hasSheet(id) || !url(id) || !atlas(id) ? 0
+				: (mine.add(id), loadSheet(id, url(id)!, atlas(id)).catch((e) => console.warn('bigwin sheet', id, e))))));
+			loading.set(g, p);
+		}
+		return p;
+	}));
 }
-/** Drop the decoded textures (ImageBitmap.close); they decode again on the next top-level win. */
-export function releaseBigWinElves() { IDS.forEach((id) => unloadSheet(id)); loading = null; }
+/** Drop the textures this layer decoded (ImageBitmap.close); they decode again on the next win at that level. Sheets the
+ *  max-win screen loaded itself are left alone. */
+export function releaseBigWinElves() { mine.forEach((id) => unloadSheet(id)); mine.clear(); loading.clear(); }
 
-const TRANS: ElfCfg['trans'] = { 'base>kiss': [['mid', 3]], 'kiss>base': [['mid', 2]], 'base>wink': [['mid', 2]], 'wink>base': [['mid', 2]] };
-const FX: ElfCfg['fx'] = { kiss: ['squash', 'tilt'], wink: ['squash', 'tilt', 'hop'], base: ['tilt0'] };
-// one kiss/wink beat per elf, NOT on a grid: ms offsets inside a 3.1 s cycle
-// (Roxy's kiss now lands after the ~2.7 s a 1000x+ win is up, so that window shows ONE calm kiss instead of a cut-off second one)
-const CYCLE: [number, string, number, number][] = [[CO, 'kiss', 350, 620], [RX, 'kiss', 1350, 560], [VI, 'kiss', 1900, 640], [RX, 'wink', 2700, 470]];
-const CYCLE_MS = 3400;   // all beats below are stretched by elfrig TEMPO (the elves are up ~2.7 s: one calm kiss)
+let rig: ElfRig | null = null, root: HTMLElement | null = null, cur: ElvesGroup | null = null, show = 0;
+/** The layer currently up (tests / QA). */
+export const elvesShowing = () => cur;
 
-let rig: ElfRig | null = null, root: HTMLElement | null = null, show = 0;
-
-/** Call from the setBigWinFx chars hook: bigWinElvesStart(B, level). No-op below BIGWIN_ELVES_LEVEL. If the sheets are still decoding,
- *  the entrance waits for them (and is dropped if the banner closed meanwhile), so nothing pops in half-loaded. */
+/** Call from the setBigWinFx chars hook at each stage: bigWinElvesStart(B, stageLevel). Shows that stage's layer
+ *  (EPIC 3, LEGENDARY 4); a layer already up hands over with a short fade. If the sheets are still decoding, the entrance
+ *  waits for them (and is dropped if the banner closed or moved on meanwhile), so nothing pops in half-loaded. */
 export function bigWinElvesStart(B: HTMLElement, level: number) {
-	bigWinElvesEnd(false);
-	if (!elvesLevel(level)) return;
-	if (!IDS.every(hasSheet)) {
-		const my = show;
-		void preloadBigWinElves().then(() => { if (my === show && !B.classList.contains('hidden') && IDS.every(hasSheet)) bigWinElvesStart(B, level); });
+	const g = elvesFor(level);
+	if (!g || g === cur) return;
+	const d = DEFS[g];
+	if (!d.ids.every(hasSheet)) {
+		const my = ++show;
+		void preloadBigWinElves(level).then(() => { if (my === show && !B.classList.contains('hidden') && d.ids.every(hasSheet)) bigWinElvesStart(B, level); });
 		return;
 	}
-	root = document.createElement('div'); root.className = 'bwElves';
-	const host = document.createElement('div'); host.className = 'bwGroup in'; root.appendChild(host);
+	if (root) { const old = root, oldRig = rig; old.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 180, easing: 'ease-out', fill: 'forwards' }).finished.catch(() => {}).finally(() => { oldRig?.destroy(); old.remove(); }); }
+	show++; cur = g;
+	root = document.createElement('div'); root.className = 'bwElves'; root.dataset.group = g;
+	const host = document.createElement('div'); host.className = d.cls; root.appendChild(host);
 	B.insertBefore(root, B.firstChild);                       // behind .bw (title + amount)
-	rig = new ElfRig(host, NAMES.map((n) => ({ id: 'bigwin_elf_' + n, base: 'base', trans: TRANS, fx: FX, blush: { mid: 0.35, kiss: 0.75, wink: 0.5 } })));
-	rig.enter(0, [RX, VI, CO], 80);
-	for (let c = 0; c < 20; c++) for (const [i, s, t, hold] of CYCLE) {
+	rig = new ElfRig(host, d.cfg());
+	rig.enter(0, d.order, 80);
+	for (let c = 0; c < 20; c++) for (const [i, s, t, hold] of d.cycle) {
 		const t0 = 600 + Math.round((c * CYCLE_MS + t) * TEMPO) + ((c * 37 + i * 53) % 90);   // a little drift per cycle
-		rig.set(i, s, t0); rig.set(i, 'base', t0 + Math.round(hold * TEMPO));
+		rig.set(i, s, t0); rig.set(i, d.base, t0 + Math.round(hold * TEMPO));
 	}
 	rig.start();
 }
 
 /** Call from the setBigWinFx end hook. Stops the rig, removes the layer and (by default) releases the sheets. */
 export function bigWinElvesEnd(release = true) {
-	show++; rig?.destroy(); rig = null; root?.remove(); root = null;
+	show++; cur = null; rig?.destroy(); rig = null;
+	clearLayers();
 	if (release) releaseBigWinElves();
 }
+function clearLayers() { document.querySelectorAll('#bigwin .bwElves').forEach((e) => e.remove()); root = null; }

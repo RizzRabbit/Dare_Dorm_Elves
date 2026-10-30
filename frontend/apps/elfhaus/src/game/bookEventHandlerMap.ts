@@ -5,7 +5,7 @@ import { money } from './format';
 import type { BookEvent, BookEventOf, BookEventType, Locked, Pos } from './typesBookEvent';
 import { roxy, roxyState } from './roxy';
 import { maxWinCelebration, preloadMaxWin } from './maxwin';
-import { elvesLevel, preloadBigWinElves } from './bigwinElves';
+import { elvesLevel, preloadBigWinElves, LEGEND_ELVES_LEVEL } from './bigwinElves';
 import { showRespin, endRespin, hideRespin } from './respin';
 import { mxBurst, lockFx, clearSymWins, symLand, symWin, landBump } from './fx';
 import { cardFlip } from './cardflip';
@@ -242,8 +242,8 @@ export const bookEventHandlerMap: Handlers = {
 		if (ev.step > 0) endRespin();
 		await wait(350);
 	},
-	// v3.19: the banner and its stages follow the math's winLevel on the event (synced standard edges if it is missing);
-	// below the first banner level is a normal win, the max level is the wincap screen
+	// v3.19: the banner and its stages follow the math win level of the amount (synced standard edges; the book's winLevel
+	// is cross-checked, winLevel()); below the first banner level is a normal win, the max level is the wincap screen
 	async setWin(ev) {
 		const x = ev.amount / 100, lvl = winLevel(ev);
 		if (BIG_TIERS.length && lvl >= BIG_TIERS[0].level && lvl < maxLevel() && x < MAX_WIN_X) { roxy('win'); await bigWin(x, undefined, lvl); }
@@ -358,15 +358,21 @@ export function egwFlow(events: BookEvent[]): BookEvent[] {
 	return out;
 }
 
-/** Math win level of a setWin: the book's winLevel, else from the synced standard edges. */
-const winLevel = (ev: { amount: number; winLevel?: number }) => (Number.isFinite(ev.winLevel) ? ev.winLevel! : levelOf(ev.amount / 100, WIN_LEVELS.standard));
+/** Math win level of a setWin: the synced standard edges applied to the amount (math-sourced). The book's winLevel is
+ *  cross-checked only below the LEGENDARY edge, where it matches books made before the 1000x edge was added (those
+ *  books say 9 / 10 above 1000x; the synced edges say 10 / 11). A mismatch there warns in dev and the edges win. */
+export const winLevel = (ev: { amount: number; winLevel?: number }) => {
+	const lv = levelOf(ev.amount / 100, WIN_LEVELS.standard);
+	if (import.meta.env?.DEV && Number.isFinite(ev.winLevel) && lv < LEGEND_ELVES_LEVEL && ev.winLevel !== lv) console.warn(`setWin ${ev.amount}: book winLevel ${ev.winLevel} != math edges ${lv}`);
+	return lv;
+};
 export async function playBookEvents(events: BookEvent[]) {
 	events = egwFlow(events);
 	S.roundBase = 0; capHit = false; voiceSpin();
 	// celebration sheets are lazy: start decoding them only once this round's book shows they're needed (the reels spin
 	// meanwhile); they're released again after the screen closes
 	if (events.some((e) => e.type === 'wincap')) void preloadMaxWin();
-	else if (events.some((e) => e.type === 'setWin' && elvesLevel(winLevel(e as { amount: number; winLevel?: number })))) void preloadBigWinElves();
+	else { const top = Math.max(0, ...events.filter((e) => e.type === 'setWin').map((e) => winLevel(e as { amount: number; winLevel?: number }))); if (elvesLevel(top)) void preloadBigWinElves(top); } // that level's layers only
 	if (roxyState() === 'anticipation') roxy('idle');
 	for (const ev of events) {
 		const h = (bookEventHandlerMap as any)[ev.type];

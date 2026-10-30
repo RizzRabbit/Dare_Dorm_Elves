@@ -20,7 +20,7 @@ import { winPresenting, skipStage, noteTap } from './winstage';
 import { startShimmer, initWfExpand } from './wildfx';
 import { setArmedGlow, wireTapFx } from './uifx';
 import { featOpen, featClose } from './featfx';
-import { BIGWIN_ELVES_LEVEL, elvesLevel, preloadBigWinElves, bigWinElvesStart, bigWinElvesEnd } from './bigwinElves';
+import { elvesLevel, preloadBigWinElves, bigWinElvesStart, bigWinElvesEnd } from './bigwinElves';
 import { setBigWinFx } from './ui';
 import { initSettings, popOpen, closePop } from './settings';
 import { initAudio, sfx } from './audio';
@@ -45,7 +45,7 @@ import { hideRespin } from './respin';
 import type { BookEvent } from './typesBookEvent';
 
 const DISCLAIMER =
-	'Malfunction voids all wins and plays. A consistent internet connection is required. In the event of a disconnection, reload the game to finish any uncompleted rounds. The expected return is calculated over many plays. The game display is not representative of any physical device and is for illustrative purposes only. Winnings are settled according to the amount received from the Remote Game Server and not from events within the web browser. TM and © 2026 Engine.';
+	'Malfunction voids all wins and plays. A consistent internet connection is required. In the event of a disconnection, reload the game to finish any uncompleted rounds. The expected return is calculated over many plays. The game display is not representative of any physical device and is for illustrative purposes only. Winnings are settled according to the amount received from the Remote Game Server and not from events within the web browser. TM and © 2026 Rizzin Games.';
 
 const q = new URLSearchParams(location.search);
 const url = {
@@ -660,10 +660,10 @@ export async function initGame() {
 	// big-win banner moments: burst + confetti on open (no star glints on the tier titles), the character layer on the top math win level
 	setBigWinFx({
 		// backup trigger for the lazy elf sheets (playBookEvents normally started the decode when the book arrived)
-		start: (B, _x, level) => { featOpen(B.querySelector('.bwFx')); if (elvesLevel(level)) void preloadBigWinElves(); },
+		start: (B, _x, level) => { featOpen(B.querySelector('.bwFx')); if (elvesLevel(level)) void preloadBigWinElves(level); },
 		tier: () => {},                                                // round 6: no star glints on the win screens
-		// the Vi / Roxy / Coco group (bigwinElves.ts) rises in as the top-level stage (math level BIGWIN_ELVES_LEVEL, EPIC WIN) lands
-		chars: (B) => bigWinElvesStart(B, BIGWIN_ELVES_LEVEL),
+		// per stage (bigwinElves.ts): EPIC WIN = Vi / Roxy / Coco, LEGENDARY WIN (1000x) = Coco / Jade / Roxy / Vi
+		chars: (B, level) => bigWinElvesStart(B, level),
 		end: (B) => { featClose(B.querySelector('.bwFx')); bigWinElvesEnd(); },
 	});
 	// v3.15d: taps on a menu / panel / confirm card (or that close one) do not count toward the win lines' 2-tap zip

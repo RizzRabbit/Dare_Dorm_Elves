@@ -1,5 +1,5 @@
 {
- "source": "math a4e33bb game_calculations.py + reel_params.json",
+ "source": "math 9f9b4e4 game_calculations.py + reel_params.json",
  "maxWinX": 50000,
  "spinCap": 20,
  "maxRespins": 3,
@@ -14,5 +14,5 @@
  "epic": {"stackX": 16, "step": 2},
  "retrigger": {"two": 2, "threePlus": 5},
  "egwStackX": 4,
- "winLevels": {"standard": [0.1, 1, 2, 5, 15, 30, 50, 100, 50000], "endFeature": [1, 5, 10, 20, 50, 100, 500, 2000, 50000]}
+ "winLevels": {"standard": [0.1, 1, 2, 5, 15, 30, 50, 100, 1000, 50000], "endFeature": [1, 5, 10, 20, 50, 100, 500, 2000, 50000]}
 }

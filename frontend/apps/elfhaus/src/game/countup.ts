@@ -78,13 +78,13 @@ export const isCounting = (el: HTMLElement) => runs.has(el);
 // HOLD the exact threshold ~0.25 s while onTier pops the new title, then JUMP well ahead (+30-60% of the threshold,
 // capped below the next crawl zone and below the final amount) and race on. After the top tier for this win it races
 // to the final amount, eases the last unit and stops. Closed-form on rAF time; tap skips to the end; turbo = 0.45x.
-// v3.19 (James 2026-10-30 18:02 CDT): the stages come from the math's win levels (Stake Engine standard winLevel, carried
-// by every setWin book event; the edges are synced from the math into modes.generated.json). The frontend only maps
-// a level to an approved stage visual (presentation, no thresholds of its own):
+// v3.19 (James 2026-10-30): the stages come from the math's standard win levels (game_calculations.py win_level edges,
+// synced into modes.generated.json). The level is the synced edges applied to the win amount (the book's winLevel is
+// only cross-checked, bookEventHandlerMap.ts). The frontend only maps a level to an approved stage visual:
 //   levels 1-5 (< 15x)  a normal win (line presentation, no banner)
-//   level 6 (15-30x) BIG WIN · 7 (30-50x) MEGA WIN · 8 (50-100x) SUPER WIN · 9 (100x up to the cap) EPIC WIN
-//   level 10 (the cap) the MAX WIN screen (wincap event, maxwin.ts). LEGENDARY WIN has no math level and is not shown.
-export const STAGE_OF_LEVEL: Record<number, string> = { 6: 'BIG WIN', 7: 'MEGA WIN', 8: 'SUPER WIN', 9: 'EPIC WIN' };
+//   6 (15-30x) BIG WIN · 7 (30-50x) MEGA WIN · 8 (50-100x) SUPER WIN · 9 (100-1000x) EPIC WIN · 10 (1000x up to the cap) LEGENDARY WIN
+//   11 (the cap) the MAX WIN screen (wincap event, maxwin.ts)
+export const STAGE_OF_LEVEL: Record<number, string> = { 6: 'BIG WIN', 7: 'MEGA WIN', 8: 'SUPER WIN', 9: 'EPIC WIN', 10: 'LEGENDARY WIN' };
 export type BigTier = { x: number; name: string; level: number };
 /** Math win level of x (x bet) for a level-edge table: 1 + the index of the first edge above it (math win_level). */
 export function levelOf(x: number, edges: readonly number[]) { for (let i = 0; i < edges.length; i++) if (x < edges[i]) return i + 1; return edges.length + 1; }
@@ -101,7 +101,7 @@ export function setWinLevels(edges: readonly number[]) { WIN_EDGES = edges; BIG_
 export const maxLevel = () => WIN_EDGES.length + 1;
 type Key = { t0: number; t1: number; v0: number; v1: number; ease: (u: number) => number; tier?: number; kind?: string };
 const CRAWL_FRAC = 0.01;                                   // crawl zone = last 1% of each threshold
-const CRAWL_MS = [1000, 1100, 1200, 1350, 1500];           // per stage (Big, Mega, Super, Epic; a 5th is spare)
+const CRAWL_MS = [1000, 1100, 1200, 1350, 1500];           // per stage (Big .. Legendary)
 const JUMP = [0.6, 0.5, 0.45, 0.5, 0.3];                   // jump after the pop, fraction of the threshold
 // v3.17: the hold on the exact threshold is only as long as the title pop (no dead pause); the time it gave up goes to
 // the race so a win still runs the same overall length.

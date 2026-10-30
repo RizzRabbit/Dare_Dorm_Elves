@@ -45,13 +45,50 @@ for (let L = 1; L < top; L++) {
 	const want = C.BIG_TIERS.filter((t) => t.level <= L).map((t) => t.name).join();
 	ok(xs.every((x) => C.tierPlan(x, false, L).tiers.map((t) => t.name).join() === want && C.tierPlan(x).tiers.map((t) => t.name).join() === want), `level ${L} (${lo}x-${hi}x): ${want || 'normal win, no banner'}`);
 }
-// the book's winLevel decides, not the amount: a level-6 event shows BIG only even if the amount sits higher
-ok(C.tierPlan(EDGES[6] + 1, false, 6).tiers.map((t) => t.name).join() === C.BIG_TIERS[0].name, 'the event winLevel decides the stages (level 6 at a higher amount = BIG WIN only)');
-ok(C.tierPlan(EDGES[4] - 1, false, 9).tiers.every((t) => t.x <= EDGES[4] - 1), 'never crawls past the amount even if the level says more');
-const bwe = readFileSync(new URL('../src/game/bigwinElves.ts', import.meta.url), 'utf8');
-ok(/BIGWIN_ELVES_LEVEL = Math\.max\(\.\.\.Object\.keys\(STAGE_OF_LEVEL\)/.test(bwe) && !/MIN_X\s*=\s*\d/.test(bwe), 'the elves layer is tied to the top banner level (no x threshold)');
+ok(C.tierPlan(EDGES[4] - 1, false, 9).tiers.every((t) => t.x <= EDGES[4] - 1), 'never crawls past the amount even if a level says more');
+const L_LEG = +Object.entries(C.STAGE_OF_LEVEL).find(([, n]) => n === 'LEGENDARY WIN')[0], L_EPIC = +Object.entries(C.STAGE_OF_LEVEL).find(([, n]) => n === 'EPIC WIN')[0];
+ok(C.BIG_TIERS.find((t) => t.name === 'LEGENDARY WIN')?.x === 1000 && C.BIG_TIERS.find((t) => t.name === 'EPIC WIN')?.x === 100 && L_LEG === top - 1, `LEGENDARY WIN = math level ${L_LEG} from the synced 1000x edge, EPIC WIN = level ${L_EPIC} (100-1000x), max win = level ${top}`);
 const ui = readFileSync(new URL('../src/game/ui.ts', import.meta.url), 'utf8'), bem = readFileSync(new URL('../src/game/bookEventHandlerMap.ts', import.meta.url), 'utf8'), cu = readFileSync(new URL('../src/game/countup.ts', import.meta.url), 'utf8');
-ok(!/x:\s*(10|25|50|100|1000)\b/.test(cu) && !/>=\s*1000\b/.test(ui) && /bigWin\(x, undefined, lvl\)/.test(bem) && /ev\.winLevel/.test(bem), 'no frontend win thresholds; setWin passes the book winLevel');
+ok(!/x:\s*(10|25|50|100|1000)\b/.test(cu) && !/>=\s*1000\b/.test(ui) && /bigWin\(x, undefined, lvl\)/.test(bem), 'no frontend win thresholds; setWin passes the level');
+ok(/const lv = levelOf\(ev\.amount \/ 100, WIN_LEVELS\.standard\)/.test(bem) && /lv < LEGEND_ELVES_LEVEL && ev\.winLevel !== lv/.test(bem), 'banner level = synced edges applied to the amount; book winLevel cross-checked only below LEGENDARY');
+
+console.log('\n=== character layer per stage level (bigwinElves.ts) ===');
+const stub = { ElfRig: class { constructor(h, c) { this.c = c; stub.rigs.push(c.map((x) => x.id)); } enter() {} set() {} start() { return this; } destroy() {} }, TEMPO: 1.8, rigs: [],
+	sheets: new Set(), loads: [], unloads: [],
+	loadSheet: (id) => { stub.loads.push(id); stub.sheets.add(id); return Promise.resolve(); }, hasSheet: (id) => stub.sheets.has(id), unloadSheet: (id) => { stub.unloads.push(id); stub.sheets.delete(id); } };
+globalThis.__bweStub = stub; globalThis.__bweStage = C.STAGE_OF_LEVEL;
+const ids = ['bigwin_elf_vi', 'bigwin_elf_roxy', 'bigwin_elf_coco', ...['coco', 'jade', 'delilah', 'roxy', 'vi'].map((n) => 'maxwin_elf_' + n)];
+const globs = { bw: Object.fromEntries(ids.filter((i) => i.startsWith('bigwin')).map((i) => ['./bigwin/' + i + '.json', JSON.parse(readFileSync(new URL('../src/game/bigwin/' + i + '.json', import.meta.url), 'utf8'))])),
+	mw: Object.fromEntries(ids.filter((i) => i.startsWith('maxwin')).map((i) => ['./maxwin/' + i + '.json', JSON.parse(readFileSync(new URL('../src/game/maxwin/' + i + '.json', import.meta.url), 'utf8'))])) };
+globalThis.__bweGlobs = { atl: { ...globs.bw, ...globs.mw }, img: Object.fromEntries(ids.map((i) => ['../assets/x/' + i + '.webp', i + '.webp'])) };
+const E = await load('bigwinElves.ts', (s) => s
+	.replace(/import \{ loadSheet, hasSheet, unloadSheet \} from '\.\/sprite';/, 'const { loadSheet, hasSheet, unloadSheet } = globalThis.__bweStub;')
+	.replace(/import \{ ElfRig, TEMPO, type ElfCfg \} from '\.\/elfrig';/, 'const { ElfRig, TEMPO } = globalThis.__bweStub; type ElfCfg = any;')
+	.replace(/import \{ STAGE_OF_LEVEL \} from '\.\/countup';/, 'const STAGE_OF_LEVEL = globalThis.__bweStage;')
+	.replace(/import \{ TRANS as MW_TRANS[^\n]*/, 'const MW_TRANS = {}, MW_TRANS_RX = {}, MW_FX = {}, MW_BLUSH = {};')
+	.replace(/import\.meta\.glob\('\.\/(bigwin|maxwin)[^)]*\)/g, 'globalThis.__bweGlobs.atl').replace(/import\.meta\.glob\('\.\.\/assets[^)]*\)/g, 'globalThis.__bweGlobs.img'));
+for (let L = 1; L <= top; L++) {
+	const want = L === L_LEG ? 'legendary' : L === L_EPIC ? 'epic' : null;
+	ok(E.elvesFor(L) === want, `level ${L} (${C.STAGE_OF_LEVEL[L] || (L === top ? 'max win screen' : 'normal win')}): ${want || 'no layer'}`);
+}
+ok(E.elvesSheets('epic').join() === 'bigwin_elf_vi,bigwin_elf_roxy,bigwin_elf_coco', 'EPIC WIN = Vi | Roxy | Coco (bigwin_elf_*)');
+ok(E.elvesSheets('legendary').join() === 'maxwin_elf_coco,maxwin_elf_jade,maxwin_elf_roxy,maxwin_elf_vi' && !E.elvesSheets('legendary').some((i) => /delilah/.test(i)), 'LEGENDARY WIN = Coco | Jade | Roxy | Vi on the max-win cast sheets, no Delilah');
+// re-grouped boxes: same sizes as the atlas, inside the 1237-wide frame, neighbours overlap, no Delilah gap
+const box = (n) => globs.mw['./maxwin/maxwin_elf_' + n + '.json'].box;
+const xs = ['coco', 'jade', 'roxy', 'vi'].map((n) => [E.L_AT[n][0], E.L_AT[n][0] + box(n)[2], E.L_AT[n][1] === box(n)[1]]);
+ok(xs[0][0] === 0 && xs[3][1] === E.L_GROUP[0] && E.L_GROUP[1] === box('jade')[1] + box('jade')[3] && xs.every((x) => x[2]) && xs.every((x, i) => !i || x[0] < xs[i - 1][1]), `four-elf frame ${E.L_GROUP.join('x')}: ${xs.map((x) => x[0] + '-' + x[1]).join(' | ')} (overlapping, rows unchanged)`);
+// preload per level: EPIC loads 3, LEGENDARY loads its path (EPIC then LEGENDARY), below EPIC nothing
+stub.loads = []; await E.preloadBigWinElves(L_EPIC - 1); ok(stub.loads.length === 0, 'below EPIC: nothing decoded');
+await E.preloadBigWinElves(L_EPIC); ok(stub.loads.join() === E.elvesSheets('epic').join(), 'EPIC win: only the 3-elf sheets decoded');
+await E.preloadBigWinElves(L_LEG); ok(stub.loads.join() === [...E.elvesSheets('epic'), ...E.elvesSheets('legendary')].join(), 'LEGENDARY win: + the 4-elf sheets (EPIC group shows on the way up)');
+// stage hand-over: EPIC rig, then LEGENDARY rig; the end releases only what this layer decoded
+globalThis.document = { createElement: () => ({ className: '', dataset: {}, appendChild() {}, animate: () => ({ finished: Promise.resolve() }), remove() {} }), querySelectorAll: () => [] };
+const B = { classList: { contains: () => false }, insertBefore() {}, firstChild: null };
+stub.rigs = []; E.bigWinElvesStart(B, L_EPIC); ok(E.elvesShowing() === 'epic', 'EPIC stage: the 3-elf layer is up');
+E.bigWinElvesStart(B, L_EPIC); ok(stub.rigs.length === 1, 'same stage again: no second rig');
+E.bigWinElvesStart(B, L_LEG); ok(E.elvesShowing() === 'legendary' && stub.rigs.length === 2 && stub.rigs[1].join() === E.elvesSheets('legendary').join(), 'LEGENDARY stage: hands over to the 4-elf layer');
+stub.sheets.add('maxwin_elf_delilah'); stub.unloads = []; E.bigWinElvesEnd();
+ok(E.elvesShowing() === null && stub.unloads.length === 7 && !stub.unloads.includes('maxwin_elf_delilah'), 'banner end: the 7 sheets this layer decoded released, max-win-only sheets left alone');
 
 console.log('\n=== win stages: coalescing ===');
 W._resetStages(); W.presenting(true);
