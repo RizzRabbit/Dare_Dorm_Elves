@@ -9,7 +9,8 @@ import { money } from './format';
 import type { Group, LineWin } from './typesBookEvent';
 import { DOTS } from './respin';
 import { mxBurst, lockIconCSS, symWin, clearSymWins } from './fx';
-import { countTo, countMs, setAmount, skipCounts, countTiers, BIG_TIERS, zipped, setZip } from './countup';
+import { countTo, countMs, setAmount, countTiers, BIG_TIERS, tierPlan, isCounting } from './countup';
+import { presenting, beginStage, endStage, skipStage } from './winstage';
 import { hold, tempo, gtempo } from './tempo';
 
 export const ART = ART_JSON as Record<string, string | null>;
@@ -190,13 +191,14 @@ export function banner(txt: string, ms = 1400) {
 }
 // C17: the round's win meter only counts up and never exceeds the 50,000x cap.
 /** WIN field: counts up smoothly from what it shows to the new total (duration scaled by the step's size). */
-export function setWinMeter(x: number) {
+export function setWinMeter(x: number): Promise<void> {
 	const nx = Math.min(MAX_WIN_X, Math.max(S.meterX, x)), dx = nx - S.meterX;
 	S.meterX = nx;
-	if (dx > 0) countTo($('#win'), nx * bet(), countMs(dx, S.turbo) * gtempo()); // anim-v4: studio pace (was x ANIM_TEMPO); turbo halves it
-	else setAmount($('#win'), nx * bet());
+	if (dx > 0) return countTo($('#win'), nx * bet(), countMs(dx, S.turbo) * gtempo()); // anim-v4: studio pace (was x ANIM_TEMPO); turbo halves it
+	if (!isCounting($('#win'))) setAmount($('#win'), nx * bet()); // v3.17: never cut a running count short (staged skip)
+	return Promise.resolve();
 }
-export function resetWinMeter() { S.meterX = 0; setAmount($('#win'), 0); setZip(false); }
+export function resetWinMeter() { S.meterX = 0; setAmount($('#win'), 0); }
 /** Big-win banner. The amount climbs through the tiers (countup.ts countTiers paced2: races between tiers, crawls the last 1% into each
  *  threshold for ~1 s, holds while the tier title pops (overshoot + glow burst), jumps ahead and races on; eased into the
  *  exact amount). At 1000x the character layer fades in behind the amount (bigwinElves.ts, the Vi / Roxy / Coco POV group). Tap once = jump to the
@@ -210,36 +212,100 @@ function titleHook(T: HTMLElement, name: string) {
 	T.classList.toggle('spr', !!src);
 	if (src) T.style.setProperty('--title-img', `url("${src}")`); else T.style.removeProperty('--title-img');
 }
-/** paced2: light burst behind the tier title as it pops (code only; a sibling so it sits behind the title sprite). */
-function tierGlow(T: HTMLElement) {
-	const P = T.parentElement as HTMLElement; let G = P.querySelector('.bwGlow') as HTMLElement | null;
-	if (!G) { G = document.createElement('div'); G.className = 'bwGlow'; G.setAttribute('aria-hidden', 'true'); P.insertBefore(G, T); }
-	const h = T.offsetHeight || 100; G.style.top = `${T.offsetTop - h * 0.7}px`; G.style.height = `${h * 2.4}px`;
-	G.style.setProperty('--tt-neon', getComputedStyle(T).getPropertyValue('--tt-neon').trim() || '#FFD27A');
-	G.classList.remove('burst'); void G.offsetWidth; G.classList.add('burst'); // not '.go': that is the global gold button class (resub-fix.css)
+// v3.17 motion (James 2026-10-30): our original count-up motion, tuned to an industry-standard pacing reference. Everything the
+// tier hits need is made before the count starts (title sprites decoded and painted once, glow + ghost layers
+// created, geometry read once), and the hits are WAAPI transform / opacity only: no class restarts, no forced
+// reflow, no text node or element creation, no getComputedStyle at a tier.
+const EASE_BACK = 'cubic-bezier(.34,1.56,.64,1)';
+type BwRig = { glow: HTMLElement; ghost: HTMLElement; warm: HTMLElement; neon: Record<string, string> };
+let rig: BwRig | null = null;
+async function prewarmBigWin(B: HTMLElement, T: HTMLElement, tiers: number[]) {
+	const P = T.parentElement as HTMLElement;
+	if (!rig) {
+		const glow = document.createElement('div'); glow.className = 'bwGlow'; glow.setAttribute('aria-hidden', 'true');
+		const ghost = document.createElement('div'); ghost.className = 'bwTier bwGhost'; ghost.setAttribute('aria-hidden', 'true');
+		const warm = document.createElement('div'); warm.className = 'bwWarm'; warm.setAttribute('aria-hidden', 'true');
+		rig = { glow, ghost, warm, neon: {} };
+	}
+	if (rig.glow.parentElement !== P) P.insertBefore(rig.glow, T);
+	if (rig.ghost.parentElement !== P) P.insertBefore(rig.ghost, T);
+	if (rig.warm.parentElement !== B) B.appendChild(rig.warm);
+	// decode every title sprite this win will show and paint each once (a near-invisible layer) so the GPU has it
+	rig.warm.textContent = '';
+	const decodes: Promise<unknown>[] = [];
+	for (const i of tiers) {
+		const tier = BIG_TIERS[i].name.split(' ')[0].toLowerCase(), src = ART['title_' + tier + 'win'];
+		if (!src) continue;
+		const im = new Image(); im.src = src; decodes.push(im.decode().catch(() => {}));
+		const d = document.createElement('div'); d.style.backgroundImage = `url("${src}")`; rig.warm.appendChild(d);
+	}
+	// neon colours per tier read once (CSS vars by data-tier), not at the hit
+	const keep = T.dataset.tier;
+	for (const i of tiers) { const tier = BIG_TIERS[i].name.split(' ')[0].toLowerCase(); T.dataset.tier = tier; rig.neon[tier] = getComputedStyle(T).getPropertyValue('--tt-neon').trim() || '#FFD27A'; }
+	if (keep) T.dataset.tier = keep; else delete T.dataset.tier;
+	await Promise.race([Promise.all(decodes), new Promise((r) => setTimeout(r, 250))]);
+}
+/** Tier hit: the new title scale-pops (0.7 -> 1.08 -> 1, ~220 ms ease-out-back), the outgoing title crossfades out
+ *  (opacity + a small scale-up, ~180 ms), the round glow bursts behind it in the tier's neon, the amount gets a bump. */
+function tierHit(T: HTMLElement, amt: HTMLElement, name: string, first: boolean, at: number) {
+	const r = rig!; const tier = name.split(' ')[0].toLowerCase();
+	if (!first) { // ghost = the outgoing title, same box (absolute over it), fades while the new one pops
+		r.ghost.className = T.className + ' bwGhost'; r.ghost.dataset.tier = T.dataset.tier || ''; r.ghost.textContent = T.textContent;
+		const img = T.style.getPropertyValue('--title-img'); if (img) r.ghost.style.setProperty('--title-img', img); else r.ghost.style.removeProperty('--title-img');
+		r.ghost.animate([{ opacity: 1, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(1.12)' }], { duration: 180 * at, easing: 'ease-out', fill: 'forwards' });
+	}
+	if (T.textContent !== name) T.textContent = name; titleHook(T, name); T.classList.add('on');
+	T.animate([{ opacity: 0, transform: 'scale(.7)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 220 * at, easing: EASE_BACK });
+	r.glow.style.setProperty('--tt-neon', r.neon[tier] || '#FFD27A');
+	r.glow.animate([{ opacity: 0, transform: 'translateX(-50%) scale(.4)' }, { opacity: 0.95, transform: 'translateX(-50%) scale(1.05)', offset: 0.25 }, { opacity: 0, transform: 'translateX(-50%) scale(1.35)' }], { duration: 700 * at, easing: 'ease-out' });
+	amt.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.06)', offset: 0.35 }, { transform: 'scale(1)' }], { duration: 200 * at, easing: 'ease-out' });
 }
 export async function bigWin(x: number, label?: string) {
 	const B = $('#bigwin'), T = B.querySelector('.bwTier') as HTMLElement;
-	T.textContent = label || ''; T.classList.toggle('on', !!label); T.classList.remove('spr'); delete T.dataset.tier; if (label) T.dataset.tier = 'label';
+	const at = S.turbo ? 0.6 : 1;
+	const { tiers } = tierPlan(x, S.turbo), idx = tiers.map((t) => t.i);
+	T.textContent = label || ''; T.classList.toggle('on', !!label); T.classList.remove('spr', 'pop'); delete T.dataset.tier; if (label) T.dataset.tier = 'label';
 	(B.querySelector('.bwX') as HTMLElement).textContent = `${x.toLocaleString('en-US')}x`;
 	const amt = B.querySelector('.bwAmt') as HTMLElement; setAmount(amt, 0);
-	B.classList.remove('hidden'); B.classList.remove('chars'); fxHooks.start?.(B, x); bwpStart(B, x);
+	B.classList.remove('hidden', 'out'); B.classList.remove('chars');
+	// reserve the first title's box (invisible) so its landing does not push the amount down (no layout jump)
+	if (!label && idx.length) { T.textContent = BIG_TIERS[idx[0]].name; titleHook(T, BIG_TIERS[idx[0]].name); }
+	presenting(true);
+	await prewarmBigWin(B, T, idx);
+	// geometry for the glow, read once (not at the hit)
+	{ const h = T.offsetHeight || 100; rig!.glow.style.top = `${T.offsetTop - h * 0.7}px`; rig!.glow.style.height = `${h * 2.4}px`;
+		const g = rig!.ghost.style; g.position = 'absolute'; g.left = '0'; g.right = '0'; g.top = `${T.offsetTop}px`; g.opacity = '0'; g.pointerEvents = 'none'; }
+	fxHooks.start?.(B, x); bwpStart(B, x);
 	sfx('bigwin_sting'); duck(true); const cu = loop('bigwin_countup_loop'); setTimeout(() => voice('bigwin'), VOICE.bigWinDelayMs);
 	let close = () => {}; const closed = new Promise<void>((r) => (close = r));
-	let landed = false, chars = false;
-	const tap = () => { if (!landed) skipCounts(); else close(); };
-	B.addEventListener('pointerdown', tap);
+	let chars = false, stIx = 0;
+	// stages (winstage.ts): one per tier checkpoint, then the run to the final amount, then the landed banner
+	const names = [...(label ? [] : idx.map((i) => 'bw:' + BIG_TIERS[i].name)), 'bw:final'];
 	const counted = countTiers(amt, x, bet(), {
 		turbo: S.turbo,
-		onTier: (i) => { if (label) return; T.textContent = BIG_TIERS[i].name; titleHook(T, BIG_TIERS[i].name); T.classList.add('on'); T.classList.remove('pop'); void T.offsetWidth; T.classList.add('pop'); tierGlow(T); fxHooks.tier?.(B, i); bwpTier(i); },
+		onTier: (i) => {
+			endStage(names[stIx]); stIx++; beginStage(names[stIx] ?? 'bw:final', () => counted.next());
+			if (label) return; tierHit(T, amt, BIG_TIERS[i].name, i === idx[0], at); fxHooks.tier?.(B, i); bwpTier(i);
+		},
 		onX: (v) => { if (!chars && v >= 1000) { chars = true; B.classList.add('chars'); fxHooks.chars?.(B); } },
 	});
-	if (zipped()) { setZip(false); skipCounts(); } // v3.15d: 2 taps on the lines = land on the final tier + amount now
+	beginStage(names[0], () => counted.next());
+	const tap = () => { skipStage(); };
+	B.addEventListener('pointerdown', tap);
 	await counted;
-	landed = true; cu.stop(200);
+	endStage(names[stIx] ?? 'bw:final');
+	// the end: the amount lands on the exact value with a confident pop, then holds
+	amt.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.12)', offset: 0.4 }, { transform: 'scale(1)' }], { duration: 280 * at, easing: EASE_BACK });
+	cu.stop(200);
+	beginStage('bw:landed', () => close());
 	await Promise.race([waitRaw(S.turbo ? 700 * 0.35 : x >= 1000 ? 2200 : 1500), closed]);
+	endStage('bw:landed');
 	duck(false);
-	B.removeEventListener('pointerdown', tap); B.classList.add('hidden'); B.classList.remove('chars'); fxHooks.end?.(B); bwpEnd();
+	B.removeEventListener('pointerdown', tap);
+	// dismiss: a short fade (opacity only), then hidden
+	B.classList.add('out'); await waitRaw(220 * at);
+	B.classList.add('hidden'); B.classList.remove('out', 'chars'); fxHooks.end?.(B); bwpEnd(); rig?.warm && (rig.warm.textContent = '');
+	presenting(false);
 }
 type BwHooks = { start?: (B: HTMLElement, x: number) => void; tier?: (B: HTMLElement, i: number) => void; chars?: (B: HTMLElement) => void; end?: (B: HTMLElement) => void };
 const fxHooks: BwHooks = {};

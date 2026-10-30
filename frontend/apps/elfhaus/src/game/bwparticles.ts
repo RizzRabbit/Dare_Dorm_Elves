@@ -21,7 +21,7 @@ function frame(now: number) {
 	const W = innerWidth, H = innerHeight;
 	if (fountain > 0) { const n = Math.round(fountain * dt * 60); for (let i = 0; i < n; i++) spawn(W * (0.3 + Math.random() * 0.4), H * 0.62, 1, 160, 420); }
 	g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H); g.globalCompositeOperation = 'lighter';
-	ps = ps.filter((p) => (p.age += dt) < p.life);
+	{ let w = 0; for (let i = 0; i < ps.length; i++) { const p = ps[i]; if ((p.age += dt) < p.life) ps[w++] = p; } ps.length = w; } // v3.17: in place (no new array per frame)
 	for (const p of ps) {
 		p.vy += 520 * dt; p.vx *= 1 - 0.9 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.a += p.spin * dt;
 		const k = 1 - p.age / p.life, col = COLS[(p.r * 10 | 0) % COLS.length];

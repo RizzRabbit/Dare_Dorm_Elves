@@ -222,3 +222,11 @@ body.replay.portrait #replayBar .rpPre{display:none}
 body.replay.portrait #replayBar>span{overflow:hidden;text-overflow:ellipsis;min-width:0}
 body.replay.portrait #replayBar{gap:8px;padding:6px 6px 6px 12px}
 body.replay.portrait #replayPlay{padding:0 14px!important;min-width:0}
+/* v3.17 big-win motion (original, tuned to an industry-standard pacing reference): the tier hits are WAAPI (ui.ts tierHit); the ghost is
+   the outgoing title crossfading out over the new one; .bwWarm paints each title sprite once before the count (no
+   decode / upload hitch at a tier); #bigwin.out = a short opacity-only dismiss. */
+#bigwin .bwGhost{z-index:2;margin:0 auto}
+#bigwin .bwWarm{position:absolute;left:0;top:0;width:min(60vw,860px);aspect-ratio:3.6;opacity:.01;z-index:0;pointer-events:none}
+#bigwin .bwWarm>div{position:absolute;inset:0;background:center/contain no-repeat}
+#bigwin{transition:opacity .22s ease-out} #bigwin.out{opacity:0}
+#bigwin .bwAmt{will-change:transform}

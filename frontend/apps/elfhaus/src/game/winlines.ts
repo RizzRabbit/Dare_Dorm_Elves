@@ -1,9 +1,9 @@
 // Win-line presentation: one thin glowing line at a time races along a winning payline from reel 1 to reel 5
 // (canvas overlay, rAF, time-based). While a line plays only its winning symbols run the win sprite, its amount
 // ticks into the WIN field and a small amount label shows near the line's end. After the last line a short summary
-// highlights every winning symbol with no line over the board. Tap 1 = finish this line now and go to the next one;
-// tap 2 (any time in the same presentation, v3.15d) = zip to the end: no more lines, the WIN meter lands on the
-// step total, and a big-win banner that follows lands on its final tier/amount (countup.ts zip). Turbo plays a fast version. Normal pace = studio pace (anim-v4, tempo.ts TG; was x ANIM_TEMPO).
+// highlights every winning symbol with no line over the board. v3.17: staged (winstage.ts): a = the glow + draw-on and
+// hold, b = the lines one by one, c = the WIN meter count to the step total; a tap / double tap ends only the current
+// stage (eased settle) and the next one plays normally. Turbo plays a fast version (no b). Normal pace = studio pace (anim-v4, tempo.ts TG; was x ANIM_TEMPO).
 // Cost: one canvas, three strokes per frame (wide faint glow, mid glow, bright core) plus a pre-rendered head stamp;
 // nothing animates filter/shadow, and the canvas is cleared and idle between lines.
 import { LINES, REELS } from './config';
@@ -16,11 +16,12 @@ import type { LineWin } from './typesBookEvent';
 import { TG } from './tempo'; // anim-v4: win lines run at gameplay pace (not ANIM_TEMPO)
 import { sfx } from './audio';
 import { voice } from './voice';
-import { skipCounts, setZip } from './countup';
+import { skipCounts } from './countup';
+import { presenting, stage } from './winstage';
 
 let cv: HTMLCanvasElement | null = null, ctx: CanvasRenderingContext2D | null = null, dpr = 1;
 let head: HTMLCanvasElement | null = null;
-let skipLine = false, skipAll = false, taps = 0, active = false;
+let skipLine = false, skipAll = false, active = false;
 
 function ensure() {
 	const board = $('#board');
@@ -85,12 +86,8 @@ async function run(ms: number, fn: (t: number) => void) {
 }
 async function hold(ms: number) { const t0 = performance.now(); while (performance.now() - t0 < ms && !skipLine && !skipAll) await frame(); }
 
-/** Tap / Space handler (wired in game.ts; panel / menu taps are not passed in): tap 1 finishes the current line,
- *  tap 2 in the same presentation zips to the end. */
-export function tapLines() {
-	if (!active) return;
-	if (++taps >= 2) { skipAll = true; setZip(true); } else skipLine = true;
-}
+/** Legacy tap hook (game.ts): win taps now go through winstage.skipStage; kept as a no-op for callers. */
+export function tapLines() {}
 export const linesActive = () => active;
 
 /** Small floating amount over the middle of the line's winning cells (rises and fades in; transform/opacity only). */
@@ -109,44 +106,58 @@ export function clearRace() {
 /** Re-audit M1/M2: every line of the step draws on at once (thick gold glow), every winning symbol pops while the
  *  rest dim, and the WIN meter counts smoothly from the step's start to its total in one go (no per-line steps, no
  *  jump). Then, when there is more than one line, each line is shown once on its own with its amount (a short cycle,
- *  capped so a step never drags). Tap 1 = skip the draw-on / current cycle line, tap 2 = zip to the end (total now).
- *  base = WIN meter value (x bet) before this step. */
+ *  capped so a step never drags). v3.17 stages (winstage.ts): a = draw-on + hold, b = the line cycle, c = the meter
+ *  landing on the step total; a skip ends only the current stage. base = WIN meter value (x bet) before this step. */
 export async function playWins(wins: LineWin[], base: number) {
-	ensure(); active = true; skipAll = false; taps = 0; setZip(false);
+	ensure(); active = true; skipAll = false; skipLine = false;
+	presenting(true);
+	try {
 	const cells = document.querySelectorAll('.cell'); cells.forEach((c) => c.classList.add('dim'));
 	const n = wins.length, turbo = S.turbo;
 	const tot = base + wins.reduce((a, w) => a + w.win / 100, 0);
 	const Ps = wins.map((w) => path(w.lineIndex));
-	// 1) all at once: symbols pop, lines draw on together, the meter counts up to the step total
+	// a) all at once: symbols pop, lines draw on together; the meter starts counting to the step total (it keeps
+	//    counting through a / b skips: its own stage is c)
 	if (n) sfx('winline_highlight');
 	clearSymWins(); clearOvWins();
 	wins.forEach((w) => w.positions.forEach((p) => { ovWin(p.reel); const c = cellEl(p.reel, p.row); c.classList.remove('dim');
 		const fresh = !c.classList.contains('win'); c.classList.add('win'); litOn(c); symWin(c); if (fresh && !turbo) burst(c, 'pop'); }));
-	setWinMeter(tot);
+	const meter = setWinMeter(tot);
 	const drawOn = turbo ? 160 : TG(420);
-	await run(drawOn, (t) => drawAll(Ps, easeIO(t), 1));
-	await hold(turbo ? 120 : TG(Math.min(900, 380 + 120 * n)));
-	// 2) cycle: each line alone with its amount (more than one line, not turbo / zipped); capped at ~2.4 s in total
-	if (n > 1 && !turbo && !skipAll) {
-		const per = TG(Math.max(240, Math.min(520, 2400 / n)));
-		for (let i = 0; i < n && !skipAll; i++) {
-			skipLine = false; const w = wins[i];
-			document.querySelectorAll('.cell.win').forEach((c) => c.classList.add('soft'));
-			w.positions.forEach((p) => { const c = cellEl(p.reel, p.row); c.classList.remove('soft'); c.classList.remove('pulse'); void (c as HTMLElement).offsetWidth; c.classList.add('pulse'); });
-			const L = label(w.positions, moneyWin(w.win / 100 * bet()));
-			await run(per * 0.3, (t) => draw(Ps[i], 1, t));
-			await hold(per * 0.7);
-			L.remove();
-		}
-		document.querySelectorAll('.cell.soft').forEach((c) => c.classList.remove('soft'));
-	}
+	await stage('a', () => { skipLine = true; }, async () => {
+		await run(drawOn, (t) => drawAll(Ps, easeIO(t), 1));
+		await hold(turbo ? 120 : TG(Math.min(900, 380 + 120 * n)));
+	});
 	skipLine = false;
-	clearRace(); setWinMeter(tot); if (skipAll) skipCounts(); // zipped: the WIN meter shows the step total now
-	// round win so far (x bet): < 2 small, 2-5 medium, 5-10 big; >= 10 gets the big-win sting instead; turbo = small only
-	if (n && tot < 10) sfx(turbo || tot < 2 ? 'win_small' : tot < 5 ? 'win_medium' : 'win_big');
-	if (n && !turbo && tot >= 2 && tot < 10) voice('win');
-	wins.forEach((w) => w.positions.forEach((p) => { ovWin(p.reel); const c = cellEl(p.reel, p.row); c.classList.remove('dim'); c.classList.add('win'); litOn(c); symWin(c); }));
-	if (!skipAll) await hold(turbo ? 200 : TG(500));
+	// b) cycle: each line alone with its amount (more than one line, not turbo); capped at ~2.4 s in total
+	if (n > 1 && !turbo) {
+		await stage('b', () => { skipAll = true; }, async () => {
+			const per = TG(Math.max(240, Math.min(520, 2400 / n)));
+			for (let i = 0; i < n && !skipAll; i++) {
+				skipLine = false; const w = wins[i];
+				document.querySelectorAll('.cell.win').forEach((c) => c.classList.add('soft'));
+				w.positions.forEach((p) => { const c = cellEl(p.reel, p.row); c.classList.remove('soft'); c.classList.remove('pulse'); void (c as HTMLElement).offsetWidth; c.classList.add('pulse'); });
+				const L = label(w.positions, moneyWin(w.win / 100 * bet()));
+				await run(per * 0.3, (t) => draw(Ps[i], 1, t));
+				await hold(per * 0.7);
+				L.remove();
+			}
+		});
+		document.querySelectorAll('.cell.soft').forEach((c) => c.classList.remove('soft'));
+		document.querySelectorAll('.wlAmt').forEach((e) => e.remove());
+	}
+	skipLine = false; skipAll = false;
+	clearRace();
+	// c) the meter lands on the step total (a skip eases it there, countup SETTLE_MS), then a short beat
+	let skipC = false;
+	await stage('c', () => { skipC = true; skipCounts(); }, async () => {
+		await meter;
+		// round win so far (x bet): < 2 small, 2-5 medium, 5-10 big; >= 10 gets the big-win sting instead; turbo = small only
+		if (n && tot < 10) sfx(turbo || tot < 2 ? 'win_small' : tot < 5 ? 'win_medium' : 'win_big');
+		if (n && !turbo && tot >= 2 && tot < 10) voice('win');
+		wins.forEach((w) => w.positions.forEach((p) => { ovWin(p.reel); const c = cellEl(p.reel, p.row); c.classList.remove('dim'); c.classList.add('win'); litOn(c); symWin(c); }));
+		if (!skipC) { const t0 = performance.now(), ms = turbo ? 200 : TG(500); while (performance.now() - t0 < ms && !skipC) await frame(); }
+	});
 	document.querySelectorAll('.cell.pulse').forEach((c) => c.classList.remove('pulse'));
-	active = false; skipAll = false;
+	} finally { active = false; skipAll = false; skipLine = false; presenting(false); }
 }
