@@ -127,7 +127,7 @@ body.mk #app #armTag::after{content:"";position:absolute;left:-4px;right:-4px;to
 body.mk #app #armTag .t{overflow:visible}
 body.mk #app #armTag svg{width:.85em;height:.85em}
 /* v3.17 (James 02:28, 03:04): on phones Roxy's lower half stands BEHIND the see-through board (z: #scene canvas <
-   #mkFrame panel at 24% < #cells), so symbols must stay fully opaque there: the win "dim" of non-winning cells (and the ante
+   #mkFrame inner panel at 78% < #cells), so symbols must stay fully opaque there: the win "dim" of non-winning cells (and the ante
    preview dim) darkens with a filter instead of fading alpha, so she never shows through a symbol. Desktop is unchanged. */
 body.mk.phone .cell.dim{opacity:1;filter:brightness(.62) saturate(.85)}
 body.mk.phone #board.mAnt #cells .cell{opacity:1;filter:brightness(.5) saturate(.8)}
