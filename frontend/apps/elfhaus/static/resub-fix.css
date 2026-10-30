@@ -9,7 +9,7 @@ body:not(.portrait):not(.phl){--hb:max(clamp(34px,calc(5.4*var(--vh)),56px),var(
 body.portrait{--hb:max(48px,var(--t48));--sp:max(64px,calc(var(--t48)*1.3))}
 #app #hud{width:clamp(620px,calc(var(--cell)*5 + 220px),1100px)}
 /* switches: the button grows to a 48 px hit box with a transparent border; the visible track is the padding box */
-.sw,#anteRow .sw,#turboRow .sw,#stFeat{--swE:max(0px,calc((var(--t48) - 26px) / 2));width:calc(46px + 2*var(--swE));height:calc(26px + 2*var(--swE));
+.sw,#anteRow .sw,#turboRow .sw,#stFeat,#stBonus{--swE:max(0px,calc((var(--t48) - 26px) / 2));width:calc(46px + 2*var(--swE));height:calc(26px + 2*var(--swE));
   border:var(--swE) solid transparent!important;background-clip:padding-box!important;box-shadow:inset 0 0 0 1.5px #8A6A3A!important;margin:calc(-1*var(--swE)) calc(-1*var(--swE)) calc(-1*var(--swE)) 0}
 .sw::before{display:none}
 .chip,.advBtn,.go,#msgOk,#replayPlay,#popMenu .pmRow,#bmBet .ico,#autoMenu input{min-height:var(--t48)}
@@ -233,3 +233,9 @@ body.replay.portrait #replayPlay{padding:0 14px!important;min-width:0}
 
 /* v3.18 intro card carousel: swipes on the intro are ours (no browser pan / pull-to-refresh while the vestibule is up) */
 body.introOn #loader{touch-action:none;user-select:none;-webkit-user-select:none}
+
+/* v3.18b: TAP TO CONTINUE appears only once the TOTAL WIN has landed (subtle fade, same type/colour) */
+#outro .otHint{transition:opacity .35s ease}
+#outro:not(.landed) .otHint,body.tb #outro:not(.landed) .otHint{opacity:0}
+/* v3.18b: AUTO-PLAY BONUS row in the autoplay menu (same row + switch as the others) */
+#abRow{margin:10px 0 8px}

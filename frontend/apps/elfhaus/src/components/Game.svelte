@@ -93,6 +93,7 @@
 	<div class="mView"><div class="mTrack">
 	<div class="mHead"><h2 id="autoTitle">AUTOPLAY</h2></div>
 	<div id="autoCounts" role="radiogroup" aria-label="Number of spins"></div>
+	<div id="abRow" class="row"><span class="lbl">AUTO-PLAY BONUS</span><button id="stBonus" class="sw" role="switch" aria-checked="false" aria-label="Auto-play bonus"><i></i></button></div>
 	<button id="advBtn" class="advBtn" aria-expanded="false">ADVANCED <svg viewBox="0 0 12 12"><path d="M3 4.5 6 7.5 9 4.5" /></svg></button>
 	<div id="adv" class="hidden">
 		<label class="row"><span class="lbl">Stop on loss</span><input id="stLoss" inputmode="decimal" placeholder="Off" autocomplete="off" /></label>

@@ -18,7 +18,7 @@ export const $ = <T extends HTMLElement = HTMLElement>(s: string) => document.qu
 const LINE_COLORS = ['#C8435F', '#4E6A8C', '#B79BE0', '#7E9C6B', '#9A6FB0', '#8B7FA8', '#5E8F95', '#6E6880'];
 
 export const S = {
-	currency: 'USD', balance: 0, levels: [] as number[], betIdx: 0, ante: false, turbo: false, busy: false, auto: 0,
+	currency: 'USD', balance: 0, levels: [] as number[], betIdx: 0, ante: false, turbo: false, busy: false, auto: 0, autoBonus: false,   /* v3.18b: autoplay plays bonuses hands-free (AUTO-PLAY BONUS toggle, default off) */
 	sym: [] as string[][], vals: new Map<number, number>(), full: new Map<number, number>(), groups: [] as Group[],
 	roundBase: 0, meterX: 0, inBonus: false, cell: 100, ready: false, replay: false, replayBet: 0, roundBet: 0,
 	jur: {} as Record<string, any>,

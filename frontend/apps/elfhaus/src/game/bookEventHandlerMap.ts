@@ -64,9 +64,10 @@ function lockCarried(l: Locked) {
 	l.singles.forEach((s) => { const c = cellEl(s.reel, s.row); if (!c.classList.contains('locked')) { c.classList.add('locked'); lockFx(c); fresh = true; } });
 	if (fresh) sfx('wild_sticky_lock');
 }
-/** Bonus start card: resolves on START / a tap on the overlay (after a 300 ms guard), or after `autoMs` (autoplay only;
- *  same pace as before: ui.wait; 0 = wait for the player however long it takes). */
-export function startGate(I: HTMLElement, autoMs: number): Promise<void> {
+/** Bonus start card: resolves on START / a tap on the overlay (after a 300 ms guard against a leftover tap from the spin).
+ *  v3.18b (James): no timed advance in manual play or in autoplay, turbo on or off. Only autoplay with AUTO-PLAY BONUS on
+ *  passes `autoMs` (hands-free: the old pace, ui.wait). */
+export function startGate(I: HTMLElement, autoMs = 0): Promise<void> {
 	const shown = performance.now(); I.dataset.waiting = autoMs ? 'auto' : 'start';
 	return new Promise<void>((res) => {
 		const done = () => { I.onclick = null; delete I.dataset.waiting; res(); };
@@ -74,6 +75,9 @@ export function startGate(I: HTMLElement, autoMs: number): Promise<void> {
 		if (autoMs) wait(autoMs).then(() => { if (I.dataset.waiting) done(); });
 	});
 }
+/** v3.18b: autoplay with the AUTO-PLAY BONUS toggle on plays bonuses hands-free; otherwise every bonus waits for taps. */
+const handsFree = () => S.auto > 0 && S.autoBonus;
+
 export const endBonusUi = () => { music('base'); setBg(false); document.body.classList.remove('inBonus'); $('#fsBar').classList.add('hidden'); $('#intro').classList.add('hidden'); $('#fsMore').classList.add('hidden'); S.inBonus = false; };
 
 /** EGW: the reels named by egwStart (reel -> stack value). The math sends them as already-locked full reels in the
@@ -260,7 +264,7 @@ export const bookEventHandlerMap: Handlers = {
 		// v3.18 (James 2026-10-30): the player starts every bonus with START (or a tap on the card / Space), in turbo
 		// exactly as without it; the old timer advanced it on its own (turbo: ~0.5 s, which read as "starts by itself").
 		// Only autoplay keeps the timed advance. Taps in the first 300 ms are ignored (a slam-stop double tap).
-		await startGate(I, S.auto > 0 ? (S.turbo ? 1400 : 2600) : 0);
+		await startGate(I, handsFree() ? (S.turbo ? 1400 : 2600) : 0);   // v3.18b: waits for START (autoplay too, count kept) unless AUTO-PLAY BONUS
 		I.onclick = null; I.classList.add('hidden'); featClose(fx); unScatter(); voice('fsstart', { tier: ev.tier });
 		showFsBar();
 		$('#fsTier').textContent = TL(ev.tier); $('#fsCount').textContent = `FREE SPIN 0 / ${ev.totalFs}`;
@@ -302,16 +306,21 @@ export const bookEventHandlerMap: Handlers = {
 	},
 	async freeSpinEnd(ev) {
 		if (capHit) { endBonusUi(); return; }   // v3.15g: after a capped max win go straight back to base (finalWin sets the meter)
-		// outro: TOTAL WIN counts up over a burst + confetti; tap = jump to the amount, tap again (or wait) = close
+		// outro: TOTAL WIN counts up over a burst + confetti; tap = jump to the amount, tap again = close
 		const O = $('#outro'), fx = O.querySelector<HTMLElement>('.bwFx'), amt = O.querySelector<HTMLElement>('.otAmt')!;
 		const total = Math.min(ev.amount / 100, MAX_WIN_X) * bet();
 		setAmount(amt, 0); O.classList.remove('hidden'); featOpen(fx); sfx('fs_outro'); duck(true); const cu = loop('bigwin_countup_loop');   // no star glints on the total-win screen (round 6)
-		let close = () => {}; const closed = new Promise<void>((r) => (close = r)); let landed = false;
-		O.onclick = () => (landed ? close() : skipCounts());
+		// v3.18b (James): the screen waits for a tap once landed, turbo on or off and in autoplay too (autoplay keeps its count and
+		// resumes right after the tap). Only autoplay with AUTO-PLAY BONUS on closes it by itself after the short hold.
+		// Staged: a tap during the count-up lands it; once landed a tap / Space / Enter closes it (300 ms guard vs leftover taps).
+		let close = () => {}; const closed = new Promise<void>((r) => (close = r)); let landedAt = 0;
+		O.classList.remove('landed'); delete O.dataset.waiting;
+		O.onclick = () => { if (!landedAt) skipCounts(); else if (performance.now() - landedAt >= 300) close(); };
 		await countTo(amt, total, countMs(total / Math.max(bet(), 1e-9), S.turbo) * gtempo()); // anim-v4: studio pace
-		landed = true; cu.stop(200);
-		await Promise.race([wait(S.turbo ? 900 : 1800), closed]);
-		duck(false);
+		landedAt = performance.now(); cu.stop(200); O.classList.add('landed');
+		if (handsFree()) { O.dataset.waiting = 'auto'; await Promise.race([wait(S.turbo ? 900 : 1800), closed]); }   // AUTO-PLAY BONUS: short hold
+		else { O.dataset.waiting = 'tap'; await closed; }
+		duck(false); delete O.dataset.waiting; O.classList.remove('landed');
 		O.onclick = null; O.classList.add('hidden'); featClose(fx); endBonusUi();
 	},
 	async mysteryStart() { await wait(200); },

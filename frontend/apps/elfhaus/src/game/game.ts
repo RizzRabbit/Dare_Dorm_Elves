@@ -143,7 +143,7 @@ function setBusy(b: boolean) {
 // the bought trigger itself doesn't count, or every buy would stop it). The spin button shows the spins left;
 // pressing spin (or the autoplay button, or Space) stops it.
 const AUTO_COUNTS = [10, 25, 50, 100, 250, 500, 1000];
-let autoPick = 10, featStop = false;
+let autoPick = 10, featStop = false, autoBonus = false;   // v3.18b: AUTO-PLAY BONUS (default off: autoplay waits for taps at a bonus)
 const stops = { loss: 0, win: 0, up: 0, feat: false, start: 0 };
 let featHit = false;
 const setAuto = () => {
@@ -169,13 +169,14 @@ function buildAuto() {
 	$('#autoCounts').innerHTML = AUTO_COUNTS.map((n) => `<button role="radio" aria-checked="${n === autoPick}" class="chip${n === autoPick ? ' on' : ''}" data-n="${n}">${n}</button>`).join('');
 	$('#autoCounts').querySelectorAll<HTMLElement>('.chip').forEach((c) => (c.onclick = () => { autoPick = Number(c.dataset.n); buildAuto(); }));
 	const sw = $('#stFeat'); sw.classList.toggle('on', featStop); sw.setAttribute('aria-checked', String(featStop));
+	const ab = $('#stBonus'); ab.classList.toggle('on', autoBonus); ab.setAttribute('aria-checked', String(autoBonus));
 	['#stLoss', '#stWin', '#stUp'].forEach((id) => (($(id) as HTMLInputElement).placeholder = `Off · ${S.currency}`));
 	readStops();
 }
 function startAuto() {
 	if (S.replay) return; // v3.16 (#171)
 	const f = readStops(); if (!f || S.busy) return;
-	Object.assign(stops, f, { feat: featStop, start: S.balance });
+	Object.assign(stops, f, { feat: featStop, start: S.balance }); S.autoBonus = autoBonus;
 	closePanel('#autoMenu', true);
 	S.auto = autoPick; setAuto(); round(spinMode());
 }
@@ -580,6 +581,7 @@ function wire() {
 	$('#autoStart').onclick = startAuto;
 	$('#advBtn').onclick = () => { const open = $('#adv').classList.toggle('hidden') === false; $('#advBtn').setAttribute('aria-expanded', String(open)); $('#advBtn').classList.toggle('open', open); measurePanel('#autoMenu'); };
 	$('#stFeat').onclick = () => { featStop = !featStop; buildAuto(); };
+	$('#stBonus').onclick = () => { autoBonus = !autoBonus; buildAuto(); };
 	['#stLoss', '#stWin', '#stUp'].forEach((id) => {
 		const el = $(id) as HTMLInputElement; el.oninput = () => readStops();
 		// on blur a valid amount is tidied to the money decimals rule (2 places; more only below one unit when significant)
@@ -612,18 +614,23 @@ function wire() {
 	initSettings(() => { buildRules(); openPanel('#menu'); });
 	$('#replayPlay').onclick = () => playReplay();
 	addEventListener('keydown', (e) => {
+		// v3.18b: Space / Enter = START on the bonus card and continue on the TOTAL WIN screen (their own click handlers apply
+		// the staged skip + 300 ms guard). In autoplay Space keeps its job (stop autoplay); Enter or a tap continues it.
+		if ((e.code === 'Enter' || e.code === 'NumpadEnter' || (e.code === 'Space' && !S.auto && !S.jur.disabledSpacebar)) && !e.repeat && !anyOpen() && !popOpen()) {
+			const gate = !$('#intro').classList.contains('hidden') ? $('#intro .cont') : !$('#outro').classList.contains('hidden') ? $('#outro') : null;
+			if (gate) { e.preventDefault(); (gate as HTMLElement).click(); return; }
+		}
 		if (e.code !== 'Space' || S.jur.disabledSpacebar) return;
 		if (anyOpen() || popOpen()) return;
 		e.preventDefault();
 		if (S.auto) { stopAuto(); return; }
-		if (!e.repeat && !$('#intro').classList.contains('hidden')) { ($('#intro .cont') as HTMLElement).click(); return; }   // v3.18: Space = START on the bonus card
 		if (S.busy) { if (!e.repeat) skipBoard(); return; } // Space mid-round = the same skip as a tap on the board
 		if (e.repeat) return;
 		S.replay ? playReplay() : round(spinMode());
 	});
 	// plain button clicks (the buy menu, bet steps, mode arming and errors play their own sounds above)
 	document.addEventListener('click', (e) => {
-		const b = (e.target as Element)?.closest?.('#menuBtn,.mX,#turboBtn,#turboSw,#autoBtn,#autoStart,#advBtn,#msgOk,#replayPlay,.chip,#popMenu .pmRow,#stFeat') as HTMLButtonElement | null;
+		const b = (e.target as Element)?.closest?.('#menuBtn,.mX,#turboBtn,#turboSw,#autoBtn,#autoStart,#advBtn,#msgOk,#replayPlay,.chip,#popMenu .pmRow,#stFeat,#stBonus') as HTMLButtonElement | null;
 		if (b && !b.disabled) sfx('ui_click');
 	});
 	addEventListener('resize', layout);
