@@ -39,6 +39,9 @@ export function fitStage() {
 	document.body.classList.toggle('phl', phl);
 	document.body.classList.toggle('tb', tb > 1.001);
 	document.body.classList.toggle('portrait', portrait); // same rule for the loader, the game and every CSS layer
+	// v3.17 (James 02:26): 'phone' = portrait, or a landscape viewport no taller than 500 CSS px (phone landscape); the see-through
+	// board (mkboard.ts drawFrame: inner panel 78%, frame solid) keys on it, so desktop (1280x720 and up) is unchanged
+	document.body.classList.toggle('phone', portrait || Math.min(vw, vh) <= 500);
 	const r = document.documentElement.style;
 	r.setProperty('--dw', w + 'px'); r.setProperty('--dh', h + 'px'); r.setProperty('--s', String(s));
 	r.setProperty('--tb', tb.toFixed(3)); r.setProperty('--tbs', Math.min(tb, 1.5).toFixed(3)); r.setProperty('--tbm', Math.min(tb, 1.6).toFixed(3));

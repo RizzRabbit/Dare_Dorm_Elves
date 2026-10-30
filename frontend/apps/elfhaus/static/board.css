@@ -118,3 +118,14 @@ html body.mk #app :is(#menuBtn,#hud button,#strip button):focus:not(:focus-visib
 html body.mk #app :is(#menuBtn,#hud button,#strip button,#armTag){-webkit-tap-highlight-color:transparent!important}
 /* the old round-button press / tap ring sprites (fx_btn) are circles: off on the square approved buttons (mockup press = scale only) */
 html body.mk #app #hud :is(.uiRing,.uiTap,.uiHalo){display:none!important}
+/* v3.17 (James 03:04/03:06): the phone see-through panel is drawn in mkboard.ts drawFrame (well + tiles at 78%, frame 100%).
+   Layer order: #bg room < canvas#scene (Roxy) < #mkFrame < #cells symbols/wilds/stacks < win lines/FX < HUD/UI. */
+   pill stays ~22 px on phones, its tap target is padded invisibly to 44 px */
+/* v3.17 (James 02:28, 03:04): on phones Roxy's lower half stands BEHIND the see-through board (z: #scene canvas <
+   #mkFrame panel at 24% < #cells), so symbols must stay fully opaque there: the win "dim" of non-winning cells (and the ante
+   preview dim) darkens with a filter instead of fading alpha, so she never shows through a symbol. Desktop is unchanged. */
+body.mk.phone .cell.dim{opacity:1;filter:brightness(.62) saturate(.85)}
+body.mk.phone #board.mAnt #cells .cell{opacity:1;filter:brightness(.5) saturate(.8)}
+/* v3.17 (James 03:08): the bet -/+ draw smaller than their slot (mkboard BET_VK); this invisible pad keeps the tap area >= 44 px */
+body.mk #app #hud :is(#betDown,#betUp){position:absolute}
+body.mk #app #hud :is(#betDown,#betUp)::after{content:""!important;display:block!important;position:absolute!important;inset:calc(-1 * var(--hitPad, 0px))!important;background:none!important;border:0!important;box-shadow:none!important;opacity:1!important}

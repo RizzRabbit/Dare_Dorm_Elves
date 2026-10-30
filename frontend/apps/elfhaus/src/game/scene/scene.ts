@@ -20,6 +20,8 @@ const roxyMask = new Graphics();
 let calm: Sprite | null = null;
 let now = 0, bonus = false, partyK = 0, snap = false, roxyOn = true, hold = false, free = false, last: [boolean, DOMRect] | null = null;
 /** where Roxy stands (stage design px) + scale; read by the intro */
+/** v7 rig rows from her waist (top of the waist blend, ~src row 500) down to the hip row (rows.hips = 560 + headroom). */
+const WAIST = 60;
 export const roxyAt = { x: 0, y: 0, s: 1, portrait: false };
 export const sceneNow = () => now;
 type Mote = { sp: Sprite; x: number; y: number; vx: number; vy: number; s: number; ph: number; a: number };
@@ -109,11 +111,14 @@ export function placeScene(portrait: boolean, fr: DOMRect) {
 		const rx0 = Math.max(770 + Math.max(0, rs0 / f - 1.85) * 70, 1080 + 8 - (R.srcW / 2) * rs0) - 47;   // -47: the v7 figure sits right of the mockup's in its box
 		// ... v3.17 (James): scaled by the board's own factor and kept at the same place relative to the frame's top-right
 		// corner (hips on the frame top). If her head would leave the top of the screen she slides down behind the board
-		// instead (the frame clips her), never smaller.
+		// instead, never smaller; on short phones her hair top (not the old hop headroom) goes to 14 px under the screen top.
 		const F = g.bs / bs0, rs = rs0 * F, R0 = 540 + FW * bs0 / 2, R1 = 540 + FW * g.bs / 2;
-		const rx = R1 + (rx0 - R0) * F, hip = Math.max(T, 46 + (cutRow - hopTop) * rs), feet = hip + (R.srcH - cutRow) * rs;
+		const rx = R1 + (rx0 - R0) * F, hip = Math.max(T + WAIST * rs, 14 + (cutRow - R.rows.headTop) * rs), feet = hip + (R.srcH - cutRow) * rs;
 		if (!hold) { R.view.position.set(g.ox + rx * k, g.oy + feet * k); R.view.scale.set(rs * k); }
-		clipRoxy(hold && free ? null : fr.top + 14); roxyL.visible = true;
+		// v3.17 (James 02:29): chest up fully ABOVE the frame top; from the waist down (waist at the frame top, WAIST rig rows
+		// above the hip row) she stands behind the see-through phone board (board.css body.phone) and shows faintly through it; clipped at the reel window's
+		// foot so nothing of her shows under the board (button row / HUD)
+		clipRoxy(hold && free ? null : fr.top + (FT + BH) * u); roxyL.visible = true;
 		R.shadow(false); R.setGrade({ cut: cutRow / R.srcH, res: ST.s * (window.devicePixelRatio || 1) });
 		Object.assign(roxyAt, { x: g.ox + rx * k, y: g.oy + feet * k, s: rs * k, portrait });
 	} else if (!portrait) {

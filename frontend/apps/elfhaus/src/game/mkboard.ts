@@ -37,28 +37,31 @@ export function mkGeo(): MkGeo {
 	const cmp = { x: 800, y: 452, s: 0.64 };
 	if (ST.portrait) {
 		const DH = Math.max(1720, 1080 * H / W), D = { w: 1080, h: DH }, f = fit(D), tt = t48(f.k);
-		const HB = 344, hudY = DH - HB - 18;
-		const loose = DH >= 2100, kk = loose ? 1 : 0.86, GAPB = loose ? 44 : 22, RH = 176 * kk, ab = Math.max(160 * kk, tt);
+		// v3.17 (James 02:26): the button row and the HUD bar shrink a little (touch targets stay >= 44 px) and the board
+		// moves DOWN into the freed space (same width / shape); T0 / bs0 keep the pre-v3.17 numbers (Roxy's base size, room)
+		const loose = DH >= 2100, hu = loose ? 0.92 : 0.86, HB = 344 * hu, hudY = DH - HB - 18, t44 = (Math.ceil(44 / ST.s) + 2) / f.k;
+		const kk0 = loose ? 1 : 0.86, kk = loose ? 0.9 : 0.76, GAPB = loose ? 40 : 18, RH = 176 * kk, ab = Math.max(160 * kk, t44);
 		const rowY = hudY - GAPB - RH / 2, below = 2 * GAPB + RH;
+		const hudY0 = DH - 344 - 18, below0 = 2 * (loose ? 44 : 22) + 176 * kk0;
 		// bs0: the pre-v3.17 scale (top 690 reserved for the logo + Roxy; 0.92..1.28, so short phones got a ~74%-wide board).
 		// v3.17 (James, iPhone on studio.engine.io): the board scales UNIFORMLY (same shape, square cells) to ~95% of the
 		// width (frame 868 * BS_W = 1026 of 1080), its foot stays where it was (BUY row + HUD untouched), so it grows upward;
 		// capped only so the logo on the frame top still clears the menu button (TOP_MIN).
-		const bs0 = Math.max(0.92, Math.min(1.28, (hudY - below - 690) / (BH + FB)));
+		const bs0 = Math.max(0.92, Math.min(1.28, (hudY0 - below0 - 690) / (BH + FB)));
 		const menuB = (12 + Math.max(144 * f.k, Math.ceil(48 / ST.s) + 2)) / f.k - f.oy / f.k;   // menu button bottom (design units)
 		const TOP_MIN = menuB + 12 + 64 + 412 * 0.4 * 0.62;   // logo top under the menu; v3.17: logo always clear of the frame top (y = T - 64)
 		const bs = Math.max(Math.min(bs0, BS_W), Math.min(BS_W, (hudY - below - TOP_MIN) / (BH + FB + FT)));
 		const by = hudY - below - (BH + FB) * bs, bx = 540 - BW * bs / 2, T = by - FT * bs;
-		const sb = (s: number) => Math.max(s, tt), t44 = (Math.ceil(44 / ST.s) + 2) / f.k;
-		return { mode: 'port', ...f, D, loose, bx, by, bs, bs0, T, T0: hudY - below - (BH + FB + FT) * bs0,
+		const sb = (s: number) => Math.max(s, tt);
+		return { mode: 'port', ...f, D, loose, bx, by, bs, bs0, T, T0: hudY0 - below0 - (BH + FB + FT) * bs0,
 			logo: { x: Math.max(272, 540 - BW * bs / 2 + 220), y: T - 64, s: 0.4 },
 			hud: { x: 14, y: hudY, w: 1052, h: HB, r: 22 },
-			fBal: { x: 14 + 40, y: hudY + 28, ls: 30, vs: 56, w: 400 }, fWin: { x: 14 + 470, y: hudY + 28, ls: 30, vs: 56, w: 300 },
+			fBal: { x: 14 + 40, y: hudY + 28 * hu, ls: 30 * hu, vs: 56 * hu, w: 400 }, fWin: { x: 14 + 470, y: hudY + 28 * hu, ls: 30 * hu, vs: 56 * hu, w: 300 },
 			// v3.17 (James: the +/- were ~70 px squares): 126 design (~46 px on a 390-wide phone), floor 44 screen px for
 			// touch; the bet row tightens around them: [-] left-aligned with BALANCE, BET between, [+] under WIN
-			fBet: { x: 14 + 190, y: hudY + 204, ls: 30, vs: 56, w: 200 },
-			minus: { x: 14 + 103, y: hudY + 250, s: Math.max(126, t44), ic: 2.3 }, plus: { x: 14 + 456 + Math.max(126, t44) / 2, y: hudY + 250, s: Math.max(126, t44), ic: 2.3 },
-			spin: { x: 14 + 904, y: hudY + 172, s: sb(236), ic: 2.55 },
+			fBet: { x: 14 + 190, y: hudY + 204 * hu, ls: 30 * hu, vs: 56 * hu, w: 200 },
+			minus: { x: 14 + 103, y: hudY + 250 * hu, s: Math.max(126 * hu, t44), ic: 2.3 }, plus: { x: 14 + 456 + Math.max(126 * hu, t44) / 2, y: hudY + 250 * hu, s: Math.max(126 * hu, t44), ic: 2.3 },
+			spin: { x: 14 + 904, y: hudY + 172 * hu, s: sb(236 * hu), ic: 2.55 },
 			auto: { x: 30 + ab / 2, y: rowY, s: ab, ic: 2.5 * kk }, turbo: { x: 30 + ab * 1.5 + 18 * kk, y: rowY, s: ab, ic: 2.5 * kk },
 			bonus: { v: 'p', x: 1066 - 290 * kk, y: rowY, s: kk }, cmp };
 	}
@@ -122,17 +125,20 @@ export function mkPlace(cell: number) {
 	const h = g.hud, hx = X(h.x), hy = Y(h.y);
 	css($('#hud'), { position: 'absolute', left: hx, top: hy, width: L(h.w), height: L(h.h), 'max-width': 'none', margin: '0', padding: '0', 'border-radius': L(h.r) + 'px' });
 	const rel = (x: number, y: number) => ({ x: X(x) - hx, y: Y(y) - hy });
-	const btn = (sel: string, b: Btn) => {
-		const s = L(b.s), p = rel(b.x, b.y), e = $(sel);
+	// vk / ik: visual size and glyph scale inside the layout slot (v3.17, James 03:08: the bet -/+ draw at 0.82 of their slot,
+	// about 38 px on phones, glyph smaller still; the tap area is padded invisibly back to >= 44 screen px via ::after --hitPad)
+	const btn = (sel: string, b: Btn, vk = 1, ik = 1) => {
+		const s = L(b.s) * vk, p = rel(b.x, b.y), e = $(sel);
 		css(e, { position: 'absolute', left: p.x - s / 2, top: p.y - s / 2, width: s, height: s, margin: '0', padding: '0', 'border-radius': (s * 0.28) + 'px',
-			'border-width': bwPx(Math.max(2, b.s / 40) * g.k), '--icS': String(L(b.ic)), '--bh': s + 'px' });
+			'border-width': bwPx(Math.max(2, b.s * vk / 40) * g.k), '--icS': String(L(b.ic) * vk * ik), '--bh': s + 'px',
+			'--hitPad': Math.max(0, (Math.ceil(44 / ST.s) - s) / 2) + 'px' });
 		return { x: hx + p.x - s / 2, y: hy + p.y - s / 2, s };
 	};
 	// field positions in the HUD (absolute world coords in the geo -> bar-relative)
 	const fld = (sel: string, f: Field) => { const p = rel(f.x, f.y); css($(sel), { position: 'absolute', left: p.x, top: p.y, width: L(f.w), margin: '0', padding: '0',
 		'--ls': Math.max(L(f.ls), 12 / ST.s) + 'px', '--vs': Math.max(L(f.vs), 14 / ST.s) + 'px' }); };   // audit text floor: >= 12 screen px
 	fld('#strip .m:nth-child(1)', g.fBal); fld('#strip .m:nth-child(2)', g.fBet); fld('#strip .m:nth-child(3)', g.fWin);
-	btn('#betDown', g.minus); btn('#betUp', g.plus);
+	btn('#betDown', g.minus, BET_VK, 0.88); btn('#betUp', g.plus, BET_VK, 0.88);
 	const sp = btn('#spinBtn', g.spin);
 	btn('#autoBtn', g.auto); btn('#turboBtn', g.turbo);
 	// BUY plate (mockup paintBonus 'v' = tall, 'p' = wide portrait row)
@@ -180,9 +186,14 @@ function canvasIn(id: string, before: boolean) {
 	if (!c) { c = document.createElement('canvas'); c.id = id; c.setAttribute('aria-hidden', 'true'); const f = $('#frame'); if (before) f.insertBefore(c, f.firstChild); else f.appendChild(c); }
 	return c;
 }
+const BET_VK = 0.82;
 let drawn = '';
 function drawFrame(u: number) {
-	const dpr = Math.min(2, (window.devicePixelRatio || 1) * ST.s), key = `${u.toFixed(4)}|${dpr.toFixed(3)}`;
+	// v3.17 (James 03:04 / 03:06): on phones the inner panel (well + cell tiles) is 78% opaque so Roxy's lower half, standing
+	// behind the board (canvas#scene < #mkFrame < #cells), is only faintly visible; the frame body, bevel, sill, studs and the
+	// neon edge stay 100% solid. Desktop unchanged (PANEL_A = 1).
+	const PANEL_A = document.body.classList.contains('phone') ? 0.78 : 1;
+	const dpr = Math.min(2, (window.devicePixelRatio || 1) * ST.s), key = `${u.toFixed(4)}|${dpr.toFixed(3)}|${PANEL_A}`;
 	const fc = canvasIn('mkFrame', true), nc = canvasIn('mkNeon', false);
 	const cw = (FW + 2 * M) * u, ch = (FH + 2 * M) * u;
 	for (const c of [fc, nc]) css(c, { position: 'absolute', left: -M * u, top: -M * u, width: cw, height: ch });
@@ -199,6 +210,7 @@ function drawFrame(u: number) {
 	rr(g, 1.5, 1.5, FW - 3, FH - 3, 29); g.lineWidth = 3; g.strokeStyle = gr; g.stroke();
 	gr = g.createLinearGradient(0, FT + BH + 6, 0, FH); gr.addColorStop(0, '#4a3860'); gr.addColorStop(0.12, '#2a1d38'); gr.addColorStop(1, '#120b19');
 	g.fillStyle = gr; g.fillRect(14, FT + BH + 6, FW - 28, FB - 18);
+	if (PANEL_A < 1) { g.save(); g.globalCompositeOperation = 'destination-out'; rr(g, FT - 6, FT - 6, BW + 12, BH + 12, 18); g.fill(); g.restore(); }
 	g.save(); rr(g, FT - 6, FT - 6, BW + 12, BH + 12, 18); g.fillStyle = '#05030a'; g.fill();
 	g.shadowColor = 'rgba(0,0,0,0.9)'; g.shadowBlur = 16 * sc; rr(g, FT - 6, FT - 6, BW + 12, BH + 12, 18); g.lineWidth = 5; g.strokeStyle = '#020104'; g.stroke(); g.restore();
 	for (let i = 0; i < 5; i++) for (let r = 0; r < 4; r++) {
@@ -207,6 +219,8 @@ function drawFrame(u: number) {
 		rr(g, x, y, CELL - 8, CELL - 8, 14); g.fillStyle = gr; g.fill();
 		rr(g, x + 0.5, y + 0.5, CELL - 9, CELL - 9, 14); g.lineWidth = 1; g.strokeStyle = 'rgba(255,255,255,0.05)'; g.stroke();
 	}
+	// phone: knock the whole inner panel (well + tiles, drawn solid above) back to PANEL_A in one pass, so it is a uniform 78%
+	if (PANEL_A < 1) { g.save(); g.globalCompositeOperation = 'destination-out'; g.globalAlpha = 1 - PANEL_A; rr(g, FT - 6, FT - 6, BW + 12, BH + 12, 18); g.fill(); g.restore(); }
 	const stud = (x: number, y: number) => { g.save(); g.translate(x, y); g.rotate(Math.PI / 4); const s = 5, sg = g.createLinearGradient(-s, -s, s, s);
 		sg.addColorStop(0, '#d9cfe6'); sg.addColorStop(1, '#4a3d58'); g.fillStyle = sg; g.fillRect(-s, -s, 2 * s, 2 * s); g.restore(); };
 	[[17, 17], [FW - 17, 17], [17, FH - 22], [FW - 17, FH - 22], [FW / 2 - 140, FH - 22], [FW / 2 + 140, FH - 22]].forEach(([x, y]) => stud(x, y));
