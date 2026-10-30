@@ -197,8 +197,8 @@ export function setWinMeter(x: number) {
 	else setAmount($('#win'), nx * bet());
 }
 export function resetWinMeter() { S.meterX = 0; setAmount($('#win'), 0); setZip(false); }
-/** Big-win banner. The amount climbs through the tiers (countup.ts countTiers: fast between tiers, a short crawl
- *  into each threshold, the tier title swaps in with a pop as it crosses, much faster past 1000x, eased into the
+/** Big-win banner. The amount climbs through the tiers (countup.ts countTiers: bursts out of each tier and slows into the next, a crawl
+ *  into Big / Mega / Super / Epic, the tier title swaps in with a pop as it crosses, fast from Epic on, eased into the
  *  exact amount). At 1000x the character layer fades in behind the amount (bigwinElves.ts, the Vi / Roxy / Coco POV group). Tap once = jump to the
  *  end, tap again (or wait) = close. Turbo shortens everything. featfx.ts adds burst / confetti / pop sheets. */
 /** aifix 12: win-title type system hook. Sets data-tier (big|mega|super|epic|legendary) for the CSS type ramp and,

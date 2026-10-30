@@ -51,10 +51,11 @@ export const setZip = (v: boolean) => { zip = v; };
 export const zipped = () => zip;
 
 // ---------- anticipatory big-win count (the banner amount) ----------
-// Count in "x the bet" space through the tier thresholds below the win: each leg accelerates out of the last tier,
-// eases toward the next one, then crawls the last few percent (tension) before it crosses; crossing calls onTier
-// (title swap + pop) and the next leg speeds off again. Past 1000x the remaining legs run much faster. The final
-// leg eases out into the exact amount. Everything is closed-form on rAF time; tap skips to the end.
+// Count in "x the bet" space through the tier thresholds below the win. Up to Epic each leg bursts out of the last
+// tier and decelerates (ease-out) toward the next threshold, then creeps over the last stretch (tension) before it
+// crosses; crossing calls onTier (title swap + pop) and the next leg bursts off again (Big -> Mega -> Super -> Epic).
+// Once Epic is reached the rest counts up fast to the exact amount (Legendary, if any, is crossed on the way without
+// a crawl). Everything is closed-form on rAF time; tap skips to the end. Turbo runs the same plan at 0.45x.
 export const BIG_TIERS = [
 	{ x: 10, name: 'BIG WIN' }, { x: 25, name: 'MEGA WIN' }, { x: 50, name: 'SUPER WIN' }, { x: 100, name: 'EPIC WIN' }, { x: 1000, name: 'LEGENDARY WIN' },
 ] as const;
@@ -65,18 +66,24 @@ const crawl = (u: number) => 0.5 - Math.cos(Math.PI * u) / 2;
 const easeOutQuart = (u: number) => 1 - Math.pow(1 - u, 4);
 /** Build the timeline (ms) for a win of X times the bet. */
 export function tierPlan(X: number, turbo = false) {
-	const k = turbo ? 0.45 : 1, keys: Key[] = [];
+	const k = turbo ? 0.45 : 1, keys: Key[] = [], EPIC = 100;
 	let t = 0, v = 0;
 	const tiers = BIG_TIERS.map((b, i) => ({ ...b, i })).filter((b) => b.x <= X);
 	tiers.forEach((b) => {
-		const fast = v >= 1000, leg = (fast ? 260 : b.x === 1000 ? 820 : b.x === 10 ? 420 : 460) * k;
-		const near = b.x * (b.x === 10 ? 0.9 : 0.94), cr = (fast ? 0 : 260) * k;
-		keys.push({ t0: t, t1: t + leg, v0: v, v1: near, ease: v === 0 ? easeIn : easeInOut }); t += leg;
+		if (v >= EPIC) {                                            // past Epic: no anticipation, just a quick pass
+			const leg = 300 * k;
+			keys.push({ t0: t, t1: t + leg, v0: v, v1: b.x, ease: v === EPIC ? easeIn : easeInOut, tier: b.i }); t += leg; v = b.x; return;
+		}
+		const first = v === 0;
+		// leg: burst out of the last tier, slowing as it nears the threshold; crawl: creep the last stretch, then cross
+		const near = first ? b.x * 0.9 : v + (b.x - v) * 0.86;
+		const leg = (first ? 420 : 480) * k, cr = (first ? 260 : 400) * k;
+		keys.push({ t0: t, t1: t + leg, v0: v, v1: near, ease: first ? easeIn : easeOut }); t += leg;
 		keys.push({ t0: t, t1: t + cr, v0: near, v1: b.x, ease: crawl, tier: b.i }); t += cr; v = b.x;
 	});
 	if (X > v) {
-		const fast = v >= 1000, r = Math.log10(X / Math.max(1, v) + 1);
-		const leg = (fast ? 380 + 260 * r : v === 0 ? countMs(X) : 320 + 420 * r) * k;
+		const fast = v >= EPIC, r = Math.log10(X / Math.max(1, v) + 1);
+		const leg = (fast ? 300 + 200 * r : v === 0 ? countMs(X) : 320 + 420 * r) * k;
 		keys.push({ t0: t, t1: t + leg, v0: v, v1: X, ease: fast ? easeOutQuart : easeOut }); t += leg;
 	}
 	return { keys, total: t };
