@@ -81,13 +81,37 @@ const spillTex = () => ctex(256, 256, (g) => { const gr = g.createLinearGradient
   g.filter = 'blur(16px)'; g.fillStyle = gr; g.beginPath(); g.moveTo(84, -20); g.lineTo(172, -20); g.lineTo(226, 236); g.lineTo(30, 236); g.closePath(); g.fill(); });   // soft-edged light pool
 
 // ---------------- geometry ----------------
-function geo(W, H) {
-  const port = W / H < 0.9;
-  const k = port ? Math.min(W / 1080, H / 1720) : Math.min(W / 1920, H / 1080), DW = W / k, DH = H / k, cx = DW / 2;
-  if (!port) { const FL = DH / 2 + 400, dw = 520, dh = 580, top = FL - dh;
-    return { port, k, DW, DH, cx, FL, dw, dh, top, lint: 64, logo: { y: top - 64 - 122, w: 560 }, bar: { y: FL + 64, w: 560, h: 40 }, btn: { y: FL + 64, w: 470, h: 100 }, sc: { dx: 400, y: top + 150, s: 0.6 }, F: 1500 }; }
-  const FL = DH * 0.69, dw = 540, dh = 780, top = FL - dh;
-  return { port, k, DW, DH, cx, FL, dw, dh, top, lint: 64, logo: { y: top - 64 - 210, w: 800 }, bar: { y: FL + 170, w: 640, h: 46 }, btn: { y: FL + 170, w: 620, h: 132 }, sc: { dx: 400, y: top + 210, s: 0.72 }, F: 1700 };
+function geo(W, H) {   // W, H: stage px (ST.w / ST.h); the card + skip-strip budgets below are SCREEN px (stage px * ST.s)
+  const port = W / H < 0.9, S = ST.s || 1;
+  W *= S; H *= S;   // work in screen px; ks = design -> screen, k = design -> stage
+  // intro cards (v3.17): sized in SCREEN px so they stay readable on phones (the old design-px cards shrank to ~80 px wide
+  // under the doors at portrait); the door scene gives up the room they need instead
+  if (!port) {   // feature cards in a column on each side of the doorway (sconces reach ~490 design px from the centre)
+    const m = 12, CMIN = 180, CMAX = 300, half = 490;
+    let ks = Math.min(W / 1920, H / 1080);
+    const free = (W - 2 * half * ks) / 2 - 2 * m;
+    if (free < CMIN) ks = Math.min(ks, (W - 2 * (CMIN + 2 * m)) / (2 * half));
+    const cw = Math.max(CMIN, Math.min(CMAX, (W - 2 * half * ks) / 2 - 2 * m)), k = ks / S, DW = W / ks, DH = H / ks, cx = DW / 2;
+    const FL = DH / 2 + 400, dw = 520, dh = 580, top = FL - dh;
+    const lbh = Math.max(100, 46 / ks);   // TAP TO PARTY keeps a >= 46 screen-px plate on small landscape phones
+    const skip = 62, ch = Math.min(600, H - 2 * m - skip), y0 = Math.max(m, (H - skip - ch) / 2 + 6);
+    const colX = (W - 2 * half * ks) / 4;   // centre of each free side band (screen px from the edge)
+    return { port, k, ks, Ws: W, DW, DH, cx, FL, dw, dh, top, lint: 64, logo: { y: top - 64 - 122, w: 560 }, bar: { y: FL + 64, w: 560, h: 40 }, btn: { y: FL + 64, w: 470 * lbh / 100, h: lbh }, sc: { dx: 400, y: top + 150, s: 0.6 }, F: 1500,
+      pc: { cw, ch, y0, colX, gap: 12 } }; }
+  // portrait: logo + doors + TAP TO PARTY on top, the three cards as full-width rows under them, the skip strip last
+  const dw = 540, dh = 780, lint = 64, ar = tex.title ? tex.title.height / tex.title.width : 0.56, logoW = 800;
+  const above = dh + lint + 210 + logoW * ar / 2 + 14, btnY = 130;
+  const rw = Math.min(W - 24, 520), rh = Math.round(Math.max(62, Math.min(96, H * 0.1))), gap = Math.round(Math.max(6, Math.min(12, H * 0.012)));
+  const cardsH = 3 * rh + 2 * gap, skip = 62, budget = H - cardsH - skip - 10;
+  // TAP TO PARTY keeps a >= 46 screen-px plate when the scene scales down on short phones
+  let bh = 132, ks = Math.min(W / 1080, budget / (above + btnY + bh / 2 + 14));
+  for (let i = 0; i < 3; i++) { bh = Math.max(132, 46 / ks); ks = Math.min(W / 1080, budget / (above + btnY + bh / 2 + 14)); }
+  const below = btnY + bh / 2 + 14, k = ks / S, DW = W / ks, DH = H / ks, cx = DW / 2;
+  const sceneH = ks * (above + below), spare = Math.max(0, budget - sceneH), sy = Math.min(spare * 0.45, 40) + 4;
+  const FL = sy / ks + above, top = FL - dh;
+  const sBot = sy + sceneH, y0 = sBot + Math.max(4, (H - skip - sBot - cardsH) / 2);
+  return { port, k, ks, Ws: W, DW, DH, cx, FL, dw, dh, top, lint, logo: { y: top - 64 - 210, w: logoW }, bar: { y: FL + btnY, w: 640, h: 46 }, btn: { y: FL + btnY, w: 620 * bh / 132, h: bh }, sc: { dx: 400, y: top + 210, s: 0.72 }, F: 1700,
+    pc: { rw, rh, gap, y0 } };
 }
 
 // ---------------- build ----------------
@@ -190,34 +214,49 @@ function build() {
   buildCards();
   setDoors(0, 0);
 }
-// card slots (design px). Landscape: two square-art cards stacked left of the left sconce, the tall merged-pair card on the right.
-// Portrait: a row of three under TAP TO PARTY (scaled down to fit short screens).
+// card slots: positions in design px, sizes in screen px (each card container is scaled 1/k).
+// Landscape: two square-art cards stacked in the free band left of the doorway, the tall merged-pair card on the right
+// (its column stops above the bottom-right "Don't show this again" strip). Portrait: three full-width rows under TAP TO PARTY.
 function cardSlots() {
-  const { cx, top, DH } = G;
-  if (!G.port) { const y0 = top - 110, h = 610, w = 400, gx = 710;
-    return { s: 1, dir: 'x', slots: [{ x: cx - gx, y: y0, w, h: (h - 20) / 2, art: 150, side: -1 }, { x: cx - gx, y: y0 + (h - 20) / 2 + 20, w, h: (h - 20) / 2, art: 150, side: -1 },
-      { x: cx + gx, y: y0, w, h, art: 420, side: 1 }] }; }
-  // L3: keep a free strip under the cards for the 48 px "Don't show this again" row (.spSkip, 48 screen px + 10 px inset)
-  const skipRow = (48 + 14) / G.k;
-  const w = 330, gap = 18, h = 400, yTop = G.btn.y + G.btn.h / 2 + 28, avail = DH - 12 - skipRow - yTop, sc = Math.min(1, avail / h);
-  return { s: sc, dir: 'y', slots: [-1, 0, 1].map((i) => ({ x: cx + i * (w + gap) * sc, y: yTop + (avail - h * sc) / 2, w, h, art: 190, side: 0 })) };
+  const { ks: k, pc } = G;
+  if (!G.port) { const { cw, ch, y0, colX, gap } = pc, hh = (ch - gap) / 2, xl = colX / k, xr = (G.Ws - colX) / k;
+    return { dir: 'x', slots: [{ x: xl, y: y0 / k, w: cw, h: hh, side: -1 }, { x: xl, y: (y0 + hh + gap) / k, w: cw, h: hh, side: -1 },
+      { x: xr, y: y0 / k, w: cw, h: ch, side: 1 }] }; }
+  const { rw, rh, gap, y0 } = pc;
+  return { dir: 'y', slots: [0, 1, 2].map((i) => ({ x: G.cx, y: (y0 + i * (rh + gap)) / k, w: rw, h: rh, side: 0, row: true })) };
+}
+function cardText(c, size, wrapW, maxH) {   // title + line, shrinking the line until it fits maxH (screen px)
+  const ti = new Text({ text: c.title.toUpperCase(), style: { fontFamily: FONT, fontWeight: '900', fontSize: size.t, fill: GOLD, letterSpacing: 0.5, align: size.al,
+    dropShadow: { color: 0x000000, alpha: 0.6, blur: 2, distance: 1.5, angle: Math.PI / 2 } } });
+  let fl = size.l, ln;
+  for (;;) { ln?.destroy(); ln = new Text({ text: c.line, style: { fontFamily: FONT, fontWeight: '700', fontSize: fl, fill: 0xeee3f2, align: size.al, wordWrap: true, wordWrapWidth: wrapW, lineHeight: Math.round(fl * 1.25) } });
+    if (ti.height + 4 + ln.height <= maxH || fl <= 11) break; fl -= 0.5; }
+  if (ti.width > wrapW) ti.scale.set(wrapW / ti.width);
+  return { ti, ln };
 }
 function buildCards() {
   cardsC = new Container(); root.addChild(cardsC); cardEls = [];
   const L = cardSlots();
-  CARDS.forEach((c, i) => { const q = L.slots[i], C = new Container(); C.scale.set(L.s); cardsC.addChild(C);
-    const { w, h } = q, R = 22, g = new Graphics();
-    for (const [sw, a] of [[26, 0.04], [16, 0.08], [9, 0.14], [4, 0.26]]) g.roundRect(-w / 2 - 2, -2, w + 4, h + 4, R + 2).stroke({ width: sw, color: GOLD, alpha: a });
-    g.roundRect(-w / 2, 0, w, h, R).fill({ color: 0x000000, alpha: 0.62 }).roundRect(-w / 2 + 4, 4, w - 8, Math.min(90, h * 0.2), R - 4).fill({ color: 0xffffff, alpha: 0.04 })
-      .roundRect(-w / 2, 0, w, h, R).stroke({ width: 3, color: GOLD }).roundRect(-w / 2 + 7, 7, w - 14, h - 14, R - 6).stroke({ width: 1.2, color: 0xffeab0, alpha: 0.45 });
+  CARDS.forEach((c, i) => { const q = L.slots[i], C = new Container(); C.scale.set(1 / G.ks); cardsC.addChild(C);
+    const { w, h } = q, R = 14, g = new Graphics();
+    for (const [sw, a] of [[16, 0.04], [10, 0.08], [6, 0.14], [3, 0.26]]) g.roundRect(-w / 2 - 1.5, -1.5, w + 3, h + 3, R + 1.5).stroke({ width: sw, color: GOLD, alpha: a });
+    g.roundRect(-w / 2, 0, w, h, R).fill({ color: 0x000000, alpha: 0.7 }).roundRect(-w / 2 + 3, 3, w - 6, Math.min(56, h * 0.2), R - 3).fill({ color: 0xffffff, alpha: 0.04 })
+      .roundRect(-w / 2, 0, w, h, R).stroke({ width: 2, color: GOLD }).roundRect(-w / 2 + 5, 5, w - 10, h - 10, R - 4).stroke({ width: 1, color: 0xffeab0, alpha: 0.45 });
     C.addChild(g);
-    const art = new Sprite(tex['card_' + c.key]); art.anchor.set(0.5); const ab = q.art, fit = Math.min((w - 40) / art.texture.width, ab / art.texture.height);
-    art.scale.set(fit); art.position.set(0, 20 + ab / 2); C.addChild(art);
-    const ti = new Text({ text: c.title.toUpperCase(), style: { fontFamily: FONT, fontWeight: '900', fontSize: G.port ? 25 : 30, fill: GOLD, letterSpacing: G.port ? 0.5 : 1.5, align: 'center',
-      dropShadow: { color: 0x000000, alpha: 0.6, blur: 3, distance: 2, angle: Math.PI / 2 } } });
-    ti.anchor.set(0.5, 0); ti.position.set(0, 20 + ab + 14); C.addChild(ti);
-    const ln = new Text({ text: c.line, style: { fontFamily: FONT, fontWeight: '700', fontSize: G.port ? 23 : 21, fill: 0xeee3f2, align: 'center', wordWrap: true, wordWrapWidth: w - 48, lineHeight: G.port ? 30 : 27 } });
-    ln.anchor.set(0.5, 0); ln.position.set(0, ti.y + ti.height + 8); C.addChild(ln);
+    const art = new Sprite(tex['card_' + c.key]); art.anchor.set(0.5); const tw = art.texture.width, th = art.texture.height;
+    if (q.row) {   // art left, text right
+      const ah = h - 14, aw = Math.min(ah * 1.3, w * 0.3), fit = Math.min(aw / tw, ah / th);
+      art.scale.set(fit); const artW = tw * fit; art.position.set(-w / 2 + 12 + artW / 2, h / 2); C.addChild(art);
+      const tx = -w / 2 + 12 + artW + 12, wrapW = w / 2 - 14 - tx;
+      const { ti, ln } = cardText(c, { t: Math.max(14, Math.min(21, h * 0.24)), l: Math.max(12, Math.min(16, h * 0.19)), al: 'left' }, wrapW, h - 12);
+      const bh = ti.height + 4 + ln.height, y = (h - bh) / 2;
+      ti.anchor.set(0, 0); ti.position.set(tx, y); ln.anchor.set(0, 0); ln.position.set(tx, y + ti.height + 4); C.addChild(ti, ln);
+    } else {        // art on top, title + line under it
+      const { ti, ln } = cardText(c, { t: Math.max(15, Math.min(22, w * 0.075)), l: Math.max(12.5, Math.min(16, w * 0.056)), al: 'center' }, w - 28, h * 0.55);
+      const textH = ti.height + 4 + ln.height, ab = Math.max(40, h - 12 - textH - 12 - 10), fit = Math.min((w - 28) / tw, ab / th);
+      art.scale.set(fit); art.position.set(0, 12 + ab / 2); C.addChild(art);
+      ti.anchor.set(0.5, 0); ti.position.set(0, 12 + ab + 8); ln.anchor.set(0.5, 0); ln.position.set(0, ti.y + ti.height + 4); C.addChild(ti, ln);
+    }
     cardEls.push({ C, q, L, i }); });
   placeCards(0, 0);
 }
