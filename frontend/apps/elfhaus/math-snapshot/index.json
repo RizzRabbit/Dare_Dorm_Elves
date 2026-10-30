@@ -20,25 +20,25 @@
         },
         {
             "name": "double_dare",
-            "cost": 250.0,
+            "cost": 300.0,
             "events": "books_double_dare.jsonl.zst",
             "weights": "lookUpTable_double_dare_0.csv"
         },
         {
             "name": "triple_dare",
-            "cost": 600.0,
+            "cost": 1000.0,
             "events": "books_triple_dare.jsonl.zst",
             "weights": "lookUpTable_triple_dare_0.csv"
         },
         {
             "name": "mystery",
-            "cost": 600.0,
+            "cost": 1000.0,
             "events": "books_mystery.jsonl.zst",
             "weights": "lookUpTable_mystery_0.csv"
         },
         {
             "name": "egw",
-            "cost": 450.0,
+            "cost": 750.0,
             "events": "books_egw.jsonl.zst",
             "weights": "lookUpTable_egw_0.csv"
         }

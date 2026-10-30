@@ -20,7 +20,7 @@ import { frameIn } from './wildframe';
 /** stack_form sheets decode ahead for reels with 2+ wilds that are not full yet (stacks.ts loads sheets on demand). */
 const warmStacks = () => stackPrefetch(S.sym.flatMap((c, r) => (!S.full.has(r) && c.filter((x) => x === 'W').length >= 2 ? [r] : [])));
 import { featOpen, featPop, featClose } from './featfx';
-import { countTo, countMs, setAmount, skipCounts } from './countup';
+import { countTo, countMs, setAmount, skipCounts, BIG_TIERS } from './countup';
 import { grab, combineInto } from './combine';
 import { tempo, hold, gtempo } from './tempo';
 import { sfx, loop, music, duck, duckFor, type Handle } from './audio';
@@ -181,7 +181,7 @@ export const bookEventHandlerMap: Handlers = {
 	},
 	async winInfo(ev) {
 		// one thin line at a time races along each payline; its amount ticks into WIN (winlines.ts)
-		await playWins(ev.wins, S.roundBase);
+		await playWins(ev.wins, S.roundBase, ev.totalWin);
 	},
 	async updateStepWin(ev) { setWinMeter(S.roundBase + ev.amount / 100); },
 	async wildGrow(ev) {
@@ -242,7 +242,7 @@ export const bookEventHandlerMap: Handlers = {
 		if (ev.step > 0) endRespin();
 		await wait(350);
 	},
-	async setWin(ev) { const x = ev.amount / 100; if (x >= 10 && x < MAX_WIN_X) { roxy('win'); await bigWin(x); } },
+	async setWin(ev) { const x = ev.amount / 100; if (x >= BIG_TIERS[0].x && x < MAX_WIN_X) { roxy('win'); await bigWin(x); } },
 	async setTotalWin(ev) { const x = Math.min(ev.amount / 100, MAX_WIN_X); setWinMeter(x); S.roundBase = x; },
 	async cardFlip(ev) {
 		await showScatters(scattersOnBoard(), 900);
@@ -331,7 +331,7 @@ export const bookEventHandlerMap: Handlers = {
 	},
 	async egwStart(ev) { egwPending = new Map(ev.reels.map((r) => [r, ev.value])); },
 	async buyTriggerStart() { await wait(200); },
-	async wincap() { capHit = true; hideRespin(); setWinMeter(MAX_WIN_X); await maxWinCelebration(); },
+	async wincap(ev) { const capX = Number.isFinite(ev.amount) ? ev.amount / 100 : MAX_WIN_X; capHit = true; hideRespin(); setWinMeter(capX); await maxWinCelebration(capX); },
 	async finalWin(ev) { setWinMeter(Math.min(ev.amount / 100, MAX_WIN_X)); },
 };
 

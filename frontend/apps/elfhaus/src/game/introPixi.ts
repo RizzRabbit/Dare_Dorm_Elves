@@ -15,6 +15,7 @@ import { ctex, ease, clamp, seg, lerp, softBlob, glowDot } from './scene/util';
 import { loadSheet, loadTex } from './scene/load';
 import { rig, roxyAt, sceneHold } from './scene/scene';
 import TITLE from '../assets/intro/splash_title.webp?url';
+import { EGW_STACK_X } from './config';
 
 const FONT = "Montserrat, Nunito, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
 const PAL = { wall: 0x2e1a40, wallHi: 0x3a2350, wallLo: 0x24132f, stone: 0xa597b8, stoneHi: 0xd2c6dd, stoneSh: 0x6f6286, gold: 0xe0ac3a,
@@ -31,7 +32,7 @@ const CARDS = [
   { key: 'sticky', art: 'assets/intro/card_sticky_W_R2_card.webp', title: 'Sticky Wilds',
     line: 'In Double Dare and Triple Dare the wilds lock in place and keep growing every free spin. Triple Dare guarantees at least one full-reel wild.' },
   { key: 'egw', art: 'assets/intro/card_egw_WM2_R1-2.webp', title: 'Elves Gone Wild',
-    line: 'One supercharged spin: 2 to 5 reels land wilds that grow into full-reel wilds (x4 each), then respins. Full wild reels side by side multiply.' },
+    line: `One supercharged spin: 2 to 5 reels land wilds that grow into full-reel wilds (x${EGW_STACK_X} each), then respins. Full wild reels side by side multiply.` },
 ];
 let app = null, state = 'off', t = 0, tt = 0, prog = 0, G = null, primed = false, roxyFree = false, faceOff = false, progFn = () => 0;
 let doneRes = () => {}, tapRes = () => {}, killed = false;

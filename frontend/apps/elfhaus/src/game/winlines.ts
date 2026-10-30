@@ -108,13 +108,14 @@ export function clearRace() {
  *  jump). Then, when there is more than one line, each line is shown once on its own with its amount (a short cycle,
  *  capped so a step never drags). v3.17 stages (winstage.ts): a = draw-on + hold, b = the line cycle, c = the meter
  *  landing on the step total; a skip ends only the current stage. base = WIN meter value (x bet) before this step. */
-export async function playWins(wins: LineWin[], base: number) {
+export async function playWins(wins: LineWin[], base: number, stepTotal?: number) {
 	ensure(); active = true; skipAll = false; skipLine = false;
 	presenting(true);
 	try {
 	const cells = document.querySelectorAll('.cell'); cells.forEach((c) => c.classList.add('dim'));
 	const n = wins.length, turbo = S.turbo;
-	const tot = base + wins.reduce((a, w) => a + w.win / 100, 0);
+	// the step total is the book's winInfo.totalWin (math); the line sum is only a fallback for a book without it
+	const tot = base + (Number.isFinite(stepTotal) ? stepTotal! : wins.reduce((a, w) => a + w.win, 0)) / 100;
 	const Ps = wins.map((w) => path(w.lineIndex));
 	// a) all at once: symbols pop, lines draw on together; the meter starts counting to the step total (it keeps
 	//    counting through a / b skips: its own stage is c)

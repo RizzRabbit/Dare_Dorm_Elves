@@ -9,7 +9,7 @@ import { requestAuthenticate, requestBet, requestEndRound, requestReplay } from 
 import { API_AMOUNT_MULTIPLIER } from 'constants-shared/bet';
 import {
 	ANTE_COST, CONFIRM_ABOVE_X, fmtX, BUY_MODES, GAME_ID, LINES, MAX_WIN_X, MODES, MODE_LABEL, MYSTERY_ODDS, PAYTABLE,
-	SPIN_CAP, START_FS, EPIC_STACK_X, SYMBOL_NAMES, VERSION, isProvisional, oneIn, type ModeKey,
+	SPIN_CAP, START_FS, EPIC_STACK_X, EPIC_GROW_STEP, GROW_STEP, GUARANTEE, MAX_RESPINS, RETRIGGER, EGW_STACK_X, SYMBOL_NAMES, VERSION, isProvisional, oneIn, type ModeKey,
 } from './config';
 import { confirmCopy, resumeCopy, controlsAuto, controlsBonus, controlsTurbo, controlsUi, costHeader, errorText, errorTitle, modeDesc, type CopyCtx, type CopyMode } from './copy';
 import { registerPanel, openPanel, closePanel, isOpen, anyOpen, measurePanel, setClosable } from './panels';
@@ -375,6 +375,7 @@ function buildBuy() {
 const copyCtx = (): CopyCtx => ({
 	social: isSocial(), anteX: fmtX(ANTE_COST), anteOdds: oneIn('ante', 68), baseOdds: oneIn('base', 190),
 	fs: { dare: START_FS.dare, double_dare: START_FS.double_dare, triple_dare: START_FS.triple_dare }, odds: { ...MYSTERY_ODDS },
+	egwX: EGW_STACK_X, tdGuar: GUARANTEE.triple_dare,
 });
 /** What CONFIRM (or a tap on a mode at or under CONFIRM_ABOVE_X) does: the old one-tap selection. Voice fires here
  *  (pickArm), never on the preview. A bonus closes the menu (no banner, v3.17: the armTag by SPIN is the indicator); Ante switches on in place. */
@@ -450,11 +451,11 @@ function buildRules() {
 <h3>How to play</h3>
 <p>5 reels × 4 rows with 20 fixed lines. Wins ${isSocial() ? 'are awarded' : 'pay'} left to right for 3, 4 or 5 matching symbols on a line, starting on the leftmost reel. Only the highest win per line counts. Line wins are multiplied by the ${isSocial() ? 'play amount' : 'bet'} per line (the total ${isSocial() ? 'play amount' : 'bet'} divided by 20).</p>
 <h3>Wilds and respins</h3>
-<p>Wilds substitute for every symbol. Each wild carries its own multiplier, starting at x1. A winning line through a wild triggers a respin: wilds lock, the other symbols of the winning lines respin, and everything else stays. Every locked wild that connects again gains +1. Up to 3 respins per spin; every step ${win} as it lands. Dots on locked wilds show the respins left.</p>
+<p>Wilds substitute for every symbol. Each wild carries its own multiplier, starting at x1. A winning line through a wild triggers a respin: wilds lock, the other symbols of the winning lines respin, and everything else stays. Every locked wild that connects again gains +${GROW_STEP} (+${EPIC_GROW_STEP} in Epic). Up to ${MAX_RESPINS} respins per spin; every step ${win} as it lands. Dots on locked wilds show the respins left.</p>
 <p>Four wilds on one reel become a full-reel wild worth the sum of their multipliers. A stack completed by wilds that all landed on the same spin is an instant stack. Adjacent full-reel wilds merge into one wide wild worth the product of their values; non-adjacent ones add. A line's multiplier is the product of merged groups plus the sum of the other wilds it uses.</p>
 <h3>Dare Cards and free spins</h3>
 <p>The Dare Card is the scatter: at most one per reel, it never awards a win and can land on any spin or respin. 3 Dare Cards on the final board start Dare (${START_FS.dare} free spins), 4 start Double Dare (${START_FS.double_dare}). 5 flip the Dare Card: Triple Dare (${START_FS.triple_dare}) or Epic (${START_FS.hidden}).</p>
-<p>In Dare, wilds clear after each spin. From Double Dare up, the trigger spin's wilds stay in place for the bonus and all wilds stay locked. Triple Dare starts with at least 1 full-reel wild, Epic with at least 2 (guaranteed stacks are added if missing; Epic's start at x${EPIC_STACK_X} or more). During free spins, 2 Dare Cards add +2 spins and 3 or more add +5, up to ${SPIN_CAP} spins in total.</p>
+<p>In Dare, wilds clear after each spin. From Double Dare up, the trigger spin's wilds stay in place for the bonus and all wilds stay locked. Triple Dare starts with at least ${GUARANTEE.triple_dare} full-reel wild${GUARANTEE.triple_dare === 1 ? '' : 's'}, Epic with at least ${GUARANTEE.hidden} (guaranteed stacks are added if missing; Epic's start at x${EPIC_STACK_X} or more). During free spins, 2 Dare Cards add +${RETRIGGER.two} spins and 3 or more add +${RETRIGGER.threePlus}, up to ${SPIN_CAP} spins in total.</p>
 <h3>Modes</h3>
 <p>${(['ante', ...BUY_MODES] as ModeKey[]).map((m) => `<b>${MODE_LABEL[m]}</b> (${mult(modeCost(m))}): ${modeDesc(m as CopyMode, cc)}`).join('<br>')}</p>
 <table><tr><th>Mode</th><th>${costHeader(isSocial())}</th><th>RTP</th><th>Max win</th></tr>${modeRows}</table>

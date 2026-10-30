@@ -89,7 +89,8 @@ function groupShow(host: HTMLElement, landAt: number) {
 	return rig;
 }
 const ease = (t: number) => 1 - Math.pow(1 - t, 3);
-export async function maxWinCelebration() {
+/** capX = the book's wincap amount in x bet (the math's cap); MAX_WIN_X (synced math CAP_C) only if the event has none. */
+export async function maxWinCelebration(capX: number = MAX_WIN_X) {
 	const M = $('#maxwin'); const stage = M.querySelector('.mwStage') as HTMLElement;
 	await preloadMaxWin();                                             // fallback: wait for the decode before the entrance (instant if already preloaded)
 	await loadBg();                                                    // (orientation may have changed since the preload)
@@ -98,7 +99,7 @@ export async function maxWinCelebration() {
 	// calm screen: no falling paper confetti over the max win (turbo/skip unchanged)
 	const xEl = M.querySelector('.mwX') as HTMLElement, amtEl = M.querySelector('.mwAmt') as HTMLElement, hint = M.querySelector('.mwHint') as HTMLElement;
 	const tier = M.querySelector('.mwTier') as HTMLElement; tier.classList.add('spr');
-	const total = MAX_WIN_X * bet(), dp = moneyDigits(total); let skipped = false;
+	const total = capX * bet(), dp = moneyDigits(total); let skipped = false;
 	xEl.textContent = '0x'; amtEl.textContent = moneyWin(0, dp);
 	hint.textContent = (matchMedia('(pointer: coarse)').matches || matchMedia('(any-pointer: coarse)').matches || navigator.maxTouchPoints > 0) ? // L9: any touch screen says TAP
 		 'TAP TO CONTINUE' : 'CLICK TO CONTINUE';
@@ -118,7 +119,7 @@ export async function maxWinCelebration() {
 		const t0 = performance.now() + COUNT_AT;
 		const tick = (now: number) => {
 			const k = skipped ? 1 : Math.max(0, Math.min(1, (now - t0) / COUNT_MS)), e = ease(k);
-			xEl.textContent = `${Math.round(MAX_WIN_X * e).toLocaleString('en-US')}x`;
+			xEl.textContent = `${Math.round(capX * e).toLocaleString('en-US')}x`;
 			amtEl.textContent = moneyWin(k < 1 ? Math.floor(total * e * 10 ** dp) / 10 ** dp : total, dp); // v3.16i: fixed places, the last frame is the exact target
 			k < 1 ? requestAnimationFrame(tick) : res();
 		};

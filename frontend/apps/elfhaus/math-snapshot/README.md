@@ -1,3 +1,5 @@
-Snapshot of math/games/elfhaus/library (index.json from publish_files, stats_summary.json) at math commit ca08873
-(origin/math-elfhaus-v2, scatter v2). scripts/sync-config.mjs uses the live math folder when it exists in the repo, else this.
-Refresh: git show <math-commit>:math/games/elfhaus/library/publish_files/index.json > math-snapshot/index.json (same for stats_summary.json).
+Snapshot of the Elfhaus math (math a4e33bb game_calculations.py + reel_params.json). Written by scripts/sync-math.mjs; do not edit by hand.
+- game_config.json: paytable, lines, max win, spin cap, respins, free-spin counts, guarantees, Epic stack start / step,
+  wild grow steps, Mystery odds, retrigger spins, EGW stack value, mode costs.
+- index.json, stats_summary.json: the publish files' index and the run's stats (RTP, max win, bonus odds).
+Re-sync: node scripts/sync-math.mjs <math games/elfhaus dir> [publish_files dir] && node scripts/sync-config.mjs

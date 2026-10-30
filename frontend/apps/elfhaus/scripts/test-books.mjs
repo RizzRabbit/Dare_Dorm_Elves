@@ -6,6 +6,10 @@ import { join, resolve } from 'node:path';
 const appDir = resolve(import.meta.dirname, '..');
 const booksDir = join(appDir, 'test-fixtures/books');
 const bookFiles = readdirSync(booksDir).filter((f) => f.endsWith('.json'));
+// every math-owned value the tests check comes from the generated config (scripts/sync-config.mjs), never typed here
+const GEN = JSON.parse(readFileSync(join(appDir, 'src/game/modes.generated.json'), 'utf8'));
+const MATH = GEN.math;
+const MAX_WIN_X = MATH.maxWinX;
 
 console.log(`\n=== 1. Testing ${bookFiles.length} fixture books ===`);
 let failedBooks = 0;
@@ -20,7 +24,6 @@ for (const file of bookFiles) {
 	let stepWin = 0;
 	let roundBase = 0;
 	let reachedWincap = false;
-	const MAX_WIN_X = 50000;
 
 	for (const ev of events) {
 		// Coordinate bounds check
@@ -78,17 +81,19 @@ for (const file of bookFiles) {
 	}
 }
 
-// v3.15f: Epic ('hidden') starts with START_FS.hidden free spins and its guaranteed stacks start at EPIC_STACK_X
+// v3.15f / math v2: Epic ('hidden') starts with START_FS.hidden free spins, its guaranteed stacks start at
+// GUAR_MIN_VAL.hidden and every wild grows by GROW_STEP.hidden per step after the trigger (+1 before it, every other tier)
 {
+	const startFs = MATH.startFs.hidden, stackX = MATH.epic.stackX, step = MATH.epic.step, base = MATH.growStep.default;
+	console.log(`\n=== 1b. Epic start: ${startFs} free spins, stacks from x${stackX}, +${step} per step (other wilds +${base}) ===`);
 	const cfg = readFileSync(join(appDir, 'src/game/config.ts'), 'utf8');
-	const startFs = Number(cfg.match(/START_FS = \{[^}]*hidden:\s*(\d+)/)[1]), stackX = Number(cfg.match(/EPIC_STACK_X = (\d+)/)[1]);
-	console.log(`\n=== 1b. Epic start: ${startFs} free spins, stacks from x${stackX} ===`);
-	if (startFs !== 14 || stackX !== 6) { console.error(`  FAIL: config START_FS.hidden=${startFs}, EPIC_STACK_X=${stackX} (want 14, 6)`); failedBooks++; }
+	if (!/EPIC_STACK_X: number = G\.epic\.stackX/.test(cfg) || !/EPIC_GROW_STEP: number = G\.epic\.step/.test(cfg)) { console.error('  FAIL: config.ts EPIC_STACK_X / EPIC_GROW_STEP not read from the math config'); failedBooks++; }
 	let epics = 0;
 	for (const dir of [booksDir, join(appDir, 'src/mock/books')]) for (const file of readdirSync(dir).filter((f) => f.endsWith('.json'))) {
 		const ev = JSON.parse(readFileSync(join(dir, file), 'utf8')).events || [];
-		const trig = ev.find((e) => e.type === 'freeSpinTrigger' && e.tier === 'hidden');
-		if (!trig) continue;
+		const ti = ev.findIndex((e) => e.type === 'freeSpinTrigger' && e.tier === 'hidden');
+		if (ti < 0) continue;
+		const trig = ev[ti];
 		epics++;
 		const g = ev.find((e) => e.type === 'guaranteedStacks' && e.tier === 'hidden'), ufs = ev.find((e) => e.type === 'updateFreeSpin');
 		const errs = [];
@@ -96,8 +101,12 @@ for (const file of bookFiles) {
 		if (ufs && ufs.total !== startFs) errs.push(`first updateFreeSpin.total ${ufs.total}`);
 		if (g && g.stacks.some((st) => st.value < stackX)) errs.push(`guaranteedStacks values ${g.stacks.map((st) => st.value)}`);
 		if (g && g.stacks.some((st) => !g.locked.fullReels.some((f) => f.reel === st.reel && f.value === st.value))) errs.push('stack missing from locked.fullReels');
+		const steps = new Set(), pre = new Set();
+		ev.forEach((e, i) => { if (e.type === 'wildGrow') for (const c of e.changes) (i > ti ? steps : pre).add(c.to - c.from); });
+		if ([...steps].some((d) => d !== step)) errs.push(`Epic wildGrow steps ${[...steps]} (want +${step})`);
+		if ([...pre].some((d) => d !== base)) errs.push(`pre-trigger wildGrow steps ${[...pre]} (want +${base})`);
 		if (errs.length) { console.error(`  FAIL: ${file}: ${errs.join('; ')}`); failedBooks++; }
-		else console.log(`  PASS: ${file.padEnd(24)} totalFs=${trig.totalFs}, stacks x${g ? g.stacks.map((st) => st.value).join(', x') : '-'}`);
+		else console.log(`  PASS: ${file.padEnd(24)} totalFs=${trig.totalFs}, stacks x${g ? g.stacks.map((st) => st.value).join(', x') : '-'}, grows +${[...steps].join('/') || '-'}`);
 	}
 	if (!epics) { console.error('  FAIL: no Epic books found'); failedBooks++; }
 }
@@ -106,7 +115,7 @@ for (const file of bookFiles) {
 {
 	const src = readFileSync(join(appDir, 'src/game/bookEventHandlerMap.ts'), 'utf8');
 	console.log(`\n=== 1c. Max win skips the TOTAL WIN outro ===`);
-	const ok = /async wincap\(\) \{ capHit = true;/.test(src) && /async freeSpinEnd\(ev\) \{\s*if \(capHit\) \{ endBonusUi\(\); return; \}/.test(src) && /S\.roundBase = 0; capHit = false;/.test(src);
+	const ok = /async wincap\(\w*\) \{[^}\n]*capHit = true;/.test(src) && /async freeSpinEnd\(ev\) \{\s*if \(capHit\) \{ endBonusUi\(\); return; \}/.test(src) && /S\.roundBase = 0; capHit = false;/.test(src);
 	if (!ok) { console.error('  FAIL: capHit skip not wired in bookEventHandlerMap.ts'); failedBooks++; }
 	let caps = 0;
 	for (const dir of [booksDir, join(appDir, 'src/mock/books')]) for (const file of readdirSync(dir).filter((f) => f.endsWith('.json'))) {
@@ -117,9 +126,10 @@ for (const file of bookFiles) {
 		const fe = ev.findIndex((e) => e.type === 'freeSpinEnd'), fw = ev.filter((e) => e.type === 'finalWin').pop();
 		const errs = [];
 		if (fe >= 0 && fe < wi) errs.push('freeSpinEnd before wincap');
-		if (!fw || Math.min(fw.amount / 100, 50000) !== 50000) errs.push(`finalWin ${fw && fw.amount}`);
+		if (!fw || Math.min(fw.amount / 100, MAX_WIN_X) !== MAX_WIN_X) errs.push(`finalWin ${fw && fw.amount}`);
+		if (ev[wi].amount / 100 !== MAX_WIN_X) errs.push(`wincap amount ${ev[wi].amount} vs math cap ${MAX_WIN_X}x`);
 		if (errs.length) { console.error(`  FAIL: ${file}: ${errs.join('; ')}`); failedBooks++; }
-		else console.log(`  PASS: ${file.padEnd(24)} outro ${fe >= 0 ? 'skipped' : 'n/a (no FS)'}, finalWin 50000x`);
+		else console.log(`  PASS: ${file.padEnd(24)} outro ${fe >= 0 ? 'skipped' : 'n/a (no FS)'}, finalWin ${MAX_WIN_X}x`);
 	}
 	if (!caps) { console.error('  FAIL: no wincap books found'); failedBooks++; }
 }
@@ -187,7 +197,7 @@ if (disclaimerMatch) {
 	const cs = readFileSync(join(appDir, 'src/game/copy.ts'), 'utf8');
 	const { code } = await transformWithEsbuild(cs, 'copy.ts', { loader: 'ts', format: 'esm' });
 	const C = await import('data:text/javascript;base64,' + Buffer.from(code).toString('base64'));
-	const ctx = { social: true, anteX: '3x', anteOdds: 'about 1 in 68', baseOdds: 'about 1 in 190', fs: { dare: 8, double_dare: 10, triple_dare: 10 }, odds: { none: 50, double_dare: 37, triple_dare: 10, hidden: 3 } };
+	const ctx = { social: true, anteX: GEN.modes.ante.cost + 'x', anteOdds: 'about 1 in 68', baseOdds: 'about 1 in 190', fs: { dare: MATH.startFs.dare, double_dare: MATH.startFs.double_dare, triple_dare: MATH.startFs.triple_dare }, odds: { ...MATH.mysteryOdds }, egwX: MATH.egwStackX, tdGuar: MATH.guarantee.triple_dare };
 	const texts = [];
 	for (const m of ['ante', 'dare', 'double_dare', 'triple_dare', 'mystery', 'egw']) {
 		texts.push(['modeDesc ' + m, C.modeDesc(m, ctx)]);
@@ -318,18 +328,54 @@ let priceErrors = 0;
 			if (!seen.has(e.type) && !new RegExp(`\\b(async )?${e.type}\\(`).test(src)) { console.error(`  no handler for ${e.type} (${f})`); failedBooks++; }
 			seen.add(e.type);
 			if (e.type === 'bonusUpgrade') { console.error(`  stale bonusUpgrade in ${f}`); failedBooks++; }
-			if (e.type === 'freeSpinTrigger' && (!Array.isArray(e.scatters) || e.cap !== 20)) { console.error(`  freeSpinTrigger without scatters/cap 20 in ${f}`); failedBooks++; }
+			if (e.type === 'freeSpinTrigger' && (!Array.isArray(e.scatters) || e.cap !== MATH.spinCap)) { console.error(`  freeSpinTrigger without scatters/cap ${MATH.spinCap} in ${f}`); failedBooks++; }
 		}
 	}
 	console.log(`\n=== Event handlers === ${seen.size} event types covered`);
+}
+
+// Math-owned values (James 2026-10-30): every win value comes from the books or the synced math config. The fallback
+// (src/game/math.fallback.json) is only a safety net and must equal the generated values; no UI source may type them.
+let mathErrors = 0;
+{
+	console.log('\n=== Math values (synced, fallback drift, no hardcoded win values) ===');
+	const fb = JSON.parse(readFileSync(join(appDir, 'src/game/math.fallback.json'), 'utf8'));
+	console.log(`  source: ${MATH.source}`);
+	if (/^FALLBACK/.test(MATH.source || '')) { console.error('  generated math came from the fallback: run scripts/sync-math.mjs'); mathErrors++; }
+	for (const [k, v] of Object.entries(fb)) {
+		if (JSON.stringify(MATH[k]) !== JSON.stringify(v)) { console.error(`  DRIFT ${k}: fallback ${JSON.stringify(v).slice(0, 80)} vs math ${JSON.stringify(MATH[k]).slice(0, 80)}`); mathErrors++; }
+	}
+	for (const [m, c] of Object.entries(MATH.costs)) if (GEN.modes[m]?.cost !== c) { console.error(`  cost ${m}: modes ${GEN.modes[m]?.cost} vs math ${c}`); mathErrors++; }
+	if (!mathErrors) console.log(`  OK fallback == math (${Object.keys(fb).length} keys); costs ${Object.entries(MATH.costs).map(([m, c]) => m + ' ' + c + 'x').join(', ')}`);
+	// no typed win values in the UI sources
+	const bans = [
+		[/MAX_WIN_X\s*(:\s*number)?\s*=\s*\d/, 'MAX_WIN_X literal'], [/EPIC_STACK_X\s*(:\s*number)?\s*=\s*\d/, 'EPIC_STACK_X literal'],
+		[/PAYTABLE[^=\n]*=\s*\{/, 'PAYTABLE literal'], [/SPIN_CAP\s*(:\s*number)?\s*=\s*\d/, 'SPIN_CAP literal'], [/START_FS[^=\n]*=\s*\{/, 'START_FS literal'],
+		[/MYSTERY_ODDS[^=\n]*=\s*\{/, 'MYSTERY_ODDS literal'], [/gains \+1\b|\(x4 each\)|add \+2 spins|add \+5\b|Up to 3 respins/, 'math value typed in player text'],
+	];
+	for (const f of readdirSync(join(appDir, 'src/game')).filter((x) => x.endsWith('.ts'))) {
+		const src = readFileSync(join(appDir, 'src/game', f), 'utf8');
+		for (const [re, what] of bans) if (re.test(src)) { console.error(`  ${what} in src/game/${f}`); mathErrors++; }
+	}
+	// the step total the WIN meter lands on is the book's winInfo.totalWin, which must equal its line wins
+	let steps = 0;
+	for (const dir of [booksDir, join(appDir, 'src/mock/books')]) for (const file of readdirSync(dir).filter((x) => x.endsWith('.json'))) {
+		for (const e of JSON.parse(readFileSync(join(dir, file), 'utf8')).events || []) if (e.type === 'winInfo') {
+			steps++;
+			const sum = (e.wins || []).reduce((a, w) => a + w.win, 0);
+			if (e.totalWin !== sum) { console.error(`  ${file}: winInfo step ${e.step} totalWin ${e.totalWin} != line sum ${sum}`); mathErrors++; }
+		}
+	}
+	console.log(`  ${mathErrors ? 'FAIL' : 'OK'} no typed win values in src/game; ${steps} winInfo steps total = line sum`);
 }
 console.log(`\n=== Summary ===`);
 console.log(`Books: ${bookFiles.length - failedBooks}/${bookFiles.length} passed`);
 console.log(`Social scan: ${violations === 0 ? 'CLEAN (0 violations)' : `${violations} violations`}`);
 
 console.log(`Mode prices: ${priceErrors === 0 ? 'match math index' : `${priceErrors} errors`}`);
+console.log(`Math values: ${mathErrors === 0 ? 'synced, no drift' : `${mathErrors} errors`}`);
 
-if (failedBooks > 0 || violations > 0 || priceErrors > 0) {
+if (failedBooks > 0 || violations > 0 || priceErrors > 0 || mathErrors > 0) {
 	process.exit(1);
 } else {
 	console.log(`All checks passed!`);

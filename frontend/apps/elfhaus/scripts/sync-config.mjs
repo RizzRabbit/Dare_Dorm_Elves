@@ -1,13 +1,16 @@
-// Writes src/game/modes.generated.json from the math publish files: the live math folder
-// (math/games/elfhaus/library/publish_files/index.json + stats_summary.json) when it exists in the repo,
-// otherwise the vendored math-snapshot/ copy; only if neither exists, the PROVISIONAL defaults.
+// Writes src/game/modes.generated.json from the math: per-mode costs / RTP / max win / bonus odds from the publish
+// files' index.json + stats_summary.json, and every other math-owned game value (paytable, lines, max win cap, spin cap,
+// respins, free-spin counts, guarantees, Epic stack start and grow step, Mystery odds, retriggers, EGW stack value)
+// from game_config.json. Sources, first found wins: the live math folder in the repo
+// (math/games/elfhaus/library/publish_files), else the vendored math-snapshot/ (refreshed by scripts/sync-math.mjs).
+// Only if neither exists: src/game/math.fallback.json (a safety net; scripts/test-books.mjs fails if it drifts).
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 const app = resolve(import.meta.dirname, '..'), repo = resolve(app, '../../..');
 const lib = join(repo, 'math/games/elfhaus/library');
 const snap = join(app, 'math-snapshot');
-const defaults = { base: 1, ante: 3, dare: 100, double_dare: 250, triple_dare: 600, mystery: 600, egw: 450 };
-const modes = Object.fromEntries(Object.entries(defaults).map(([k, cost]) => [k, { cost, rtp: null, maxWinX: 50000, pBonus: null }]));
+const fallback = JSON.parse(readFileSync(join(app, 'src/game/math.fallback.json'), 'utf8'));
+const modes = Object.fromEntries(Object.entries(fallback.costs).map(([k, cost]) => [k, { cost, rtp: null, maxWinX: fallback.maxWinX, pBonus: null }]));
 let source = 'PROVISIONAL (no math publish files yet)';
 const sets = [
 	{ name: 'math publish_files/index.json', idx: join(lib, 'publish_files/index.json'), stats: [join(lib, 'stats_summary.json'), join(lib, 'publish_files/stats_summary.json')] },
@@ -32,5 +35,14 @@ if (set) {
 		break;
 	}
 }
-writeFileSync(join(app, 'src/game/modes.generated.json'), JSON.stringify({ source, modes }, null, 1) + '\n');
-console.log('modes:', source);
+let math = { source: 'FALLBACK src/game/math.fallback.json', ...fallback };
+const gc = [join(snap, 'game_config.json')].find((f) => existsSync(f));
+if (gc) {
+	const g = JSON.parse(readFileSync(gc, 'utf8'));
+	const missing = Object.keys(fallback).filter((k) => g[k] === undefined);
+	if (missing.length) { console.error('game_config.json is missing', missing.join(', '), '- re-run scripts/sync-math.mjs'); process.exit(1); }
+	math = g;
+	for (const [k, c] of Object.entries(g.costs)) if (modes[k] && modes[k].cost !== Number(c)) { console.error(`cost ${k}: index ${modes[k].cost} vs game_config ${c}`); process.exit(1); }
+}
+writeFileSync(join(app, 'src/game/modes.generated.json'), JSON.stringify({ source, modes, math }, null, 1) + '\n');
+console.log('modes:', source, '| math:', math.source);

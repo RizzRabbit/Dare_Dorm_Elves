@@ -1,0 +1,17 @@
+{
+ "source": "math a4e33bb game_calculations.py + reel_params.json",
+ "maxWinX": 50000,
+ "spinCap": 20,
+ "maxRespins": 3,
+ "lines": [[0, 0, 0, 0, 0], [1, 1, 1, 1, 1], [2, 2, 2, 2, 2], [3, 3, 3, 3, 3], [0, 1, 2, 1, 0], [3, 2, 1, 2, 3], [1, 0, 0, 0, 1], [2, 3, 3, 3, 2], [0, 1, 0, 1, 0], [3, 2, 3, 2, 3], [1, 2, 1, 2, 1], [2, 1, 2, 1, 2], [0, 0, 1, 0, 0], [3, 3, 2, 3, 3], [1, 1, 0, 1, 1], [2, 2, 3, 2, 2], [0, 1, 1, 1, 0], [3, 2, 2, 2, 3], [1, 2, 3, 2, 1], [2, 1, 0, 1, 2]],
+ "paytable": {"W": [25, 100, 500], "H1": [25, 100, 500], "H2": [20, 75, 300], "H3": [15, 50, 200], "H4": [10, 40, 150], "L1": [5, 20, 80], "L2": [5, 15, 60], "L3": [4, 10, 40], "L4": [3, 8, 30], "L5": [3, 8, 30]},
+ "costs": {"base": 1, "ante": 3, "dare": 100, "double_dare": 300, "triple_dare": 1000, "mystery": 1000, "egw": 750},
+ "startFs": {"dare": 8, "double_dare": 10, "triple_dare": 10, "hidden": 14},
+ "mysteryOdds": {"none": 50, "double_dare": 37, "triple_dare": 10, "hidden": 3},
+ "guarantee": {"triple_dare": 1, "hidden": 2},
+ "guarMinVal": {"triple_dare": 4, "hidden": 16},
+ "growStep": {"default": 1, "hidden": 2},
+ "epic": {"stackX": 16, "step": 2},
+ "retrigger": {"two": 2, "threePlus": 5},
+ "egwStackX": 4
+}

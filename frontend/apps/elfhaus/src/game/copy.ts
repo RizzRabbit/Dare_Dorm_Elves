@@ -10,6 +10,8 @@ export type CopyCtx = {
 	baseOdds: string;  // 'about 1 in 190'
 	fs: { dare: number; double_dare: number; triple_dare: number };
 	odds: { none: number; double_dare: number; triple_dare: number; hidden: number };
+	egwX: number;      // EGW full-reel wild value (math)
+	tdGuar: number;    // Triple Dare guaranteed full-reel wilds (math GUARANTEE)
 };
 
 /** Rules "Modes" paragraph descriptions (the long form). */
@@ -20,9 +22,9 @@ export function modeDesc(m: CopyMode, c: CopyCtx): string {
 			: `Costs ${c.anteX} the bet; a bonus triggers naturally ${c.anteOdds} spins, versus ${c.baseOdds} in base play. Same symbols, wins and rules.`;
 		case 'dare': return `One real trigger spin with 3 Dare Cards (it wins as normal), then ${c.fs.dare} free spins. Dare wilds clear after each spin.`;
 		case 'double_dare': return `One real trigger spin with 4 Dare Cards, then ${c.fs.double_dare} free spins. The trigger spin's wilds stay in place; all wilds stay locked and keep growing.`;
-		case 'triple_dare': return `One real trigger spin with 5 Dare Cards, then ${c.fs.triple_dare} free spins. The trigger spin's wilds stay in place, with at least 1 full-reel wild guaranteed.`;
+		case 'triple_dare': return `One real trigger spin with 5 Dare Cards, then ${c.fs.triple_dare} free spins. The trigger spin's wilds stay in place, with at least ${c.tdGuar} full-reel wild${c.tdGuar === 1 ? '' : 's'} guaranteed.`;
 		case 'mystery': return `One spin that always lands 2 Dare Cards; the remaining reels are the reveal. The result was decided before the spin: No bonus ${c.odds.none}% · Double Dare ${c.odds.double_dare}% · Triple Dare ${c.odds.triple_dare}% · Epic ${c.odds.hidden}%. A bonus continues on the same board.`;
-		case 'egw': return 'One supercharged spin: 2 to 5 reels land wilds that grow into full-reel wilds (x4 each) once the spin stops, then respins. It never awards free spins.';
+		case 'egw': return `One supercharged spin: 2 to 5 reels land wilds that grow into full-reel wilds (x${c.egwX} each) once the spin stops, then respins. It never awards free spins.`;
 	}
 }
 
@@ -32,9 +34,9 @@ export function shortDesc(m: CopyMode, c: CopyCtx): string {
 		case 'ante': return `Bonuses trigger more often: ${c.anteOdds} spins instead of ${c.baseOdds}. Same symbols, wins and rules.`;
 		case 'dare': return `3 Dare Cards. ${c.fs.dare} free spins, wilds reset.`;
 		case 'double_dare': return `4 Dare Cards. ${c.fs.double_dare} free spins, sticky wilds that grow.`;
-		case 'triple_dare': return `5 Dare Cards. ${c.fs.triple_dare} free spins, sticky wilds, a full-reel wild guaranteed.`;
+		case 'triple_dare': return `5 Dare Cards. ${c.fs.triple_dare} free spins, sticky wilds, ${c.tdGuar === 1 ? 'a full-reel wild' : `${c.tdGuar} full-reel wilds`} guaranteed.`;
 		case 'mystery': return `One spin that always lands 2 Dare Cards; the other reels reveal the result. No bonus ${c.odds.none}% · Double Dare ${c.odds.double_dare}% · Triple Dare ${c.odds.triple_dare}% · Epic ${c.odds.hidden}%.`;
-		case 'egw': return '2 to 5 full-reel wilds (x4 each) with respins. No scatters.';
+		case 'egw': return `2 to 5 full-reel wilds (x${c.egwX} each) with respins. No scatters.`;
 	}
 }
 
