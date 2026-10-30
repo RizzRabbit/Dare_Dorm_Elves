@@ -189,8 +189,13 @@ body:not(.portrait) #fsBar:not(.hidden) ~ #banner{top:calc(50% - var(--cell)*2 -
 #bigwin{cursor:pointer} .bwFx{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 .bwTier{position:relative;z-index:3;opacity:0;transform:scale(.9);will-change:transform,opacity}
 .bwTier.on{opacity:1;transform:none;transition:opacity .12s,transform .25s cubic-bezier(.3,1.6,.5,1)}
-.bwTier.pop{animation:tierPop .32s cubic-bezier(.3,1.6,.5,1)}
-@keyframes tierPop{0%{transform:scale(.82);opacity:.4}100%{transform:none;opacity:1}}
+.bwTier.pop{animation:tierPop .42s ease-out}
+/* paced2: title scale-pop with overshoot + a glow burst behind it (code only) */
+@keyframes tierPop{0%{transform:scale(.55);opacity:0}45%{transform:scale(1.22);opacity:1}70%{transform:scale(.95)}85%{transform:scale(1.03)}100%{transform:none;opacity:1}}
+.bwGlow{position:absolute;left:50%;width:min(calc(78*var(--vw)),1000px);z-index:2;pointer-events:none;opacity:0;border-radius:50%;
+  background:radial-gradient(closest-side,color-mix(in srgb,var(--tt-neon,#FFD27A) 75%,#fff 25%),color-mix(in srgb,var(--tt-neon,#FFD27A) 45%,transparent) 45%,transparent 72%)}
+.bwGlow.burst{animation:tierGlow .7s ease-out}
+@keyframes tierGlow{0%{opacity:0;transform:translateX(-50%) scale(.4)}25%{opacity:.95;transform:translateX(-50%) scale(1.05)}100%{opacity:0;transform:translateX(-50%) scale(1.35)}}
 .bwAmt,.bwX{position:relative;z-index:2}
 
 .bwTier{font-family:"Cinzel";font-weight:900;font-size:96px;letter-spacing:3px;background-image:linear-gradient(#FFFFFF,#DCD3F0 42%,#8E7BB5 54%,#CFC3EA 80%,#F2EEFA);
@@ -1038,7 +1043,7 @@ html,body{background:#120C18}
   margin:0 auto;background:var(--title-img) center/contain no-repeat}
 body.portrait .bwTier.spr{width:calc(86*var(--vw))}
 .bwTier.on{transition-duration:calc(.12s*var(--at)/2),calc(.25s*var(--at)/2)}
-.bwTier.pop{animation-duration:calc(.32s*var(--at)/2)}
+.bwTier.pop{animation-duration:calc(.42s*var(--at)/2)} .bwGlow.burst{animation-duration:calc(.7s*var(--at)/2)}
 .bwAmt{filter:none;-webkit-text-stroke:.07em var(--tt-ink);paint-order:stroke fill;text-shadow:0 .05em 0 var(--tt-ink)}
 
 /* FS intro / outro: one calm plum card, same frame as the splash cards; no confetti (featfx off) */

@@ -197,8 +197,8 @@ export function setWinMeter(x: number) {
 	else setAmount($('#win'), nx * bet());
 }
 export function resetWinMeter() { S.meterX = 0; setAmount($('#win'), 0); setZip(false); }
-/** Big-win banner. The amount climbs through the tiers (countup.ts countTiers: bursts out of each tier and slows into the next, a crawl
- *  into Big / Mega / Super / Epic, the tier title swaps in with a pop as it crosses, fast from Epic on, eased into the
+/** Big-win banner. The amount climbs through the tiers (countup.ts countTiers paced2: races between tiers, crawls the last 1% into each
+ *  threshold for ~1 s, holds while the tier title pops (overshoot + glow burst), jumps ahead and races on; eased into the
  *  exact amount). At 1000x the character layer fades in behind the amount (bigwinElves.ts, the Vi / Roxy / Coco POV group). Tap once = jump to the
  *  end, tap again (or wait) = close. Turbo shortens everything. featfx.ts adds burst / confetti / pop sheets. */
 /** aifix 12: win-title type system hook. Sets data-tier (big|mega|super|epic|legendary) for the CSS type ramp and,
@@ -209,6 +209,14 @@ function titleHook(T: HTMLElement, name: string) {
 	T.dataset.tier = tier; T.setAttribute('aria-label', name);
 	T.classList.toggle('spr', !!src);
 	if (src) T.style.setProperty('--title-img', `url("${src}")`); else T.style.removeProperty('--title-img');
+}
+/** paced2: light burst behind the tier title as it pops (code only; a sibling so it sits behind the title sprite). */
+function tierGlow(T: HTMLElement) {
+	const P = T.parentElement as HTMLElement; let G = P.querySelector('.bwGlow') as HTMLElement | null;
+	if (!G) { G = document.createElement('div'); G.className = 'bwGlow'; G.setAttribute('aria-hidden', 'true'); P.insertBefore(G, T); }
+	const h = T.offsetHeight || 100; G.style.top = `${T.offsetTop - h * 0.7}px`; G.style.height = `${h * 2.4}px`;
+	G.style.setProperty('--tt-neon', getComputedStyle(T).getPropertyValue('--tt-neon').trim() || '#FFD27A');
+	G.classList.remove('burst'); void G.offsetWidth; G.classList.add('burst'); // not '.go': that is the global gold button class (resub-fix.css)
 }
 export async function bigWin(x: number, label?: string) {
 	const B = $('#bigwin'), T = B.querySelector('.bwTier') as HTMLElement;
@@ -223,7 +231,7 @@ export async function bigWin(x: number, label?: string) {
 	B.addEventListener('pointerdown', tap);
 	const counted = countTiers(amt, x, bet(), {
 		turbo: S.turbo,
-		onTier: (i) => { if (label) return; T.textContent = BIG_TIERS[i].name; titleHook(T, BIG_TIERS[i].name); T.classList.add('on'); T.classList.remove('pop'); void T.offsetWidth; T.classList.add('pop'); fxHooks.tier?.(B, i); bwpTier(i); },
+		onTier: (i) => { if (label) return; T.textContent = BIG_TIERS[i].name; titleHook(T, BIG_TIERS[i].name); T.classList.add('on'); T.classList.remove('pop'); void T.offsetWidth; T.classList.add('pop'); tierGlow(T); fxHooks.tier?.(B, i); bwpTier(i); },
 		onX: (v) => { if (!chars && v >= 1000) { chars = true; B.classList.add('chars'); fxHooks.chars?.(B); } },
 	});
 	if (zipped()) { setZip(false); skipCounts(); } // v3.15d: 2 taps on the lines = land on the final tier + amount now

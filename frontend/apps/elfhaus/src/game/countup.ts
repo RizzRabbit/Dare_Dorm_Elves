@@ -51,40 +51,46 @@ export const setZip = (v: boolean) => { zip = v; };
 export const zipped = () => zip;
 
 // ---------- anticipatory big-win count (the banner amount) ----------
-// Count in "x the bet" space through the tier thresholds below the win. Up to Epic each leg bursts out of the last
-// tier and decelerates (ease-out) toward the next threshold, then creeps over the last stretch (tension) before it
-// crosses; crossing calls onTier (title swap + pop) and the next leg bursts off again (Big -> Mega -> Super -> Epic).
-// Once Epic is reached the rest counts up fast to the exact amount (Legendary, if any, is crossed on the way without
-// a crawl). Everything is closed-form on rAF time; tap skips to the end. Turbo runs the same plan at 0.45x.
+// paced2 (James 2026-10-29, ref: Waylanders Forge on Stake). Count in "x the bet" space through the tier thresholds
+// below the win. Each tier: RACE (fast blur) up to ~1% under the threshold, CRAWL the last 1% for ~1 s (1.1-1.5 s
+// for the higher tiers; the whole number barely moves while the cents tick, easing into exactly the threshold),
+// HOLD the exact threshold ~0.25 s while onTier pops the new title, then JUMP well ahead (+30-60% of the threshold,
+// capped below the next crawl zone and below the final amount) and race on. After the top tier for this win it races
+// to the final amount, eases the last unit and stops. Closed-form on rAF time; tap skips to the end; turbo = 0.45x.
 export const BIG_TIERS = [
 	{ x: 10, name: 'BIG WIN' }, { x: 25, name: 'MEGA WIN' }, { x: 50, name: 'SUPER WIN' }, { x: 100, name: 'EPIC WIN' }, { x: 1000, name: 'LEGENDARY WIN' },
 ] as const;
-type Key = { t0: number; t1: number; v0: number; v1: number; ease: (u: number) => number; tier?: number };
-const easeInOut = (u: number) => (u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2);
-const easeIn = (u: number) => u * u * (0.4 + 0.6 * u);
-const crawl = (u: number) => 0.5 - Math.cos(Math.PI * u) / 2;
-const easeOutQuart = (u: number) => 1 - Math.pow(1 - u, 4);
+type Key = { t0: number; t1: number; v0: number; v1: number; ease: (u: number) => number; tier?: number; kind?: string };
+const CRAWL_FRAC = 0.01;                                   // crawl zone = last 1% of each threshold
+const CRAWL_MS = [1000, 1100, 1200, 1350, 1500];           // per tier (Big .. Legendary)
+const JUMP = [0.6, 0.5, 0.45, 0.5, 0.3];                   // jump after the pop, fraction of the threshold
+const HOLD_MS = 250, RACE_MS = 600, LAST_MS = 420;
+const race = (u: number) => 1 - Math.pow(1 - u, 1.6);     // fast, a light brake at the end (no stop)
+const raceIn = (u: number) => u * (0.35 + 0.65 * u);       // first leg, from 0
+const crawlOut = (u: number) => 1 - Math.pow(1 - u, 1.6); // eases into exactly the threshold
+const settle = (u: number) => 1 - Math.pow(1 - u, 3);
 /** Build the timeline (ms) for a win of X times the bet. */
 export function tierPlan(X: number, turbo = false) {
-	const k = turbo ? 0.45 : 1, keys: Key[] = [], EPIC = 100;
+	const k = turbo ? 0.45 : 1, keys: Key[] = [];
 	let t = 0, v = 0;
 	const tiers = BIG_TIERS.map((b, i) => ({ ...b, i })).filter((b) => b.x <= X);
-	tiers.forEach((b) => {
-		if (v >= EPIC) {                                            // past Epic: no anticipation, just a quick pass
-			const leg = 300 * k;
-			keys.push({ t0: t, t1: t + leg, v0: v, v1: b.x, ease: v === EPIC ? easeIn : easeInOut, tier: b.i }); t += leg; v = b.x; return;
-		}
-		const first = v === 0;
-		// leg: burst out of the last tier, slowing as it nears the threshold; crawl: creep the last stretch, then cross
-		const near = first ? b.x * 0.9 : v + (b.x - v) * 0.86;
-		const leg = (first ? 420 : 480) * k, cr = (first ? 260 : 400) * k;
-		keys.push({ t0: t, t1: t + leg, v0: v, v1: near, ease: first ? easeIn : easeOut }); t += leg;
-		keys.push({ t0: t, t1: t + cr, v0: near, v1: b.x, ease: crawl, tier: b.i }); t += cr; v = b.x;
+	const push = (dur: number, v1: number, ease: (u: number) => number, kind: string, tier?: number) => {
+		keys.push({ t0: t, t1: t + dur, v0: v, v1, ease, kind, tier }); t += dur; v = v1;
+	};
+	tiers.forEach((b, n) => {
+		const cs = b.x * (1 - CRAWL_FRAC);
+		if (v < cs) push(RACE_MS * k, cs, v === 0 ? raceIn : race, 'race');
+		push(CRAWL_MS[b.i] * k, b.x, crawlOut, 'crawl', b.i);                // tier fires when the crawl lands
+		push(HOLD_MS * k, b.x, () => 0, 'hold');
+		const nx = tiers[n + 1], cap = nx ? b.x + (nx.x * (1 - CRAWL_FRAC) - b.x) * 0.75 : b.x + (X - b.x) * 0.55;
+		const j = Math.min(b.x * (1 + JUMP[b.i]), cap);
+		if (j > v) v = j;                                                     // the jump: next key starts here
 	});
 	if (X > v) {
-		const fast = v >= EPIC, r = Math.log10(X / Math.max(1, v) + 1);
-		const leg = (fast ? 300 + 200 * r : v === 0 ? countMs(X) : 320 + 420 * r) * k;
-		keys.push({ t0: t, t1: t + leg, v0: v, v1: X, ease: fast ? easeOutQuart : easeOut }); t += leg;
+		if (tiers.length === 0) { push(countMs(X) * k, X, settle, 'race'); return { keys, total: t }; }
+		const last = Math.min(1, (X - v) * 0.15);                             // ease the last unit or so
+		if (X - last > v + 0.5) push(RACE_MS * k, X - last, race, 'race'); // tiny remainder: settle only
+		push(LAST_MS * k, X, settle, 'settle');
 	}
 	return { keys, total: t };
 }
@@ -99,7 +105,11 @@ export function countTiers(el: HTMLElement, X: number, unit: number, opts: { tur
 		const step = (now: number) => {
 			const t = now - t0;
 			if (t >= total) { runs.delete(el); shown.set(el, X * unit); el.textContent = money(X * unit); run.done(); return; }
-			let x = X; for (const kk of keys) if (t < kk.t1) { x = kk.v0 + (kk.v1 - kk.v0) * kk.ease((t - kk.t0) / (kk.t1 - kk.t0)); break; }
+			let x = X; for (const kk of keys) if (t < kk.t1) {
+				x = kk.v0 + (kk.v1 - kk.v0) * kk.ease((t - kk.t0) / (kk.t1 - kk.t0));
+				if (kk.kind === 'crawl' && unit > 0) x = Math.min(x, kk.v1 - 0.01 / unit); // shows .99 until it lands, so the title pops on the landing frame
+				break;
+			}
 			fire(t); opts.onX?.(x);
 			shown.set(el, x * unit); const txt = money(x * unit, d); if (el.textContent !== txt) el.textContent = txt;
 			run.raf = requestAnimationFrame(step);
