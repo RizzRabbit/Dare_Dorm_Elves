@@ -616,9 +616,9 @@ function wire() {
 		if (anyOpen() || popOpen()) return;
 		e.preventDefault();
 		if (S.auto) { stopAuto(); return; }
+		if (!e.repeat && !$('#intro').classList.contains('hidden')) { ($('#intro .cont') as HTMLElement).click(); return; }   // v3.18: Space = START on the bonus card
 		if (S.busy) { if (!e.repeat) skipBoard(); return; } // Space mid-round = the same skip as a tap on the board
 		if (e.repeat) return;
-		if (!$('#intro').classList.contains('hidden')) { ($('#intro .cont') as HTMLElement).click(); return; }
 		S.replay ? playReplay() : round(spinMode());
 	});
 	// plain button clicks (the buy menu, bet steps, mode arming and errors play their own sounds above)

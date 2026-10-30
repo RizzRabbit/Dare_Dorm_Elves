@@ -64,6 +64,16 @@ function lockCarried(l: Locked) {
 	l.singles.forEach((s) => { const c = cellEl(s.reel, s.row); if (!c.classList.contains('locked')) { c.classList.add('locked'); lockFx(c); fresh = true; } });
 	if (fresh) sfx('wild_sticky_lock');
 }
+/** Bonus start card: resolves on START / a tap on the overlay (after a 300 ms guard), or after `autoMs` (autoplay only;
+ *  same pace as before: ui.wait; 0 = wait for the player however long it takes). */
+export function startGate(I: HTMLElement, autoMs: number): Promise<void> {
+	const shown = performance.now(); I.dataset.waiting = autoMs ? 'auto' : 'start';
+	return new Promise<void>((res) => {
+		const done = () => { I.onclick = null; delete I.dataset.waiting; res(); };
+		I.onclick = () => { if (performance.now() - shown >= 300) done(); };
+		if (autoMs) wait(autoMs).then(() => { if (I.dataset.waiting) done(); });
+	});
+}
 export const endBonusUi = () => { music('base'); setBg(false); document.body.classList.remove('inBonus'); $('#fsBar').classList.add('hidden'); $('#intro').classList.add('hidden'); $('#fsMore').classList.add('hidden'); S.inBonus = false; };
 
 /** EGW: the reels named by egwStart (reel -> stack value). The math sends them as already-locked full reels in the
@@ -247,8 +257,10 @@ export const bookEventHandlerMap: Handlers = {
 		I.dataset.tier = ev.tier; I.classList.remove('hidden');
 		sfx('fs_intro'); music('bonus');
 		const fx = I.querySelector<HTMLElement>('.bwFx'); featOpen(fx); featPop(I.querySelector('.tierName'));
-		// brief and skippable: a tap anywhere on the overlay continues
-		await Promise.race([wait(S.turbo ? 1400 : 2600), new Promise<void>((res) => (I.onclick = () => res()))]);
+		// v3.18 (James 2026-10-30): the player starts every bonus with START (or a tap on the card / Space), in turbo
+		// exactly as without it; the old timer advanced it on its own (turbo: ~0.5 s, which read as "starts by itself").
+		// Only autoplay keeps the timed advance. Taps in the first 300 ms are ignored (a slam-stop double tap).
+		await startGate(I, S.auto > 0 ? (S.turbo ? 1400 : 2600) : 0);
 		I.onclick = null; I.classList.add('hidden'); featClose(fx); unScatter(); voice('fsstart', { tier: ev.tier });
 		showFsBar();
 		$('#fsTier').textContent = TL(ev.tier); $('#fsCount').textContent = `FREE SPIN 0 / ${ev.totalFs}`;
