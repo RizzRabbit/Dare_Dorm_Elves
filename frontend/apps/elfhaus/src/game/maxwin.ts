@@ -23,7 +23,7 @@ const ids = Object.keys(ATL).map((p) => p.split('/').pop()!.replace('.json', '')
 const src = (id: string) => Object.entries(IMG).find(([p]) => p.endsWith('/' + id + '.webp'))?.[1] || '';
 
 const RISE = 150;                     // ms: first elf starts rising (staggered, centre out)
-// Round 6: the backdrop is a pre-blurred, dimmed Lounge plate (same room + light as the base game), loaded with the sheets
+// The backdrop is a pre-blurred, dimmed render of the grand foyer (base mode, no reels / Roxy / HUD; 2026-10-29), loaded with the sheets
 const BG = { land: src('maxwin_bg_land'), port: src('maxwin_bg_port') };
 let bgImg: HTMLImageElement | null = null;
 const bgUrl = () => (document.body.classList.contains('portrait') ? BG.port : BG.land);
