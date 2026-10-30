@@ -33,6 +33,12 @@ export const timing = () => (S.turbo
 const P = () => (S.turbo
 	? { wu: 0, amp: 0, acc: 70, v: 44, D: 220, ov: 0.14, set: 150, pw: 2, soft: false, smooth: false, dMin: 220, dMax: 900, bl: 1, td: 1 }
 	: { wu: 90, amp: 0.12, acc: 140, v: 26, D: 360, ov: 0.14, set: 240, pw: 2.2, soft: true, smooth: true, dMin: 260, dMax: 700, bl: 1, td: 1 }); // re-audit M4: at speed the blur strip REPLACES the tape (was a 70/70 blend = double exposure)
+/** v3.17 (James 2026-10-30, "the reels all stop at about the same time"): the shortest lead (ms from now) the first
+ *  reel's land time needs so its brake (D) + settle (set) can still start in the future. When the RGS answer arrives
+ *  late (real latency 300-800 ms on phones; the mock has none) the old `at = max(first, now + 120)` put every reel's
+ *  brake start in the past, all five got clamped to "now" and landed together. bookEventHandlerMap schedules the
+ *  first stop at least this far out, so every reel keeps its own brake and the T.gap stagger survives. */
+export const stopLead = () => { const p = P(); return p.D + p.set + 40; };
 void STOP_TEMPO; // normal stops no longer derive from STOP_TEMPO (kept exported in tempo.ts for the respin mini cells)
 
 type Slot = HTMLElement & { n?: number };

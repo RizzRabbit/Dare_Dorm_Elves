@@ -81,6 +81,8 @@ export async function mockBet(params: { currency: string; amount: number; mode: 
 	const q = typeof location !== 'undefined' ? new URLSearchParams(location.search) : null;
 	const bookName = params.forcedBook || q?.get('book');
 	if (typeof window !== 'undefined') ((window as any).__mockBets ??= []).push(params.mode); // scripts/e2e-arm.mjs: which mode each press bet
+	// dev only: ?lat=<ms> simulates the RGS round trip (scripts/e2e-reelstops.mjs measures the stop stagger under latency)
+	const lat = Number(q?.get('lat') || 0); if (lat > 0) await new Promise((r) => setTimeout(r, lat));
 
 	let book: MockBook | undefined;
 	if (bookName && books[bookName]) {

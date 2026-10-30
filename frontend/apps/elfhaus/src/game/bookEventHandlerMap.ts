@@ -9,7 +9,7 @@ import { BIGWIN_ELVES_MIN_X, preloadBigWinElves } from './bigwinElves';
 import { showRespin, endRespin, hideRespin } from './respin';
 import { mxBurst, lockFx, clearSymWins, symLand, symWin, landBump } from './fx';
 import { cardFlip } from './cardflip';
-import { timing, isSpinning, startSpin, markStopped, sinceStart, sleep, spinMini, stopMini, stopReel } from './reels';
+import { timing, isSpinning, startSpin, markStopped, sinceStart, sleep, spinMini, stopMini, stopReel, stopLead } from './reels';
 import { $, S, k, bet, wait, banner, toast, hideToast, bigWin, setWinMeter, clearLines, renderCell, renderOverlays, cellEl, setGem, ovMx, symHTML } from './ui';
 import { playWins } from './winlines';
 import { wildLand, wfExpand } from './wildfx';
@@ -118,7 +118,7 @@ export const bookEventHandlerMap: Handlers = {
 		// every reel gets an absolute settle time; reels.ts eases each one in (decel, overshoot, settle)
 		// anticipation reels (math flags them once 2 Dare Cards have landed) each glow from the previous reel's stop,
 		// hold an extra T.ant and brake slowly, one after another, so reel 5 always lands last
-		let at = Math.max(T.first, sinceStart() + 120), prev = at;
+		let at = Math.max(T.first, sinceStart() + stopLead()), prev = at; // v3.17: late RGS answer = still staggered (reels.ts stopLead)
 		const stops: Promise<void>[] = [];
 		let riser: Handle | null = null, riserT = 0;
 		for (let r = 0; r < REELS; r++) {
