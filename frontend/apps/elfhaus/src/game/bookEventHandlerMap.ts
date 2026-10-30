@@ -66,14 +66,11 @@ function lockCarried(l: Locked) {
 }
 export const endBonusUi = () => { music('base'); setBg(false); document.body.classList.remove('inBonus'); $('#fsBar').classList.add('hidden'); $('#intro').classList.add('hidden'); $('#fsMore').classList.add('hidden'); S.inBonus = false; };
 
-/** v3.10 EGW: the reels named by egwStart (reel -> stack value). The math sends them as already-locked full reels in the
- * next reveal, which used to pin them on the board before the spin even started ("drops the wilds like a ton of bricks").
- * Now that reveal spins them like any other reel: they stop left to right in the normal order with the normal settle,
- * land as four single wilds (normal wildLand + glow brighten). v3.11: once the LAST reel has stopped, all the EGW stacks
- * form together in one pass (formStack in parallel: the shared calm stack-from-singles, ONE face reaction for the
- * leftmost stack; turbo: the short squash/pop), then the book's mergeGroups plays. The four badges add up exactly to
- * the stack value (egwParts.ts: under 4 the extra rows show no badge). No extra anticipation: the reveal's own math
- * anticipation flags apply, exactly as in the other modes. */
+/** EGW: the reels named by egwStart (reel -> stack value). The math sends them as already-locked full reels in the
+ * next reveal; that reveal spins them like any other reel instead (they stop left to right with the normal settle and
+ * land as four single wilds whose badges add up to the stack value, egwParts.ts). v3.17: from there EGW uses the base /
+ * ante flow unchanged: playBookEvents (egwFlow) adds one ordinary stackComplete per EGW reel after the reveal, then the
+ * book's mergeGroups and wins play as in any mode. No EGW-only animation path. */
 let egwPending: Map<number, number> | null = null;
 /** v3.15g (James): set by wincap; the max-win screen already showed the capped total, so freeSpinEnd skips its TOTAL WIN outro */
 let capHit = false;
@@ -147,10 +144,9 @@ export const bookEventHandlerMap: Handlers = {
 		clearTimeout(riserT); (riser as Handle | null)?.stop(150);
 		markStopped();
 		await sleep(T.land);
-		// EGW (v3.11, owner: "have them form once at the end of the spin"): after the LAST reel has stopped, every EGW reel
-		// forms its stack together in ONE pass (the same calm stack-from-singles / turbo pop as base and Dare), with one
-		// face reaction (the leftmost EGW reel) instead of one per reel; the book's mergeGroups follows.
-		if (egw) { const rs = [...egw].sort((a, b) => a[0] - b[0]); await Promise.all(rs.map(([reel, value], i) => formStack({ reel, value }, i === 0))); }
+		// EGW (v3.17, James: "the same flow as normal / ante"): nothing EGW-specific here any more. The EGW reels landed as
+		// four single wilds like any reel; playBookEvents (egwFlow) follows this reveal with one ordinary stackComplete per
+		// EGW reel, left to right, so they stack exactly like base / ante stacks, then the book's mergeGroups merges them.
 	},
 	async stackComplete(ev) { await formStack(ev); },
 	async mergeGroups(ev) {
@@ -318,7 +314,26 @@ export const bookEventHandlerMap: Handlers = {
 	async finalWin(ev) { setWinMeter(Math.min(ev.amount / 100, MAX_WIN_X)); },
 };
 
+/** v3.17: EGW runs the base / ante flow. The math sends egwStart (reels + value) and then a reveal that already holds
+ *  those reels as locked full reels; base books instead land the singles in the reveal and send one stackComplete per
+ *  reel after it. Rewrite the EGW book into that same shape (data only, no EGW animation code): the reveal lands the
+ *  EGW reels as four single wilds (egwParts badges, reveal handler) and a stackComplete per EGW reel, left to right,
+ *  follows it, before the book's own mergeGroups / wins. */
+export function egwFlow(events: BookEvent[]): BookEvent[] {
+	const out: BookEvent[] = []; let pend: { reels: number[]; value: number } | null = null;
+	for (const ev of events) {
+		out.push(ev);
+		if (ev.type === 'egwStart') pend = { reels: [...(ev as BookEventOf<'egwStart'>).reels].sort((a, b) => a - b), value: (ev as BookEventOf<'egwStart'>).value };
+		else if (ev.type === 'reveal' && pend) {
+			for (const reel of pend.reels) out.push({ type: 'stackComplete', step: 0, reel, parts: egwParts(pend.value, ROWS), value: pend.value, instant: false } as unknown as BookEvent);
+			pend = null;
+		}
+	}
+	return out;
+}
+
 export async function playBookEvents(events: BookEvent[]) {
+	events = egwFlow(events);
 	S.roundBase = 0; capHit = false; voiceSpin();
 	// celebration sheets are lazy: start decoding them only once this round's book shows they're needed (the reels spin
 	// meanwhile); they're released again after the screen closes
