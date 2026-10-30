@@ -102,9 +102,16 @@ export function placeScene(portrait: boolean, fr: DOMRect) {
 		// mockup portrait: she peeks over the board, hips at the frame's top edge, behind the board
 		const k = g.k, T = (fr.top - g.oy) / k, DH = g.D.h;
 		room.scale.set(k); room.position.set(g.ox, g.oy);
-		({ keys, cool } = buildFoyerPort(T, DH));
-		const rs = g.loose ? 2.4 * f : Math.min(2.4 * f, Math.max(0.6 * f, (T - 46) / (cutRow - hopTop)));
-		const feet = T + (R.srcH - cutRow) * rs, rx = Math.max(770 + Math.max(0, rs / f - 1.85) * 70, 1080 + 8 - (R.srcW / 2) * rs) - 47;   // -47: the v7 figure sits right of the mockup's in its box
+		const T0 = g.T0 ?? T, bs0 = g.bs0 ?? g.bs;
+		({ keys, cool } = buildFoyerPort(T0, DH));   // v3.17: the room stays where it was (laid out for the pre-v3.17 board top)
+		// her approved size / spot for the pre-v3.17 board (scale bs0, top T0) ...
+		const rs0 = g.loose ? 2.4 * f : Math.min(2.4 * f, Math.max(0.6 * f, (T0 - 46) / (cutRow - hopTop)));
+		const rx0 = Math.max(770 + Math.max(0, rs0 / f - 1.85) * 70, 1080 + 8 - (R.srcW / 2) * rs0) - 47;   // -47: the v7 figure sits right of the mockup's in its box
+		// ... v3.17 (James): scaled by the board's own factor and kept at the same place relative to the frame's top-right
+		// corner (hips on the frame top). If her head would leave the top of the screen she slides down behind the board
+		// instead (the frame clips her), never smaller.
+		const F = g.bs / bs0, rs = rs0 * F, R0 = 540 + FW * bs0 / 2, R1 = 540 + FW * g.bs / 2;
+		const rx = R1 + (rx0 - R0) * F, hip = Math.max(T, 46 + (cutRow - hopTop) * rs), feet = hip + (R.srcH - cutRow) * rs;
 		if (!hold) { R.view.position.set(g.ox + rx * k, g.oy + feet * k); R.view.scale.set(rs * k); }
 		clipRoxy(hold && free ? null : fr.top + 14); roxyL.visible = true;
 		R.shadow(false); R.setGrade({ cut: cutRow / R.srcH, res: ST.s * (window.devicePixelRatio || 1) });

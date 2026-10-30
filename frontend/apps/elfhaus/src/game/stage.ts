@@ -14,7 +14,10 @@ const TB_MIN = 0.66, TB_MAX = 2.2;
 const LAND_H = 1080, LAND_AR: [number, number] = [1.25, 2.4];   // stage width / height
 // Phone landscape (resub-fix H1): a short landscape window (visible height <= 500) gets its own, shorter stage so the
 // UI renders at ~0.65 instead of ~0.36 and a dedicated layout (board fills the height, side rails for the controls).
-const PHL_MAX_H = 500, PHL_H = 600;
+// v3.17 (James 01:46 CDT): phone landscape is the DESKTOP layout scaled uniformly to the phone (same board, logo, BUY
+// plate + autoplay / turbo left, Roxy right, HUD bar, armed tag); only the 48 px tap floors in mkboard.ts differ. The
+// dedicated short stage / side-rail layout is off (PHL_MAX_H 0); body.tb still lifts the text to a legible size.
+const PHL_MAX_H = 0, PHL_H = 600;
 const PORT_W = 390, PORT_AR: [number, number] = [1.5, 2.4];     // stage height / width
 const clamp = (v: number, [a, b]: [number, number]) => Math.min(b, Math.max(a, v));
 

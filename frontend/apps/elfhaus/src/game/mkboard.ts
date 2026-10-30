@@ -4,7 +4,7 @@
 //   land  (desktop / tablet landscape, D 1920 x 1080): board at (430,170) s1, BUY plate + autoplay / turbo left of it,
 //         full-width HUD bar at the bottom (BALANCE | - BET + | WIN | SPIN), logo over the frame top, Roxy right.
 //   port  (phones, D 1080 x DH): full-width board, [autoplay][turbo] .... [BUY BONUS] row, 2-row HUD bar + big SPIN.
-//   cmp   (phone landscape, D 1000 x 562): board left at s0.56, BUY plate + autoplay / turbo between board and Roxy, HUD bar.
+//   cmp   (old phone landscape, D 1000 x 562; unused since v3.17: phones in landscape get 'land', stage.ts PHL_MAX_H).
 // The frame (slim plum frame, recessed well, one rounded tile per cell, gold studs) and its pink neon edge are the
 // mockup's frameTex / neonTex canvas code, drawn at device resolution on two canvases inside #frame.
 // Game-only pieces the mockup never had: the menu button (top-left corner, same square style), the armed-mode tag
@@ -14,12 +14,14 @@ import { ST } from './stage';
 const bwPx = (w: number) => { const d = ST.s * (window.devicePixelRatio || 1); return (Math.max(1, Math.round(w * d)) + 0.01) / d + 'px'; };
 
 export const CELL = 160, FT = 34, FB = 52, BW = 800, BH = 640, FW = BW + 2 * FT, FH = BH + FT + FB, M = 40;
+/** portrait board scale for a frame ~95% of the 1080 design width */
+const BS_W = 1026 / FW;
 const NEON = '#ff4fc3';
 type Btn = { x: number; y: number; s: number; ic: number };          // centre, size, icon scale (mockup design units)
 type Field = { x: number; y: number; ls: number; vs: number; w: number };
 export type MkGeo = {
 	mode: 'land' | 'port' | 'cmp'; k: number; ox: number; oy: number; D: { w: number; h: number }; loose: boolean;
-	bx: number; by: number; bs: number; T: number; logo: { x: number; y: number; s: number };
+	bx: number; by: number; bs: number; bs0?: number; T: number; T0?: number; logo: { x: number; y: number; s: number };
 	hud: { x: number; y: number; w: number; h: number; r: number }; fBal: Field; fBet: Field; fWin: Field;
 	minus: Btn; plus: Btn; spin: Btn; auto: Btn; turbo: Btn; bonus: { v: 'v' | 'p'; x: number; y: number; s: number };
 	cmp: { x: number; y: number; s: number };
@@ -38,15 +40,24 @@ export function mkGeo(): MkGeo {
 		const HB = 344, hudY = DH - HB - 18;
 		const loose = DH >= 2100, kk = loose ? 1 : 0.86, GAPB = loose ? 44 : 22, RH = 176 * kk, ab = Math.max(160 * kk, tt);
 		const rowY = hudY - GAPB - RH / 2, below = 2 * GAPB + RH;
-		const bs = Math.max(0.92, Math.min(1.28, (hudY - below - 690) / (BH + FB)));
+		// bs0: the pre-v3.17 scale (top 690 reserved for the logo + Roxy; 0.92..1.28, so short phones got a ~74%-wide board).
+		// v3.17 (James, iPhone on studio.engine.io): the board scales UNIFORMLY (same shape, square cells) to ~95% of the
+		// width (frame 868 * BS_W = 1026 of 1080), its foot stays where it was (BUY row + HUD untouched), so it grows upward;
+		// capped only so the logo on the frame top still clears the menu button (TOP_MIN).
+		const bs0 = Math.max(0.92, Math.min(1.28, (hudY - below - 690) / (BH + FB)));
+		const menuB = (12 + Math.max(144 * f.k, Math.ceil(48 / ST.s) + 2)) / f.k - f.oy / f.k;   // menu button bottom (design units)
+		const TOP_MIN = menuB + 12 + 64 + 412 * 0.4 * 0.62;   // logo top under the menu; v3.17: logo always clear of the frame top (y = T - 64)
+		const bs = Math.max(Math.min(bs0, BS_W), Math.min(BS_W, (hudY - below - TOP_MIN) / (BH + FB + FT)));
 		const by = hudY - below - (BH + FB) * bs, bx = 540 - BW * bs / 2, T = by - FT * bs;
-		const sb = (s: number) => Math.max(s, tt);
-		return { mode: 'port', ...f, D, loose, bx, by, bs, T,
-			logo: { x: Math.max(272, 540 - BW * bs / 2 + 220), y: T - (loose ? 64 : 24), s: 0.4 },
+		const sb = (s: number) => Math.max(s, tt), t44 = (Math.ceil(44 / ST.s) + 2) / f.k;
+		return { mode: 'port', ...f, D, loose, bx, by, bs, bs0, T, T0: hudY - below - (BH + FB + FT) * bs0,
+			logo: { x: Math.max(272, 540 - BW * bs / 2 + 220), y: T - 64, s: 0.4 },
 			hud: { x: 14, y: hudY, w: 1052, h: HB, r: 22 },
 			fBal: { x: 14 + 40, y: hudY + 28, ls: 30, vs: 56, w: 400 }, fWin: { x: 14 + 470, y: hudY + 28, ls: 30, vs: 56, w: 300 },
-			fBet: { x: 14 + 236, y: hudY + 204, ls: 30, vs: 56, w: 150 },
-			minus: { x: 14 + 116, y: hudY + 250, s: sb(160), ic: 2.9 }, plus: { x: 14 + 470, y: hudY + 250, s: sb(160), ic: 2.9 },
+			// v3.17 (James: the +/- were ~70 px squares): 126 design (~46 px on a 390-wide phone), floor 44 screen px for
+			// touch; the bet row tightens around them: [-] left-aligned with BALANCE, BET between, [+] under WIN
+			fBet: { x: 14 + 190, y: hudY + 204, ls: 30, vs: 56, w: 200 },
+			minus: { x: 14 + 103, y: hudY + 250, s: Math.max(126, t44), ic: 2.3 }, plus: { x: 14 + 456 + Math.max(126, t44) / 2, y: hudY + 250, s: Math.max(126, t44), ic: 2.3 },
 			spin: { x: 14 + 904, y: hudY + 172, s: sb(236), ic: 2.55 },
 			auto: { x: 30 + ab / 2, y: rowY, s: ab, ic: 2.5 * kk }, turbo: { x: 30 + ab * 1.5 + 18 * kk, y: rowY, s: ab, ic: 2.5 * kk },
 			bonus: { v: 'p', x: 1066 - 290 * kk, y: rowY, s: kk }, cmp };
@@ -66,14 +77,18 @@ export function mkGeo(): MkGeo {
 			bonus: { v: 'v', x: 606, y: top + bh / 2, s: s0 }, cmp };
 	}
 	const D = { w: 1920, h: 1080 }, f = fit(D), tt = t48(f.k), sb = (s: number) => Math.max(s, tt);
-	const s0 = 1.05, bw = 216 * s0, bh = 240 * s0, ab = sb(106), gp = 18, top = 500 - (bh + gp + ab) / 2;
+	// v3.17 phones in landscape (text boost / 48 px floor): the BUY plate grows a little so the boosted label fits it,
+	// autoplay / turbo keep a gap between them, -/+ step out around the boosted BET value. Desktop (ph false) unchanged.
+	const mb = sb(116), ph = ST.tb > 1.001 || mb > 116;
+	const s0 = ph ? 1.2 : 1.05, bw = 216 * s0, bh = 240 * s0, ab = sb(106), gp = 18, top = 500 - (bh + gp + ab) / 2;
+	const ax = Math.max(bw / 2 - ab / 2, (ab + gp) / 2);
 	return { mode: 'land', ...f, D, loose: false, bx: 430, by: 170, bs: 1, T: 136,
 		logo: { x: 430 + BW / 2, y: 150, s: 0.36 }, hud: { x: 40, y: 900, w: 1840, h: 168, r: 22 },
-		fBal: { x: 40 + 60, y: 900 + 44, ls: 22, vs: 42, w: 520 }, fBet: { x: 40 + 780, y: 900 + 44, ls: 22, vs: 42, w: 120 },
+		fBal: { x: 40 + 60, y: 900 + 44, ls: 22, vs: 42, w: 520 }, fBet: { x: 40 + 780, y: 900 + 44, ls: 22, vs: 42, w: 120 * (ph ? ST.tb : 1) },
 		fWin: { x: 40 + 1240, y: 900 + 44, ls: 22, vs: 42, w: 380 },
-		minus: { x: 40 + 700, y: 900 + 84, s: sb(116), ic: 2.1 }, plus: { x: 40 + 964, y: 900 + 84, s: sb(116), ic: 2.1 },
+		minus: { x: 40 + (ph ? 780 - 14 - mb / 2 : 700), y: 900 + 84, s: mb, ic: 2.1 }, plus: { x: 40 + (ph ? 780 + 120 * ST.tb + 14 + mb / 2 : 964), y: 900 + 84, s: mb, ic: 2.1 },
 		spin: { x: 40 + 1736, y: 900 + 84, s: sb(152), ic: 1.65 },
-		auto: { x: 236 - bw / 2 + ab / 2, y: top + bh + gp + ab / 2, s: ab, ic: 1.62 }, turbo: { x: 236 + bw / 2 - ab / 2, y: top + bh + gp + ab / 2, s: ab, ic: 1.62 },
+		auto: { x: 236 - ax, y: top + bh + gp + ab / 2, s: ab, ic: 1.62 }, turbo: { x: 236 + ax, y: top + bh + gp + ab / 2, s: ab, ic: 1.62 },
 		bonus: { v: 'v', x: 236, y: top + bh / 2, s: s0 }, cmp };
 }
 
@@ -141,6 +156,13 @@ export function mkPlace(cell: number) {
 	const tagBase = { position: 'absolute', bottom: 'auto', right: 'auto', width: 'auto', 'min-width': '0', 'max-width': 'none', margin: '0', 'font-size': tf + 'px',
 		'min-height': (Math.ceil(48 / ST.s) + 1) + 'px', height: 'auto', padding: '0 ' + tf * 0.8 + 'px', 'grid-area': 'auto' };
 	if (g.mode === 'port') css(tag, { ...tagBase, left: bp.x, top: fy + fh - hy, translate: '-50% -50%' });
+	else if (g.mode === 'land' && ST.tb > 1.001) {
+		// v3.17 phones in landscape: over SPIN the boosted chip covered Roxy's feet; it sits in the free space under the
+		// autoplay / turbo pair instead (left column, clear of the board and Roxy)
+		const ab = Math.max(L(g.auto.s), 1), colB = Y(g.auto.y) + ab / 2, hudT = Y(g.hud.y);
+		const cw = L(2 * (Math.abs(g.turbo.x - g.auto.x) / 2 + g.auto.s / 2));   // autoplay..turbo width: two lines if needed
+		css(tag, { ...tagBase, left: X(g.bonus.x) - hx, top: (colB + hudT) / 2 - hy, translate: '-50% -50%', 'max-width': cw + 'px', 'white-space': 'normal', 'text-align': 'center', 'line-height': '1.1' });
+	}
 	else css(tag, { ...tagBase, left: sp.x + sp.s / 2 - hx, top: sp.y - 8 - hy, translate: '-50% -100%' });
 	// free-spins bar on the frame's sill, banner over the top row, step toast at the board's foot
 	css($('#fsBar'), { position: 'absolute', left: '50%', top: (fh - FB * u / 2) + 'px', translate: '-50% -50%', margin: '0', 'z-index': '6' });
