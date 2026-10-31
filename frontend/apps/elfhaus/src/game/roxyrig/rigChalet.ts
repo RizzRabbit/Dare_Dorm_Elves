@@ -8,11 +8,11 @@ import { loadTex } from '../scene/load';
 import type { RoxyAdapter, RoxyFace, RoxyGrade } from './types';
 
 const SRC = 'assets/rig/elf_roxy.webp';
-const W = 429, H = 1166, GROUND = 1156, CX = 220;          // cutout px; origin between the feet on the ground row
-const NECK = { x: 228, y: 300 }, HIPS = 560, CHEST = [330, 470] as const;
-const HAIR = { x1: 130, y1: 470 };                           // ponytail box (screen left of her head)
+const W = 443, H = 1166, GROUND = 1155, CX = 220;          // cutout px; origin between the feet on the ground row
+const NECK = { x: 232, y: 292 }, HIPS = 560, CHEST = [310, 450] as const;
+const HAIR = { x1: 140, y1: 360 };                           // ponytail box (screen left of her head)
 // eye openings (cutout px): x, y (lid top), w, h; R = her left (screen right), winks
-const EYES = [{ x: 170, y: 187, w: 57, h: 36 }, { x: 250, y: 190, w: 47, h: 37 }];
+const EYES = [{ x: 170, y: 163, w: 54, h: 38 }, { x: 253, y: 170, w: 42, h: 34 }];
 const SKIN = 0xe9874a, INK = 0x26140f, LASH = 0x1a0d0a;
 const VX = 10, VY = 36;
 
@@ -28,8 +28,8 @@ export async function createRoxy(): Promise<RoxyAdapter> {
 	const view = new Container(), body = new Container();
 	// contact shadow under the boots: a soft outer pool + a darker core, offset a touch right (the fire lights from the left)
 	const shadowG = new Graphics();
-	for (let k = 0; k < 6; k++) { const t = k / 5; shadowG.ellipse(14 - 6 * t, -2 - 2 * t, 250 - 70 * t, 34 - 14 * t).fill({ color: 0x0c0402, alpha: 0.2 }); }
-	for (const fx of [-92, 104]) for (let k = 0; k < 3; k++) shadowG.ellipse(fx, -6, 74 - 12 * k, 15 - 3 * k).fill({ color: 0x080201, alpha: 0.24 });
+	for (let k = 0; k < 6; k++) { const t = k / 5; shadowG.ellipse(6 - 4 * t, -12 - 2 * t, 250 - 70 * t, 38 - 14 * t).fill({ color: 0x0c0402, alpha: 0.2 }); }
+	for (const [fx, fy] of [[-142, -34], [145, -4]]) for (let k = 0; k < 3; k++) shadowG.ellipse(fx, fy, 72 - 12 * k, 15 - 3 * k).fill({ color: 0x080201, alpha: 0.24 });
 	const mesh = new MeshPlane({ texture: tex, verticesX: VX, verticesY: VY });
 	mesh.position.set(-CX, -GROUND);
 	body.addChild(mesh);
