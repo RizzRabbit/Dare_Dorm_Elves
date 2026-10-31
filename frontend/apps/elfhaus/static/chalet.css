@@ -450,8 +450,12 @@ html body .cell.win .sym.fr.rigd>.rig{animation:v4WinPunch calc(.32s*var(--gt,1)
 @keyframes tLiftWin{0%{--lift:0}35%{--lift:1}100%{--lift:.6}}
 /* bust wilds: the card's own ring sits under the shared recess + border; the bust and the raised WILD lift off the card */
 html body .rig .rgBody>.tRec,html body .rig .rgBody>.tBd{border-width:calc(var(--cell,150px)*.203);border-image-width:calc(var(--cell,150px)*.203)}
-html body .rig .rp.m_fig{filter:drop-shadow(0 calc(var(--cell,150px)*-.008) 0 rgba(255,240,205,.75)) drop-shadow(calc(var(--cell,150px)*.02) calc(var(--cell,150px)*.028) calc(var(--cell,150px)*.016) rgba(18,2,8,.5))}
+html body .rig .rp.m_fig{filter:drop-shadow(0 calc(var(--cell,150px)*-.008) 0 rgba(255,240,205,.75)) drop-shadow(0 0 calc(var(--cell,150px)*.014) rgba(16,2,8,var(--figHalo,.55))) drop-shadow(calc(var(--cell,150px)*.02) calc(var(--cell,150px)*.028) calc(var(--cell,150px)*.016) rgba(18,2,8,.5))}
+html body .rig.k_W_R1{--figHalo:.85}
 html body .rig .rp.m_lets{filter:drop-shadow(0 calc(var(--cell,150px)*.012) calc(var(--cell,150px)*.008) rgba(20,4,8,.6))}
 /* stacked / merged wilds: the same recess + border over the overlay art */
-html body .ov>.tRec,html body .ov>.tBd{z-index:2}
+/* the overlay spans whole cells (no gap) but tiles are inset 3.75% (board.css .sym.art): clip the overlay to the same
+   tile edge and put the same border at that edge, so a stack / merge border is pixel-for-pixel a tile border */
+html body #board .ov.art{clip-path:inset(calc(var(--cell)*.0375) round calc(var(--cell)*.135))}
+html body .ov>.tRec,html body .ov>.tBd{z-index:2;inset:calc(var(--cell)*.0375)}
 @media (prefers-reduced-motion:reduce){html body .cell .sym.fr.rigd>.rig{animation:none!important}}

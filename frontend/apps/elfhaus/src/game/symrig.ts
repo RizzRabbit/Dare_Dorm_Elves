@@ -22,6 +22,8 @@ export const frameTier = (key: string) => (key[0] === 'H' ? 'hi' : key[0] === 'L
 export const FR_IN = 0.095;
 /** 9-slice geometry of _border / _recess: 256 px pieces, 52 px corners (= 0.203 of a cell). */
 export const NINE = { size: 256, slice: 52 };
+/** Dark separation halo behind each bust (chalet.css .m_fig); Roxy's red jacket on her red card needs the most. */
+const FIG_HALO: Record<string, number> = { W_R1: 0.85 };
 const edgeHTML = (sp = false) => `<i class="tRec"></i><i class="tBd${sp ? ' sp' : ''}"></i>`;
 export function tileHTML(key: string) { const t = frameTier(key); return t ? `<i class="rp f__tile_${t} tTile"></i>${edgeHTML(t === 'sp')}` : ''; }
 /** Recess + border for a stacked / merged wild overlay (any size; 9-slice). */
@@ -36,12 +38,17 @@ export function rigGlowHTML(key: string, n = 1) {
 export function rigHTML(key: string, still = false) {
 	const r = RIG[key]; if (!r) return '';
 	const [W, H] = r.src, org = `transform-origin:${pc(r.pivot[0], W)} ${pc(r.pivot[1], H)}`;
-	const parts = r.parts.map((p) => `<i class="rp f_${p.f} m_${p.cls}"></i>`).join('');
+	const pt = (p: Part) => `<i class="rp f_${p.f} m_${p.cls}"></i>`, parts = r.parts.map(pt).join('');
 	if (still) return `<i class="rig still k_${key}"><i class="rgBody"><i class="rp f_${key}"></i>${parts}</i></i>`;
 	const sparks = r.spark.map(([x, y, s], i) => `<i class="rp f__spark rgSp" style="left:${pc(x - 48 * s, W)};top:${pc(y - 48 * s, H)};width:${pc(96 * s, W)};height:${pc(96 * s, H)};--d:${i * 0.09}s"></i>`).join('');
 	const sh = `<i class="rp f__shadow rgSh" style="left:${pc(r.pivot[0] - 150, W)};top:${pc(Math.min(H - 40, r.pivot[1] < H * 0.6 ? H * 0.86 : r.pivot[1]) - 22, H)};width:${pc(300, W)};height:${pc(66, H)}"></i>`;
-	const edge = key.startsWith('W_') ? edgeHTML() : '';   // bust card: recess + border over the card, under the bust
-	return `<i class="rig k_${key}">${sh}<i class="rgBody" style="${org}"><i class="rp f_${key}"></i>${edge}${parts}<i class="rgShine s_${key}"></i></i>${sparks}</i>`;
+	// bust card: recess over the card, then the bust and details, then the SAME gold border as the tiles on top of them
+	// (so nothing - the bust's shadow, the sheen - dims or narrows it), then the raised WILD, which sits over the border.
+	if (key.startsWith('W_')) {
+		const body = r.parts.filter((p) => p.cls !== 'lets').map(pt).join(''), lets = r.parts.filter((p) => p.cls === 'lets').map(pt).join('');
+		return `<i class="rig k_${key}">${sh}<i class="rgBody" style="${org}"><i class="rp f_${key}"></i><i class="tRec"></i>${body}<i class="rgShine s_${key}"></i><i class="tBd"></i>${lets}</i>${sparks}</i>`;
+	}
+	return `<i class="rig k_${key}">${sh}<i class="rgBody" style="${org}"><i class="rp f_${key}"></i>${parts}<i class="rgShine s_${key}"></i></i>${sparks}</i>`;
 }
 /** Land hook (reels.ts landMini): one snappy squash-and-settle with follow-through on the details. */
 export function rigLand(cell: HTMLElement | null) {
@@ -76,9 +83,10 @@ function drawNine(g: CanvasRenderingContext2D, page: HTMLImageElement, n: string
 	}
 }
 /** A layer lifted off the tile: drop shadow down-right, then a thin top rim light (both from its own alpha). */
-function drawLifted(g: CanvasRenderingContext2D, src: CanvasImageSource, x: number, y: number, w: number, h: number, cell: number, lets = false) {
+function drawLifted(g: CanvasRenderingContext2D, src: CanvasImageSource, x: number, y: number, w: number, h: number, cell: number, lets = false, halo = 0) {
 	g.save();
 	if (lets) { g.shadowColor = 'rgba(20,4,8,.6)'; g.shadowOffsetX = 0; g.shadowOffsetY = cell * 0.012; g.shadowBlur = cell * 0.008; g.drawImage(src, x, y, w, h); g.restore(); return; }
+	if (halo) { g.shadowColor = `rgba(16,2,8,${halo})`; g.shadowOffsetX = 0; g.shadowOffsetY = 0; g.shadowBlur = cell * 0.014; g.drawImage(src, x, y, w, h); }
 	g.shadowColor = 'rgba(18,2,8,.55)'; g.shadowOffsetX = cell * 0.02; g.shadowOffsetY = cell * 0.028; g.shadowBlur = cell * 0.016;
 	g.drawImage(src, x, y, w, h);
 	g.shadowColor = 'rgba(255,240,205,.8)'; g.shadowOffsetX = 0; g.shadowOffsetY = -Math.max(1, cell * 0.008); g.shadowBlur = 0;
@@ -108,10 +116,11 @@ function composeCell(page: HTMLImageElement, key: string, size: number) {
 	// bust wild: card, recess, border, the lifted bust, the other details, the raised WILD
 	const k = size / Math.max(b.sourceSize.w, b.sourceSize.h);
 	drawFr(g, page, key, 0, 0, k);
-	drawNine(g, page, '_recess', 0, 0, size, size, bw); drawNine(g, page, '_border', 0, 0, size, size, bw);
+	drawNine(g, page, '_recess', 0, 0, size, size, bw);
 	const fig = flat(page, key, (p) => p.cls === 'fig'), det = flat(page, key, (p) => p.cls !== 'fig' && p.cls !== 'lets'), lets = flat(page, key, (p) => p.cls === 'lets');
-	if (fig) drawLifted(g, fig, 0, 0, size, size, size);
+	if (fig) drawLifted(g, fig, 0, 0, size, size, size, false, FIG_HALO[key] ?? 0.55);
 	if (det) g.drawImage(det, 0, 0, size, size);
+	drawNine(g, page, '_border', 0, 0, size, size, bw);   // the tiles' border, over the bust (as in the live cell)
 	if (lets) drawLifted(g, lets, 0, 0, size, size, size, true);
 	return c;
 }
