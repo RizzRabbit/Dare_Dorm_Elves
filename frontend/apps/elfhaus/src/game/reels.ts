@@ -9,7 +9,7 @@
 // same symHTML() the cells use. The four final symbols are written into slots that are still above the window when
 // the decel starts, so they scroll in for real; at the end the cells are rendered with identical content and the
 // strip is hidden in the same frame, so no swap is visible. Locked cells sit above the strip and never move.
-import { rigAnt, rigLand } from './symrig';
+import { rigAnt, rigLand, tileLand } from './symrig';
 import { S, ART, symHTML, k } from './ui';
 import { ROWS, REELS } from './config';
 import { SPIN_TEMPO, STOP_TEMPO } from './tempo';
@@ -315,7 +315,7 @@ function landMini(reel: number, row: number) {
 	if (!S.turbo) sfx('reel_stop_3', { throttle: 60 }); else if (!minis.size) sfx('reel_stop_3', { gain: 0.7 });
 	if (!minis.size) bedOff();
 	const sym = c?.querySelector<HTMLElement>('.sym');
-	rigLand(c);
+	tileLand(c); rigLand(c);
 	if (S.turbo) sym?.animate([{ transform: 'translateY(-28%) scale(.94,1.06)' }, { transform: 'translateY(4%) scale(1.07,.92)', offset: .45 }, { transform: 'translateY(-2%) scale(.98,1.02)', offset: .75 }, { transform: 'none' }], { duration: 160, easing: 'ease-out' });
 	else sym?.animate([{ transform: 'translateY(-22%) scale(.96,1.04)', opacity: 0.5 }, { transform: 'translateY(3%) scale(1.05,.94)', opacity: 1, offset: .5 }, { transform: 'translateY(-1%) scale(.99,1.01)', offset: .78 }, { transform: 'none' }], { duration: 240, easing: 'ease-out' });
 }

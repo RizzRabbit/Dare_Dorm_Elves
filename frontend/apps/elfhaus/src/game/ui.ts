@@ -12,7 +12,7 @@ import { DOTS } from './respin';
 import { mxBurst, lockIconCSS, symWin, clearSymWins } from './fx';
 import STACKS from './chalet/stacks.json';
 import LETS_JSON from './chalet/stackletters.json';
-import { hasRig, ovEdgeHTML, rigGlowHTML, rigHTML, tileHTML } from './symrig';
+import { hasRig, ovEdgeHTML, rigGlowHTML, rigHTML, tileHTML, tileTopHTML, wildLetsHTML } from './symrig';
 import { countTo, countMs, setAmount, countTiers, BIG_TIERS, tierPlan, isCounting, setWinLevels, levelOf, WIN_EDGES } from './countup';
 setWinLevels(WIN_LEVELS.standard); // v3.19: banner stages from the math's standard win levels
 /** v20: the round's win-level edges by its mode (math WIN_LEVEL_EDGES_BY_MODE; base / ante / Dare = standard). Called at every round start. */
@@ -134,11 +134,15 @@ export function symHTML(name: string, v?: number, reel?: number) {
 	if (name === 'W') {
 		const val = v || 1; // v === 0 (an EGW split under 4, egwParts.ts): no badge at all
 		const rk = reel !== undefined && (hasRig('W_R' + (reel + 1)) || ART['W_R' + (reel + 1)]) ? 'W_R' + (reel + 1) : '';
-		const wArt = rk && hasRig(rk) ? rigGlowHTML(rk, 2) + rigHTML(rk) : rk ? glowLayer(rk, 2) + img(rk) : ART.W ? glowLayer('W') + img('W') + winFx('W') : '';
-		return `<div class="sym W${wArt ? ' art' : ''}${rk ? ' wReel' : ''}${rk && hasRig(rk) ? ' rigd' : ''}">${wArt ? wArt : `<span class="nm">WILD</span>${ph('W')}<span class="plate">WILD</span>`}</div>${v === 0 ? '' : gemHTML(val, '', nudgeCSS('W'))}<div class="lock"><i class="lkI" style="${lockIconCSS()}"></i><span class="lkT">LOCKED</span>${DOTS}</div>`;
+		const tail = `${v === 0 ? '' : gemHTML(val, '', nudgeCSS('W'))}<div class="lock"><i class="lkI" style="${lockIconCSS()}"></i><span class="lkT">LOCKED</span>${DOTS}</div>`;
+		// rigged bust: separate pieces (tile card + recess | bust | tile border + light | WILD lettering | glow behind)
+		if (rk && hasRig(rk)) return `${tileHTML(rk)}<div class="sym W art wReel rigd">${rigHTML(rk)}</div>${tileTopHTML(rk)}${wildLetsHTML(rk)}<div class="sym W art rigd symBack">${rigGlowHTML(rk, 2)}</div>${tail}`;
+		const wArt = rk ? glowLayer(rk, 2) + img(rk) : ART.W ? glowLayer('W') + img('W') + winFx('W') : '';
+		return `<div class="sym W${wArt ? ' art' : ''}${rk ? ' wReel' : ''}">${wArt ? wArt : `<span class="nm">WILD</span>${ph('W')}<span class="plate">WILD</span>`}</div>${tail}`;
 	}
 	const t = name[0];
-	if (hasRig(name)) { const fr = tileHTML(name); return `<div class="sym ${t} ${name} art rigd${fr ? ' fr' : ''}">${fr}${rigGlowHTML(name)}${rigHTML(name)}</div>`; }
+	// the tile is its own piece beside the symbol (.cell > .tile + .sym): symbol motion never moves the tile
+	if (hasRig(name)) { const fr = tileHTML(name); return `${fr}<div class="sym ${t} ${name} art rigd${fr ? ' fr' : ''}">${rigGlowHTML(name)}${rigHTML(name)}</div>`; }
 	if (ART[name]) return `<div class="sym ${t} ${name} art">${glowLayer(name)}${img(name)}${winFx(name)}</div>`;
 	return `<div class="sym ${t} ${name}"><span class="nm">${(SYMBOL_NAMES[name] || name).toUpperCase()}</span>${ph(name)}</div>`;
 }
@@ -162,6 +166,9 @@ export function renderCell(r: number, row: number, cls?: string | null, delayMs 
 		if (delayMs) (d.querySelector('.sym') as HTMLElement | null)?.style.setProperty('animation-delay', delayMs + 'ms');
 	}
 }
+/** An overlay's art pieces (the stack / merge art, its lettering and canvases, the badge), not its tile edge + light:
+ *  entrance and win motion go on these, so the overlay's tile holds still like a cell's. */
+export const ovArt = (ov: HTMLElement) => [...ov.querySelectorAll<HTMLElement>(':scope>:is(.wart,.mLets,canvas,.mx)')];
 let ovHook: ((ov: HTMLElement) => void) | null = null;
 /** Called for every overlay after each render (stacks.ts starts the merge_idle / letters sheets there). */
 export function setOverlayHook(f: (ov: HTMLElement) => void) { ovHook = f; }
@@ -176,7 +183,7 @@ export function renderOverlays(anim: boolean | number = false) {
 		d.classList.add('art');
 		d.innerHTML = stillHTML(g.reels) + ovEdgeHTML() + `<i class="ovWinO"></i>` + frameHTML(g.reels) + gemHTML(g.product, 'stack', nudgeCSS(key)) + `<div class="ovrd">${DOTS}</div>`;
 		d.dataset.reels = g.reels.join(',');
-		if (!anim) d.style.animation = 'none';
+		if (anim) d.classList.add('ovIn');
 		o.appendChild(d);
 	});
 	[...S.full].forEach(([r, v]) => {
@@ -186,7 +193,7 @@ export function renderOverlays(anim: boolean | number = false) {
 		d.classList.add('art');
 		d.innerHTML = stillHTML([r]) + ovEdgeHTML() + `<i class="ovWinO"></i>` + frameHTML([r]) + gemHTML(v, 'stack', nudgeCSS('WF')) + `<div class="ovrd">${DOTS}</div>`;
 		d.dataset.reel = String(r);
-		if (anim !== r) d.style.animation = 'none';
+		if (anim === r) d.classList.add('ovIn');
 		o.appendChild(d);
 	});
 	if (ovHook) o.querySelectorAll<HTMLElement>('.ov').forEach((d) => ovHook!(d));

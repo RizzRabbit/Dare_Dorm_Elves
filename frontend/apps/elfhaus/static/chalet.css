@@ -459,3 +459,79 @@ html body .rig .rp.m_lets{filter:drop-shadow(0 calc(var(--cell,150px)*.012) calc
 html body #board .ov.art{clip-path:inset(calc(var(--cell)*.0375) round calc(var(--cell)*.135))}
 html body .ov>.tRec,html body .ov>.tBd{z-index:2;inset:calc(var(--cell)*.0375)}
 @media (prefers-reduced-motion:reduce){html body .cell .sym.fr.rigd>.rig{animation:none!important}}
+
+/* ===== tiles and symbols are separate pieces (symrig.ts tileHTML / tileTopHTML / wildLetsHTML) =====
+   .cell > .tile (colour, recess, border, light) + .sym (the symbol) [+ wilds: .tile.tTop border over the bust, .sym.symTop
+   the raised WILD, .sym.symBack the glow behind the card]. Everything that animates .sym / .rig / .rgBody moves only the
+   symbol. The tile has its own subtler motion: land = a small thud + one gold glint along the border, win = a border flash,
+   then a shimmer + a soft glow pulse, anticipation = a faint shimmer. The tile stays nearly flat (a light inner shade);
+   the depth is on the symbol, which comes forward out of it: a touch larger (it overlaps the inner border), a subtle
+   forward perspective, a soft drop shadow down-right onto the tile, a top / left rim light and a thin raised edge. */
+html body #cells .cell{isolation:isolate}
+html body .cell>.tile{position:absolute;inset:0;z-index:0;display:block;pointer-events:none;transform-origin:50% 62%}
+body.mk #app .cell>.tile{inset:3.75%}
+html body .cell>.tile>.tTile,html body .cell>.tile.tW>.rp{left:0;top:0;width:100%;height:100%;z-index:0}
+html body .cell>.tile>.tRec{z-index:1}
+html body .cell>.tile:not(.tTop)::after{content:"";position:absolute;inset:6.5%;z-index:2;border-radius:11%;pointer-events:none;
+  box-shadow:inset 0 calc(var(--cell)*.012) calc(var(--cell)*.022) rgba(20,4,8,.28)}
+html body .cell>.tile>.tBd{z-index:3}
+html body .cell>.tile.tTop{z-index:2}
+html body .cell>.sym{z-index:1}
+html body .cell>.sym.symTop{z-index:3;pointer-events:none}
+html body .cell>.sym.symBack{z-index:-1}
+html body .cell>.sym.symTop>.rig,html body .cell>.sym.symBack>.symGlow{position:absolute;inset:0;display:block}
+html body .cell>.mx{z-index:6}
+/* tile light: a glint copy of the border (masked sweep) and a soft glow copy of it; opacity / mask position only */
+html body .tGl,html body .tGw{position:absolute;inset:0;display:block;pointer-events:none;box-sizing:border-box;z-index:4;opacity:0;
+  border:calc(var(--cell,150px)*.203) solid transparent;border-image-slice:52 fill;border-image-repeat:stretch;border-image-width:calc(var(--cell,150px)*.203);
+  border-image-source:var(--tBd,none)}
+html body .tGl.sp,html body .tGw.sp{border-image-source:var(--tBdSp,var(--tBd,none))}
+html body .tGl{filter:brightness(1.9) saturate(1.15);-webkit-mask-image:linear-gradient(115deg,transparent 0 38%,#000 50%,transparent 62% 100%);mask-image:linear-gradient(115deg,transparent 0 38%,#000 50%,transparent 62% 100%);
+  -webkit-mask-size:300% 100%;mask-size:300% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:100% 0;mask-position:100% 0}
+html body .tGw{z-index:5;filter:blur(calc(var(--cell,150px)*.022)) brightness(1.7);mix-blend-mode:screen}
+html body .ov>.tGl,html body .ov>.tGw{z-index:3;inset:calc(var(--cell)*.0375)}
+@keyframes tThud{0%{translate:0 0;scale:1;animation-timing-function:cubic-bezier(.3,0,.6,1)}
+	30%{translate:0 1.2%;scale:.986 .982;animation-timing-function:cubic-bezier(.25,.6,.4,1)}
+	68%{translate:0 -.25%;scale:1.003 1.004;animation-timing-function:cubic-bezier(.45,0,.55,1)}100%{translate:0 0;scale:1}}
+@keyframes tGlint{0%{opacity:.95;-webkit-mask-position:100% 0;mask-position:100% 0}80%{opacity:.95}100%{opacity:0;-webkit-mask-position:0 0;mask-position:0 0}}
+@keyframes tShim{0%{-webkit-mask-position:100% 0;mask-position:100% 0}100%{-webkit-mask-position:0 0;mask-position:0 0}}
+@keyframes tFlash{0%{opacity:0;-webkit-mask-size:100% 100%;mask-size:100% 100%}25%{opacity:.85}100%{opacity:0;-webkit-mask-size:100% 100%;mask-size:100% 100%}}
+@keyframes tGlowP{0%{opacity:.12}100%{opacity:.62}}
+html body .cell.tLand>.tile{animation:tThud .24s both}
+html body .cell.tLand>.tile>.tGl{animation:tGlint .46s cubic-bezier(.3,.2,.4,1) .02s both}
+html body .cell.win>.tile>.tGl,html body .ov.win>.tGl{opacity:.7;animation:tFlash .26s ease-out both,tShim 1.5s cubic-bezier(.45,0,.55,1) .26s infinite}
+html body .cell.win>.tile>.tGw,html body .ov.win>.tGw{animation:tGlowP .8s cubic-bezier(.45,0,.55,1) .08s infinite alternate}
+body.rgAnt #cells .cell:not(.spinning):not(.win)>.tile>.tGl{opacity:.32;animation:tShim 1.8s linear infinite}
+/* the symbol comes forward: larger box (it overlaps the inner border), a subtle forward perspective, raised edge,
+   top / left rim light, soft drop shadow down-right onto the tile (deeper while it is lifted: --lift) */
+html body .cell>.sym.fr>.rig,html body .cell>.sym.fr>.symGlow{inset:6%}
+html body .cell>.sym.fr .rgBody{transform:perspective(calc(var(--cell)*3)) translateZ(calc(var(--cell)*.05))}
+html body .sym.fr .rgBody{filter:contrast(1.06) saturate(1.1)
+  drop-shadow(calc(var(--cell,150px)*.005) calc(var(--cell,150px)*.008) 0 rgba(58,22,10,.92))
+  drop-shadow(calc(var(--cell,150px)*-.006) calc(var(--cell,150px)*-.008) 0 rgba(255,242,210,.78))
+  drop-shadow(calc(var(--cell,150px)*(.038 + .02*var(--lift))) calc(var(--cell,150px)*(.052 + .03*var(--lift))) calc(var(--cell,150px)*(.032 + .02*var(--lift))) rgba(18,2,8,.56))}
+html body .cell>.sym .rig .rp.m_fig{filter:drop-shadow(calc(var(--cell,150px)*.004) calc(var(--cell,150px)*.006) 0 rgba(58,22,10,.8))
+  drop-shadow(calc(var(--cell,150px)*-.005) calc(var(--cell,150px)*-.007) 0 rgba(255,240,205,.72))
+  drop-shadow(0 0 calc(var(--cell,150px)*.014) rgba(16,2,8,var(--figHalo,.55)))
+  drop-shadow(calc(var(--cell,150px)*.03) calc(var(--cell,150px)*.042) calc(var(--cell,150px)*.026) rgba(18,2,8,.55))}
+html body .cell>.sym.symTop .rp.m_lets{filter:drop-shadow(calc(var(--cell,150px)*.004) calc(var(--cell,150px)*.007) 0 rgba(58,22,10,.9))
+  drop-shadow(calc(var(--cell,150px)*.02) calc(var(--cell,150px)*.03) calc(var(--cell,150px)*.016) rgba(20,4,8,.6))}
+/* wild pieces: bust, WILD and glow move by their rig keyframes only (in step), never by the .sym pop; the bust is
+   clipped just inside the tile edge so its pop never spills past the tile */
+html body .cell.win>.sym.W.rigd,html body .cell.wLand>.sym.W.rigd{transform:none!important;animation:none!important}
+html body .cell>.sym.W.wReel.rigd{clip-path:inset(2.5% round 13%)}
+html body .cell.rgLand .sym.symTop .rgBody{animation:rgWLand .3s both!important}
+html body .cell.win .sym.symTop .rgBody{animation:rgWWin .56s both!important}
+body.rgAnt #cells .cell:not(.spinning) .sym.symTop .rgBody{animation:rgAnt .5s ease-in-out infinite alternate}
+/* win: the symbol pops a beat after the tile flashes (overshoot ease), the tile itself does not scale */
+html body .cell.win>.sym:not(.W){transition-delay:.04s}
+/* stacked / merged overlays: the entrance + win bump move the art, the tile edge + light hold still */
+html body .ov{animation:none!important}
+html body .ov.ovIn>:is(.wart,.mLets,canvas.stk_body){animation:settle .5s ease-out;transform-origin:50% 0}
+/* snow puff: the symbol pops away, the tile stays (and refills on the respin) */
+html body .cell.puffed>.tile{opacity:1!important}
+@media (prefers-reduced-motion:reduce){
+  html body .cell>.tile,html body .tGl,html body .tGw,html body .ov.ovIn>*,html body .cell>.sym .rgBody{animation:none!important}
+  html body .tGl,html body .tGw{opacity:0!important}
+  html body .cell.win>.sym{transition:none!important}
+}

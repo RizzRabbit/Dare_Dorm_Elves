@@ -10,7 +10,7 @@ import { showRespin, endRespin, hideRespin } from './respin';
 import { mxBurst, lockFx, clearSymWins, symLand, symWin, landBump } from './fx';
 import { cardFlip } from './cardflip';
 import { timing, isSpinning, startSpin, markStopped, sinceStart, sleep, spinMini, stopMini, stopReel, stopLead } from './reels';
-import { $, S, k, bet, wait, titleHTML, banner, toast, hideToast, bigWin, setWinMeter, clearLines, renderCell, renderOverlays, cellEl, setGem, ovMx, symHTML } from './ui';
+import { $, S, k, bet, wait, titleHTML, banner, toast, hideToast, bigWin, setWinMeter, clearLines, renderCell, renderOverlays, cellEl, setGem, ovMx, symHTML, ovArt } from './ui';
 import { playWins } from './winlines';
 import { puffWith } from './puff';
 import { wildLand, wfExpand } from './wildfx';
@@ -296,7 +296,7 @@ export const bookEventHandlerMap: Handlers = {
 			renderOverlays(false);
 			const ov = document.querySelector<HTMLElement>(`.ov.full[data-reel="${st.reel}"]`);
 			const cells = Array.from({ length: ROWS }, (_, row) => cellEl(st.reel, row)), base = S.turbo ? 220 : 600, dur = S.turbo ? base : base * tempo(); // wait() applies the tempo itself
-			if (ov) { ov.style.animation = 'none'; ov.style.transformOrigin = '50% 50%'; ov.animate([{ opacity: 0, transform: 'scale(1.03)' }, { opacity: 1, transform: 'none' }], { duration: dur, easing: 'cubic-bezier(.3,.1,.3,1)' }); }
+			if (ov) { ov.animate([{ opacity: 0 }, { opacity: 1 }], { duration: dur, easing: 'cubic-bezier(.3,.1,.3,1)' }); ovArt(ov).forEach((e) => e.animate([{ transform: 'scale(1.03)' }, { transform: 'none' }], { duration: dur, easing: 'cubic-bezier(.3,.1,.3,1)' })); }
 			cells.forEach((el) => el.animate([{ opacity: 1 }, { opacity: 1, offset: 0.4 }, { opacity: 0 }], { duration: dur, easing: 'ease-in-out', fill: 'forwards' }));
 			frameIn(ov, S.turbo ? 0 : base * 0.5);
 			sfx('wild_stack_merge', { throttle: 250 });

@@ -18,16 +18,35 @@ export const hasRig = (key: string) => !!RIG[key];
  *  9-slice) -> symbol (its own layers) with a drop shadow + top rim light from its own alpha (CSS / canvas) -> glow / FX.
  *  Bust wilds: their card -> recess -> border -> the bust (fig, its own pixels lifted) -> the shared raised WILD (_wild). */
 export const frameTier = (key: string) => (key[0] === 'H' ? 'hi' : key[0] === 'L' ? 'lo' : key === 'S' ? 'sp' : '');
-/** The symbol inside its tile: the rig box is inset by FR_IN on each side (~85% of the panel, chalet.css .sym.fr). */
-export const FR_IN = 0.095;
+/** The symbol inside its tile: the rig box is inset by FR_IN on each side (it comes forward over the inner border, chalet.css .cell>.sym.fr). */
+export const FR_IN = 0.06;
 /** 9-slice geometry of _border / _recess: 256 px pieces, 52 px corners (= 0.203 of a cell). */
 export const NINE = { size: 256, slice: 52 };
 /** Dark separation halo behind each bust (chalet.css .m_fig); Roxy's red jacket on her red card needs the most. */
 const FIG_HALO: Record<string, number> = { W_R1: 0.85 };
 const edgeHTML = (sp = false) => `<i class="tRec"></i><i class="tBd${sp ? ' sp' : ''}"></i>`;
-export function tileHTML(key: string) { const t = frameTier(key); return t ? `<i class="rp f__tile_${t} tTile"></i>${edgeHTML(t === 'sp')}` : ''; }
-/** Recess + border for a stacked / merged wild overlay (any size; 9-slice). */
-export const ovEdgeHTML = () => edgeHTML();
+/** The tile's own light layers (chalet.css .tGl / .tGw): a glint copy of the border (land sweep, win shimmer,
+ *  anticipation shimmer) and a soft glow copy of it (win pulse). Only opacity / mask position animate. */
+const lightHTML = (sp = false) => `<i class="tGl${sp ? ' sp' : ''}"></i><i class="tGw${sp ? ' sp' : ''}"></i>`;
+/** Bare tile pieces (no container): colour + recess + border. The cell spinner (reels.ts) reuses them. */
+export function tileParts(key: string) {
+	const t = frameTier(key);
+	if (t) return { under: `<i class="rp f__tile_${t} tTile"></i><i class="tRec"></i>`, over: `<i class="tBd${t === 'sp' ? ' sp' : ''}"></i>`, sp: t === 'sp' };
+	if (key.startsWith('W_') && RIG[key]) return { under: `<i class="rp f_${key}"></i><i class="tRec"></i>`, over: `<i class="tBd"></i>`, sp: false };
+	return null;
+}
+/** The tile as its own piece, a sibling of the symbol (.cell > .tile + .sym): the symbol's land / win / anticipation
+ *  motion never moves, scales or turns it; the tile has its own subtler motion (thud, border glint / flash / glow).
+ *  Tier tiles: colour + recess + border + light, under the symbol. Bust wilds: card + recess under the bust (tileHTML),
+ *  then the border + light over it (tileTopHTML), then the raised WILD lettering as its own piece (wildLetsHTML). */
+export function tileHTML(key: string) {
+	const p = tileParts(key); if (!p) return '';
+	if (key.startsWith('W_')) return `<div class="tile tW">${p.under}</div>`;
+	return `<div class="tile">${p.under}${p.over}${lightHTML(p.sp)}</div>`;
+}
+export const tileTopHTML = (key: string) => (key.startsWith('W_') && RIG[key] ? `<div class="tile tTop"><i class="tBd"></i>${lightHTML()}</div>` : '');
+/** Recess + border (+ the tile light) for a stacked / merged wild overlay (any size; 9-slice). */
+export const ovEdgeHTML = () => edgeHTML() + lightHTML();
 const pc = (v: number, d: number) => ((v / d) * 100).toFixed(2) + '%';
 
 /** The symbol's win glow (1/4-scale sheet frame, scaled to its source box); n layers (wilds draw it twice). */
@@ -42,13 +61,27 @@ export function rigHTML(key: string, still = false) {
 	if (still) return `<i class="rig still k_${key}"><i class="rgBody"><i class="rp f_${key}"></i>${parts}</i></i>`;
 	const sparks = r.spark.map(([x, y, s], i) => `<i class="rp f__spark rgSp" style="left:${pc(x - 48 * s, W)};top:${pc(y - 48 * s, H)};width:${pc(96 * s, W)};height:${pc(96 * s, H)};--d:${i * 0.09}s"></i>`).join('');
 	const sh = `<i class="rp f__shadow rgSh" style="left:${pc(r.pivot[0] - 150, W)};top:${pc(Math.min(H - 40, r.pivot[1] < H * 0.6 ? H * 0.86 : r.pivot[1]) - 22, H)};width:${pc(300, W)};height:${pc(66, H)}"></i>`;
-	// bust card: recess over the card, then the bust and details, then the SAME gold border as the tiles on top of them
-	// (so nothing - the bust's shadow, the sheen - dims or narrows it), then the raised WILD, which sits over the border.
+	// bust wild: the bust and details only; the card + recess under it and the SAME gold border as the tiles over it are
+	// the tile (so nothing - the bust's shadow, the sheen - dims or narrows it), the raised WILD is wildLetsHTML.
 	if (key.startsWith('W_')) {
 		const body = r.parts.filter((p) => p.cls !== 'lets').map(pt).join(''), lets = r.parts.filter((p) => p.cls === 'lets').map(pt).join('');
-		return `<i class="rig k_${key}">${sh}<i class="rgBody" style="${org}"><i class="rp f_${key}"></i><i class="tRec"></i>${body}<i class="rgShine s_${key}"></i><i class="tBd"></i>${lets}</i>${sparks}</i>`;
+		// the card, recess and border are the tile (tileHTML / tileTopHTML); here only the bust and its details
+		return `<i class="rig k_${key}">${sh}<i class="rgBody" style="${org}">${body}<i class="rgShine s_${key}"></i></i>${sparks}</i>`;
 	}
 	return `<i class="rig k_${key}">${sh}<i class="rgBody" style="${org}"><i class="rp f_${key}"></i>${parts}<i class="rgShine s_${key}"></i></i>${sparks}</i>`;
+}
+/** The raised WILD lettering of a bust wild, over the tile border: its own piece with the bust's pivot, so the same
+ *  rgBody land / win / anticipation keyframes move bust and lettering in step, never the tile. */
+export function wildLetsHTML(key: string) {
+	const r = RIG[key]; if (!r || !key.startsWith('W_')) return '';
+	const [W, H] = r.src, lets = r.parts.filter((p) => p.cls === 'lets').map((p) => `<i class="rp f_${p.f} m_${p.cls}"></i>`).join('');
+	return lets ? `<div class="sym W art symTop rigd"><i class="rig k_${key}"><i class="rgBody" style="transform-origin:${pc(r.pivot[0], W)} ${pc(r.pivot[1], H)}">${lets}</i></i></div>` : '';
+}
+/** Tile land: the tile's own small thud + one border glint (chalet.css .cell.tLand), leading the symbol's settle. */
+export function tileLand(el: HTMLElement | null) {
+	if (!el) return;
+	el.classList.remove('tLand'); void el.offsetWidth; el.classList.add('tLand');
+	window.setTimeout(() => el.classList.remove('tLand'), 620);
 }
 /** Land hook (reels.ts landMini): one snappy squash-and-settle with follow-through on the details. */
 export function rigLand(cell: HTMLElement | null) {
@@ -84,13 +117,15 @@ function drawNine(g: CanvasRenderingContext2D, page: HTMLImageElement, n: string
 }
 /** A layer lifted off the tile: drop shadow down-right, then a thin top rim light (both from its own alpha). */
 function drawLifted(g: CanvasRenderingContext2D, src: CanvasImageSource, x: number, y: number, w: number, h: number, cell: number, lets = false, halo = 0) {
+	// = chalet.css (.cell>.sym.fr .rgBody / .m_fig / .m_lets): raised edge, top-left rim light, soft drop shadow down-right
+	const pass = (col: string, dx: number, dy: number, b: number) => { g.shadowColor = col; g.shadowOffsetX = dx; g.shadowOffsetY = dy; g.shadowBlur = b; g.drawImage(src, x, y, w, h); };
 	g.save();
-	if (lets) { g.shadowColor = 'rgba(20,4,8,.6)'; g.shadowOffsetX = 0; g.shadowOffsetY = cell * 0.012; g.shadowBlur = cell * 0.008; g.drawImage(src, x, y, w, h); g.restore(); return; }
-	if (halo) { g.shadowColor = `rgba(16,2,8,${halo})`; g.shadowOffsetX = 0; g.shadowOffsetY = 0; g.shadowBlur = cell * 0.014; g.drawImage(src, x, y, w, h); }
-	g.shadowColor = 'rgba(18,2,8,.55)'; g.shadowOffsetX = cell * 0.02; g.shadowOffsetY = cell * 0.028; g.shadowBlur = cell * 0.016;
-	g.drawImage(src, x, y, w, h);
-	g.shadowColor = 'rgba(255,240,205,.8)'; g.shadowOffsetX = 0; g.shadowOffsetY = -Math.max(1, cell * 0.008); g.shadowBlur = 0;
-	g.drawImage(src, x, y, w, h); g.restore();
+	if (lets) { pass('rgba(20,4,8,.6)', cell * 0.02, cell * 0.03, cell * 0.016); pass('rgba(58,22,10,.9)', cell * 0.004, cell * 0.007, 0); g.restore(); return; }
+	pass('rgba(18,2,8,.56)', cell * 0.038, cell * 0.052, cell * 0.032);
+	if (halo) pass(`rgba(16,2,8,${halo})`, 0, 0, cell * 0.014);
+	pass('rgba(255,242,210,.78)', -cell * 0.006, -cell * 0.008, 0);
+	pass('rgba(58,22,10,.92)', cell * 0.005, cell * 0.008, 0);
+	g.restore();
 }
 /** The symbol alone (its layers at rest == the approved art), source-box sized. */
 function flat(page: HTMLImageElement, key: string, only?: (p: Part) => boolean) {

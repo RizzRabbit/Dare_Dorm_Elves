@@ -17,7 +17,7 @@
 // sw() (turbo = 1); the stacks sheets slow with it (sprite.ts), so the sheet beats and these beats stay in step.
 // Art swap (stacks.ts): when the stacks_v1 sheets (MERGE_ANIM.md) are imported, stack_form / merge_join /
 // letters_ignite / merge_win play at these same beats and merge_idle loops; any sheet not there keeps its placeholder.
-import { S, $, setGem, gemHTML, ovMx, cellEl, pos } from './ui';
+import { S, $, setGem, gemHTML, ovMx, cellEl, pos, ovArt } from './ui';
 import { burst } from './fx';
 import { mergeFx, wfExpand } from './wildfx';
 import { grab } from './combine';
@@ -76,16 +76,16 @@ export async function stackIn(reel: number, render: (frameDelay?: number) => voi
 		const probe = document.createElement('div'); probe.className = 'ov full'; probe.dataset.reel = String(reel);
 		if (hasStack('stack_form', probe)) { // the sheet does the flash + build-up itself
 			// v20: the sheet starts past its baked light-column / white wipe (stacks.ts CLEAN_FROM); a short fade + settle is the entrance
-			render(); const ov = ovOf(reel); if (ov) { ov.style.animation = 'none'; ov.style.transformOrigin = '50% 50%'; A(ov, [{ opacity: 0, transform: 'scale(1.03)' }, { opacity: 1, transform: 'none' }], { duration: 200, easing: 'cubic-bezier(.3,.1,.3,1)' }); await Promise.race([stackOnce('stack_form', ov), sw(700)]); }
+			render(); const ov = ovOf(reel); if (ov) { A(ov, [{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: 'cubic-bezier(.3,.1,.3,1)' }); ovArt(ov).forEach((e) => A(e, [{ transform: 'scale(1.03)' }, { transform: 'none' }], { duration: 200, easing: 'cubic-bezier(.3,.1,.3,1)' })); await Promise.race([stackOnce('stack_form', ov), sw(700)]); }
 			return;
 		}
 		// v20: no light-column flash and no white 'lock' burst column here any more (James: the white streak on every expand)
-		cells.forEach((el, row) => { const s = el.querySelector('.sym') || el; A(s, [{ transform: 'none', opacity: 1 }, { transform: `translateY(${(1.5 - row) * c * 0.42}px) scale(.72,.6)`, opacity: 0.35 }], { duration: 230, easing: 'cubic-bezier(.5,0,.9,.4)', fill: 'forwards' }); });
+		cells.forEach((el, row) => el.querySelectorAll<HTMLElement>('.sym').forEach((s) => A(s, [{ transform: 'none', opacity: 1 }, { transform: `translateY(${(1.5 - row) * c * 0.42}px) scale(.72,.6)`, opacity: 0.35 }], { duration: 230, easing: 'cubic-bezier(.5,0,.9,.4)', fill: 'forwards' })));
 		await sw(230);
 		render();
-		cells.forEach((el) => (el.querySelector('.sym') || el).getAnimations().forEach((a) => a.cancel()));
+		cells.forEach((el) => el.querySelectorAll('.sym').forEach((s) => s.getAnimations().forEach((a) => a.cancel())));
 		const ov = ovOf(reel);
-		if (ov) { ov.style.animation = 'none'; ov.style.transformOrigin = '50% 50%'; A(ov, [{ transform: 'scale(.9,.25)', opacity: 0 }, { transform: 'scale(1.06,1.08)', opacity: 1, offset: .45 }, { transform: 'scale(.98,.97)', offset: .72 }, { transform: 'none', opacity: 1 }], { duration: 480, easing: 'ease-out' }); wfExpand(ov); }
+		if (ov) { A(ov, [{ opacity: 0 }, { opacity: 1, offset: .3 }, { opacity: 1 }], { duration: 480, easing: 'ease-out' }); ovArt(ov).forEach((e) => A(e, [{ transform: 'scale(.9,.25)' }, { transform: 'scale(1.06,1.08)', offset: .45 }, { transform: 'scale(.98,.97)', offset: .72 }, { transform: 'none' }], { duration: 480, easing: 'ease-out' })); wfExpand(ov); }
 		await sw(260);
 	} finally { end(); }
 }
@@ -329,6 +329,7 @@ export async function growIn(ov: HTMLElement, from: number[], to: number[], from
 export function ovWin(reel: number) {
 	const ov = ovOf(reel); if (!ov || ov.classList.contains('win')) return;
 	ov.classList.add('win'); stackWin(ov);
-	ov.animate([{ transform: 'none' }, { transform: 'translateY(-3%) scale(1.03)', offset: .4 }, { transform: 'translateY(.6%) scale(.995)', offset: .75 }, { transform: 'none' }], { duration: T(460), easing: 'ease-out' });
+	// the art bumps (a beat after the tile's border flash, CSS .ov.win>.tGl); the overlay's tile edge holds still
+	ovArt(ov).forEach((e) => e.animate([{ transform: 'none' }, { transform: 'translateY(-3%) scale(1.03)', offset: .4 }, { transform: 'translateY(.6%) scale(.995)', offset: .75 }, { transform: 'none' }], { duration: T(460), delay: 40, easing: 'ease-out' }));
 }
 export const clearOvWins = () => document.querySelectorAll<HTMLElement>('.ov.win').forEach((o) => { o.classList.remove('win'); stackWinOff(o); });
