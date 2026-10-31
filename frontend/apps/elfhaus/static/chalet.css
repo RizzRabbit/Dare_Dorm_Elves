@@ -371,3 +371,15 @@ body.rgAnt #cells .cell:not(.spinning) .sym.S.rigd .rp.m_clip{animation:rgClip .
 html body #bmConfirm #cfDesc,html body #msg #msgBody,html body #resumeCard #rcLine{color:var(--c-ink)!important;font-size:15px!important;font-weight:700!important;line-height:1.42!important;text-shadow:none!important;opacity:1!important}
 html body :is(#buyTitle,#rulesTitle,#autoTitle,#msgTitle,#rcTitle){color:var(--c-cran)!important;text-shadow:0 2px 0 var(--c-paper)!important}
 html body .modal h2 small{color:var(--c-ink)!important;border-color:#26140f55!important}
+/* ---- respin counter: one cream pill on the frame's bottom rail (respin.ts placeRespin), never over a cell. The per-wild
+   chips and stack-foot dots are gone (they covered the art); the locked wilds keep their ring. ---- */
+html body .cell .lock,html body .ov .ovrd,html body.respinning .ov .ovrd{display:none!important}
+#rsCtr{position:absolute;left:50%;translate:-50% 0;z-index:8;display:flex;align-items:center;gap:calc(var(--rsh,20px)*.22);pointer-events:none;
+  padding:0 calc(var(--rsh,20px)*.45);border-radius:999px;background:var(--c-cream);border:max(1.5px,calc(var(--rsh,20px)*.08)) solid var(--c-ink);
+  box-shadow:0 calc(var(--rsh,20px)*.08) 0 var(--c-ink);color:var(--c-ink);font-family:'Lilita One',sans-serif;font-size:calc(var(--rsh,20px)*.5);
+  letter-spacing:.04em;line-height:1;white-space:nowrap;opacity:0;scale:.6;transition:opacity .18s,scale .22s cubic-bezier(.3,1.6,.5,1)}
+body.respinning #rsCtr{opacity:1;scale:1}
+#rsCtr b{font-weight:400}
+html body #rsCtr .rd{display:inline-flex;gap:calc(var(--rsh,20px)*.16)}
+html body #rsCtr .rd i{width:calc(var(--rsh,20px)*.34);height:calc(var(--rsh,20px)*.34)}
+@media (prefers-reduced-motion:reduce){#rsCtr{transition:opacity .15s;scale:1}}

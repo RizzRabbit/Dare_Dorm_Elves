@@ -29,7 +29,7 @@ function setLit(n: number, anim: 'dim' | 'refill' | null) {
 
 /** respinStart: `remaining` = respins left after the one starting now. */
 export function showRespin(_step: number, remaining: number) {
-	clearTimeout(dimT); clearTimeout(hideT);
+	clearTimeout(dimT); clearTimeout(hideT); placeRespin();
 	const avail = Math.min(MAX, remaining + 1);
 	if (!B().classList.contains('respinning')) {
 		setLit(avail, null);
@@ -49,7 +49,25 @@ export function hideRespin() {
 	B().classList.remove('respinning'); delete B().dataset.rl;
 	document.querySelectorAll('.rd canvas').forEach((c) => c.remove());
 }
-/** Kept for layout(); the dots live on the wilds now, nothing to place. */
-export function placeRespin() {}
+/** ONE board counter (RESPINS + the 3 dots) on the frame's bottom rail, under the cells, so it never covers a
+ *  symbol at any size (the per-wild chips / stack-foot dots covered the art; hidden in chalet.css). layout() calls this
+ *  on every resize: it sits centred in the rail between the board's last row and the frame's bottom edge. */
+function counter() {
+	let el = document.getElementById('rsCtr');
+	if (!el) {
+		const fr = document.getElementById('frame'); if (!fr) return null;
+		el = document.createElement('div'); el.id = 'rsCtr'; el.setAttribute('aria-hidden', 'true');
+		el.innerHTML = `<b>RESPINS</b>${DOTS}`;
+		fr.appendChild(el);
+	}
+	return el;
+}
+export function placeRespin() {
+	const el = counter(), fr = document.getElementById('frame'), bd = document.getElementById('board');
+	if (!el || !fr || !bd) return;
+	const bot = bd.offsetTop + bd.offsetHeight, rail = Math.max(8, fr.clientHeight - bot);
+	const h = Math.round(Math.min(36, Math.max(19, rail * 0.8)));
+	el.style.cssText = `top:${Math.round(bot + Math.max(2, (rail - h) / 2))}px;height:${h}px;--rsh:${h}px`;
+}
 export const RESPIN_MAX = MAX;
-export const DOTS = '<span class="rd" aria-hidden="true"><i></i><i></i><i></i></span>';
+export const DOTS: string = '<span class="rd" aria-hidden="true"><i></i><i></i><i></i></span>';
