@@ -268,6 +268,11 @@ export const bookEventHandlerMap: Handlers = {
 		const I = $('#intro');
 		(I.querySelector('.tierName') as HTMLElement).innerHTML = titleHTML(ev.tier, TL(ev.tier) + '!');
 		(I.querySelector('.spins') as HTMLElement).textContent = `${ev.totalFs} FREE SPINS`;
+		// chalet: the tier's elves (upper bodies from the stack stills) on the card, so it reads as a scene, not a dialog
+		{ const src: Record<string, string> = { dare: 'assets/stacks/still/WF_R1.webp', double_dare: 'assets/stacks/still/WM2_R1-2.webp', triple_dare: 'assets/stacks/still/WM3_R2-4.webp', hidden: 'assets/stacks/still/WM5_R1-5.webp' };
+		  let a = I.querySelector<HTMLImageElement>('.card img.tArt'); const u = src[ev.tier] || src.double_dare;
+		  if (!a) { a = document.createElement('img'); a.className = 'tArt'; a.alt = ''; a.draggable = false; I.querySelector('.card .spins')!.before(a); }
+		  if (a.getAttribute('src') !== u) a.src = u; }
 		I.dataset.tier = ev.tier; I.classList.remove('hidden');
 		sfx('fs_intro'); music('bonus');
 		const fx = I.querySelector<HTMLElement>('.bwFx'); featOpen(fx); featPop(I.querySelector('.tierName'));

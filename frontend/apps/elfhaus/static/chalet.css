@@ -238,3 +238,13 @@ html body .ov.full.art::before{box-shadow:none!important}
 html body .ov.art{background:#26140f!important}
 html body .ov.win .ovWinO{box-shadow:inset 0 0 0 3px #f2b935,inset 0 0 0 6px #26140f!important;background:none!important;border-radius:10px}
 html body #loader #lGo::after{content:none!important;display:none!important}
+/* bonus intro card: the tier's elves in a framed window under the title, bigger spin count and START */
+html body #intro img.tArt{display:block;width:min(440px,64vw);height:min(210px,26vh);object-fit:cover;object-position:50% 30%;margin:.2em auto .5em;
+  border:5px solid var(--c-ink);border-radius:18px;box-shadow:inset 0 0 0 3px var(--c-gold),0 6px 0 rgba(20,8,4,.35);background:var(--c-cran)}
+html body #intro .spins{font-size:clamp(20px,3.2vh,34px)!important}
+html body #intro .cont{font-size:clamp(18px,2.6vh,28px)!important;padding:.35em 1.6em!important;min-height:48px;margin-top:.5em}
+@media (orientation:landscape) and (max-height:500px){html body #intro img.tArt{height:min(120px,28vh)}}
+/* big-win multiplier chip: cream ticket with ink rim (was a dark pill) */
+html body #bigwin .bwX{background:var(--c-cream)!important;border:3px solid var(--c-ink)!important;border-radius:10px!important;box-shadow:inset 0 0 0 2px var(--c-gold),0 3px 0 rgba(20,8,4,.5)!important;
+  color:var(--c-cran)!important;-webkit-text-stroke:0!important;text-shadow:none!important;padding:.1em .5em!important;font-size:clamp(14px,2.2vh,24px)!important;line-height:1.2!important}
+@media (orientation:landscape) and (max-height:500px){html body #bigwin .bwAmt{font-size:118px!important} html body #bigwin .bwX{font-size:40px!important}}
