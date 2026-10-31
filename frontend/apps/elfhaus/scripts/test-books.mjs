@@ -204,7 +204,7 @@ if (disclaimerMatch) {
 		for (const [k, v] of Object.entries(cf)) if (k !== 'title' && k !== 'amount') texts.push([`confirm ${m}.${k}`, v]);
 	}
 	for (const [k, v] of Object.entries(C.turboCopy(true))) texts.push(['turbo.' + k, v]);
-	texts.push(['costHeader', C.costHeader(true)], ['controlsBonus', C.controlsBonus(ctx)], ['controlsTurbo', C.controlsTurbo()], ['controlsAuto', C.controlsAuto(ctx)], ['controlsUi', C.controlsUi()], ['controlsSound', C.controlsSound()], ['roundingNote', C.roundingNote(true)], ['roundingShort', C.roundingShort(true)]);
+	texts.push(['costHeader', C.costHeader(true)], ['controlsBonus', C.controlsBonus(ctx)], ['controlsTurbo', C.controlsTurbo()], ['controlsAuto', C.controlsAuto(ctx)], ['controlsUi', C.controlsUi()], ['controlsSound', C.controlsSound()]);
 	if (/unfinished/.test(C.controlsUi()) && /RESUME/.test(C.controlsUi()) && /SKIP/.test(C.controlsUi())) console.log('  OK controlsUi explains the unfinished-round card'); else { console.error('  VIOLATION: controlsUi lacks the unfinished-round card'); violations++; }
 	if (!/\$0\.00|collect/.test(C.resumeCopy(false, null).line)) console.log('  OK no-amount line: ' + C.resumeCopy(false, null).line); else { console.error('  VIOLATION: no-amount line'); violations++; }
 	// v3.16c: resume card, social side, with and without a known amount

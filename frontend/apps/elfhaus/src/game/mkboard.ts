@@ -32,14 +32,14 @@ export let G: MkGeo | null = null;
 export function mkGeo(): MkGeo {
 	const W = ST.w, H = ST.h;
 	// 48 screen px in design units for this layout's k (H2: tap targets never under 48 px)
-	const t48 = (k: number) => (Math.ceil(48 / ST.s) + 2) / k;
+	const t48 = (k: number) => (Math.ceil(ST.tap / ST.s) + 2) / k;   // v21: ST.tap = 48, or 28 when compact (stage.ts)
 	const fit = (D: { w: number; h: number }) => { const k = Math.min(W / D.w, H / D.h); return { k, ox: (W - D.w * k) / 2, oy: (H - D.h * k) / 2 }; };
 	const cmp = { x: 800, y: 452, s: 0.64 };
 	if (ST.portrait) {
 		const DH = Math.max(1720, 1080 * H / W), D = { w: 1080, h: DH }, f = fit(D), tt = t48(f.k);
 		// v3.17 (James 02:26): the button row and the HUD bar shrink a little (touch targets stay >= 44 px) and the board
 		// moves DOWN into the freed space (same width / shape); T0 / bs0 keep the pre-v3.17 numbers (Roxy's base size, room)
-		const loose = DH >= 2100, hu = loose ? 0.92 : 0.86, HB = 344 * hu, hudY = DH - HB - 18, t44 = (Math.ceil(44 / ST.s) + 2) / f.k;
+		const loose = DH >= 2100, hu = loose ? 0.92 : 0.86, HB = 344 * hu, hudY = DH - HB - 18, t44 = (Math.ceil(Math.min(44, ST.tap) / ST.s) + 2) / f.k;
 		const kk0 = loose ? 1 : 0.86, kk = loose ? 0.9 : 0.76, GAPB = loose ? 40 : 18, RH = 176 * kk, ab = Math.max(160 * kk, t44);
 		const rowY = hudY - GAPB - RH / 2, below = 2 * GAPB + RH;
 		const hudY0 = DH - 344 - 18, below0 = 2 * (loose ? 44 : 22) + 176 * kk0;
@@ -48,7 +48,7 @@ export function mkGeo(): MkGeo {
 		// width (frame 868 * BS_W = 1026 of 1080), its foot stays where it was (BUY row + HUD untouched), so it grows upward;
 		// capped only so the logo on the frame top still clears the menu button (TOP_MIN).
 		const bs0 = Math.max(0.92, Math.min(1.28, (hudY0 - below0 - 690) / (BH + FB)));
-		const menuB = (12 + Math.max(144 * f.k, Math.ceil(48 / ST.s) + 2)) / f.k - f.oy / f.k;   // menu button bottom (design units)
+		const menuB = (12 + Math.max(144 * f.k, Math.ceil(ST.tap / ST.s) + 2)) / f.k - f.oy / f.k;   // menu button bottom (design units)
 		const TOP_MIN = menuB + 12 + 64 + 412 * 0.4 * 0.62;   // logo top under the menu; v3.17: logo always clear of the frame top (y = T - 64)
 		const bs = Math.max(Math.min(bs0, BS_W), Math.min(BS_W, (hudY - below - TOP_MIN) / (BH + FB + FT)));
 		const by = hudY - below - (BH + FB) * bs, bx = 540 - BW * bs / 2, T = by - FT * bs;
@@ -140,12 +140,12 @@ export function mkPlace(cell: number) {
 		const s = L(b.s) * vk, p = rel(b.x, b.y), e = $(sel);
 		css(e, { position: 'absolute', left: p.x - s / 2, top: p.y - s / 2, width: s, height: s, margin: '0', padding: '0', 'border-radius': (s * 0.28) + 'px',
 			'border-width': bwPx(Math.max(2, b.s * vk / 40) * g.k), '--icS': String(L(b.ic) * vk * ik), '--bh': s + 'px',
-			'--hitPad': Math.max(0, (Math.ceil(44 / ST.s) - s) / 2) + 'px' });
+			'--hitPad': Math.max(0, (Math.ceil(Math.min(44, ST.tap) / ST.s) - s) / 2) + 'px' });
 		return { x: hx + p.x - s / 2, y: hy + p.y - s / 2, s };
 	};
 	// field positions in the HUD (absolute world coords in the geo -> bar-relative)
 	const fld = (sel: string, f: Field) => { const p = rel(f.x, f.y); css($(sel), { position: 'absolute', left: p.x, top: p.y, width: L(f.w), margin: '0', padding: '0',
-		'--ls': Math.max(L(f.ls), 12 / ST.s) + 'px', '--vs': Math.max(L(f.vs), 14 / ST.s) + 'px' }); };   // audit text floor: >= 12 screen px
+		'--ls': Math.max(L(f.ls), (ST.compact ? 9 : 12) / ST.s) + 'px', '--vs': Math.max(L(f.vs), (ST.compact ? 11 : 14) / ST.s) + 'px' }); };   // audit text floor: >= 12 screen px (v21 compact: 9 / 11)
 	fld('#strip .m:nth-child(1)', g.fBal); fld('#strip .m:nth-child(2)', g.fBet); fld('#strip .m:nth-child(3)', g.fWin);
 	btn('#betDown', g.minus, BET_VK, 0.88); btn('#betUp', g.plus, BET_VK, 0.88);
 	const sp = btn('#spinBtn', g.spin);
@@ -155,14 +155,14 @@ export function mkPlace(cell: number) {
 	const bp = rel(g.bonus.x, g.bonus.y), b = $('#buyBtn');
 	b.classList.remove('side'); b.classList.toggle('mkP', bv === 'p'); b.classList.toggle('mkV', bv !== 'p');
 	const pr = { position: 'absolute', left: bp.x - bw0 * ps / 2, top: bp.y - bh0 * ps / 2, width: bw0 * ps, height: bh0 * ps, margin: '0', 'border-radius': (bv === 'p' ? 48 : 44) * ps + 'px' };
-	const pf = Math.max((bv === 'p' ? 50 : 25) * ps, 12 / ST.s);
+	const pf = Math.max((bv === 'p' ? 50 : 25) * ps, (ST.compact ? 7 : 12) / ST.s);   // v21: compact popouts let the label shrink so it fits the plate
 	css(b, { ...pr, padding: '0', '--ps': ps + '', '--pf': pf + 'px', '--pl': (bv === 'p' ? 4 : 3) * ps * Math.min(1, (bv === 'p' ? 50 : 25) * ps / pf) + 'px', '--pw': bw0 * ps + 'px', '--ph': bh0 * ps + 'px', '--pS': Math.max(bw0, bh0) * 1.3 * ps + 'px' });
 	// the neon halo breathes on its own layer (opacity only), under the plate
 	let gl = document.getElementById('mkBuyGlow');
 	if (!gl) { gl = document.createElement('div'); gl.id = 'mkBuyGlow'; gl.setAttribute('aria-hidden', 'true'); $('#hud').insertBefore(gl, $('#hud').firstChild); }
 	css(gl, { ...pr, '--ps': ps + '' });
 	// menu (game-only): the same square button, top-left corner of the stage
-	const ms = Math.max(L(g.mode === 'port' ? 144 : g.mode === 'cmp' ? 64 : 88), Math.ceil(48 / ST.s) + 2), m0 = g.mode === 'port' ? 12 : 16;
+	const ms = Math.max(L(g.mode === 'port' ? 144 : g.mode === 'cmp' ? 64 : 88), Math.ceil(ST.tap / ST.s) + 2), m0 = g.mode === 'port' ? 12 : 16;
 	css($('#menuBtn'), { position: 'absolute', left: m0 - hx, top: m0 - hy, width: ms, height: ms, margin: '0', padding: '0', 'border-radius': (ms * 0.28) + 'px', 'border-width': bwPx(Math.max(2, ms / g.k / 40) * g.k), '--icS': String(ms * 0.0155) });
 	r.setProperty('--mkMenuR', (m0 + ms) + 'px'); r.setProperty('--mkMenuY', (m0 + ms / 2) + 'px');
 	// armed-mode tag (v3.17, James 02:32): the ONLY armed indicator. A slim single-line pill (about 22 screen px tall on phones,
@@ -181,7 +181,7 @@ export function mkPlace(cell: number) {
 		translate: '0 -50%', width: 'auto', 'min-width': '0', 'max-width': maxW + 'px', 'min-height': '0', height: hP + 'px', margin: '0',
 		padding: '0 ' + tf * 0.6 + 'px', 'font-size': tf + 'px', 'line-height': '1', 'letter-spacing': '0.04em', 'white-space': 'nowrap', overflow: 'visible',
 		gap: tf * 0.4 + 'px', 'border-radius': hP / 2 + 'px', 'border-width': bwPx(Math.max(1, 1.2 / ST.s)), 'grid-area': 'auto', 'align-items': 'center',
-		'--tagPad': Math.max(0, (Math.ceil(44 / ST.s) - hP) / 2) + 'px', '--tagMax': maxW + 'px' });
+		'--tagPad': Math.max(0, (Math.ceil(Math.min(44, ST.tap) / ST.s) - hP) / 2) + 'px', '--tagMax': maxW + 'px' });
 	fitArmTag();
 	// free-spins bar on the frame's sill, banner over the top row, step toast at the board's foot
 	css($('#fsBar'), { position: 'absolute', left: '50%', top: (fh - FB * u / 2) + 'px', translate: '-50% -50%', margin: '0', 'z-index': '6' });

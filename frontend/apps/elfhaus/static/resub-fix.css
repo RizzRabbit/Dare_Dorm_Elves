@@ -31,8 +31,8 @@ body:not(.portrait) .modal{zoom:var(--mz);max-height:calc(92*var(--vh)/var(--mz)
 body:not(.portrait) .modal.bm{width:min(860px,calc(94*var(--vw)/var(--mz)))}
 body:not(.portrait) #popMenu{zoom:var(--mz)}
 /* inside a zoomed panel 48 screen px is --t48 / --mz */
-body:not(.portrait) .modal{--t48:calc(48px / var(--s) / var(--mz));--t12:calc(12px / var(--s) / var(--mz));--t14:calc(14px / var(--s) / var(--mz))}
-body:not(.portrait) #popMenu{--t48:calc(48px / var(--s) / var(--mz));--t14:calc(14px / var(--s) / var(--mz))}
+body:not(.portrait) .modal{--t48:calc(var(--tap,48px) / var(--s) / var(--mz));--t12:calc(12px / var(--s) / var(--mz));--t14:calc(14px / var(--s) / var(--mz))}
+body:not(.portrait) #popMenu{--t48:calc(var(--tap,48px) / var(--s) / var(--mz));--t14:calc(14px / var(--s) / var(--mz))}
 
 /* ---------- H1: phone landscape (body.phl, visible height <= 500): 600-design-px stage (stage.ts), board fills the
    height, left rail = menu / BUY plate / readouts, right rail = turbo / bet + / SPIN / bet - / autoplay. ---------- */
@@ -239,3 +239,16 @@ body.introOn #loader{touch-action:none;user-select:none;-webkit-user-select:none
 #outro:not(.landed) .otHint,body.tb #outro:not(.landed) .otHint{opacity:0}
 /* v3.18b: AUTO-PLAY BONUS row in the autoplay menu (same row + switch as the others) */
 #abRow{margin:10px 0 8px}
+
+/* ---- v21 (review #193/#195/#243): COMPACT = small desktop popouts (landscape <= 600 px tall, fine pointer) and every
+   replay (stage.ts). 28 px tap floor (--tap), text boost <= 1.6, no panel zoom. Touch phones outside a replay are never
+   compact, so the approved 390x844 / 844x390 phone looks are untouched. ---- */
+body.compact .modal,body.compact #popMenu{zoom:1}
+body.compact #menu .mX{min-width:28px;min-height:28px}
+body.compact #loader label.spSkip{min-height:var(--t48);font-size:calc(var(--t12) * .9)}
+body.compact #intro .cont{min-width:0}
+body.compact #sting .stBox{height:calc(62*var(--vmin))}   /* #sting lives in the scaled stage: stage vmin, not window vmin */
+/* replay bar: one short line, text >= ~10 screen px, the PLAY button on the 28 px floor */
+body.compact.replay #replayBar{font-size:max(13px,calc(10px / var(--s)));padding:calc(3px / var(--s)) calc(4px / var(--s)) calc(3px / var(--s)) calc(8px / var(--s));gap:calc(6px / var(--s));border-radius:calc(8px / var(--s))}
+body.compact.replay #replayPlay{min-height:var(--t48);font-size:inherit;padding:0 calc(10px / var(--s))!important;border-radius:calc(6px / var(--s))}
+body.compact.replay:not(.portrait) #replayBar .rpPre{display:none}

@@ -73,14 +73,6 @@ export const controlsAuto = (c: CopyCtx) =>
 /** v21 (#235): the menu's Mute all row. */
 export const controlsSound = () =>
 	' Mute all (in the menu) silences music, sound effects and voices at once and keeps your volume settings; tap it again (Unmute) to bring the sound back. The choice is remembered on this device.';
-/** v21 (#24/#26): Stake payouts are in 0.1x steps; the math rounds each round's total DOWN (finish(), PAYOUT_STEP = 10 centi-x; step wins
- *  are multiples of 0.05x, so at most 0.05x comes off). The published RTP and max win come from the rounded books. */
-export const roundingNote = (social: boolean) => social
-	? "Each round's total win is rounded down to the nearest 0.1x the play amount (never by more than 0.05x). The RTP and max win shown already include this."
-	: "Each round's total win is rounded down to the nearest 0.1x the bet (never by more than 0.05x). The RTP and max win shown already include this.";
-export const roundingShort = (social: boolean) => social
-	? "A round's total win is rounded down to the nearest 0.1x the play amount."
-	: "A round's total win is rounded down to the nearest 0.1x the bet.";
 /** v3.16 (#235): Menu, Info, Music / Sound, closing panels, the intro skip box and replay PLAY. */
 export const controlsUi = () =>
 	' The menu button opens Info (these rules) and the Music and Sound volume sliders. Close a panel with the small X in its top corner, Esc or a tap outside it; drag or swipe to scroll it.' +

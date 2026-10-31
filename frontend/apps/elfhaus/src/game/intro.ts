@@ -6,7 +6,7 @@ import { loadSheet, play, type Atlas } from './sprite';
 import { LOADER_CARDS } from './loader';
 import LAYOUT from '../assets/intro/splash_layout.json';
 import { ART } from './ui';
-import { fitStage } from './stage';
+import { fitStage, isReplayUrl } from './stage';
 import GLINT_ATLAS from '../assets/intro/sting_glint.atlas.json';
 const U = import.meta.glob('../assets/intro/*.webp', { eager: true, import: 'default', query: '?url' }) as Record<string, string>;
 const url = (f: string) => U['../assets/intro/' + f] || '';
@@ -20,6 +20,8 @@ const CARDS: Record<'modes' | 'sticky' | 'egw', { art: string; title: string; li
 
 const KEY = 'elfhaus.skipSplash';
 export const skipSplash = () => { try { return localStorage.getItem(KEY) === '1'; } catch { return false; } };
+/** v21 (review #193): no door intro in a replay (straight to the board + replay bar); else the player's own choice. */
+export const noIntro = () => isReplayUrl() || skipSplash();
 
 let stingRes: () => void = () => {}; const sting = new Promise<void>((r) => (stingRes = r));
 export const stingDone = () => sting;
@@ -94,7 +96,7 @@ function runSting() {
 
 export function initSplash() {
 	const R = document.getElementById('loader'); if (!R) return;
-	R.classList.toggle('quick', skipSplash());
+	R.classList.toggle('quick', noIntro());
 	const cb = R.querySelector<HTMLInputElement>('#spSkip')!;
 	cb.checked = skipSplash();
 	cb.onchange = () => { try { cb.checked ? localStorage.setItem(KEY, '1') : localStorage.removeItem(KEY); } catch {} };

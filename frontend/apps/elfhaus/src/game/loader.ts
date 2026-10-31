@@ -1,7 +1,7 @@
 // Loading screen: full ELFHAUS logo, feature-card carousel, progress bar, then CLICK/TAP TO CONTINUE (the press is
 // the user gesture later sound needs). Progress counts every tracked promise: art images, Roxy sheets, RGS/mock auth.
 import { $, ART } from './ui';
-import { initSplash, stingDone, skipSplash, preOut } from './intro';
+import { initSplash, stingDone, noIntro, preOut } from './intro';
 import { initIntro, introLoaded, introEnter, introSkip, introEatClick } from './introPixi';
 
 // Card titles (checked by the social-mode word scan in scripts/test-books.mjs).
@@ -51,10 +51,10 @@ export async function loaderReady() {
 	done = total; progress();
 	await stingDone();
 	const pix = await px; if (!pix) preOut();   // DOM splash (no WebGL): the inline loader steps aside
-	if (pix && !skipSplash()) await introLoaded();   // bar full, game primed behind the doors, TAP TO PARTY up
+	if (pix && !noIntro()) await introLoaded();   // bar full, game primed behind the doors, TAP TO PARTY up
 	L.classList.add('ready');
 	// returning players who ticked "Don't show this again" go straight in once loading is done
-	if (!skipSplash()) await new Promise<void>((res) => {
+	if (!noIntro()) await new Promise<void>((res) => {
 		const btn = $('#lGo'); btn.focus({ preventScroll: true });
 		const go_ = (e?: Event) => { if ((e?.target as Element)?.closest?.('.spSkip')) return; if (e && introEatClick(e)) return; /* v3.18: swipes / taps on the card carousel never enter */ removeEventListener('keydown', key, true); L.removeEventListener('click', go_); res(); };
 		const key = (e: KeyboardEvent) => { if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); e.stopPropagation(); go_(); } };
@@ -62,7 +62,7 @@ export async function loaderReady() {
 		addEventListener('keydown', key, { capture: true });
 	});
 	hideLoader();
-	if (pix) await (skipSplash() ? (introSkip(), Promise.resolve()) : introEnter());   // doors -> push -> board + Roxy drop (tap skips)
+	if (pix) await (noIntro() ? (introSkip(), Promise.resolve()) : introEnter());   // doors -> push -> board + Roxy drop (tap skips)
 }
 /** Fade the loader out into the game (also used to get it out of the way of an error message). */
 export function hideLoader() {

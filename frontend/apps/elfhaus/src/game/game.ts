@@ -12,7 +12,7 @@ import {
 	ANTE_COST, CONFIRM_ABOVE_X, fmtX, BUY_MODES, GAME_ID, LINES, MAX_WIN_X, MODES, MODE_LABEL, MYSTERY_ODDS, PAYTABLE,
 	SPIN_CAP, START_FS, EPIC_STACK_X, EPIC_GROW_STEP, GROW_STEP, GUARANTEE, MAX_RESPINS, RETRIGGER, EGW_STACK_X, SYMBOL_NAMES, VERSION, isProvisional, oneIn, type ModeKey,
 } from './config';
-import { roundingNote, roundingShort, controlsSound, confirmCopy, resumeCopy, controlsAuto, controlsBonus, controlsTurbo, controlsUi, costHeader, errorText, errorTitle, modeDesc, type CopyCtx, type CopyMode } from './copy';
+import { controlsSound, confirmCopy, resumeCopy, controlsAuto, controlsBonus, controlsTurbo, controlsUi, costHeader, errorText, errorTitle, modeDesc, type CopyCtx, type CopyMode } from './copy';
 import { registerPanel, openPanel, closePanel, isOpen, anyOpen, measurePanel, setClosable } from './panels';
 import { money, moneyWin, mult, setCurrency, setLocale, isSocialCurrency, amountStr } from './format';
 import { skipCounts, setAmount } from './countup';
@@ -474,10 +474,9 @@ function buildRules() {
 <p>${(['ante', ...BUY_MODES] as ModeKey[]).map((m) => `<b>${MODE_LABEL[m]}</b> (${mult(modeCost(m))}): ${modeDesc(m as CopyMode, cc)}`).join('<br>')}</p>
 <table><tr><th>Mode</th><th>${costHeader(isSocial())}</th><th>RTP</th><th>Max win</th></tr>${modeRows}</table>
 <p>Max win is ${MAX_WIN_X.toLocaleString('en-US')}${xb} in every mode. When it is reached, the round ends immediately and awards the max win.${isProvisional() ? ' RTP figures are pending final math.' : ''}</p>
-<p>${roundingNote(isSocial())}</p>
 <h3>${isSocial() ? 'Win table' : 'Paytable'}</h3>
 <table><tr><th>Symbol</th><th>3</th><th>4</th><th>5</th></tr>${pt}</table>
-<p>Values shown in ${xb} for a full line. ${roundingShort(isSocial())}</p>
+<p>Values shown in ${xb} for a full line.</p>
 <h3>${isSocial() || S.replay ? 'Win lines' : 'Paylines'}</h3><div class="plGrid">${lines}</div><p>20 fixed lines, read left to right from the leftmost reel.</p>
 <h3>Controls</h3>
 <p>Spin with the round button${S.jur.disabledSpacebar ? '' : ' or the Space bar'}. − and + change the ${isSocial() ? 'play amount' : 'bet'}. ${controlsBonus(cc)}${S.jur.disabledTurbo ? '' : controlsTurbo()}${S.jur.disabledAutoplay ? '' : controlsAuto(cc)}${controlsSound()}${controlsUi()} Replays never change your balance.</p>
@@ -688,6 +687,7 @@ export async function initGame() {
 	setOverlayHook(stackIdle); initStacks().then(() => renderOverlays(false)); void initWfExpand(); // optional stack / per-reel expand sheets (placeholders until imported)
 	track(document.fonts?.ready ?? Promise.resolve());
 	buildCells(); S.sym = IDLE.map((c) => [...c]); S.vals = new Map([[2 * 4 + 2, 1]]);
+	if (url.replay) document.body.classList.add('replay');   // v21 (review #193): replay styling is in place before the first layout
 	wire(); layout(); setBusy(true);
 	try {
 		// v3.16b (#188): currency first, so XSC / XGC replays are social even without social=true

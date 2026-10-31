@@ -97,13 +97,14 @@ function geo(W, H) {   // W, H: stage px (ST.w / ST.h); the card + skip-strip bu
   if (!port) {
     const ks = Math.min(W / 1920, H / 1080), k = ks / S, DW = W / ks, DH = H / ks, cx = DW / 2;
     const FL = DH / 2 + 400, dw = 520, dh = 580, top = FL - dh;
-    const lbh = Math.max(100, 46 / ks);   // TAP TO PARTY keeps a >= 46 screen-px plate on small landscape phones
+    // TAP TO PARTY keeps a >= 46 screen-px plate on small landscape phones; v21 compact popouts: scales with the screen, no px floor
+    const lbh = ST.compact ? 100 : Math.max(100, 46 / ks);
     const logo = { y: top - 64 - 122, w: 560 }, btn = { y: FL + 64, w: 470 * lbh / 100, h: lbh };
     const ar = tex.title ? tex.title.height / tex.title.width : 0.56;
     const yA = (logo.y + logo.w * ar * 0.42) * ks + m, yB = (btn.y - btn.h / 2) * ks - m - DOTS;   // between logo and button (screen px)
-    const ch = Math.max(150, Math.min(340, yB - yA)), cw = Math.min(W * 0.52, 560, ch * 2.1);
+    const ch = ST.compact ? Math.max(0, Math.min(340, yB - yA)) : Math.max(150, Math.min(340, yB - yA)), cw = Math.min(W * 0.52, 560, ch * 2.1);
     return { port, k, ks, Ws: W, Hs: H, DW, DH, cx, FL, dw, dh, top, lint: 64, logo, bar: { y: FL + 64, w: 560, h: 40 }, btn, sc: { dx: 400, y: top + 150, s: 0.6 }, F: 1500,
-      pc: { cw, ch, cy: (yA + yB) / 2, row: true } }; }
+      pc: { cw, ch, cy: (yA + yB) / 2, row: true, off: ST.compact && (H < 260 || ch < 60) } }; }   // v21: no carousel in a window under 260 px tall
   // portrait: the scene keeps its full width scale and sits centred above the skip strip; the carousel overlays the doors
   const dw = 540, dh = 780, lint = 64, ar = tex.title ? tex.title.height / tex.title.width : 0.56, logoW = 800;
   const above = dh + lint + 210 + logoW * ar / 2 + 14, btnY = 130, skip = 62, budget = H - skip - 10;
@@ -230,7 +231,7 @@ function cardText(c, size, wrapW, maxH) {   // title + detail, shrinking the det
     dropShadow: { color: 0x000000, alpha: 0.6, blur: 2, distance: 1.5, angle: Math.PI / 2 } } });
   let fl = size.l, ln;
   for (;;) { ln?.destroy(); ln = new Text({ text: c.line, style: { fontFamily: FONT, fontWeight: '700', fontSize: fl, fill: 0xeee3f2, align: size.al, wordWrap: true, wordWrapWidth: wrapW, lineHeight: Math.round(fl * 1.3) } });
-    if (ti.height + 6 + ln.height <= maxH || fl <= 11) break; fl -= 0.5; }
+    if (ti.height + 6 + ln.height <= maxH || fl <= (ST.compact ? 7 : 11)) break; fl -= 0.5; }
   if (ti.width > wrapW) ti.scale.set(wrapW / ti.width);
   return { ti, ln };
 }
@@ -248,7 +249,7 @@ function buildCards() {
       const ah = h - 24, aw = w * 0.36, fit = Math.min(aw / tw, ah / th);
       art.scale.set(fit); const artW = tw * fit; art.position.set(-w / 2 + 14 + aw / 2, 0); C.addChild(art);
       const tx = -w / 2 + 14 + aw + 14, wrapW = w / 2 - 16 - tx;
-      const { ti, ln } = cardText(c, { t: Math.max(16, Math.min(26, h * 0.1)), l: Math.max(12.5, Math.min(18, h * 0.065)), al: 'left' }, wrapW, h - 28);
+      const { ti, ln } = cardText(c, { t: ST.compact ? Math.min(26, h * 0.1) : Math.max(16, Math.min(26, h * 0.1)), l: ST.compact ? Math.min(18, h * 0.065) : Math.max(12.5, Math.min(18, h * 0.065)), al: 'left' }, wrapW, h - 28);
       const bh = ti.height + 6 + ln.height, y = -bh / 2;
       ti.position.set(tx, y); ln.position.set(tx, y + ti.height + 6); C.addChild(ti, ln);
     } else {     // portrait: art on top, title + detail under it
@@ -269,6 +270,8 @@ function carStep() { if (CAR.t0 < 0 || CAR.drag?.on) return; const k = Math.min(
   CAR.pos = lerp(CAR.from, CAR.to, ease.outCubic(k)); if (k >= 1) { CAR.pos = CAR.to; CAR.t0 = -1; } }
 function placeCards(inK, outT) {   // inK: global clock for the calm fade-in; outT: seconds since tap (snappy exit)
   if (!cardEls.length) return;
+  if (G.pc.off) { cardsC.visible = false; if (dotsG) dotsG.visible = false; return; }   // v21: too short for the carousel
+  cardsC.visible = true; if (dotsG) dotsG.visible = true;
   const { ch: h, cy } = G.pc, ks = G.ks, d = cardSpacing(), cxS = G.Ws / 2;
   const a = seg(inK, 0.15, 0.5), rise = (1 - ease.outCubic(a)) * 24, ko = seg(outT, T.cards[0], T.cards[0] + 0.3, ease.inCubic);
   cardsC.alpha = dotsG.alpha = a * (1 - ko);
@@ -283,7 +286,7 @@ function placeCards(inK, outT) {   // inK: global clock for the calm fade-in; ou
 }
 // pointer: the transparent #loader sits over the canvas, so listen on the document and map client -> screen px
 function toScreen(e) { const r = app?.canvas?.getBoundingClientRect?.(); if (!r || !r.width) return null; return { x: (e.clientX - r.left) / r.width * G.Ws, y: (e.clientY - r.top) / r.height * G.Hs }; }
-const carLive = () => !!app && (state === 'loading' || state === 'tap') && !fading;
+const carLive = () => !!app && !G?.pc?.off && (state === 'loading' || state === 'tap') && !fading;
 function inBand(q) { const { ch: h, cy } = G.pc; return q && Math.abs(q.y - cy) <= h / 2 + 8; }
 function carDown(e) { if (!carLive() || (e.button ?? 0) !== 0 || e.target?.closest?.('.spSkip')) return; const q = toScreen(e); if (!inBand(q)) return;
   CAR.t0 = -1; CAR.drag = { on: true, id: e.pointerId, x0: q.x, x: q.x, p0: CAR.pos, moved: false, hist: [[performance.now(), q.x]] }; }
