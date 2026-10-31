@@ -44,6 +44,9 @@ export function symLand(cell: HTMLElement) {
 export function landBump(cell: HTMLElement) {
 	const sym = symOf(cell); if (!sym) return;
 	const n = symName(cell), heavy = n === 'W' || n === 'S';
+	// chalet item 3: a rigged wild bust lands with ONE eased squash-and-settle on its rig (.cell.rgLand, chalet.css
+	// rgWLand); a second squash on .sym here stacked with it (and with wPop) and read as stepped / jittery.
+	if (n === 'W' && sym.querySelector('.rig[class*="k_W_R"]')) return;
 		// anim-v4: every symbol gets a quick squash-and-stretch on land in normal pace too (the reel's own bounce carries it,
 	// this adds weight); wilds / scatters hit harder. Still transform only, ~150-220 ms.
 	if (!document.body.classList.contains('turbo')) {
