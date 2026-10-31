@@ -468,14 +468,14 @@ html body .ov>.tRec,html body .ov>.tBd{z-index:2;inset:calc(var(--cell)*.0375)}
    the depth is on the symbol, which comes forward out of it: a touch larger (it overlaps the inner border), a subtle
    forward perspective, a soft drop shadow down-right onto the tile, a top / left rim light and a thin raised edge. */
 html body #cells .cell{isolation:isolate}
-html body .cell>.tile{position:absolute;inset:0;z-index:0;display:block;pointer-events:none;transform-origin:50% 62%}
-body.mk #app .cell>.tile{inset:3.75%}
-html body .cell>.tile>.tTile,html body .cell>.tile.tW>.rp{left:0;top:0;width:100%;height:100%;z-index:0}
-html body .cell>.tile>.tRec{z-index:1}
-html body .cell>.tile:not(.tTop)::after{content:"";position:absolute;inset:6.5%;z-index:2;border-radius:11%;pointer-events:none;
+html body :is(.cell,.cspin)>.tile{position:absolute;inset:0;z-index:0;display:block;pointer-events:none;transform-origin:50% 62%}
+body.mk #app :is(.cell,.cspin)>.tile{inset:3.75%}
+html body :is(.cell,.cspin)>.tile>.tTile,html body :is(.cell,.cspin)>.tile.tW>.rp{left:0;top:0;width:100%;height:100%;z-index:0}
+html body :is(.cell,.cspin)>.tile>.tRec{z-index:1}
+html body :is(.cell,.cspin)>.tile:not(.tTop)::after{content:"";position:absolute;inset:6.5%;z-index:2;border-radius:11%;pointer-events:none;
   box-shadow:inset 0 calc(var(--cell)*.012) calc(var(--cell)*.022) rgba(20,4,8,.28)}
-html body .cell>.tile>.tBd{z-index:3}
-html body .cell>.tile.tTop{z-index:2}
+html body :is(.cell,.cspin)>.tile>.tBd{z-index:3}
+html body :is(.cell,.cspin)>.tile.tTop{z-index:2}
 html body .cell>.sym{z-index:1}
 html body .cell>.sym.symTop{z-index:3;pointer-events:none}
 html body .cell>.sym.symBack{z-index:-1}
@@ -497,8 +497,9 @@ html body .ov>.tGl,html body .ov>.tGw{z-index:3;inset:calc(var(--cell)*.0375)}
 @keyframes tShim{0%{-webkit-mask-position:100% 0;mask-position:100% 0}100%{-webkit-mask-position:0 0;mask-position:0 0}}
 @keyframes tFlash{0%{opacity:0;-webkit-mask-size:100% 100%;mask-size:100% 100%}25%{opacity:.85}100%{opacity:0;-webkit-mask-size:100% 100%;mask-size:100% 100%}}
 @keyframes tGlowP{0%{opacity:.12}100%{opacity:.62}}
-html body .cell.tLand>.tile{animation:tThud .24s both}
-html body .cell.tLand>.tile>.tGl{animation:tGlint .46s cubic-bezier(.3,.2,.4,1) .02s both}
+html body :is(.cell,.cspin).tLand>.tile{animation:tThud var(--thd,240ms) both}
+html body :is(.cell,.cspin).tLand>.tile>.tGl{animation:tGlint .46s cubic-bezier(.3,.2,.4,1) .02s both}
+html body .cell.tGlint>.tile>.tGl{animation:tGlint .46s cubic-bezier(.3,.2,.4,1) calc(var(--gd,0ms) + .02s) both}
 html body .cell.win>.tile>.tGl,html body .ov.win>.tGl{opacity:.7;animation:tFlash .26s ease-out both,tShim 1.5s cubic-bezier(.45,0,.55,1) .26s infinite}
 html body .cell.win>.tile>.tGw,html body .ov.win>.tGw{animation:tGlowP .8s cubic-bezier(.45,0,.55,1) .08s infinite alternate}
 body.rgAnt #cells .cell:not(.spinning):not(.win)>.tile>.tGl{opacity:.32;animation:tShim 1.8s linear infinite}
@@ -535,3 +536,30 @@ html body .cell.puffed>.tile{opacity:1!important}
   html body .tGl,html body .tGw{opacity:0!important}
   html body .cell.win>.sym{transition:none!important}
 }
+
+/* ===== cell spinners (reels.ts): each spinning cell = its own fixed tile + a window on its inner panel where real
+   symbols scroll (three recycled slots, translate3d only). Near full speed a light trail + stretch (--tr). In the last
+   moments of the settle the window opens so the final symbol comes forward over the border exactly as in the cell. */
+#strips .cspin{position:absolute;width:var(--cell);height:var(--cell);z-index:1;pointer-events:none;contain:layout style}
+#strips .cspin>.cwin{position:absolute;inset:0;z-index:1;overflow:hidden;clip-path:inset(6.4% round 10%);--tr:0}
+body.mk #app #strips .cspin>.cwin{inset:3.75%}
+#strips .cspin.open>.cwin{clip-path:none;overflow:visible}
+#strips .cspin>.cwin>.sl{position:absolute;left:0;top:0;width:100%;height:100%;display:block;background:no-repeat 0 0/100% 100%;will-change:transform;
+  scale:1 calc(1 + .07*var(--tr));transform-origin:50% 50%}
+#strips .cspin>.cwin>.sl::before,#strips .cspin>.cwin>.sl::after{content:"";position:absolute;inset:0;background:inherit;pointer-events:none}
+#strips .cspin>.cwin>.sl::before{translate:0 -7%;opacity:calc(.34*var(--tr))}
+#strips .cspin>.cwin>.sl::after{translate:0 -14%;opacity:calc(.16*var(--tr))}
+#strips .cspin.open>.cwin>.sl::before,#strips .cspin.open>.cwin>.sl::after{display:none}
+#strips .cspin>.tile.tTop{z-index:2}
+#strips .cspin.ant>.tile>.tGl{opacity:.38;animation:tShim 1.4s linear infinite}
+/* landings come out of the spinner's own settle bounce, so the symbol's follow-through starts from rest (no pop) */
+@keyframes rgLandB{0%{scale:1 1}24%{scale:1.035 .96}58%{scale:.99 1.015}100%{scale:1 1}}
+@keyframes tLiftLand{0%{--lift:.3;scale:1}30%{--lift:1;scale:1.012}100%{--lift:0;scale:1}}
+@keyframes rgFollow{0%{translate:0 0;scale:1}30%{translate:0 2.5%;scale:1.03 .95}65%{translate:0 -1%;scale:.99 1.02}100%{translate:0 0;scale:1 1}}
+@keyframes rgLetsLand{0%{scale:1}40%{scale:1.05}100%{scale:1}}
+@keyframes rgWLand{0%{scale:1 1;translate:0 0;animation-timing-function:cubic-bezier(.3,0,.5,1)}
+	30%{scale:1.03 .97;translate:0 1%;animation-timing-function:cubic-bezier(.25,.6,.4,1)}
+	66%{scale:.99 1.012;translate:0 -.5%;animation-timing-function:cubic-bezier(.45,0,.55,1)}100%{scale:1 1;translate:0 0}}
+@keyframes rgWLets{0%{scale:1;animation-timing-function:cubic-bezier(.3,0,.5,1)}40%{scale:1.05;animation-timing-function:cubic-bezier(.45,0,.55,1)}100%{scale:1}}
+@keyframes rgShLand{0%{opacity:0}30%{opacity:.4}100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){#strips .cspin>.tile,#strips .cspin .tGl{animation:none!important}#strips .cspin>.cwin{--tr:0!important}}

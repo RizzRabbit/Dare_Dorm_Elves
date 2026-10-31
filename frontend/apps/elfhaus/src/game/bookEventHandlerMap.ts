@@ -7,10 +7,10 @@ import { roxy, roxyState, roxySmile } from './roxy';
 import { maxWinCelebration, preloadMaxWin } from './maxwin';
 import { elvesLevel, preloadBigWinElves, LEGEND_ELVES_LEVEL } from './bigwinElves';
 import { showRespin, endRespin, hideRespin } from './respin';
-import { mxBurst, lockFx, clearSymWins, symLand, symWin, landBump } from './fx';
+import { mxBurst, lockFx, clearSymWins, symLand, symWin } from './fx';
 import { cardFlip } from './cardflip';
 import { timing, isSpinning, startSpin, markStopped, sinceStart, sleep, spinMini, stopMini, stopReel, stopLead } from './reels';
-import { $, S, k, bet, wait, titleHTML, banner, toast, hideToast, bigWin, setWinMeter, clearLines, renderCell, renderOverlays, cellEl, setGem, ovMx, symHTML, ovArt } from './ui';
+import { $, S, k, bet, wait, titleHTML, banner, toast, hideToast, bigWin, setWinMeter, clearLines, renderCell, renderOverlays, cellEl, setGem, ovMx, ovArt } from './ui';
 import { playWins } from './winlines';
 import { puffWith } from './puff';
 import { wildLand, wfExpand } from './wildfx';
@@ -145,16 +145,14 @@ export const bookEventHandlerMap: Handlers = {
 			// the riser starts with the first slowed reel's glow and fades out on the last land
 			if (slow && !riserT) riserT = window.setTimeout(() => { riser = sfx('anticipation_riser'); }, Math.max(0, prev - sinceStart()));
 			if (slow) at += T.ant;
-			const finals = Array.from({ length: ROWS }, (_, row) => symHTML(S.sym[r][row], S.vals.get(k(r, row)), r));
-			stops.push(stopReel(r, at, finals, () => {
-				for (let row = 0; row < ROWS; row++) {
-					const locked = lockedSingles.has(k(r, row));
-					renderCell(r, row, null);
-					cellEl(r, row).classList.toggle('locked', locked);
-					if (!locked && !fullLocked.has(r) && S.sym[r][row] === 'W') { wildLand(cellEl(r, row)); voice('wild', { reel: r }); }
-					else if (S.sym[r][row] === 'S') symLand(cellEl(r, row));
-					if (!locked && !fullLocked.has(r)) landBump(cellEl(r, row));
-				}
+			// each cell is rendered as its own spinner settles (the reel's still cells with its first stop); the
+			// spinner already gave the landing its bounce, the tile its thud + glint, so no extra squash here
+			stops.push(stopReel(r, at, (row) => {
+				const locked = lockedSingles.has(k(r, row));
+				renderCell(r, row, null);
+				cellEl(r, row).classList.toggle('locked', locked);
+				if (!locked && !fullLocked.has(r) && S.sym[r][row] === 'W') { wildLand(cellEl(r, row)); voice('wild', { reel: r }); }
+				else if (S.sym[r][row] === 'S') symLand(cellEl(r, row));
 			}, slow, prev));
 		}
 		await Promise.all(stops);

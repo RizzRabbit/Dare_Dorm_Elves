@@ -136,10 +136,17 @@ function flat(page: HTMLImageElement, key: string, only?: (p: Part) => boolean) 
 	return c;
 }
 /** A whole cell at `size` px, from the shared parts (strips, paytable, intro and flip cards). */
-function composeCell(page: HTMLImageElement, key: string, size: number) {
+function composeCell(page: HTMLImageElement, key: string, size: number, bare = false) {
 	const r = RIG[key], b = FRAMES[key]; if (!r || !b) return null;
 	const c = cv(size, size), g = c.getContext('2d'); if (!g) return null;
 	const t = frameTier(key), bw = size * (NINE.slice / NINE.size);
+	if (t && bare) {   // the lifted symbol alone, as the live cell draws it over its tile (the cell spinner's slots)
+		const sym = flat(page, key); if (!sym) return c;
+		const box = size * (1 - 2 * FR_IN), k = box / Math.max(sym.width, sym.height), cell = size / 0.925;
+		g.filter = 'contrast(1.06) saturate(1.1)';
+		drawLifted(g, sym, size * FR_IN + (box - sym.width * k) / 2, size * FR_IN + (box - sym.height * k) / 2, sym.width * k, sym.height * k, cell);
+		return c;
+	}
 	if (t) {
 		const tf = FRAMES['_tile_' + t]; if (tf) g.drawImage(page, tf.frame.x, tf.frame.y, tf.frame.w, tf.frame.h, 0, 0, size, size);
 		drawNine(g, page, '_recess', 0, 0, size, size, bw); drawNine(g, page, t === 'sp' ? '_border_sp' : '_border', 0, 0, size, size, bw);
@@ -181,38 +188,12 @@ async function bakeAll() {
 			if (uf) ART[k + '_flat'] = uf;   // the bare symbol (Secret Santa card gift)
 			if (!u) return;
 			ART[k] = u; for (const c of CARD_ALIASES[k] || []) ART[c] = u;
+			// cell spinner slot (reels.ts): the lifted symbol alone (tiers) / the whole card (bust wilds), tile-box sized
+			const sc = composeCell(page, k, SPIN_PX, true), us = sc && (await blobURL(sc));
+			if (us) ART[k + '_spin'] = us;
 		}));
-		await bakeStrips(page, ART);
 	} catch (e) { console.warn('symbol sheet', e); }
 }
-// ---------- per-cell spin strips (reels.ts spinMini .mini i) ----------
-// One 6-symbol cycle per strip, drawn from the same sheet layers as the cells and motion-blurred along the spin
-// direction, so every spinning cell shows its own blurred symbols running (the chalet art set has no strip files).
-const STRIP_T = 144;
-const STRIPS: Record<string, string[]> = { reel_stripA: ['H1', 'L3', 'H4', 'L1', 'W_R1', 'L5'], reel_stripB: ['L2', 'H3', 'L4', 'H2', 'S', 'H1'] };
-function drawKey(g: CanvasRenderingContext2D, page: HTMLImageElement, key: string, x: number, y: number, size: number) {
-	const c = composeCell(page, key, size * 2); if (c) g.drawImage(c, x, y, size, size);
-}
-async function bakeStrips(page: HTMLImageElement, ART: Record<string, string | null>) {
-	const T = STRIP_T, pad = Math.round(T * 0.04);
-	for (const [name, order] of Object.entries(STRIPS)) {
-		const n = order.length, sharp = document.createElement('canvas'); sharp.width = T; sharp.height = T * n;
-		const g = sharp.getContext('2d'); if (!g) return;
-		order.forEach((key, i) => drawKey(g, page, key, pad, i * T + pad, T - pad * 2));
-		const out = document.createElement('canvas'); out.width = T; out.height = T * n;
-		const o = out.getContext('2d'); if (!o) return;
-		// vertical motion blur: wrapped offset copies (the strip repeats, so the seam stays continuous)
-		const R = Math.round(T * 0.18), steps = 17;
-		for (let s = 0; s < steps; s++) {
-			const dy = Math.round(-R + (2 * R * s) / (steps - 1));
-			o.globalAlpha = 1 / (s + 1) * 1.0; // running average
-			o.globalCompositeOperation = 'source-over';
-			for (const w of [-T * n, 0, T * n]) o.drawImage(sharp, 0, dy + w);
-		}
-		o.globalAlpha = 1;
-		const u = await new Promise<string | null>((res) => out.toBlob((bl) => res(bl ? URL.createObjectURL(bl) : null), 'image/png'));
-		if (u) ART[name] = u;
-	}
-}
+const SPIN_PX = 320;
 /** Resolves once ART[H1..W_R5] (+ the wild cards) point at baked images; started at import so it overlaps the loader. */
 export const symArtReady: Promise<void> = typeof document === 'undefined' ? Promise.resolve() : bakeAll();
