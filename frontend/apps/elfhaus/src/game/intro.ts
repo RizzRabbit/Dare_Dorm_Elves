@@ -6,6 +6,7 @@ import { loadSheet, play, type Atlas } from './sprite';
 import { LOADER_CARDS } from './loader';
 import LAYOUT from '../assets/intro/splash_layout.json';
 import { ART } from './ui';
+import { symArtReady } from './symrig';
 import { fitStage, isReplayUrl } from './stage';
 import GLINT_ATLAS from '../assets/intro/sting_glint.atlas.json';
 const U = import.meta.glob('../assets/intro/*.webp', { eager: true, import: 'default', query: '?url' }) as Record<string, string>;
@@ -55,8 +56,10 @@ function layout() {
 	}
 	ps.forEach((p, i) => { const q = d.panels[i];
 		const key = /modes/.test(q.img) ? 'modes' : /sticky/.test(q.img) ? 'sticky' : 'egw', c = CARDS[key];
-		if (p.dataset.k !== key) { p.dataset.k = key; p.setAttribute('aria-label', LOADER_CARDS[key === 'modes' ? 0 : key === 'sticky' ? 1 : 2]);
-			const src = c.art.includes('/') ? c.art : ART[c.art];
+		if (p.dataset.k !== key) { const src = c.art.includes('/') ? c.art : ART[c.art];
+			// symbol art is baked from the sheet just after start: lay out again once it is there
+			if (src) p.dataset.k = key; else void symArtReady.then(() => window.dispatchEvent(new Event('resize')));
+			p.setAttribute('aria-label', LOADER_CARDS[key === 'modes' ? 0 : key === 'sticky' ? 1 : 2]);
 			p.innerHTML = `<div class="spArt">${src ? `<img src="${src}" alt="" draggable="false">` : ''}</div><div class="spTxt"><h3></h3><p></p></div>`;
 			p.querySelector('h3')!.textContent = c.title; p.querySelector('p')!.textContent = c.line; }
 		place(p, q); p.style.setProperty('--d', q.delayMs + 'ms'); });

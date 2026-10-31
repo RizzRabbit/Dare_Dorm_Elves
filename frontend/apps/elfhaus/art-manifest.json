@@ -1,107 +1,45 @@
 {
- "_comment": "Winter Chalet art (assets/chalet, built by the chalet art pipeline). Empty list = not used (code draws it or skips it).",
- "H1": [
-  "assets/chalet/sym/H1.webp"
- ],
+ "_comment": "Winter Chalet art (assets/chalet, built by the chalet art pipeline). Empty list = not used (code draws it or skips it). Board symbols, their glows and the wild cards come from static/sheets/symbols.webp (build_symrig.py; flat images baked at runtime by symrig.ts).",
+ "H1": [],
  "H1_win": [],
- "H2": [
-  "assets/chalet/sym/H2.webp"
- ],
+ "H2": [],
  "H2_win": [],
- "H3": [
-  "assets/chalet/sym/H3.webp"
- ],
+ "H3": [],
  "H3_win": [],
- "H4": [
-  "assets/chalet/sym/H4.webp"
- ],
+ "H4": [],
  "H4_win": [],
- "L1": [
-  "assets/chalet/sym/L1.webp"
- ],
+ "L1": [],
  "L1_win": [],
- "L2": [
-  "assets/chalet/sym/L2.webp"
- ],
+ "L2": [],
  "L2_win": [],
- "L3": [
-  "assets/chalet/sym/L3.webp"
- ],
+ "L3": [],
  "L3_win": [],
- "L4": [
-  "assets/chalet/sym/L4.webp"
- ],
+ "L4": [],
  "L4_win": [],
- "L5": [
-  "assets/chalet/sym/L5.webp"
- ],
+ "L5": [],
  "L5_win": [],
- "W_R1": [
-  "assets/chalet/sym/W_R1.webp"
- ],
- "W_R2": [
-  "assets/chalet/sym/W_R2.webp"
- ],
- "W_R3": [
-  "assets/chalet/sym/W_R3.webp"
- ],
- "W_R4": [
-  "assets/chalet/sym/W_R4.webp"
- ],
- "W_R5": [
-  "assets/chalet/sym/W_R5.webp"
- ],
- "W_R1_card": [
-  "assets/chalet/sym/W_R1.webp"
- ],
- "W_R2_card": [
-  "assets/chalet/sym/W_R2.webp"
- ],
- "H1_glow": [
-  "assets/chalet/sym/H1_glow.webp"
- ],
- "H2_glow": [
-  "assets/chalet/sym/H2_glow.webp"
- ],
- "H3_glow": [
-  "assets/chalet/sym/H3_glow.webp"
- ],
- "H4_glow": [
-  "assets/chalet/sym/H4_glow.webp"
- ],
- "L1_glow": [
-  "assets/chalet/sym/L1_glow.webp"
- ],
- "L2_glow": [
-  "assets/chalet/sym/L2_glow.webp"
- ],
- "L3_glow": [
-  "assets/chalet/sym/L3_glow.webp"
- ],
- "L4_glow": [
-  "assets/chalet/sym/L4_glow.webp"
- ],
- "L5_glow": [
-  "assets/chalet/sym/L5_glow.webp"
- ],
- "S_glow": [
-  "assets/chalet/sym/S_glow.webp"
- ],
- "W_R1_glow": [
-  "assets/chalet/sym/W_R1_glow.webp"
- ],
- "W_R2_glow": [
-  "assets/chalet/sym/W_R2_glow.webp"
- ],
- "W_R3_glow": [
-  "assets/chalet/sym/W_R3_glow.webp"
- ],
- "W_R4_glow": [
-  "assets/chalet/sym/W_R4_glow.webp"
- ],
- "W_R5_glow": [
-  "assets/chalet/sym/W_R5_glow.webp"
- ],
+ "W_R1": [],
+ "W_R2": [],
+ "W_R3": [],
+ "W_R4": [],
+ "W_R5": [],
+ "W_R1_card": [],
+ "W_R2_card": [],
+ "H1_glow": [],
+ "H2_glow": [],
+ "H3_glow": [],
+ "H4_glow": [],
+ "L1_glow": [],
+ "L2_glow": [],
+ "L3_glow": [],
+ "L4_glow": [],
+ "L5_glow": [],
+ "S_glow": [],
+ "W_R1_glow": [],
+ "W_R2_glow": [],
+ "W_R3_glow": [],
+ "W_R4_glow": [],
+ "W_R5_glow": [],
  "background": [
   "assets/chalet/scene/bg_land.webp"
  ],
@@ -111,9 +49,7 @@
  "logo": [
   "assets/chalet/ui/logo.webp"
  ],
- "logo_full": [
-  "assets/chalet/ui/logo.webp"
- ],
+ "logo_full": [],
  "frame": [],
  "alcove_crown_landscape": [],
  "alcove_crown_fs_landscape": [],
@@ -154,9 +90,7 @@
  "sym_L3": [],
  "sym_L4": [],
  "sym_L5": [],
- "S": [
-  "assets/chalet/sym/S.webp"
- ],
+ "S": [],
  "S_win": [],
  "sym_S": [],
  "card_flip": [],

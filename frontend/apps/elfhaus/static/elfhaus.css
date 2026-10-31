@@ -1,7 +1,7 @@
 /* Elfhaus UI — painted matte reel frame + sharp serif wordmark & minimal dark-glass controls.
    NO glow, NO neon, NO gloss, NO bubbly shapes. Fonts bundled locally (OFL): Cinzel (display), Nunito (UI/numbers). */
-@font-face{font-family:"Cinzel";src:url(fonts/Cinzel-VF.ttf) format("truetype");font-weight:400 900;font-display:block}
-@font-face{font-family:"Nunito";src:url(fonts/Nunito-VF.ttf) format("truetype");font-weight:200 1000;font-display:block}
+@font-face{font-family:"Cinzel";src:url(fonts/Cinzel-VF.woff2) format("woff2");font-weight:400 900;font-display:block}
+@font-face{font-family:"Nunito";src:url(fonts/Nunito-VF.woff2) format("woff2");font-weight:200 1000;font-display:block}
 :root{ --glass:rgba(20,18,26,.70); --glass2:rgba(20,18,26,.82); --hair:rgba(230,224,245,.22); --gold:#B9A2E0; --steel:#DCE2E8;
   --ink:#2A2433; --ink2:#4A4258; --cream:#F1F0F5; --paper:#E6E3EE; --paper2:#CFCBDB;
   --slate:#5E5A6B; --slate2:#3D3948; --pink:#D3BFEA; --rose:#C8435F; --rose2:#9C2F48; --denim:#4E6A8C; --denim2:#36506E;

@@ -248,3 +248,107 @@ html body #intro .cont{font-size:clamp(18px,2.6vh,28px)!important;padding:.35em 
 html body #bigwin .bwX{background:var(--c-cream)!important;border:3px solid var(--c-ink)!important;border-radius:10px!important;box-shadow:inset 0 0 0 2px var(--c-gold),0 3px 0 rgba(20,8,4,.5)!important;
   color:var(--c-cran)!important;-webkit-text-stroke:0!important;text-shadow:none!important;padding:.1em .5em!important;font-size:clamp(14px,2.2vh,24px)!important;line-height:1.2!important}
 @media (orientation:landscape) and (max-height:500px){html body #bigwin .bwAmt{font-size:118px!important} html body #bigwin .bwX{font-size:40px!important}}
+
+/* ===== symbol cut-out rigs (symrig.ts / symrig.css): layers that equal the art at rest; motion on real time ===== */
+html body .sym.rigd>.rig{position:absolute;inset:0;z-index:1;display:block;pointer-events:none}
+html body .sym.rigd .rgBody{position:absolute;inset:0;display:block}
+html body .sym .symGlow>.rp{transform-origin:50% 55%}
+html body .cell.win .sym .symGlow>.rp{animation:aiGlowPulse calc(.45s*var(--gt,1)) ease-in-out calc(.16s*var(--gt,1)) infinite alternate}
+html body .cell.wild:not(.win) .sym.W .symGlow>.rp{animation:wGlowBreathe calc(.7s*var(--at,1)) ease-in-out infinite alternate}
+html body .sym:has(canvas.symFx)>.rig{visibility:hidden}
+html body .rig.still{position:absolute;inset:0;display:block}
+html body .rig.still .rgBody{position:absolute;inset:0;display:block}
+/* the old flat-art rules, carried over to the rig container */
+#cells .sym.H.art.rigd>.rig,#cells .sym.H.art.rigd>.symGlow{-webkit-mask:linear-gradient(#000 0,#000 80%,transparent 98%);mask:linear-gradient(#000 0,#000 80%,transparent 98%)}
+#board:not(.busyB) .cell:not(.win):not(.dim):not(.spinning) .sym.H.art.rigd>.rig,
+#board:not(.busyB) .cell:not(.win):not(.dim):not(.spinning) .sym.S.art.rigd>.rig{animation:idBreathe 3.6s ease-in-out infinite;transform-origin:50% 85%}
+#cells .cell:not(.win):nth-child(5n+2) .sym.rigd>.rig{animation-delay:-.7s}
+#cells .cell:not(.win):nth-child(5n+3) .sym.rigd>.rig{animation-delay:-1.4s}
+#cells .cell:not(.win):nth-child(5n+4) .sym.rigd>.rig{animation-delay:-2.1s}
+#cells .cell:not(.win):nth-child(5n) .sym.rigd>.rig{animation-delay:-2.8s}
+html body .cell.win .sym.art.rigd>.rig{animation:v4WinPunch calc(.32s*var(--gt,1)) cubic-bezier(.3,1.5,.5,1) both;transform-origin:50% 80%}
+
+/* shared bits: contact shadow (only while the symbol is off the ground), sparkle, shine sweep */
+html body .rig .rgSh{opacity:0}
+html body .rig .rgSp{opacity:0;scale:.2}
+html body .rig .rgShine{position:absolute;display:block;opacity:0;-webkit-mask-image:url(sheets/symbols.webp);mask-image:url(sheets/symbols.webp);-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
+	background:linear-gradient(115deg,transparent 0 45%,rgba(255,250,225,.45) 48.5%,rgba(255,255,255,.75) 50%,rgba(255,250,225,.45) 51.5%,transparent 55% 100%) no-repeat;background-size:400% 100%;background-position:100% 0;mix-blend-mode:screen}
+
+/* ---- land: snappy squash and settle (the cell's own drop-in runs on .sym; this is the follow-through) ---- */
+html body .cell.rgLand .rig .rgBody{animation:rgLandB .34s cubic-bezier(.2,.9,.3,1) both}
+html body .cell.rgLand .rig .rgSh{animation:rgShLand .34s ease-out both}
+html body .cell.rgLand .rig .rp.m_bounce,html body .cell.rgLand .rig .rp.m_ribbon,html body .cell.rgLand .rig .rp.m_bow,html body .cell.rgLand .rig .rp.m_sprig{animation:rgFollow .42s cubic-bezier(.2,.9,.3,1) both}
+html body .cell.rgLand .rig .rp.m_swingL,html body .cell.rgLand .rig .rp.m_clip,html body .cell.rgLand .rig .rp.m_cap{animation:rgSwingSmall .42s ease-out both}
+html body .cell.rgLand .rig .rp.m_swingR{animation:rgSwingSmall .42s ease-out both reverse}
+html body .cell.rgLand .rig .rp.m_lets{animation:rgLetsLand .36s cubic-bezier(.3,1.6,.5,1) both}
+@keyframes rgLandB{0%{scale:1.08 .9}38%{scale:.96 1.05}70%{scale:1.015 .99}100%{scale:1 1}}
+@keyframes rgShLand{0%{opacity:.55;scale:1.15 1}100%{opacity:0;scale:1 1}}
+@keyframes rgFollow{0%{translate:0 5%;scale:1.06 .9}40%{translate:0 -3%;scale:.97 1.05}75%{translate:0 .5%}100%{translate:0 0;scale:1 1}}
+@keyframes rgSwingSmall{0%{rotate:0deg}30%{rotate:7deg}60%{rotate:-3deg}85%{rotate:1deg}100%{rotate:0deg}}
+@keyframes rgLetsLand{0%{scale:.9}60%{scale:1.06}100%{scale:1}}
+
+/* ---- win: character-led pop per symbol + shine + detail wiggle (the pop/puff stages stay as they are) ---- */
+html body .cell.win .rig .rgShine{animation:rgShine .7s ease-out .08s both}
+html body .cell.win .rig .rgSh{animation:rgShWin .9s ease-in-out both}
+html body .cell.win .rig .rgSp{animation:rgSpark .62s ease-out calc(.12s + var(--d,0s)) both}
+@keyframes rgShine{0%{opacity:.85;background-position:100% 0}100%{opacity:.85;background-position:0 0}}
+@keyframes rgShWin{0%,100%{opacity:0}30%{opacity:.5;scale:.8 1}55%{opacity:.35;scale:.9 1}}
+@keyframes rgSpark{0%{opacity:0;scale:.2;rotate:0deg}35%{opacity:1;scale:1.1}100%{opacity:0;scale:.5;rotate:90deg}}
+/* bodies (transform-origin = the symbol's pivot, set inline) */
+html body .cell.win .rig.k_H1 .rgBody{animation:rgStar .7s cubic-bezier(.3,1.5,.5,1) both}
+html body .cell.win .rig.k_H2 .rgBody{animation:rgSled .7s cubic-bezier(.3,1.4,.5,1) both}
+html body .cell.win .rig.k_H3 .rgBody{animation:rgSkis .7s cubic-bezier(.3,1.4,.5,1) both}
+html body .cell.win .rig.k_H4 .rgBody,html body .cell.win .rig.k_L5 .rgBody{animation:rgMug .7s cubic-bezier(.3,1.4,.5,1) both}
+html body .cell.win .rig.k_L1 .rgBody{animation:rgBell .8s ease-out both}
+html body .cell.win .rig.k_L2 .rgBody{animation:rgBauble .9s ease-out both}
+html body .cell.win .rig.k_L3 .rgBody{animation:rgGift .7s cubic-bezier(.3,1.5,.5,1) both}
+html body .cell.win .rig.k_L4 .rgBody{animation:rgCane .7s cubic-bezier(.3,1.4,.5,1) both}
+html body .cell.win .rig.k_S .rgBody{animation:rgPass .8s ease-out both}
+html body .cell.win .rig[class*="k_W_R"] .rgBody{animation:rgBust .7s cubic-bezier(.3,1.5,.5,1) both}
+@keyframes rgStar{0%{scale:1;rotate:0deg}25%{scale:.92 1.08;rotate:-6deg}55%{scale:1.1;rotate:5deg}80%{scale:.98;rotate:-1deg}100%{scale:1;rotate:0deg}}
+@keyframes rgSled{0%{translate:0 0;rotate:0deg}25%{translate:-3% 0;rotate:-3deg;scale:1.05 .95}55%{translate:4% -6%;rotate:4deg;scale:.97 1.04}80%{translate:-1% 0;rotate:-1deg}100%{translate:0 0;rotate:0deg;scale:1}}
+@keyframes rgSkis{0%{scale:1}25%{scale:1.08 .9}50%{scale:.94 1.08;translate:0 -5%}78%{scale:1.02 .98;translate:0 0}100%{scale:1}}
+@keyframes rgMug{0%{rotate:0deg;scale:1}25%{rotate:-5deg;scale:1.06 .94}55%{rotate:4deg;scale:.97 1.05;translate:0 -4%}80%{rotate:-1.5deg;translate:0 0}100%{rotate:0deg;scale:1}}
+@keyframes rgBell{0%{rotate:0deg}18%{rotate:-11deg}40%{rotate:9deg}60%{rotate:-5deg}80%{rotate:2deg}100%{rotate:0deg}}
+@keyframes rgBauble{0%{rotate:0deg}20%{rotate:9deg}45%{rotate:-7deg}68%{rotate:4deg}86%{rotate:-1.5deg}100%{rotate:0deg}}
+@keyframes rgGift{0%{scale:1;translate:0 0}22%{scale:1.1 .88}50%{scale:.94 1.08;translate:0 -7%}75%{scale:1.03 .97;translate:0 0}100%{scale:1}}
+@keyframes rgCane{0%{rotate:0deg}25%{rotate:-8deg;scale:1.04 .96}55%{rotate:6deg;scale:.98 1.03}80%{rotate:-2deg}100%{rotate:0deg;scale:1}}
+@keyframes rgPass{0%{rotate:0deg;scale:1}15%{scale:1.06}30%{rotate:-9deg}52%{rotate:7deg}72%{rotate:-3deg}88%{rotate:1deg}100%{rotate:0deg;scale:1}}
+@keyframes rgBust{0%{scale:1;translate:0 0}25%{scale:1.05 .95}55%{scale:.98 1.04;translate:0 -3%}80%{scale:1.01 .99;translate:0 0}100%{scale:1}}
+/* details */
+html body .cell.win .rig .rp.m_twinkle{animation:rgTwinkle .7s cubic-bezier(.3,1.6,.5,1) .06s both}
+html body .cell.win .rig .rp.m_bounce{animation:rgHop .7s cubic-bezier(.3,1.5,.5,1) .1s both}
+html body .cell.win .rig .rp.m_swingL{animation:rgPole .8s ease-out .05s both}
+html body .cell.win .rig .rp.m_swingR{animation:rgPole .8s ease-out .05s both reverse}
+html body .cell.win .rig .rp.m_steam,html body .cell.rgIdle .rig .rp.m_steam{animation:rgSteam 1.1s ease-in-out both}
+html body .cell.win .rig .rp.m_straw{animation:rgStraw .8s ease-out .08s both}
+html body .cell.win .rig .rp.m_bow,html body .cell.win .rig .rp.m_ribbon{animation:rgBow .8s ease-out .08s both}
+html body .cell.win .rig .rp.m_sprig{animation:rgSprig .8s ease-out .12s both}
+html body .cell.win .rig .rp.m_clapper{animation:rgClap .8s ease-out both}
+html body .cell.win .rig .rp.m_cap{animation:rgCap .9s ease-out both}
+html body .cell.win .rig .rp.m_orange{animation:rgOrange .8s ease-out .06s both}
+html body .cell.win .rig .rp.m_clip{animation:rgClip .8s ease-out both}
+html body .cell.win .rig .rp.m_lets{animation:rgLets .6s cubic-bezier(.3,1.6,.5,1) .1s both}
+html body .cell.win .rig .rp.m_blink{animation:rgBlink .26s ease-in-out .42s both}
+html body .cell.wild:not(.win) .rig .rp.m_blink{animation:rgBlink 4.2s ease-in-out infinite;animation-delay:var(--bd,1.3s)}
+@keyframes rgTwinkle{0%{rotate:0deg;scale:1}40%{rotate:72deg;scale:1.2}100%{rotate:144deg;scale:1}}
+@keyframes rgHop{0%{translate:0 0;scale:1}25%{translate:0 2%;scale:1.08 .9}50%{translate:0 -14%;scale:.95 1.07}72%{translate:0 0;scale:1.05 .94}88%{translate:0 -2%;scale:1}100%{translate:0 0}}
+@keyframes rgPole{0%{rotate:0deg}22%{rotate:-14deg}48%{rotate:10deg}70%{rotate:-4deg}100%{rotate:0deg}}
+@keyframes rgSteam{0%{translate:0 0;opacity:1;skew:0deg}35%{translate:0 -8%;skew:8deg 0deg;opacity:.6}70%{translate:0 -3%;skew:-6deg 0deg;opacity:.85}100%{translate:0 0;skew:0deg;opacity:1}}
+@keyframes rgStraw{0%{rotate:0deg}25%{rotate:8deg}55%{rotate:-6deg}80%{rotate:2deg}100%{rotate:0deg}}
+@keyframes rgBow{0%{scale:1}20%{scale:1.12 .88}45%{scale:.93 1.08}70%{scale:1.03 .97}100%{scale:1}}
+@keyframes rgSprig{0%{rotate:0deg}25%{rotate:-10deg}55%{rotate:7deg}80%{rotate:-2deg}100%{rotate:0deg}}
+@keyframes rgClap{0%,100%{translate:0 0}15%{translate:-14% 0}35%{translate:12% 0}55%{translate:-7% 0}75%{translate:3% 0}}
+@keyframes rgCap{0%{rotate:0deg}20%{rotate:-6deg}45%{rotate:5deg}70%{rotate:-2deg}100%{rotate:0deg}}
+@keyframes rgOrange{0%{rotate:0deg;translate:0 0}30%{rotate:-12deg;translate:-2% -3%}60%{rotate:6deg;translate:0 0}100%{rotate:0deg}}
+@keyframes rgClip{0%{rotate:0deg}30%{rotate:10deg}55%{rotate:-6deg}80%{rotate:2deg}100%{rotate:0deg}}
+@keyframes rgLets{0%{scale:1}35%{scale:1.16 1.1;translate:0 -3%}65%{scale:.98 1.02;translate:0 0}100%{scale:1}}
+@keyframes rgBlink{0%,100%{scale:1 1}45%,55%{scale:1 .12}}
+@keyframes rgBlinkIdle{0%,93%,100%{scale:1 1}96%{scale:1 .12}}
+html body .cell.wild:not(.win) .rig .rp.m_blink{animation-name:rgBlinkIdle}
+
+/* ---- anticipation: scatters / wilds on the board lean in while a reel teases ---- */
+body.rgAnt #cells .cell:not(.spinning) .sym.S.rigd .rgBody,body.rgAnt #cells .cell:not(.spinning) .sym.W.rigd .rgBody{animation:rgAnt .5s ease-in-out infinite alternate}
+body.rgAnt #cells .cell:not(.spinning) .sym.S.rigd .rp.m_clip{animation:rgClip .5s ease-in-out infinite}
+@keyframes rgAnt{0%{scale:1;translate:0 0}100%{scale:1.06;translate:0 -2%}}
+@media (prefers-reduced-motion:reduce){html body .rig .rgBody,html body .rig .rp,html body .sym.rigd>.rig{animation:none!important}}

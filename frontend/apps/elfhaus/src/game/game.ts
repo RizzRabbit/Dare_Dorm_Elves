@@ -36,6 +36,7 @@ import { setBg, warmBg } from './bg';
 import { placeAlcove } from './alcove';
 import { mkCell, mkPlace, fitArmTag } from './mkboard';
 import { initLoader, preloadArt, track, loaderReady, hideLoader } from './loader';
+import { symArtReady } from './symrig';
 import { introLayout } from './introPixi';
 import { fitStage, toStage, ST } from './stage';
 import { fitStrip, initStripFit } from './stripfit';
@@ -357,7 +358,7 @@ async function playReplay() {
 // 3-elf groups, Whiteout = the 5-wide group; Secret Santa is a wrapped gift with a "?" tag.
 // v3.6: Double / Triple / Elves Gone Wild use the approved stacks r8d stills (scripts/gen-stack-stills.py), not the old
 // static WM2 / WM3 / WM5 scenes.
-const CARD_ART: Partial<Record<ModeKey, string>> = { dare: ART.W_R1_card || ART.W_R1 || '', double_dare: 'assets/stacks/still/WM2_R1-2.webp', triple_dare: 'assets/stacks/still/WM3_R1-3.webp', egw: 'assets/stacks/still/WM5_R1-5.webp' };
+const CARD_ART: Partial<Record<ModeKey, string>> = { get dare() { return ART.W_R1_card || ART.W_R1 || ''; }, double_dare: 'assets/stacks/still/WM2_R1-2.webp', triple_dare: 'assets/stacks/still/WM3_R1-3.webp', egw: 'assets/stacks/still/WM5_R1-5.webp' };
 // Secret Santa card: the wrapped Gift symbol art on cranberry with a gold "?" tag (approved symbol art + code only).
 const MYSTERY_CARD = () =>
 	`<span class="bMystFan" aria-hidden="true">${ART.L3 ? `<img class="gift" src="${ART.L3}" alt="" draggable="false">` : ''}` +
@@ -666,6 +667,7 @@ export async function initGame() {
 	setLocale(url.lang);
 	initAudio(); initVoiceIdle(); // reads the sound switches; audio itself starts on the first tap
 	initLoader(); preloadArt();
+	await track(symArtReady);   // flat symbol art for the paytable / cards / flips, rebuilt from the symbols sheet
 	// any tap lands a running count-up on its final value (the big-win banner handles its own taps)
 	startShimmer(); wireTapFx();
 	// big-win banner moments: burst + confetti on open (no star glints on the tier titles), the character layer on the top math win level

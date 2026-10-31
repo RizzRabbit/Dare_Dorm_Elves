@@ -1,7 +1,7 @@
 /* ==== Approved board + HUD (James 2026-10-28, mockup /workspace/elfhaus-mockup) ====
    Positions come from src/game/mkboard.ts (inline, stage px, the mockup's own layout); this file is the look.
    Loaded last so it outranks the B2 alcove + grid-HUD layers in elfhaus.css / resub-fix.css. */
-@font-face{font-family:"Montserrat";src:url(fonts/Montserrat-VF.ttf) format("truetype");font-weight:100 900;font-display:block}
+@font-face{font-family:"Montserrat";src:url(fonts/Montserrat-VF.woff2) format("woff2");font-weight:100 900;font-display:block}
 
 /* the old stage arch / alcove is gone */
 body.mk [id^="alcove"]{display:none!important}

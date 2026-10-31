@@ -13,6 +13,7 @@ import { ctex, ease, clamp, seg, lerp, softBlob, glowDot } from './scene/util';
 import { loadTex } from './scene/load';
 import { rig, roxyAt, sceneHold } from './scene/scene';
 import ARTG from './art.generated.json';
+import { symArtReady } from './symrig';
 const TITLE = ARTG.logo || 'art/logo.webp';
 import { EGW_STACK_X } from './config';
 
@@ -26,9 +27,9 @@ export const T = { cards: [0.0, 0.42], doorL: [0.40, 1.30], doorR: [0.50, 1.40],
   cam: [1.55, 2.17], drop: [1.99, 2.37], logo: [2.15, 2.45], hud: [2.17, 2.47], btn: [2.23, 2.55], face: [3.01, 3.13], end: 3.25 };
 // the build's own feature cards (same titles + lines as the old splash), restyled black / gold
 const CARDS = [
-  { key: 'modes', art: ARTG.S || 'art/S.webp', title: '4 Bonus Modes',
+  { key: 'modes', art: 'S', title: '4 Bonus Modes',
     line: '3, 4 or 5 Ski Passes start Bunny Slope, Black Diamond or Double Black free spins. A Secret Santa spin always lands 2 Ski Passes and the other reels reveal the result.' },
-  { key: 'sticky', art: ARTG.W_R2 || 'art/W_R2.webp', title: 'Sticky Wilds',
+  { key: 'sticky', art: 'W_R2', title: 'Sticky Wilds',
     line: 'In Black Diamond and Double Black the wilds lock in place and keep growing every free spin. Double Black guarantees at least one full-reel wild.' },
   { key: 'egw', art: 'assets/stacks/still/WM2_R1-2.webp', title: 'Whiteout',
     line: `One supercharged spin: 2 to 5 reels land wilds that grow into full-reel wilds (x${EGW_STACK_X} each), then respins. Full wild reels side by side multiply.` },
@@ -467,7 +468,8 @@ export async function initIntro(progress: () => number): Promise<boolean> {
     await a.init({ canvas: cv, width: ST.w, height: ST.h, resolution: Math.min(2, Math.max(0.5, ST.s * (window.devicePixelRatio || 1))), autoDensity: false,
       backgroundAlpha: 0, antialias: true, preference: 'webgl', sharedTicker: false, hello: false, autoStart: false });
     app = a; size();
-    const [title, ...cardT] = await Promise.all([loadTex(TITLE), ...CARDS.map((c) => loadTex(c.art))]);
+    await symArtReady;   // S / W_R2 are rebuilt from the symbols sheet (symrig.ts)
+    const [title, ...cardT] = await Promise.all([loadTex(TITLE), ...CARDS.map((c) => loadTex(c.art.includes('/') ? c.art : (ARTG as Record<string, string | null>)[c.art] || ''))]);
     tex.title = title; tex.sconce = lanternTex();
     CARDS.forEach((c, i) => { tex['card_' + c.key] = cardT[i]; try { cardT[i].source.autoGenerateMipmaps = true; cardT[i].source.updateMipmaps(); } catch {} });
     try { title.source.autoGenerateMipmaps = true; title.source.updateMipmaps(); } catch {}
