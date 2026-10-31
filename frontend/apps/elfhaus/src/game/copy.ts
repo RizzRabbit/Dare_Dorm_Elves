@@ -48,7 +48,8 @@ export function confirmCopy(m: CopyMode, c: CopyCtx, name: string, amount: strin
 		amount,
 		per: c.social ? 'PER PLAY' : 'PER SPIN',
 		x: c.social ? `${x} play` : `${x} bet`,
-		note: m === 'ante' ? 'Stays on for every spin until you turn it off.' : 'Plays this bonus on your next spin (or each spin of an autoplay run), then turns off.',
+		// v21 (#31): every mode stays armed (persistent arming, APPROVED_STATE 2026-10-30 01:37 CDT); the note says so with the per-spin amount
+		note: 'Stays on for every spin until you turn it off. ' + (c.social ? `Each spin is played for ${amount} (${x} play).` : `Each spin costs ${amount} (${x} bet).`),
 		button: 'CONFIRM',
 		hint: 'Tap anywhere to cancel',
 	};
@@ -60,13 +61,26 @@ export const costHeader = (social: boolean) => (social ? 'Play for' : 'Cost');
 /** Rules "Controls": the bonus-menu sentence. anteX = '3x'. */
 export function controlsBonus(c: CopyCtx) {
 	return `The bonus button opens the bonus menu: tap Ante (${c.anteX}) or a bonus to see what it does, then confirm it to switch it on. ` +
-		`Ante stays on until you switch it off; a bonus mode is played on the next spin (or every spin of an autoplay run) and then turns itself off. Tap the tag above the spin button to turn a mode off early; ` +
+		`Ante and bonus modes stay on for every spin until you switch them off; tap the tag above the spin button to turn one off; ` +
 		(c.social ? `each spin is played for that mode's amount.` : `each spin costs that mode's price.`);
 }
 export const controlsTurbo = () => ' Turbo (the lightning button, or the switch in the bonus menu) speeds up animations.';
 export const controlsAuto = (c: CopyCtx) =>
-	' Autoplay runs 10 to 1,000 spins with optional stops (net loss, single win, balance increase, feature trigger); net loss and gain count ' +
-	(c.social ? "each spin's full play amount." : "each spin's full cost.") + ' It also stops on any error or low balance; press the spin button to stop it.';
+	' Autoplay runs 10 to 1,000 spins. AUTO-PLAY BONUS is off by default: when off, autoplay waits for your tap at the start of a bonus and at its total win;' +
+	' when on, it plays through both by itself after a short pause. ADVANCED opens the optional stops: stop on loss, stop on single win, stop on balance increase' +
+	' (leave a box empty for off) and stop on feature (a bonus triggered by the reels, or a Mystery Spin that reveals a bonus); net loss and gain count ' +
+	(c.social ? "each spin's full play amount." : "each spin's full cost.") + ' It also stops on any error or low balance; press the spin button or the autoplay button to stop it.';
+/** v21 (#235): the menu's Mute all row. */
+export const controlsSound = () =>
+	' Mute all (in the menu) silences music, sound effects and voices at once and keeps your volume settings; tap it again (Unmute) to bring the sound back. The choice is remembered on this device.';
+/** v21 (#24/#26): Stake payouts are in 0.1x steps; the math rounds each round's total DOWN (finish(), PAYOUT_STEP = 10 centi-x; step wins
+ *  are multiples of 0.05x, so at most 0.05x comes off). The published RTP and max win come from the rounded books. */
+export const roundingNote = (social: boolean) => social
+	? "Each round's total win is rounded down to the nearest 0.1x the play amount (never by more than 0.05x). The RTP and max win shown already include this."
+	: "Each round's total win is rounded down to the nearest 0.1x the bet (never by more than 0.05x). The RTP and max win shown already include this.";
+export const roundingShort = (social: boolean) => social
+	? "A round's total win is rounded down to the nearest 0.1x the play amount."
+	: "A round's total win is rounded down to the nearest 0.1x the bet.";
 /** v3.16 (#235): Menu, Info, Music / Sound, closing panels, the intro skip box and replay PLAY. */
 export const controlsUi = () =>
 	' The menu button opens Info (these rules) and the Music and Sound volume sliders. Close a panel with the small X in its top corner, Esc or a tap outside it; drag or swipe to scroll it.' +

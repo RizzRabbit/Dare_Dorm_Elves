@@ -12,7 +12,7 @@ import {
 	ANTE_COST, CONFIRM_ABOVE_X, fmtX, BUY_MODES, GAME_ID, LINES, MAX_WIN_X, MODES, MODE_LABEL, MYSTERY_ODDS, PAYTABLE,
 	SPIN_CAP, START_FS, EPIC_STACK_X, EPIC_GROW_STEP, GROW_STEP, GUARANTEE, MAX_RESPINS, RETRIGGER, EGW_STACK_X, SYMBOL_NAMES, VERSION, isProvisional, oneIn, type ModeKey,
 } from './config';
-import { confirmCopy, resumeCopy, controlsAuto, controlsBonus, controlsTurbo, controlsUi, costHeader, errorText, errorTitle, modeDesc, type CopyCtx, type CopyMode } from './copy';
+import { roundingNote, roundingShort, controlsSound, confirmCopy, resumeCopy, controlsAuto, controlsBonus, controlsTurbo, controlsUi, costHeader, errorText, errorTitle, modeDesc, type CopyCtx, type CopyMode } from './copy';
 import { registerPanel, openPanel, closePanel, isOpen, anyOpen, measurePanel, setClosable } from './panels';
 import { money, moneyWin, mult, setCurrency, setLocale, isSocialCurrency, amountStr } from './format';
 import { skipCounts, setAmount } from './countup';
@@ -71,7 +71,7 @@ const modeCost = (m: ModeKey) => (m === 'ante' ? ANTE_COST : MODES[m]?.cost ?? 1
 let armed: ModeKey | null = null;
 const spinMode = (): ModeKey => armed ?? (S.ante ? 'ante' : 'base');
 // re-audit M5: the tag spells the full mode name ("DOUBLE" alone was ambiguous)
-const SHORT: Partial<Record<ModeKey, string>> = { ante: 'ANTE BET', dare: 'DARE', double_dare: 'DOUBLE DARE', triple_dare: 'TRIPLE DARE', mystery: 'MYSTERY SPIN', egw: 'ELVES GONE WILD' };
+const SHORT: Partial<Record<ModeKey, string>> = { ante: 'ANTE', dare: 'DARE', double_dare: 'DOUBLE DARE', triple_dare: 'TRIPLE DARE', mystery: 'MYSTERY SPIN', egw: 'ELVES GONE WILD' };
 /** v3.17 armTag abbreviations when the full name doesn't fit the slim pill next to SPIN. */
 const ABBR: Partial<Record<ModeKey, string>> = { ante: 'ANTE', dare: 'DARE', double_dare: '2X DARE', triple_dare: '3X DARE', mystery: 'MYSTERY', egw: 'EGW' };
 function setArm(m: ModeKey | null, ante = false) {
@@ -102,7 +102,7 @@ function replayLabel() {
 function placeReplayBar(portrait: boolean) {
 	if (!S.replay) return;
 	const b = $('#replayBar') as HTMLElement, m = $('#replayMode');
-	m.textContent = portrait ? `${MODE_LABEL[url.mode as ModeKey] || url.mode} · ${money(bet() * replayCost)}` : replayLabel();
+	m.textContent = portrait ? `${MODE_LABEL[url.mode as ModeKey] || url.mode} · ${money(bet())} × ${mult(replayCost)}` : replayLabel();   // v21 (#174): portrait shows the bet x multiplier too
 	if (!portrait) { b.style.top = ''; b.style.left = ''; return; }
 	const r = toStage($('#turboBtn').getBoundingClientRect());
 	b.style.top = (r.top + r.height / 2) + 'px'; b.style.left = (r.right + 10) + 'px';
@@ -474,12 +474,13 @@ function buildRules() {
 <p>${(['ante', ...BUY_MODES] as ModeKey[]).map((m) => `<b>${MODE_LABEL[m]}</b> (${mult(modeCost(m))}): ${modeDesc(m as CopyMode, cc)}`).join('<br>')}</p>
 <table><tr><th>Mode</th><th>${costHeader(isSocial())}</th><th>RTP</th><th>Max win</th></tr>${modeRows}</table>
 <p>Max win is ${MAX_WIN_X.toLocaleString('en-US')}${xb} in every mode. When it is reached, the round ends immediately and awards the max win.${isProvisional() ? ' RTP figures are pending final math.' : ''}</p>
+<p>${roundingNote(isSocial())}</p>
 <h3>${isSocial() ? 'Win table' : 'Paytable'}</h3>
 <table><tr><th>Symbol</th><th>3</th><th>4</th><th>5</th></tr>${pt}</table>
-<p>Values shown in ${xb} for a full line.</p>
+<p>Values shown in ${xb} for a full line. ${roundingShort(isSocial())}</p>
 <h3>${isSocial() || S.replay ? 'Win lines' : 'Paylines'}</h3><div class="plGrid">${lines}</div><p>20 fixed lines, read left to right from the leftmost reel.</p>
 <h3>Controls</h3>
-<p>Spin with the round button${S.jur.disabledSpacebar ? '' : ' or the Space bar'}. − and + change the ${isSocial() ? 'play amount' : 'bet'}. ${controlsBonus(cc)}${S.jur.disabledTurbo ? '' : controlsTurbo()}${S.jur.disabledAutoplay ? '' : controlsAuto(cc)}${controlsUi()} Replays never change your balance.</p>
+<p>Spin with the round button${S.jur.disabledSpacebar ? '' : ' or the Space bar'}. − and + change the ${isSocial() ? 'play amount' : 'bet'}. ${controlsBonus(cc)}${S.jur.disabledTurbo ? '' : controlsTurbo()}${S.jur.disabledAutoplay ? '' : controlsAuto(cc)}${controlsSound()}${controlsUi()} Replays never change your balance.</p>
 <p>All characters are adults. Elfhaus is a Rizzin Games production.</p>
 <h3>Disclaimer</h3><p class="disc">${DISCLAIMER}</p>`;
 }
