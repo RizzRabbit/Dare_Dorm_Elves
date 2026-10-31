@@ -211,6 +211,14 @@ export function stackReactSkip() { [...reacts.keys()].forEach(reactStop); }
 /** Play reel `reel` (0-based)'s face reaction on its settled full-reel overlay. Resolves when it ends or is skipped. */
 export function stackReact(ov: HTMLElement, reel: number): Promise<void> {
 	if (document.body.classList.contains('turbo') || !ov.isConnected || reacts.has(ov)) return Promise.resolve();
+	// Chalet cut-out stacks (no react sheets shipped): a one-shot CSS cheer on the elf layers instead of a sheet fetch.
+	if (ov.querySelector('.wart.chaletStk')) {
+		ov.classList.remove('stkReact'); void ov.offsetWidth; ov.classList.add('stkReact'); voice('stack', { reel });
+		const st: { an: Anim | null; id: string; done: () => void; p?: Promise<void> } = { an: null, id: 'css', done: () => {} };
+		st.p = new Promise<void>((res) => { const t = setTimeout(() => st.done(), 640);
+			st.done = () => { clearTimeout(t); ov.classList.remove('stkReact'); reacts.delete(ov); res(); }; });
+		reacts.set(ov, st); return st.p;
+	}
 	const id = `stack_react_R${reel + 1}`;
 	let st0: { p?: Promise<void> } = {};
 	const p = new Promise<void>((res) => {
