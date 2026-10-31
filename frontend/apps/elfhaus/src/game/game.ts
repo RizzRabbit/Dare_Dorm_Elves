@@ -363,7 +363,7 @@ async function playReplay() {
 const CARD_ART: Partial<Record<ModeKey, string>> = { dare: 'assets/cards/card_dare.webp', double_dare: 'assets/cards/card_double_dare.webp', triple_dare: 'assets/cards/card_triple_dare.webp', egw: 'assets/cards/card_egw.webp' };
 // Secret Santa card: the wrapped Gift symbol art on cranberry with a gold "?" tag (approved symbol art + code only).
 const MYSTERY_CARD = () =>
-	`<span class="bMystFan" aria-hidden="true">${ART.L3 ? `<img class="gift" src="${ART.L3}" alt="" draggable="false">` : ''}` +
+	`<span class="bMystFan" aria-hidden="true">${ART.L3_flat || ART.L3 ? `<img class="gift" src="${ART.L3_flat || ART.L3}" alt="" draggable="false">` : ''}` +
 	`<b class="bMystQ"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17"/><text x="20" y="28.5" text-anchor="middle">?</text></svg></b></span>`;
 function buildBuy() {
 	const off = !!S.jur.disabledBuyFeature;

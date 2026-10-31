@@ -13,12 +13,19 @@ type Part = { f: string; cls: string; pivot: number[]; hide?: boolean }; // hide
 type Rig = { src: number[]; pivot: number[]; parts: Part[]; spark: number[][]; glow: boolean };
 const RIG = RIG_JSON as unknown as Record<string, Rig>;
 export const hasRig = (key: string) => !!RIG[key];
-/** Regular symbols (H / L / S) sit on a tier-coloured framed tile from the sheet (_fr_hi / _fr_lo / _fr_sp, the same
- * ink rim + gold ring + banded panel as the wild cards); the wilds carry their own frame in their art. */
+/** Every cell is assembled from shared sheet parts (build_symrig.py + tileparts.py), never from baked per-symbol tiles:
+ *  tile colour (_tile_hi / _tile_lo / _tile_sp) -> recess (_recess, 9-slice) -> bevelled gold border (_border / _border_sp,
+ *  9-slice) -> symbol (its own layers) with a drop shadow + top rim light from its own alpha (CSS / canvas) -> glow / FX.
+ *  Bust wilds: their card -> recess -> border -> the bust (fig, its own pixels lifted) -> the shared raised WILD (_wild). */
 export const frameTier = (key: string) => (key[0] === 'H' ? 'hi' : key[0] === 'L' ? 'lo' : key === 'S' ? 'sp' : '');
-/** The symbol inside its frame: the rig box is inset by FR_IN on each side (~85% of the panel, chalet.css .sym.fr). */
+/** The symbol inside its tile: the rig box is inset by FR_IN on each side (~85% of the panel, chalet.css .sym.fr). */
 export const FR_IN = 0.095;
-export function tileHTML(key: string) { const t = frameTier(key); return t ? `<i class="rp f__fr_${t} symFr"></i>` : ''; }
+/** 9-slice geometry of _border / _recess: 256 px pieces, 52 px corners (= 0.203 of a cell). */
+export const NINE = { size: 256, slice: 52 };
+const edgeHTML = (sp = false) => `<i class="tRec"></i><i class="tBd${sp ? ' sp' : ''}"></i>`;
+export function tileHTML(key: string) { const t = frameTier(key); return t ? `<i class="rp f__tile_${t} tTile"></i>${edgeHTML(t === 'sp')}` : ''; }
+/** Recess + border for a stacked / merged wild overlay (any size; 9-slice). */
+export const ovEdgeHTML = () => edgeHTML();
 const pc = (v: number, d: number) => ((v / d) * 100).toFixed(2) + '%';
 
 /** The symbol's win glow (1/4-scale sheet frame, scaled to its source box); n layers (wilds draw it twice). */
@@ -33,7 +40,8 @@ export function rigHTML(key: string, still = false) {
 	if (still) return `<i class="rig still k_${key}"><i class="rgBody"><i class="rp f_${key}"></i>${parts}</i></i>`;
 	const sparks = r.spark.map(([x, y, s], i) => `<i class="rp f__spark rgSp" style="left:${pc(x - 48 * s, W)};top:${pc(y - 48 * s, H)};width:${pc(96 * s, W)};height:${pc(96 * s, H)};--d:${i * 0.09}s"></i>`).join('');
 	const sh = `<i class="rp f__shadow rgSh" style="left:${pc(r.pivot[0] - 150, W)};top:${pc(Math.min(H - 40, r.pivot[1] < H * 0.6 ? H * 0.86 : r.pivot[1]) - 22, H)};width:${pc(300, W)};height:${pc(66, H)}"></i>`;
-	return `<i class="rig k_${key}">${sh}<i class="rgBody" style="${org}"><i class="rp f_${key}"></i>${parts}<i class="rgShine s_${key}"></i></i>${sparks}</i>`;
+	const edge = key.startsWith('W_') ? edgeHTML() : '';   // bust card: recess + border over the card, under the bust
+	return `<i class="rig k_${key}">${sh}<i class="rgBody" style="${org}"><i class="rp f_${key}"></i>${edge}${parts}<i class="rgShine s_${key}"></i></i>${sparks}</i>`;
 }
 /** Land hook (reels.ts landMini): one snappy squash-and-settle with follow-through on the details. */
 export function rigLand(cell: HTMLElement | null) {
@@ -52,22 +60,82 @@ type Fr = { frame: { x: number; y: number; w: number; h: number }; spriteSourceS
 const FRAMES = (SHEET_JSON as unknown as { frames: Record<string, Fr> }).frames;
 export const SHEET_URL = 'sheets/symbols.webp';
 const CARD_ALIASES: Record<string, string[]> = { W_R1: ['W_R1_card'], W_R2: ['W_R2_card'] };
-function bake(page: HTMLImageElement, key: string): Promise<string | null> {
-	const r = RIG[key], b = FRAMES[key]; if (!r || !b) return Promise.resolve(null);
-	const cv = document.createElement('canvas'); cv.width = b.sourceSize.w; cv.height = b.sourceSize.h;
-	const g = cv.getContext('2d'); if (!g) return Promise.resolve(null);
-	for (const n of [key, ...r.parts.filter((p) => !p.hide).map((p) => p.f)]) {
-		const f = FRAMES[n]; if (!f) continue;
-		g.drawImage(page, f.frame.x, f.frame.y, f.frame.w, f.frame.h, f.spriteSourceSize.x, f.spriteSourceSize.y, f.spriteSourceSize.w, f.spriteSourceSize.h);
+const cv = (w: number, h: number) => { const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(h)); return c; };
+const blobURL = (c: HTMLCanvasElement) => new Promise<string | null>((res) => c.toBlob((bl) => res(bl ? URL.createObjectURL(bl) : null), 'image/png'));
+function drawFr(g: CanvasRenderingContext2D, page: HTMLImageElement, n: string, x: number, y: number, k: number) {
+	const f = FRAMES[n]; if (!f) return;
+	g.drawImage(page, f.frame.x, f.frame.y, f.frame.w, f.frame.h, x + f.spriteSourceSize.x * k, y + f.spriteSourceSize.y * k, f.spriteSourceSize.w * k, f.spriteSourceSize.h * k);
+}
+/** One 9-slice piece from the sheet into a w x h box (corner size bw). */
+function drawNine(g: CanvasRenderingContext2D, page: HTMLImageElement, n: string, x: number, y: number, w: number, h: number, bw: number) {
+	const f = FRAMES[n]; if (!f) return; const { x: fx, y: fy, w: fw, h: fh } = f.frame, s = NINE.slice;
+	const sx = [0, s, fw - s, fw], sy = [0, s, fh - s, fh], dx = [0, bw, w - bw, w], dy = [0, bw, h - bw, h];
+	for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) {
+		const sw = sx[i + 1] - sx[i], sh = sy[j + 1] - sy[j], dw = dx[i + 1] - dx[i], dh = dy[j + 1] - dy[j];
+		if (sw > 0 && sh > 0 && dw > 0 && dh > 0) g.drawImage(page, fx + sx[i], fy + sy[j], sw, sh, x + dx[i], y + dy[j], dw, dh);
 	}
-	return new Promise((res) => cv.toBlob((bl) => res(bl ? URL.createObjectURL(bl) : null), 'image/png'));
+}
+/** A layer lifted off the tile: drop shadow down-right, then a thin top rim light (both from its own alpha). */
+function drawLifted(g: CanvasRenderingContext2D, src: CanvasImageSource, x: number, y: number, w: number, h: number, cell: number, lets = false) {
+	g.save();
+	if (lets) { g.shadowColor = 'rgba(20,4,8,.6)'; g.shadowOffsetX = 0; g.shadowOffsetY = cell * 0.012; g.shadowBlur = cell * 0.008; g.drawImage(src, x, y, w, h); g.restore(); return; }
+	g.shadowColor = 'rgba(18,2,8,.55)'; g.shadowOffsetX = cell * 0.02; g.shadowOffsetY = cell * 0.028; g.shadowBlur = cell * 0.016;
+	g.drawImage(src, x, y, w, h);
+	g.shadowColor = 'rgba(255,240,205,.8)'; g.shadowOffsetX = 0; g.shadowOffsetY = -Math.max(1, cell * 0.008); g.shadowBlur = 0;
+	g.drawImage(src, x, y, w, h); g.restore();
+}
+/** The symbol alone (its layers at rest == the approved art), source-box sized. */
+function flat(page: HTMLImageElement, key: string, only?: (p: Part) => boolean) {
+	const r = RIG[key], b = FRAMES[key]; if (!r || !b) return null;
+	const c = cv(b.sourceSize.w, b.sourceSize.h), g = c.getContext('2d'); if (!g) return null;
+	if (!only) drawFr(g, page, key, 0, 0, 1);
+	for (const p of r.parts) if (!p.hide && (!only || only(p))) drawFr(g, page, p.f, 0, 0, 1);
+	return c;
+}
+/** A whole cell at `size` px, from the shared parts (strips, paytable, intro and flip cards). */
+function composeCell(page: HTMLImageElement, key: string, size: number) {
+	const r = RIG[key], b = FRAMES[key]; if (!r || !b) return null;
+	const c = cv(size, size), g = c.getContext('2d'); if (!g) return null;
+	const t = frameTier(key), bw = size * (NINE.slice / NINE.size);
+	if (t) {
+		const tf = FRAMES['_tile_' + t]; if (tf) g.drawImage(page, tf.frame.x, tf.frame.y, tf.frame.w, tf.frame.h, 0, 0, size, size);
+		drawNine(g, page, '_recess', 0, 0, size, size, bw); drawNine(g, page, t === 'sp' ? '_border_sp' : '_border', 0, 0, size, size, bw);
+		const sym = flat(page, key); if (!sym) return c;
+		const box = size * (1 - 2 * FR_IN), k = box / Math.max(sym.width, sym.height);
+		drawLifted(g, sym, size * FR_IN + (box - sym.width * k) / 2, size * FR_IN + (box - sym.height * k) / 2, sym.width * k, sym.height * k, size);
+		return c;
+	}
+	// bust wild: card, recess, border, the lifted bust, the other details, the raised WILD
+	const k = size / Math.max(b.sourceSize.w, b.sourceSize.h);
+	drawFr(g, page, key, 0, 0, k);
+	drawNine(g, page, '_recess', 0, 0, size, size, bw); drawNine(g, page, '_border', 0, 0, size, size, bw);
+	const fig = flat(page, key, (p) => p.cls === 'fig'), det = flat(page, key, (p) => p.cls !== 'fig' && p.cls !== 'lets'), lets = flat(page, key, (p) => p.cls === 'lets');
+	if (fig) drawLifted(g, fig, 0, 0, size, size, size);
+	if (det) g.drawImage(det, 0, 0, size, size);
+	if (lets) drawLifted(g, lets, 0, 0, size, size, size, true);
+	return c;
+}
+/** The 9-slice pieces as their own images for CSS border-image (any cell, stack or merged size). */
+async function bakeEdges(page: HTMLImageElement) {
+	const root = document.documentElement.style;
+	for (const [n, v] of [['_recess', '--tRec'], ['_border', '--tBd'], ['_border_sp', '--tBdSp']] as const) {
+		const f = FRAMES[n]; if (!f) continue;
+		const c = cv(f.frame.w, f.frame.h), g = c.getContext('2d'); if (!g) continue;
+		g.drawImage(page, f.frame.x, f.frame.y, f.frame.w, f.frame.h, 0, 0, f.frame.w, f.frame.h);
+		const u = await blobURL(c); if (u) root.setProperty(v, `url(${u})`);
+	}
 }
 async function bakeAll() {
 	const ART = ART_JSON as Record<string, string | null>;
 	try {
 		const page = new Image(); page.src = SHEET_URL; await page.decode();
+		await bakeEdges(page);
 		await Promise.all(Object.keys(RIG).map(async (k) => {
-			const u = await bake(page, k); if (!u) return;
+			const b = FRAMES[k]; if (!b) return;
+			const cell = composeCell(page, k, Math.max(b.sourceSize.w, b.sourceSize.h, 256)), u = cell && (await blobURL(cell));
+			const f = flat(page, k), uf = f && (await blobURL(f));
+			if (uf) ART[k + '_flat'] = uf;   // the bare symbol (Secret Santa card gift)
+			if (!u) return;
 			ART[k] = u; for (const c of CARD_ALIASES[k] || []) ART[c] = u;
 		}));
 		await bakeStrips(page, ART);
@@ -79,17 +147,7 @@ async function bakeAll() {
 const STRIP_T = 144;
 const STRIPS: Record<string, string[]> = { reel_stripA: ['H1', 'L3', 'H4', 'L1', 'W_R1', 'L5'], reel_stripB: ['L2', 'H3', 'L4', 'H2', 'S', 'H1'] };
 function drawKey(g: CanvasRenderingContext2D, page: HTMLImageElement, key: string, x: number, y: number, size: number) {
-	const r = RIG[key], b = FRAMES[key]; if (!r || !b) return;
-	const fr = FRAMES['_fr_' + frameTier(key)];
-	if (fr) { // the tile first (full box), then the symbol inset inside it, as on the cells
-		g.drawImage(page, fr.frame.x, fr.frame.y, fr.frame.w, fr.frame.h, x, y, size, size);
-		const d = size * FR_IN; x += d; y += d; size -= 2 * d;
-	}
-	const k = size / Math.max(b.sourceSize.w, b.sourceSize.h), ox = x + (size - b.sourceSize.w * k) / 2, oy = y + (size - b.sourceSize.h * k) / 2;
-	for (const n of [key, ...r.parts.filter((p) => !p.hide).map((p) => p.f)]) {
-		const f = FRAMES[n]; if (!f) continue;
-		g.drawImage(page, f.frame.x, f.frame.y, f.frame.w, f.frame.h, ox + f.spriteSourceSize.x * k, oy + f.spriteSourceSize.y * k, f.spriteSourceSize.w * k, f.spriteSourceSize.h * k);
-	}
+	const c = composeCell(page, key, size * 2); if (c) g.drawImage(c, x, y, size, size);
 }
 async function bakeStrips(page: HTMLImageElement, ART: Record<string, string | null>) {
 	const T = STRIP_T, pad = Math.round(T * 0.04);

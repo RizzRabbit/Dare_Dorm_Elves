@@ -331,6 +331,14 @@
   ],
   "parts": [
    {
+    "f": "W_R1_fig",
+    "cls": "fig",
+    "pivot": [
+     192,
+     300
+    ]
+   },
+   {
     "f": "W_R1_hair",
     "cls": "hair",
     "pivot": [
@@ -339,7 +347,7 @@
     ]
    },
    {
-    "f": "W_R1_lets",
+    "f": "_wild",
     "cls": "lets",
     "pivot": [
      192,
@@ -387,6 +395,14 @@
   ],
   "parts": [
    {
+    "f": "W_R2_fig",
+    "cls": "fig",
+    "pivot": [
+     192,
+     300
+    ]
+   },
+   {
     "f": "W_R2_hair",
     "cls": "hair",
     "pivot": [
@@ -395,7 +411,7 @@
     ]
    },
    {
-    "f": "W_R2_lets",
+    "f": "_wild",
     "cls": "lets",
     "pivot": [
      192,
@@ -443,6 +459,14 @@
   ],
   "parts": [
    {
+    "f": "W_R3_fig",
+    "cls": "fig",
+    "pivot": [
+     192,
+     300
+    ]
+   },
+   {
     "f": "W_R3_hair",
     "cls": "hair",
     "pivot": [
@@ -451,7 +475,7 @@
     ]
    },
    {
-    "f": "W_R3_lets",
+    "f": "_wild",
     "cls": "lets",
     "pivot": [
      192,
@@ -490,6 +514,14 @@
   ],
   "parts": [
    {
+    "f": "W_R4_fig",
+    "cls": "fig",
+    "pivot": [
+     192,
+     300
+    ]
+   },
+   {
     "f": "W_R4_hair",
     "cls": "hair",
     "pivot": [
@@ -498,7 +530,7 @@
     ]
    },
    {
-    "f": "W_R4_lets",
+    "f": "_wild",
     "cls": "lets",
     "pivot": [
      192,
@@ -546,6 +578,14 @@
   ],
   "parts": [
    {
+    "f": "W_R5_fig",
+    "cls": "fig",
+    "pivot": [
+     192,
+     300
+    ]
+   },
+   {
     "f": "W_R5_hair",
     "cls": "hair",
     "pivot": [
@@ -554,7 +594,7 @@
     ]
    },
    {
-    "f": "W_R5_lets",
+    "f": "_wild",
     "cls": "lets",
     "pivot": [
      192,

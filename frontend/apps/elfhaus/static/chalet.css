@@ -426,10 +426,32 @@ html body .cell.wild:not(.win) .rig[class*="k_W_R"] .rp.m_smile{animation:rgWSmi
 .cell .puffFx>i.pfP{position:absolute;left:50%;top:50%;display:block;opacity:0}
 .cell .puffFx>i.pf_flash,.cell .puffFx>i.pf_ring{z-index:-1}
 
-/* ---- item 8: regular symbols on tier-coloured framed tiles (sheet frames _fr_hi / _fr_lo / _fr_sp, built with the wild
-   card's ink rim + gold ring + banded panel). The tile holds still; the symbol (rig + glow) sits at ~85% of the panel and
-   keeps all of its own land / win / idle motion inside it. Wilds are untouched (their art carries its own frame). ---- */
+/* ---- tiles: every cell assembled from shared sheet parts (symrig.ts tileHTML / rigHTML, built by tileparts.py) ----
+   tile colour (.tTile, sheet frame) -> recess (.tRec) -> bevelled gold border (.tBd) -> symbol, lifted: its own alpha casts
+   a soft shadow down-right onto the tile and a thin rim light along its top edge -> glow / FX. The recess and border are
+   9-slice (border-image from the sheet pieces, baked to --tRec / --tBd at load), so the same pieces fit a cell, a stacked
+   reel and a merged group. The tile holds still; on land / win the symbol lifts a touch more (--lift: shadow grows). */
+@property --lift{syntax:'<number>';inherits:true;initial-value:0}
 html body .sym.fr{background:none!important;border:0!important;box-shadow:none!important}
 html body .sym.fr::after{display:none}
-html body .sym.fr>.symFr{left:0;top:0;width:100%;height:100%;z-index:0}
+html body .sym.fr>.tTile{left:0;top:0;width:100%;height:100%;z-index:0}
+html body .tRec,html body .tBd{position:absolute;inset:0;display:block;pointer-events:none;box-sizing:border-box;z-index:0;
+  border:calc(var(--cell,150px)*.203) solid transparent;border-image-slice:52 fill;border-image-repeat:stretch;border-image-width:calc(var(--cell,150px)*.203)}
+html body .tRec{border-image-source:var(--tRec,none)}
+html body .tBd{border-image-source:var(--tBd,none)}
+html body .tBd.sp{border-image-source:var(--tBdSp,var(--tBd,none))}
 html body .sym.fr>.rig,html body .sym.fr>.symGlow{inset:9.5%}
+html body .sym.fr .rgBody{filter:contrast(1.06) saturate(1.1)
+  drop-shadow(0 calc(var(--cell,150px)*-.008) 0 rgba(255,240,205,.8))
+  drop-shadow(calc(var(--cell,150px)*(.02 + .018*var(--lift))) calc(var(--cell,150px)*(.028 + .03*var(--lift))) calc(var(--cell,150px)*(.016 + .02*var(--lift))) rgba(18,2,8,.55))}
+html body .cell.rgLand .sym.fr.rigd>.rig{animation:tLiftLand .34s cubic-bezier(.2,.9,.3,1) both}
+html body .cell.win .sym.fr.rigd>.rig{animation:v4WinPunch calc(.32s*var(--gt,1)) cubic-bezier(.3,1.5,.5,1) both,tLiftWin calc(.6s*var(--gt,1)) cubic-bezier(.2,.8,.3,1) both;transform-origin:50% 80%}
+@keyframes tLiftLand{0%{--lift:1;scale:1.035}100%{--lift:0;scale:1}}
+@keyframes tLiftWin{0%{--lift:0}35%{--lift:1}100%{--lift:.6}}
+/* bust wilds: the card's own ring sits under the shared recess + border; the bust and the raised WILD lift off the card */
+html body .rig .rgBody>.tRec,html body .rig .rgBody>.tBd{border-width:calc(var(--cell,150px)*.203);border-image-width:calc(var(--cell,150px)*.203)}
+html body .rig .rp.m_fig{filter:drop-shadow(0 calc(var(--cell,150px)*-.008) 0 rgba(255,240,205,.75)) drop-shadow(calc(var(--cell,150px)*.02) calc(var(--cell,150px)*.028) calc(var(--cell,150px)*.016) rgba(18,2,8,.5))}
+html body .rig .rp.m_lets{filter:drop-shadow(0 calc(var(--cell,150px)*.012) calc(var(--cell,150px)*.008) rgba(20,4,8,.6))}
+/* stacked / merged wilds: the same recess + border over the overlay art */
+html body .ov>.tRec,html body .ov>.tBd{z-index:2}
+@media (prefers-reduced-motion:reduce){html body .cell .sym.fr.rigd>.rig{animation:none!important}}

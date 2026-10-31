@@ -11,7 +11,7 @@ import type { Group, LineWin } from './typesBookEvent';
 import { DOTS } from './respin';
 import { mxBurst, lockIconCSS, symWin, clearSymWins } from './fx';
 import STACKS from './chalet/stacks.json';
-import { hasRig, rigGlowHTML, rigHTML, tileHTML } from './symrig';
+import { hasRig, ovEdgeHTML, rigGlowHTML, rigHTML, tileHTML } from './symrig';
 import { countTo, countMs, setAmount, countTiers, BIG_TIERS, tierPlan, isCounting, setWinLevels, levelOf, WIN_EDGES } from './countup';
 setWinLevels(WIN_LEVELS.standard); // v3.19: banner stages from the math's standard win levels
 /** v20: the round's win-level edges by its mode (math WIN_LEVEL_EDGES_BY_MODE; base / ante / Dare = standard). Called at every round start. */
@@ -163,7 +163,7 @@ export function renderOverlays(anim: boolean | number = false) {
 		d.style.left = pos(g.reels[0], 0).x + 'px'; d.style.width = n * S.cell + 'px';
 		// The r8d still (n reels x 4 rows, same aspect as the merged area) fills the overlay edge to edge.
 		d.classList.add('art');
-		d.innerHTML = stillHTML(g.reels) + `<i class="ovWinO"></i>` + frameHTML(g.reels) + gemHTML(g.product, 'stack', nudgeCSS(key)) + `<div class="ovrd">${DOTS}</div>`;
+		d.innerHTML = stillHTML(g.reels) + ovEdgeHTML() + `<i class="ovWinO"></i>` + frameHTML(g.reels) + gemHTML(g.product, 'stack', nudgeCSS(key)) + `<div class="ovrd">${DOTS}</div>`;
 		d.dataset.reels = g.reels.join(',');
 		if (!anim) d.style.animation = 'none';
 		o.appendChild(d);
@@ -173,7 +173,7 @@ export function renderOverlays(anim: boolean | number = false) {
 		const d = document.createElement('div'); d.className = 'ov full';
 		d.style.left = pos(r, 0).x + 'px'; d.style.width = S.cell + 'px';
 		d.classList.add('art');
-		d.innerHTML = stillHTML([r]) + `<i class="ovWinO"></i>` + frameHTML([r]) + gemHTML(v, 'stack', nudgeCSS('WF')) + `<div class="ovrd">${DOTS}</div>`;
+		d.innerHTML = stillHTML([r]) + ovEdgeHTML() + `<i class="ovWinO"></i>` + frameHTML([r]) + gemHTML(v, 'stack', nudgeCSS('WF')) + `<div class="ovrd">${DOTS}</div>`;
 		d.dataset.reel = String(r);
 		if (anim !== r) d.style.animation = 'none';
 		o.appendChild(d);
