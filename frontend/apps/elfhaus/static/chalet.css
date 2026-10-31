@@ -366,3 +366,8 @@ body.rgAnt #cells .cell:not(.spinning) .sym.S.rigd .rgBody,body.rgAnt #cells .ce
 body.rgAnt #cells .cell:not(.spinning) .sym.S.rigd .rp.m_clip{animation:rgClip .5s ease-in-out infinite}
 @keyframes rgAnt{0%{scale:1;translate:0 0}100%{scale:1.06;translate:0 -2%}}
 @media (prefers-reduced-motion:reduce){html body .rig .rgBody,html body .rig .rp,html body .sym.rigd>.rig{animation:none!important}}
+/* ---- readable ink on the cream panels: the old plum-theme pale text (lavender #cfDesc, gold titles) is unreadable on cream.
+   Body copy = dark ink (16:1 on cream), titles = cranberry (6.7:1). Covers every buy / bonus / info / auto / message panel. */
+html body #bmConfirm #cfDesc,html body #msg #msgBody,html body #resumeCard #rcLine{color:var(--c-ink)!important;font-size:15px!important;font-weight:700!important;line-height:1.42!important;text-shadow:none!important;opacity:1!important}
+html body :is(#buyTitle,#rulesTitle,#autoTitle,#msgTitle,#rcTitle){color:var(--c-cran)!important;text-shadow:0 2px 0 var(--c-paper)!important}
+html body .modal h2 small{color:var(--c-ink)!important;border-color:#26140f55!important}
