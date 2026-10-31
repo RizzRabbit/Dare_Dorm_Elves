@@ -3,11 +3,16 @@
 // weights: feet (fixed) -> hips (sway / shake) -> torso (breath, counter-lean) -> neck -> head (tilt, nod) plus a hair
 // chain (ponytail lag) and an arm-side follow. Eyelids are code-drawn skin lids with an ink lash line, posed with the
 // head bone (blink, wink). Nothing is a frame sequence: no shimmer. All motion runs on real elapsed time (dt seconds).
-import { Container, Graphics, MeshPlane, type Texture } from 'pixi.js';
+import { Container, Graphics, MeshPlane, Sprite, type Texture } from 'pixi.js';
 import { loadTex } from '../scene/load';
 import type { RoxyAdapter, RoxyFace, RoxyGrade } from './types';
 
 const SRC = 'assets/rig/elf_roxy.webp';
+// her footing (built by elfhaus-chalet/build_roxy_ground.py, same rig px / origin as the cutout): a sawn log round she
+// stands on (top face through both boot soles, bark side dropping toward the room floor) and a baked shadow layer
+// (a tight dark core hugging each sole + a soft ambient pool). The round is fixed; only the shadow reacts to her hop.
+const GROUND_SRC = 'assets/rig/roxy_ground.webp', GROUND_BOX = { x: -330, y: -110 };
+const SHADOW_SRC = 'assets/rig/roxy_ground_shadow.webp', SHADOW_BOX = { x: -280, y: -120 };
 const W = 443, H = 1166, GROUND = 1155, CX = 220;          // cutout px; origin between the feet on the ground row
 const NECK = { x: 232, y: 292 }, HIPS = 560, CHEST = [310, 450] as const;
 const HAIR = { x1: 140, y1: 360 };                           // ponytail box (screen left of her head)
@@ -26,10 +31,12 @@ type Shot = { t: number; dur: number; kind: 'win' | 'bonus' | 'sad' | 'surp' };
 export async function createRoxy(): Promise<RoxyAdapter> {
 	const tex: Texture = await loadTex(SRC);
 	const view = new Container(), body = new Container();
-	// contact shadow under the boots: a soft outer pool + a darker core, offset a touch right (the fire lights from the left)
-	const shadowG = new Graphics();
-	for (let k = 0; k < 6; k++) { const t = k / 5; shadowG.ellipse(6 - 4 * t, -12 - 2 * t, 250 - 70 * t, 38 - 14 * t).fill({ color: 0x0c0402, alpha: 0.2 }); }
-	for (const [fx, fy] of [[-142, -34], [145, -4]]) for (let k = 0; k < 3; k++) shadowG.ellipse(fx, fy, 72 - 12 * k, 15 - 3 * k).fill({ color: 0x080201, alpha: 0.24 });
+	const [gTex, sTex] = await Promise.all([loadTex(GROUND_SRC), loadTex(SHADOW_SRC)]);
+	const ground = new Sprite(gTex); ground.position.set(GROUND_BOX.x, GROUND_BOX.y);
+	let shOn = true, door = false;
+	const showGround = () => { shadowG.visible = shOn && !door; ground.visible = shOn && !door; };
+	const shadowG = new Container(), shadowS = new Sprite(sTex);
+	shadowS.position.set(SHADOW_BOX.x, SHADOW_BOX.y); shadowG.addChild(shadowS);
 	const mesh = new MeshPlane({ texture: tex, verticesX: VX, verticesY: VY });
 	mesh.position.set(-CX, -GROUND);
 	body.addChild(mesh);
@@ -40,7 +47,7 @@ export async function createRoxy(): Promise<RoxyAdapter> {
 		g.moveTo(-e.w * 0.6, e.h - 1).quadraticCurveTo(0, e.h + 7, e.w * 0.6, e.h - 5).stroke({ color: LASH, width: 6, cap: 'round' });
 		g.scale.y = 0; g.visible = false; body.addChild(g); return g;
 	});
-	view.addChild(shadowG, body);
+	view.addChild(ground, shadowG, body);
 	const geo = mesh.geometry, base = Float32Array.from(geo.positions as Float32Array), pos = geo.positions as Float32Array;
 
 	// pose state (springs / tweens toward targets)
@@ -137,13 +144,13 @@ export async function createRoxy(): Promise<RoxyAdapter> {
 		surprised(on) { faceK.surprised = on ? 1 : 0; if (on) shots.push({ t: 0, dur: 0.6, kind: 'surp' }); },
 		anticipate(on) { antTo = on ? 1 : 0; },
 		disappointed() { antTo = 0; shots.push({ t: 0, dur: 1.1, kind: 'sad' }); },
-		doorReach() {},
+		doorReach(on) { door = on; showGround(); },   // intro doorway: she stands on the painted door sill, not the log
 		doorPts() { return null; },
 		face(name: RoxyFace, k: number) { faceK[name] = k; },
 		release() { faceK = {}; },
 		setGrade(_g: RoxyGrade) {},
 		setParty(k: number) { party = k; tint(); },
-		shadow(on) { shadowG.visible = on; },
+		shadow(on) { shOn = on; showGround(); },
 		destroy() { view.destroy({ children: true }); },
 	};
 	update(0);
