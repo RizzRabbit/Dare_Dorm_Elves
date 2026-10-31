@@ -1,6 +1,6 @@
 {
  "id": 1,
- "payoutMultiplier": 15,
+ "payoutMultiplier": 10,
  "events": [
   {
    "index": 0,
@@ -1319,13 +1319,13 @@
    "index": 26,
    "type": "winInfo",
    "step": 0,
-   "totalWin": 15,
+   "totalWin": 10,
    "wins": [
     {
      "lineIndex": 20,
      "symbol": "L4",
      "count": 3,
-     "win": 15,
+     "win": 10,
      "positions": [
       {
        "reel": 0,
@@ -1341,7 +1341,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 1,
       "connected": false,
       "groups": []
@@ -1352,7 +1352,7 @@
   {
    "index": 27,
    "type": "updateStepWin",
-   "amount": 15
+   "amount": 10
   },
   {
    "index": 28,
@@ -1363,28 +1363,28 @@
   {
    "index": 29,
    "type": "setWin",
-   "amount": 15,
+   "amount": 10,
    "winLevel": 2
   },
   {
    "index": 30,
    "type": "setTotalWin",
-   "amount": 15
+   "amount": 10
   },
   {
    "index": 31,
    "type": "freeSpinEnd",
-   "amount": 15,
+   "amount": 10,
    "winLevel": 1
   },
   {
    "index": 32,
    "type": "finalWin",
-   "amount": 15
+   "amount": 10
   }
  ],
  "criteria": "freegame",
  "baseGameWins": 0.0,
- "freeGameWins": 0.15,
+ "freeGameWins": 0.1,
  "mode": "base"
 }

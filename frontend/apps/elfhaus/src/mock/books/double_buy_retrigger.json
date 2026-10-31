@@ -1,6 +1,6 @@
 {
  "id": 1,
- "payoutMultiplier": 1565,
+ "payoutMultiplier": 1570,
  "events": [
   {
    "index": 0,
@@ -789,13 +789,13 @@
    "index": 16,
    "type": "winInfo",
    "step": 0,
-   "totalWin": 50,
+   "totalWin": 60,
    "wins": [
     {
      "lineIndex": 4,
      "symbol": "L1",
      "count": 3,
-     "win": 25,
+     "win": 30,
      "positions": [
       {
        "reel": 0,
@@ -811,7 +811,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 1,
       "connected": false,
       "groups": []
@@ -821,7 +821,7 @@
      "lineIndex": 14,
      "symbol": "L1",
      "count": 3,
-     "win": 25,
+     "win": 30,
      "positions": [
       {
        "reel": 0,
@@ -837,7 +837,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 1,
       "connected": false,
       "groups": []
@@ -848,7 +848,7 @@
   {
    "index": 17,
    "type": "updateStepWin",
-   "amount": 50
+   "amount": 60
   },
   {
    "index": 18,
@@ -859,13 +859,13 @@
   {
    "index": 19,
    "type": "setWin",
-   "amount": 50,
+   "amount": 60,
    "winLevel": 2
   },
   {
    "index": 20,
    "type": "setTotalWin",
-   "amount": 50
+   "amount": 60
   },
   {
    "index": 21,
@@ -1046,13 +1046,13 @@
    "index": 24,
    "type": "winInfo",
    "step": 0,
-   "totalWin": 15,
+   "totalWin": 10,
    "wins": [
     {
      "lineIndex": 3,
      "symbol": "L5",
      "count": 3,
-     "win": 15,
+     "win": 10,
      "positions": [
       {
        "reel": 0,
@@ -1068,7 +1068,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 1,
       "connected": false,
       "groups": []
@@ -1079,7 +1079,7 @@
   {
    "index": 25,
    "type": "updateStepWin",
-   "amount": 15
+   "amount": 10
   },
   {
    "index": 26,
@@ -1090,13 +1090,13 @@
   {
    "index": 27,
    "type": "setWin",
-   "amount": 15,
+   "amount": 10,
    "winLevel": 2
   },
   {
    "index": 28,
    "type": "setTotalWin",
-   "amount": 65
+   "amount": 70
   },
   {
    "index": 29,
@@ -1255,7 +1255,7 @@
   {
    "index": 31,
    "type": "setTotalWin",
-   "amount": 65
+   "amount": 70
   },
   {
    "index": 32,
@@ -1558,7 +1558,7 @@
   {
    "index": 41,
    "type": "setTotalWin",
-   "amount": 665
+   "amount": 670
   },
   {
    "index": 42,
@@ -1867,7 +1867,7 @@
   {
    "index": 51,
    "type": "setTotalWin",
-   "amount": 1565
+   "amount": 1570
   },
   {
    "index": 52,
@@ -2026,7 +2026,7 @@
   {
    "index": 54,
    "type": "setTotalWin",
-   "amount": 1565
+   "amount": 1570
   },
   {
    "index": 55,
@@ -2185,7 +2185,7 @@
   {
    "index": 57,
    "type": "setTotalWin",
-   "amount": 1565
+   "amount": 1570
   },
   {
    "index": 58,
@@ -2346,7 +2346,7 @@
   {
    "index": 60,
    "type": "setTotalWin",
-   "amount": 1565
+   "amount": 1570
   },
   {
    "index": 61,
@@ -2505,22 +2505,22 @@
   {
    "index": 63,
    "type": "setTotalWin",
-   "amount": 1565
+   "amount": 1570
   },
   {
    "index": 64,
    "type": "freeSpinEnd",
-   "amount": 1565,
+   "amount": 1570,
    "winLevel": 4
   },
   {
    "index": 65,
    "type": "finalWin",
-   "amount": 1565
+   "amount": 1570
   }
  ],
  "criteria": "freegame",
  "baseGameWins": 0.0,
- "freeGameWins": 15.65,
+ "freeGameWins": 15.7,
  "mode": "double_dare"
 }

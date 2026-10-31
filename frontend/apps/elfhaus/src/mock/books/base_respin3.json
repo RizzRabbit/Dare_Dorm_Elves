@@ -1,6 +1,6 @@
 {
  "id": 1,
- "payoutMultiplier": 980,
+ "payoutMultiplier": 970,
  "events": [
   {
    "index": 0,
@@ -341,13 +341,13 @@
    "index": 6,
    "type": "winInfo",
    "step": 1,
-   "totalWin": 30,
+   "totalWin": 20,
    "wins": [
     {
      "lineIndex": 8,
      "symbol": "L5",
      "count": 3,
-     "win": 30,
+     "win": 20,
      "positions": [
       {
        "reel": 0,
@@ -363,7 +363,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 2,
       "connected": true,
       "groups": [
@@ -381,7 +381,7 @@
   {
    "index": 7,
    "type": "updateStepWin",
-   "amount": 180
+   "amount": 170
   },
   {
    "index": 8,
@@ -488,7 +488,7 @@
   {
    "index": 12,
    "type": "updateStepWin",
-   "amount": 780
+   "amount": 770
   },
   {
    "index": 13,
@@ -604,7 +604,7 @@
   {
    "index": 17,
    "type": "updateStepWin",
-   "amount": 980
+   "amount": 970
   },
   {
    "index": 18,
@@ -629,22 +629,22 @@
   {
    "index": 20,
    "type": "setWin",
-   "amount": 980,
+   "amount": 970,
    "winLevel": 5
   },
   {
    "index": 21,
    "type": "setTotalWin",
-   "amount": 980
+   "amount": 970
   },
   {
    "index": 22,
    "type": "finalWin",
-   "amount": 980
+   "amount": 970
   }
  ],
  "criteria": "basegame",
- "baseGameWins": 9.8,
+ "baseGameWins": 9.7,
  "freeGameWins": 0.0,
  "mode": "base"
 }

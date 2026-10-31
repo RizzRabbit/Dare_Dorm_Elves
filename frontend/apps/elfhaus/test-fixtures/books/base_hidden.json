@@ -137,13 +137,13 @@
    "index": 1,
    "type": "winInfo",
    "step": 0,
-   "totalWin": 25,
+   "totalWin": 30,
    "wins": [
     {
      "lineIndex": 17,
      "symbol": "L1",
      "count": 3,
-     "win": 25,
+     "win": 30,
      "positions": [
       {
        "reel": 0,
@@ -159,7 +159,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 1,
       "connected": true,
       "groups": [
@@ -177,7 +177,7 @@
   {
    "index": 2,
    "type": "updateStepWin",
-   "amount": 25
+   "amount": 30
   },
   {
    "index": 3,
@@ -250,13 +250,13 @@
   {
    "index": 7,
    "type": "setWin",
-   "amount": 25,
+   "amount": 30,
    "winLevel": 2
   },
   {
    "index": 8,
    "type": "setTotalWin",
-   "amount": 25
+   "amount": 30
   },
   {
    "index": 9,
@@ -523,13 +523,13 @@
    "index": 14,
    "type": "winInfo",
    "step": 0,
-   "totalWin": 4500,
+   "totalWin": 4860,
    "wins": [
     {
      "lineIndex": 2,
      "symbol": "H3",
      "count": 3,
-     "win": 1350,
+     "win": 1440,
      "positions": [
       {
        "reel": 0,
@@ -545,7 +545,7 @@
       }
      ],
      "meta": {
-      "basePay": 15,
+      "basePay": 16,
       "lineMult": 18,
       "connected": true,
       "groups": [
@@ -567,7 +567,7 @@
      "lineIndex": 6,
      "symbol": "L2",
      "count": 3,
-     "win": 450,
+     "win": 540,
      "positions": [
       {
        "reel": 0,
@@ -583,7 +583,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 18,
       "connected": true,
       "groups": [
@@ -605,7 +605,7 @@
      "lineIndex": 11,
      "symbol": "L2",
      "count": 3,
-     "win": 450,
+     "win": 540,
      "positions": [
       {
        "reel": 0,
@@ -621,7 +621,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 18,
       "connected": true,
       "groups": [
@@ -681,7 +681,7 @@
      "lineIndex": 17,
      "symbol": "H3",
      "count": 3,
-     "win": 1350,
+     "win": 1440,
      "positions": [
       {
        "reel": 0,
@@ -697,7 +697,7 @@
       }
      ],
      "meta": {
-      "basePay": 15,
+      "basePay": 16,
       "lineMult": 18,
       "connected": true,
       "groups": [
@@ -720,7 +720,7 @@
   {
    "index": 15,
    "type": "updateStepWin",
-   "amount": 4500
+   "amount": 4860
   },
   {
    "index": 16,
@@ -807,7 +807,7 @@
    "index": 19,
    "type": "winInfo",
    "step": 1,
-   "totalWin": 4510,
+   "totalWin": 4620,
    "wins": [
     {
      "lineIndex": 2,
@@ -927,7 +927,7 @@
      "lineIndex": 13,
      "symbol": "H1",
      "count": 3,
-     "win": 2750,
+     "win": 2860,
      "positions": [
       {
        "reel": 0,
@@ -943,7 +943,7 @@
       }
      ],
      "meta": {
-      "basePay": 25,
+      "basePay": 26,
       "lineMult": 22,
       "connected": true,
       "groups": [
@@ -1004,7 +1004,7 @@
   {
    "index": 20,
    "type": "updateStepWin",
-   "amount": 9010
+   "amount": 9480
   },
   {
    "index": 21,
@@ -1091,7 +1091,7 @@
    "index": 24,
    "type": "winInfo",
    "step": 2,
-   "totalWin": 2470,
+   "totalWin": 2340,
    "wins": [
     {
      "lineIndex": 2,
@@ -1211,7 +1211,7 @@
      "lineIndex": 13,
      "symbol": "L4",
      "count": 3,
-     "win": 390,
+     "win": 260,
      "positions": [
       {
        "reel": 0,
@@ -1227,7 +1227,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 26,
       "connected": true,
       "groups": [
@@ -1288,7 +1288,7 @@
   {
    "index": 25,
    "type": "updateStepWin",
-   "amount": 11480
+   "amount": 11820
   },
   {
    "index": 26,
@@ -1375,13 +1375,13 @@
    "index": 29,
    "type": "winInfo",
    "step": 3,
-   "totalWin": 3300,
+   "totalWin": 2700,
    "wins": [
     {
      "lineIndex": 2,
      "symbol": "L4",
      "count": 3,
-     "win": 450,
+     "win": 300,
      "positions": [
       {
        "reel": 0,
@@ -1397,7 +1397,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 30,
       "connected": true,
       "groups": [
@@ -1419,7 +1419,7 @@
      "lineIndex": 6,
      "symbol": "L4",
      "count": 3,
-     "win": 450,
+     "win": 300,
      "positions": [
       {
        "reel": 0,
@@ -1435,7 +1435,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 30,
       "connected": true,
       "groups": [
@@ -1457,7 +1457,7 @@
      "lineIndex": 11,
      "symbol": "L4",
      "count": 3,
-     "win": 450,
+     "win": 300,
      "positions": [
       {
        "reel": 0,
@@ -1473,7 +1473,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 30,
       "connected": true,
       "groups": [
@@ -1533,7 +1533,7 @@
      "lineIndex": 17,
      "symbol": "L4",
      "count": 3,
-     "win": 450,
+     "win": 300,
      "positions": [
       {
        "reel": 0,
@@ -1549,7 +1549,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 30,
       "connected": true,
       "groups": [
@@ -1572,7 +1572,7 @@
   {
    "index": 30,
    "type": "updateStepWin",
-   "amount": 14780
+   "amount": 14520
   },
   {
    "index": 31,
@@ -1603,13 +1603,13 @@
   {
    "index": 33,
    "type": "setWin",
-   "amount": 14780,
+   "amount": 14520,
    "winLevel": 9
   },
   {
    "index": 34,
    "type": "setTotalWin",
-   "amount": 14805
+   "amount": 14550
   },
   {
    "index": 35,
@@ -1781,13 +1781,13 @@
    "index": 37,
    "type": "winInfo",
    "step": 0,
-   "totalWin": 3060,
+   "totalWin": 3400,
    "wins": [
     {
      "lineIndex": 2,
      "symbol": "L2",
      "count": 3,
-     "win": 850,
+     "win": 1020,
      "positions": [
       {
        "reel": 0,
@@ -1803,7 +1803,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 34,
       "connected": true,
       "groups": [
@@ -1901,7 +1901,7 @@
      "lineIndex": 17,
      "symbol": "L2",
      "count": 3,
-     "win": 850,
+     "win": 1020,
      "positions": [
       {
        "reel": 0,
@@ -1917,7 +1917,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 34,
       "connected": true,
       "groups": [
@@ -1940,7 +1940,7 @@
   {
    "index": 38,
    "type": "updateStepWin",
-   "amount": 3060
+   "amount": 3400
   },
   {
    "index": 39,
@@ -2018,13 +2018,13 @@
    "index": 42,
    "type": "winInfo",
    "step": 1,
-   "totalWin": 19200,
+   "totalWin": 20480,
    "wins": [
     {
      "lineIndex": 2,
      "symbol": "H3",
      "count": 3,
-     "win": 2850,
+     "win": 3040,
      "positions": [
       {
        "reel": 0,
@@ -2040,7 +2040,7 @@
       }
      ],
      "meta": {
-      "basePay": 15,
+      "basePay": 16,
       "lineMult": 38,
       "connected": true,
       "groups": [
@@ -2062,7 +2062,7 @@
      "lineIndex": 3,
      "symbol": "H3",
      "count": 3,
-     "win": 1950,
+     "win": 2080,
      "positions": [
       {
        "reel": 0,
@@ -2078,7 +2078,7 @@
       }
      ],
      "meta": {
-      "basePay": 15,
+      "basePay": 16,
       "lineMult": 26,
       "connected": true,
       "groups": [
@@ -2094,7 +2094,7 @@
      "lineIndex": 5,
      "symbol": "H3",
      "count": 3,
-     "win": 1950,
+     "win": 2080,
      "positions": [
       {
        "reel": 0,
@@ -2110,7 +2110,7 @@
       }
      ],
      "meta": {
-      "basePay": 15,
+      "basePay": 16,
       "lineMult": 26,
       "connected": true,
       "groups": [
@@ -2126,7 +2126,7 @@
      "lineIndex": 6,
      "symbol": "H3",
      "count": 3,
-     "win": 2850,
+     "win": 3040,
      "positions": [
       {
        "reel": 0,
@@ -2142,7 +2142,7 @@
       }
      ],
      "meta": {
-      "basePay": 15,
+      "basePay": 16,
       "lineMult": 38,
       "connected": true,
       "groups": [
@@ -2164,7 +2164,7 @@
      "lineIndex": 11,
      "symbol": "H3",
      "count": 3,
-     "win": 2850,
+     "win": 3040,
      "positions": [
       {
        "reel": 0,
@@ -2180,7 +2180,7 @@
       }
      ],
      "meta": {
-      "basePay": 15,
+      "basePay": 16,
       "lineMult": 38,
       "connected": true,
       "groups": [
@@ -2202,7 +2202,7 @@
      "lineIndex": 12,
      "symbol": "H3",
      "count": 3,
-     "win": 1950,
+     "win": 2080,
      "positions": [
       {
        "reel": 0,
@@ -2218,7 +2218,7 @@
       }
      ],
      "meta": {
-      "basePay": 15,
+      "basePay": 16,
       "lineMult": 26,
       "connected": true,
       "groups": [
@@ -2234,7 +2234,7 @@
      "lineIndex": 17,
      "symbol": "H3",
      "count": 3,
-     "win": 2850,
+     "win": 3040,
      "positions": [
       {
        "reel": 0,
@@ -2250,7 +2250,7 @@
       }
      ],
      "meta": {
-      "basePay": 15,
+      "basePay": 16,
       "lineMult": 38,
       "connected": true,
       "groups": [
@@ -2272,7 +2272,7 @@
      "lineIndex": 18,
      "symbol": "H3",
      "count": 3,
-     "win": 1950,
+     "win": 2080,
      "positions": [
       {
        "reel": 0,
@@ -2288,7 +2288,7 @@
       }
      ],
      "meta": {
-      "basePay": 15,
+      "basePay": 16,
       "lineMult": 26,
       "connected": true,
       "groups": [
@@ -2305,7 +2305,7 @@
   {
    "index": 43,
    "type": "updateStepWin",
-   "amount": 22260
+   "amount": 23880
   },
   {
    "index": 44,
@@ -2551,7 +2551,7 @@
   {
    "index": 48,
    "type": "updateStepWin",
-   "amount": 28140
+   "amount": 29760
   },
   {
    "index": 49,
@@ -2629,7 +2629,7 @@
    "index": 52,
    "type": "winInfo",
    "step": 3,
-   "totalWin": 3220,
+   "totalWin": 2760,
    "wins": [
     {
      "lineIndex": 2,
@@ -2673,7 +2673,7 @@
      "lineIndex": 6,
      "symbol": "L4",
      "count": 3,
-     "win": 690,
+     "win": 460,
      "positions": [
       {
        "reel": 0,
@@ -2689,7 +2689,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 46,
       "connected": true,
       "groups": [
@@ -2711,7 +2711,7 @@
      "lineIndex": 11,
      "symbol": "L4",
      "count": 3,
-     "win": 690,
+     "win": 460,
      "positions": [
       {
        "reel": 0,
@@ -2727,7 +2727,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 46,
       "connected": true,
       "groups": [
@@ -2788,7 +2788,7 @@
   {
    "index": 53,
    "type": "updateStepWin",
-   "amount": 31360
+   "amount": 32520
   },
   {
    "index": 54,
@@ -2819,13 +2819,13 @@
   {
    "index": 56,
    "type": "setWin",
-   "amount": 31360,
+   "amount": 32520,
    "winLevel": 9
   },
   {
    "index": 57,
    "type": "setTotalWin",
-   "amount": 46165
+   "amount": 47070
   },
   {
    "index": 58,
@@ -3001,13 +3001,13 @@
    "index": 60,
    "type": "winInfo",
    "step": 0,
-   "totalWin": 3750,
+   "totalWin": 2500,
    "wins": [
     {
      "lineIndex": 2,
      "symbol": "L5",
      "count": 3,
-     "win": 750,
+     "win": 500,
      "positions": [
       {
        "reel": 0,
@@ -3023,7 +3023,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 50,
       "connected": true,
       "groups": [
@@ -3045,7 +3045,7 @@
      "lineIndex": 6,
      "symbol": "L4",
      "count": 3,
-     "win": 750,
+     "win": 500,
      "positions": [
       {
        "reel": 0,
@@ -3061,7 +3061,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 50,
       "connected": true,
       "groups": [
@@ -3083,7 +3083,7 @@
      "lineIndex": 11,
      "symbol": "L4",
      "count": 3,
-     "win": 750,
+     "win": 500,
      "positions": [
       {
        "reel": 0,
@@ -3099,7 +3099,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 50,
       "connected": true,
       "groups": [
@@ -3121,7 +3121,7 @@
      "lineIndex": 13,
      "symbol": "L4",
      "count": 3,
-     "win": 750,
+     "win": 500,
      "positions": [
       {
        "reel": 0,
@@ -3137,7 +3137,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 50,
       "connected": true,
       "groups": [
@@ -3159,7 +3159,7 @@
      "lineIndex": 17,
      "symbol": "L5",
      "count": 3,
-     "win": 750,
+     "win": 500,
      "positions": [
       {
        "reel": 0,
@@ -3175,7 +3175,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 50,
       "connected": true,
       "groups": [
@@ -3198,7 +3198,7 @@
   {
    "index": 61,
    "type": "updateStepWin",
-   "amount": 3750
+   "amount": 2500
   },
   {
    "index": 62,
@@ -3285,13 +3285,13 @@
    "index": 65,
    "type": "winInfo",
    "step": 1,
-   "totalWin": 4860,
+   "totalWin": 4320,
    "wins": [
     {
      "lineIndex": 2,
      "symbol": "L4",
      "count": 3,
-     "win": 810,
+     "win": 540,
      "positions": [
       {
        "reel": 0,
@@ -3307,7 +3307,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 54,
       "connected": true,
       "groups": [
@@ -3443,7 +3443,7 @@
      "lineIndex": 17,
      "symbol": "L4",
      "count": 3,
-     "win": 810,
+     "win": 540,
      "positions": [
       {
        "reel": 0,
@@ -3459,7 +3459,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 54,
       "connected": true,
       "groups": [
@@ -3482,7 +3482,7 @@
   {
    "index": 66,
    "type": "updateStepWin",
-   "amount": 8610
+   "amount": 6820
   },
   {
    "index": 67,
@@ -3569,13 +3569,13 @@
    "index": 70,
    "type": "winInfo",
    "step": 2,
-   "totalWin": 206750,
+   "totalWin": 207980,
    "wins": [
     {
      "lineIndex": 1,
      "symbol": "L1",
      "count": 3,
-     "win": 900,
+     "win": 1080,
      "positions": [
       {
        "reel": 0,
@@ -3591,7 +3591,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 36,
       "connected": true,
       "groups": [
@@ -3607,7 +3607,7 @@
      "lineIndex": 2,
      "symbol": "H1",
      "count": 3,
-     "win": 7250,
+     "win": 7540,
      "positions": [
       {
        "reel": 0,
@@ -3623,7 +3623,7 @@
       }
      ],
      "meta": {
-      "basePay": 25,
+      "basePay": 26,
       "lineMult": 58,
       "connected": true,
       "groups": [
@@ -3741,7 +3741,7 @@
      "lineIndex": 7,
      "symbol": "L1",
      "count": 3,
-     "win": 900,
+     "win": 1080,
      "positions": [
       {
        "reel": 0,
@@ -3757,7 +3757,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 36,
       "connected": true,
       "groups": [
@@ -3824,7 +3824,7 @@
      "lineIndex": 13,
      "symbol": "L1",
      "count": 3,
-     "win": 1450,
+     "win": 1740,
      "positions": [
       {
        "reel": 0,
@@ -3840,7 +3840,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 58,
       "connected": true,
       "groups": [
@@ -3862,7 +3862,7 @@
      "lineIndex": 17,
      "symbol": "H1",
      "count": 3,
-     "win": 7250,
+     "win": 7540,
      "positions": [
       {
        "reel": 0,
@@ -3878,7 +3878,7 @@
       }
      ],
      "meta": {
-      "basePay": 25,
+      "basePay": 26,
       "lineMult": 58,
       "connected": true,
       "groups": [
@@ -3946,7 +3946,7 @@
   {
    "index": 71,
    "type": "updateStepWin",
-   "amount": 215360
+   "amount": 214800
   },
   {
    "index": 72,
@@ -4066,13 +4066,13 @@
    "index": 75,
    "type": "winInfo",
    "step": 3,
-   "totalWin": 7790,
+   "totalWin": 7860,
    "wins": [
     {
      "lineIndex": 1,
      "symbol": "L1",
      "count": 3,
-     "win": 950,
+     "win": 1140,
      "positions": [
       {
        "reel": 0,
@@ -4088,7 +4088,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 38,
       "connected": true,
       "groups": [
@@ -4142,7 +4142,7 @@
      "lineIndex": 6,
      "symbol": "L5",
      "count": 3,
-     "win": 930,
+     "win": 620,
      "positions": [
       {
        "reel": 0,
@@ -4158,7 +4158,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 62,
       "connected": true,
       "groups": [
@@ -4180,7 +4180,7 @@
      "lineIndex": 7,
      "symbol": "L1",
      "count": 3,
-     "win": 950,
+     "win": 1140,
      "positions": [
       {
        "reel": 0,
@@ -4196,7 +4196,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 38,
       "connected": true,
       "groups": [
@@ -4212,7 +4212,7 @@
      "lineIndex": 11,
      "symbol": "L5",
      "count": 3,
-     "win": 930,
+     "win": 620,
      "positions": [
       {
        "reel": 0,
@@ -4228,7 +4228,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 62,
       "connected": true,
       "groups": [
@@ -4250,7 +4250,7 @@
      "lineIndex": 13,
      "symbol": "L1",
      "count": 3,
-     "win": 1550,
+     "win": 1860,
      "positions": [
       {
        "reel": 0,
@@ -4266,7 +4266,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 62,
       "connected": true,
       "groups": [
@@ -4327,7 +4327,7 @@
   {
    "index": 76,
    "type": "updateStepWin",
-   "amount": 223150
+   "amount": 222660
   },
   {
    "index": 77,
@@ -4358,13 +4358,13 @@
   {
    "index": 79,
    "type": "setWin",
-   "amount": 223150,
-   "winLevel": 9
+   "amount": 222660,
+   "winLevel": 10
   },
   {
    "index": 80,
    "type": "setTotalWin",
-   "amount": 269315
+   "amount": 269730
   },
   {
    "index": 81,
@@ -4542,7 +4542,7 @@
      "lineIndex": 2,
      "symbol": "L5",
      "count": 3,
-     "win": 990,
+     "win": 660,
      "positions": [
       {
        "reel": 0,
@@ -4558,7 +4558,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 66,
       "connected": true,
       "groups": [
@@ -4580,7 +4580,7 @@
      "lineIndex": 6,
      "symbol": "H1",
      "count": 3,
-     "win": 8250,
+     "win": 8580,
      "positions": [
       {
        "reel": 0,
@@ -4596,7 +4596,7 @@
       }
      ],
      "meta": {
-      "basePay": 25,
+      "basePay": 26,
       "lineMult": 66,
       "connected": true,
       "groups": [
@@ -4618,7 +4618,7 @@
      "lineIndex": 11,
      "symbol": "H1",
      "count": 3,
-     "win": 8250,
+     "win": 8580,
      "positions": [
       {
        "reel": 0,
@@ -4634,7 +4634,7 @@
       }
      ],
      "meta": {
-      "basePay": 25,
+      "basePay": 26,
       "lineMult": 66,
       "connected": true,
       "groups": [
@@ -4694,7 +4694,7 @@
      "lineIndex": 17,
      "symbol": "L5",
      "count": 3,
-     "win": 990,
+     "win": 660,
      "positions": [
       {
        "reel": 0,
@@ -4710,7 +4710,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 66,
       "connected": true,
       "groups": [
@@ -4820,7 +4820,7 @@
    "index": 88,
    "type": "winInfo",
    "step": 1,
-   "totalWin": 57350,
+   "totalWin": 57700,
    "wins": [
     {
      "lineIndex": 2,
@@ -4877,7 +4877,7 @@
      "lineIndex": 6,
      "symbol": "L2",
      "count": 3,
-     "win": 1750,
+     "win": 2100,
      "positions": [
       {
        "reel": 0,
@@ -4893,7 +4893,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 70,
       "connected": true,
       "groups": [
@@ -4915,7 +4915,7 @@
      "lineIndex": 11,
      "symbol": "L2",
      "count": 3,
-     "win": 1750,
+     "win": 2100,
      "positions": [
       {
        "reel": 0,
@@ -4931,7 +4931,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 70,
       "connected": true,
       "groups": [
@@ -4953,7 +4953,7 @@
      "lineIndex": 13,
      "symbol": "L5",
      "count": 3,
-     "win": 1050,
+     "win": 700,
      "positions": [
       {
        "reel": 0,
@@ -4969,7 +4969,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 70,
       "connected": true,
       "groups": [
@@ -5043,7 +5043,7 @@
   {
    "index": 89,
    "type": "updateStepWin",
-   "amount": 82430
+   "amount": 82780
   },
   {
    "index": 90,
@@ -5145,13 +5145,13 @@
    "index": 93,
    "type": "winInfo",
    "step": 2,
-   "totalWin": 10700,
+   "totalWin": 9600,
    "wins": [
     {
      "lineIndex": 2,
      "symbol": "L2",
      "count": 3,
-     "win": 1850,
+     "win": 2220,
      "positions": [
       {
        "reel": 0,
@@ -5167,7 +5167,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 74,
       "connected": true,
       "groups": [
@@ -5189,7 +5189,7 @@
      "lineIndex": 3,
      "symbol": "L4",
      "count": 3,
-     "win": 660,
+     "win": 440,
      "positions": [
       {
        "reel": 0,
@@ -5205,7 +5205,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 44,
       "connected": true,
       "groups": [
@@ -5221,7 +5221,7 @@
      "lineIndex": 6,
      "symbol": "L4",
      "count": 3,
-     "win": 1110,
+     "win": 740,
      "positions": [
       {
        "reel": 0,
@@ -5237,7 +5237,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 74,
       "connected": true,
       "groups": [
@@ -5259,7 +5259,7 @@
      "lineIndex": 10,
      "symbol": "L4",
      "count": 3,
-     "win": 660,
+     "win": 440,
      "positions": [
       {
        "reel": 0,
@@ -5275,7 +5275,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 44,
       "connected": true,
       "groups": [
@@ -5291,7 +5291,7 @@
      "lineIndex": 11,
      "symbol": "L4",
      "count": 3,
-     "win": 1110,
+     "win": 740,
      "positions": [
       {
        "reel": 0,
@@ -5307,7 +5307,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 74,
       "connected": true,
       "groups": [
@@ -5367,7 +5367,7 @@
      "lineIndex": 16,
      "symbol": "L4",
      "count": 3,
-     "win": 660,
+     "win": 440,
      "positions": [
       {
        "reel": 0,
@@ -5383,7 +5383,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 44,
       "connected": true,
       "groups": [
@@ -5399,7 +5399,7 @@
      "lineIndex": 17,
      "symbol": "L2",
      "count": 3,
-     "win": 1850,
+     "win": 2220,
      "positions": [
       {
        "reel": 0,
@@ -5415,7 +5415,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 74,
       "connected": true,
       "groups": [
@@ -5437,7 +5437,7 @@
      "lineIndex": 18,
      "symbol": "L4",
      "count": 3,
-     "win": 660,
+     "win": 440,
      "positions": [
       {
        "reel": 0,
@@ -5453,7 +5453,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 44,
       "connected": true,
       "groups": [
@@ -5469,7 +5469,7 @@
      "lineIndex": 19,
      "symbol": "L4",
      "count": 3,
-     "win": 660,
+     "win": 440,
      "positions": [
       {
        "reel": 0,
@@ -5485,7 +5485,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 44,
       "connected": true,
       "groups": [
@@ -5502,7 +5502,7 @@
   {
    "index": 94,
    "type": "updateStepWin",
-   "amount": 93130
+   "amount": 92380
   },
   {
    "index": 95,
@@ -5607,13 +5607,13 @@
    "index": 98,
    "type": "winInfo",
    "step": 3,
-   "totalWin": 25350,
+   "totalWin": 27300,
    "wins": [
     {
      "lineIndex": 2,
      "symbol": "L2",
      "count": 3,
-     "win": 1950,
+     "win": 2340,
      "positions": [
       {
        "reel": 0,
@@ -5629,7 +5629,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 78,
       "connected": true,
       "groups": [
@@ -5651,7 +5651,7 @@
      "lineIndex": 6,
      "symbol": "H1",
      "count": 3,
-     "win": 9750,
+     "win": 10140,
      "positions": [
       {
        "reel": 0,
@@ -5667,7 +5667,7 @@
       }
      ],
      "meta": {
-      "basePay": 25,
+      "basePay": 26,
       "lineMult": 78,
       "connected": true,
       "groups": [
@@ -5689,7 +5689,7 @@
      "lineIndex": 11,
      "symbol": "H1",
      "count": 3,
-     "win": 9750,
+     "win": 10140,
      "positions": [
       {
        "reel": 0,
@@ -5705,7 +5705,7 @@
       }
      ],
      "meta": {
-      "basePay": 25,
+      "basePay": 26,
       "lineMult": 78,
       "connected": true,
       "groups": [
@@ -5727,7 +5727,7 @@
      "lineIndex": 13,
      "symbol": "L1",
      "count": 3,
-     "win": 1950,
+     "win": 2340,
      "positions": [
       {
        "reel": 0,
@@ -5743,7 +5743,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 78,
       "connected": true,
       "groups": [
@@ -5765,7 +5765,7 @@
      "lineIndex": 17,
      "symbol": "L2",
      "count": 3,
-     "win": 1950,
+     "win": 2340,
      "positions": [
       {
        "reel": 0,
@@ -5781,7 +5781,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 78,
       "connected": true,
       "groups": [
@@ -5804,7 +5804,7 @@
   {
    "index": 99,
    "type": "updateStepWin",
-   "amount": 118480
+   "amount": 119680
   },
   {
    "index": 100,
@@ -5835,13 +5835,13 @@
   {
    "index": 102,
    "type": "setWin",
-   "amount": 118480,
-   "winLevel": 9
+   "amount": 119680,
+   "winLevel": 10
   },
   {
    "index": 103,
    "type": "setTotalWin",
-   "amount": 387795
+   "amount": 389410
   },
   {
    "index": 104,
@@ -6013,13 +6013,13 @@
    "index": 106,
    "type": "winInfo",
    "step": 0,
-   "totalWin": 15990,
+   "totalWin": 15580,
    "wins": [
     {
      "lineIndex": 2,
      "symbol": "H3",
      "count": 3,
-     "win": 6150,
+     "win": 6560,
      "positions": [
       {
        "reel": 0,
@@ -6035,7 +6035,7 @@
       }
      ],
      "meta": {
-      "basePay": 15,
+      "basePay": 16,
       "lineMult": 82,
       "connected": true,
       "groups": [
@@ -6057,7 +6057,7 @@
      "lineIndex": 6,
      "symbol": "L5",
      "count": 3,
-     "win": 1230,
+     "win": 820,
      "positions": [
       {
        "reel": 0,
@@ -6073,7 +6073,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 82,
       "connected": true,
       "groups": [
@@ -6095,7 +6095,7 @@
      "lineIndex": 11,
      "symbol": "L5",
      "count": 3,
-     "win": 1230,
+     "win": 820,
      "positions": [
       {
        "reel": 0,
@@ -6111,7 +6111,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 82,
       "connected": true,
       "groups": [
@@ -6133,7 +6133,7 @@
      "lineIndex": 13,
      "symbol": "L4",
      "count": 3,
-     "win": 1230,
+     "win": 820,
      "positions": [
       {
        "reel": 0,
@@ -6149,7 +6149,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 82,
       "connected": true,
       "groups": [
@@ -6171,7 +6171,7 @@
      "lineIndex": 17,
      "symbol": "H3",
      "count": 3,
-     "win": 6150,
+     "win": 6560,
      "positions": [
       {
        "reel": 0,
@@ -6187,7 +6187,7 @@
       }
      ],
      "meta": {
-      "basePay": 15,
+      "basePay": 16,
       "lineMult": 82,
       "connected": true,
       "groups": [
@@ -6210,7 +6210,7 @@
   {
    "index": 107,
    "type": "updateStepWin",
-   "amount": 15990
+   "amount": 15580
   },
   {
    "index": 108,
@@ -6297,13 +6297,13 @@
    "index": 111,
    "type": "winInfo",
    "step": 1,
-   "totalWin": 15710,
+   "totalWin": 17820,
    "wins": [
     {
      "lineIndex": 2,
      "symbol": "L1",
      "count": 3,
-     "win": 2150,
+     "win": 2580,
      "positions": [
       {
        "reel": 0,
@@ -6319,7 +6319,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 86,
       "connected": true,
       "groups": [
@@ -6341,7 +6341,7 @@
      "lineIndex": 5,
      "symbol": "L1",
      "count": 3,
-     "win": 1250,
+     "win": 1500,
      "positions": [
       {
        "reel": 0,
@@ -6357,7 +6357,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 50,
       "connected": true,
       "groups": [
@@ -6411,7 +6411,7 @@
      "lineIndex": 9,
      "symbol": "L1",
      "count": 3,
-     "win": 1250,
+     "win": 1500,
      "positions": [
       {
        "reel": 0,
@@ -6427,7 +6427,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 50,
       "connected": true,
       "groups": [
@@ -6481,7 +6481,7 @@
      "lineIndex": 12,
      "symbol": "L1",
      "count": 3,
-     "win": 1250,
+     "win": 1500,
      "positions": [
       {
        "reel": 0,
@@ -6497,7 +6497,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 50,
       "connected": true,
       "groups": [
@@ -6551,7 +6551,7 @@
      "lineIndex": 15,
      "symbol": "L1",
      "count": 3,
-     "win": 1250,
+     "win": 1500,
      "positions": [
       {
        "reel": 0,
@@ -6567,7 +6567,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 50,
       "connected": true,
       "groups": [
@@ -6583,7 +6583,7 @@
      "lineIndex": 17,
      "symbol": "L1",
      "count": 3,
-     "win": 2150,
+     "win": 2580,
      "positions": [
       {
        "reel": 0,
@@ -6599,7 +6599,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 86,
       "connected": true,
       "groups": [
@@ -6621,7 +6621,7 @@
      "lineIndex": 20,
      "symbol": "L1",
      "count": 3,
-     "win": 1250,
+     "win": 1500,
      "positions": [
       {
        "reel": 0,
@@ -6637,7 +6637,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 50,
       "connected": true,
       "groups": [
@@ -6654,7 +6654,7 @@
   {
    "index": 112,
    "type": "updateStepWin",
-   "amount": 31700
+   "amount": 33400
   },
   {
    "index": 113,
@@ -6759,13 +6759,13 @@
    "index": 116,
    "type": "winInfo",
    "step": 2,
-   "totalWin": 9540,
+   "totalWin": 6960,
    "wins": [
     {
      "lineIndex": 2,
      "symbol": "L5",
      "count": 3,
-     "win": 1350,
+     "win": 900,
      "positions": [
       {
        "reel": 0,
@@ -6781,7 +6781,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 90,
       "connected": true,
       "groups": [
@@ -6803,7 +6803,7 @@
      "lineIndex": 6,
      "symbol": "L5",
      "count": 3,
-     "win": 1350,
+     "win": 900,
      "positions": [
       {
        "reel": 0,
@@ -6819,7 +6819,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 90,
       "connected": true,
       "groups": [
@@ -6841,7 +6841,7 @@
      "lineIndex": 9,
      "symbol": "L5",
      "count": 3,
-     "win": 780,
+     "win": 520,
      "positions": [
       {
        "reel": 0,
@@ -6857,7 +6857,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 52,
       "connected": true,
       "groups": [
@@ -6873,7 +6873,7 @@
      "lineIndex": 11,
      "symbol": "L5",
      "count": 3,
-     "win": 1350,
+     "win": 900,
      "positions": [
       {
        "reel": 0,
@@ -6889,7 +6889,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 90,
       "connected": true,
       "groups": [
@@ -6949,7 +6949,7 @@
      "lineIndex": 15,
      "symbol": "L5",
      "count": 3,
-     "win": 780,
+     "win": 520,
      "positions": [
       {
        "reel": 0,
@@ -6965,7 +6965,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 52,
       "connected": true,
       "groups": [
@@ -6981,7 +6981,7 @@
      "lineIndex": 17,
      "symbol": "L5",
      "count": 3,
-     "win": 1350,
+     "win": 900,
      "positions": [
       {
        "reel": 0,
@@ -6997,7 +6997,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 90,
       "connected": true,
       "groups": [
@@ -7019,7 +7019,7 @@
      "lineIndex": 20,
      "symbol": "L5",
      "count": 3,
-     "win": 780,
+     "win": 520,
      "positions": [
       {
        "reel": 0,
@@ -7035,7 +7035,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 52,
       "connected": true,
       "groups": [
@@ -7052,7 +7052,7 @@
   {
    "index": 117,
    "type": "updateStepWin",
-   "amount": 41240
+   "amount": 40360
   },
   {
    "index": 118,
@@ -7148,13 +7148,13 @@
    "index": 121,
    "type": "winInfo",
    "step": 3,
-   "totalWin": 16190,
+   "totalWin": 15180,
    "wins": [
     {
      "lineIndex": 1,
      "symbol": "L4",
      "count": 3,
-     "win": 810,
+     "win": 540,
      "positions": [
       {
        "reel": 0,
@@ -7170,7 +7170,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 54,
       "connected": true,
       "groups": [
@@ -7262,7 +7262,7 @@
      "lineIndex": 7,
      "symbol": "L4",
      "count": 3,
-     "win": 810,
+     "win": 540,
      "positions": [
       {
        "reel": 0,
@@ -7278,7 +7278,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 54,
       "connected": true,
       "groups": [
@@ -7332,7 +7332,7 @@
      "lineIndex": 13,
      "symbol": "L4",
      "count": 3,
-     "win": 1410,
+     "win": 940,
      "positions": [
       {
        "reel": 0,
@@ -7348,7 +7348,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 94,
       "connected": true,
       "groups": [
@@ -7409,7 +7409,7 @@
   {
    "index": 122,
    "type": "updateStepWin",
-   "amount": 57430
+   "amount": 55540
   },
   {
    "index": 123,
@@ -7440,13 +7440,13 @@
   {
    "index": 125,
    "type": "setWin",
-   "amount": 57430,
+   "amount": 55540,
    "winLevel": 9
   },
   {
    "index": 126,
    "type": "setTotalWin",
-   "amount": 445225
+   "amount": 444950
   },
   {
    "index": 127,
@@ -7618,7 +7618,7 @@
    "index": 129,
    "type": "winInfo",
    "step": 0,
-   "totalWin": 26670,
+   "totalWin": 27160,
    "wins": [
     {
      "lineIndex": 2,
@@ -7802,7 +7802,7 @@
      "lineIndex": 13,
      "symbol": "H3",
      "count": 3,
-     "win": 7350,
+     "win": 7840,
      "positions": [
       {
        "reel": 0,
@@ -7818,7 +7818,7 @@
       }
      ],
      "meta": {
-      "basePay": 15,
+      "basePay": 16,
       "lineMult": 98,
       "connected": true,
       "groups": [
@@ -7879,7 +7879,7 @@
   {
    "index": 130,
    "type": "updateStepWin",
-   "amount": 26670
+   "amount": 27160
   },
   {
    "index": 131,
@@ -7984,13 +7984,13 @@
    "index": 134,
    "type": "winInfo",
    "step": 1,
-   "totalWin": 21480,
+   "totalWin": 19080,
    "wins": [
     {
      "lineIndex": 2,
      "symbol": "L4",
      "count": 3,
-     "win": 1530,
+     "win": 1020,
      "positions": [
       {
        "reel": 0,
@@ -8006,7 +8006,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 102,
       "connected": true,
       "groups": [
@@ -8028,7 +8028,7 @@
      "lineIndex": 6,
      "symbol": "L4",
      "count": 3,
-     "win": 1530,
+     "win": 1020,
      "positions": [
       {
        "reel": 0,
@@ -8044,7 +8044,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 102,
       "connected": true,
       "groups": [
@@ -8066,7 +8066,7 @@
      "lineIndex": 10,
      "symbol": "L4",
      "count": 3,
-     "win": 870,
+     "win": 580,
      "positions": [
       {
        "reel": 0,
@@ -8082,7 +8082,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 58,
       "connected": true,
       "groups": [
@@ -8098,7 +8098,7 @@
      "lineIndex": 11,
      "symbol": "L4",
      "count": 3,
-     "win": 1530,
+     "win": 1020,
      "positions": [
       {
        "reel": 0,
@@ -8114,7 +8114,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 102,
       "connected": true,
       "groups": [
@@ -8136,7 +8136,7 @@
      "lineIndex": 13,
      "symbol": "H1",
      "count": 3,
-     "win": 12750,
+     "win": 13260,
      "positions": [
       {
        "reel": 0,
@@ -8152,7 +8152,7 @@
       }
      ],
      "meta": {
-      "basePay": 25,
+      "basePay": 26,
       "lineMult": 102,
       "connected": true,
       "groups": [
@@ -8174,7 +8174,7 @@
      "lineIndex": 16,
      "symbol": "L4",
      "count": 3,
-     "win": 870,
+     "win": 580,
      "positions": [
       {
        "reel": 0,
@@ -8190,7 +8190,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 58,
       "connected": true,
       "groups": [
@@ -8206,7 +8206,7 @@
      "lineIndex": 17,
      "symbol": "L4",
      "count": 3,
-     "win": 1530,
+     "win": 1020,
      "positions": [
       {
        "reel": 0,
@@ -8222,7 +8222,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 102,
       "connected": true,
       "groups": [
@@ -8244,7 +8244,7 @@
      "lineIndex": 19,
      "symbol": "L4",
      "count": 3,
-     "win": 870,
+     "win": 580,
      "positions": [
       {
        "reel": 0,
@@ -8260,7 +8260,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 58,
       "connected": true,
       "groups": [
@@ -8277,7 +8277,7 @@
   {
    "index": 135,
    "type": "updateStepWin",
-   "amount": 48150
+   "amount": 46240
   },
   {
    "index": 136,
@@ -8373,13 +8373,13 @@
    "index": 139,
    "type": "winInfo",
    "step": 2,
-   "totalWin": 32590,
+   "totalWin": 34020,
    "wins": [
     {
      "lineIndex": 2,
      "symbol": "L1",
      "count": 3,
-     "win": 2650,
+     "win": 3180,
      "positions": [
       {
        "reel": 0,
@@ -8395,7 +8395,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 106,
       "connected": true,
       "groups": [
@@ -8455,7 +8455,7 @@
      "lineIndex": 9,
      "symbol": "L1",
      "count": 3,
-     "win": 1500,
+     "win": 1800,
      "positions": [
       {
        "reel": 0,
@@ -8471,7 +8471,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 60,
       "connected": true,
       "groups": [
@@ -8525,7 +8525,7 @@
      "lineIndex": 13,
      "symbol": "L4",
      "count": 3,
-     "win": 1590,
+     "win": 1060,
      "positions": [
       {
        "reel": 0,
@@ -8541,7 +8541,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 106,
       "connected": true,
       "groups": [
@@ -8563,7 +8563,7 @@
      "lineIndex": 15,
      "symbol": "L1",
      "count": 3,
-     "win": 1500,
+     "win": 1800,
      "positions": [
       {
        "reel": 0,
@@ -8579,7 +8579,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 60,
       "connected": true,
       "groups": [
@@ -8595,7 +8595,7 @@
      "lineIndex": 17,
      "symbol": "L1",
      "count": 3,
-     "win": 2650,
+     "win": 3180,
      "positions": [
       {
        "reel": 0,
@@ -8611,7 +8611,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 106,
       "connected": true,
       "groups": [
@@ -8633,7 +8633,7 @@
      "lineIndex": 20,
      "symbol": "L1",
      "count": 3,
-     "win": 1500,
+     "win": 1800,
      "positions": [
       {
        "reel": 0,
@@ -8649,7 +8649,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 60,
       "connected": true,
       "groups": [
@@ -8666,7 +8666,7 @@
   {
    "index": 140,
    "type": "updateStepWin",
-   "amount": 80740
+   "amount": 80260
   },
   {
    "index": 141,
@@ -8762,13 +8762,13 @@
    "index": 144,
    "type": "winInfo",
    "step": 3,
-   "totalWin": 25510,
+   "totalWin": 26540,
    "wins": [
     {
      "lineIndex": 1,
      "symbol": "L4",
      "count": 3,
-     "win": 930,
+     "win": 620,
      "positions": [
       {
        "reel": 0,
@@ -8784,7 +8784,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 62,
       "connected": true,
       "groups": [
@@ -8800,7 +8800,7 @@
      "lineIndex": 2,
      "symbol": "L1",
      "count": 3,
-     "win": 2750,
+     "win": 3300,
      "positions": [
       {
        "reel": 0,
@@ -8816,7 +8816,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 110,
       "connected": true,
       "groups": [
@@ -8838,7 +8838,7 @@
      "lineIndex": 6,
      "symbol": "H3",
      "count": 3,
-     "win": 8250,
+     "win": 8800,
      "positions": [
       {
        "reel": 0,
@@ -8854,7 +8854,7 @@
       }
      ],
      "meta": {
-      "basePay": 15,
+      "basePay": 16,
       "lineMult": 110,
       "connected": true,
       "groups": [
@@ -8876,7 +8876,7 @@
      "lineIndex": 7,
      "symbol": "L4",
      "count": 3,
-     "win": 930,
+     "win": 620,
      "positions": [
       {
        "reel": 0,
@@ -8892,7 +8892,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 62,
       "connected": true,
       "groups": [
@@ -8908,7 +8908,7 @@
      "lineIndex": 11,
      "symbol": "H3",
      "count": 3,
-     "win": 8250,
+     "win": 8800,
      "positions": [
       {
        "reel": 0,
@@ -8924,7 +8924,7 @@
       }
      ],
      "meta": {
-      "basePay": 15,
+      "basePay": 16,
       "lineMult": 110,
       "connected": true,
       "groups": [
@@ -8946,7 +8946,7 @@
      "lineIndex": 13,
      "symbol": "L4",
      "count": 3,
-     "win": 1650,
+     "win": 1100,
      "positions": [
       {
        "reel": 0,
@@ -8962,7 +8962,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 110,
       "connected": true,
       "groups": [
@@ -8984,7 +8984,7 @@
      "lineIndex": 17,
      "symbol": "L1",
      "count": 3,
-     "win": 2750,
+     "win": 3300,
      "positions": [
       {
        "reel": 0,
@@ -9000,7 +9000,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 110,
       "connected": true,
       "groups": [
@@ -9023,7 +9023,7 @@
   {
    "index": 145,
    "type": "updateStepWin",
-   "amount": 106250
+   "amount": 106800
   },
   {
    "index": 146,
@@ -9054,13 +9054,13 @@
   {
    "index": 148,
    "type": "setWin",
-   "amount": 106250,
-   "winLevel": 9
+   "amount": 106800,
+   "winLevel": 10
   },
   {
    "index": 149,
    "type": "setTotalWin",
-   "amount": 551475
+   "amount": 551750
   },
   {
    "index": 150,
@@ -9236,13 +9236,13 @@
    "index": 152,
    "type": "winInfo",
    "step": 0,
-   "totalWin": 24510,
+   "totalWin": 26220,
    "wins": [
     {
      "lineIndex": 2,
      "symbol": "H3",
      "count": 3,
-     "win": 8550,
+     "win": 9120,
      "positions": [
       {
        "reel": 0,
@@ -9258,7 +9258,7 @@
       }
      ],
      "meta": {
-      "basePay": 15,
+      "basePay": 16,
       "lineMult": 114,
       "connected": true,
       "groups": [
@@ -9356,7 +9356,7 @@
      "lineIndex": 13,
      "symbol": "L1",
      "count": 3,
-     "win": 2850,
+     "win": 3420,
      "positions": [
       {
        "reel": 0,
@@ -9372,7 +9372,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 114,
       "connected": true,
       "groups": [
@@ -9394,7 +9394,7 @@
      "lineIndex": 17,
      "symbol": "H3",
      "count": 3,
-     "win": 8550,
+     "win": 9120,
      "positions": [
       {
        "reel": 0,
@@ -9410,7 +9410,7 @@
       }
      ],
      "meta": {
-      "basePay": 15,
+      "basePay": 16,
       "lineMult": 114,
       "connected": true,
       "groups": [
@@ -9433,7 +9433,7 @@
   {
    "index": 153,
    "type": "updateStepWin",
-   "amount": 24510
+   "amount": 26220
   },
   {
    "index": 154,
@@ -9520,13 +9520,13 @@
    "index": 157,
    "type": "winInfo",
    "step": 1,
-   "totalWin": 25370,
+   "totalWin": 27140,
    "wins": [
     {
      "lineIndex": 2,
      "symbol": "L2",
      "count": 3,
-     "win": 2950,
+     "win": 3540,
      "positions": [
       {
        "reel": 0,
@@ -9542,7 +9542,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 118,
       "connected": true,
       "groups": [
@@ -9564,7 +9564,7 @@
      "lineIndex": 6,
      "symbol": "H3",
      "count": 3,
-     "win": 8850,
+     "win": 9440,
      "positions": [
       {
        "reel": 0,
@@ -9580,7 +9580,7 @@
       }
      ],
      "meta": {
-      "basePay": 15,
+      "basePay": 16,
       "lineMult": 118,
       "connected": true,
       "groups": [
@@ -9602,7 +9602,7 @@
      "lineIndex": 11,
      "symbol": "H3",
      "count": 3,
-     "win": 8850,
+     "win": 9440,
      "positions": [
       {
        "reel": 0,
@@ -9618,7 +9618,7 @@
       }
      ],
      "meta": {
-      "basePay": 15,
+      "basePay": 16,
       "lineMult": 118,
       "connected": true,
       "groups": [
@@ -9640,7 +9640,7 @@
      "lineIndex": 13,
      "symbol": "L5",
      "count": 3,
-     "win": 1770,
+     "win": 1180,
      "positions": [
       {
        "reel": 0,
@@ -9656,7 +9656,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 118,
       "connected": true,
       "groups": [
@@ -9678,7 +9678,7 @@
      "lineIndex": 17,
      "symbol": "L2",
      "count": 3,
-     "win": 2950,
+     "win": 3540,
      "positions": [
       {
        "reel": 0,
@@ -9694,7 +9694,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 118,
       "connected": true,
       "groups": [
@@ -9717,7 +9717,7 @@
   {
    "index": 158,
    "type": "updateStepWin",
-   "amount": 49880
+   "amount": 53360
   },
   {
    "index": 159,
@@ -9804,7 +9804,7 @@
    "index": 162,
    "type": "winInfo",
    "step": 2,
-   "totalWin": 88910,
+   "totalWin": 88300,
    "wins": [
     {
      "lineIndex": 2,
@@ -9995,7 +9995,7 @@
      "lineIndex": 13,
      "symbol": "L5",
      "count": 3,
-     "win": 1830,
+     "win": 1220,
      "positions": [
       {
        "reel": 0,
@@ -10011,7 +10011,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 122,
       "connected": true,
       "groups": [
@@ -10162,7 +10162,7 @@
   {
    "index": 163,
    "type": "updateStepWin",
-   "amount": 138790
+   "amount": 141660
   },
   {
    "index": 164,
@@ -10273,7 +10273,7 @@
    "index": 167,
    "type": "winInfo",
    "step": 3,
-   "totalWin": 54390,
+   "totalWin": 55020,
    "wins": [
     {
      "lineIndex": 2,
@@ -10317,7 +10317,7 @@
      "lineIndex": 6,
      "symbol": "L2",
      "count": 3,
-     "win": 3150,
+     "win": 3780,
      "positions": [
       {
        "reel": 0,
@@ -10333,7 +10333,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 126,
       "connected": true,
       "groups": [
@@ -10387,7 +10387,7 @@
      "lineIndex": 11,
      "symbol": "L2",
      "count": 3,
-     "win": 3150,
+     "win": 3780,
      "positions": [
       {
        "reel": 0,
@@ -10403,7 +10403,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 126,
       "connected": true,
       "groups": [
@@ -10425,7 +10425,7 @@
      "lineIndex": 13,
      "symbol": "L5",
      "count": 3,
-     "win": 1890,
+     "win": 1260,
      "positions": [
       {
        "reel": 0,
@@ -10441,7 +10441,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 126,
       "connected": true,
       "groups": [
@@ -10566,7 +10566,7 @@
   {
    "index": 168,
    "type": "updateStepWin",
-   "amount": 193180
+   "amount": 196680
   },
   {
    "index": 169,
@@ -10597,13 +10597,13 @@
   {
    "index": 171,
    "type": "setWin",
-   "amount": 193180,
-   "winLevel": 9
+   "amount": 196680,
+   "winLevel": 10
   },
   {
    "index": 172,
    "type": "setTotalWin",
-   "amount": 744655
+   "amount": 748430
   },
   {
    "index": 173,
@@ -11139,13 +11139,13 @@
    "index": 180,
    "type": "winInfo",
    "step": 1,
-   "totalWin": 102630,
+   "totalWin": 100620,
    "wins": [
     {
      "lineIndex": 2,
      "symbol": "L4",
      "count": 3,
-     "win": 2010,
+     "win": 1340,
      "positions": [
       {
        "reel": 0,
@@ -11161,7 +11161,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 134,
       "connected": true,
       "groups": [
@@ -11297,7 +11297,7 @@
      "lineIndex": 13,
      "symbol": "L4",
      "count": 3,
-     "win": 2010,
+     "win": 1340,
      "positions": [
       {
        "reel": 0,
@@ -11313,7 +11313,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 134,
       "connected": true,
       "groups": [
@@ -11335,7 +11335,7 @@
      "lineIndex": 17,
      "symbol": "L4",
      "count": 3,
-     "win": 2010,
+     "win": 1340,
      "positions": [
       {
        "reel": 0,
@@ -11351,7 +11351,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 134,
       "connected": true,
       "groups": [
@@ -11374,7 +11374,7 @@
   {
    "index": 181,
    "type": "updateStepWin",
-   "amount": 199630
+   "amount": 197620
   },
   {
    "index": 182,
@@ -11479,13 +11479,13 @@
    "index": 185,
    "type": "winInfo",
    "step": 2,
-   "totalWin": 270750,
+   "totalWin": 272820,
    "wins": [
     {
      "lineIndex": 2,
      "symbol": "L2",
      "count": 3,
-     "win": 3450,
+     "win": 4140,
      "positions": [
       {
        "reel": 0,
@@ -11501,7 +11501,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 138,
       "connected": true,
       "groups": [
@@ -11637,7 +11637,7 @@
      "lineIndex": 13,
      "symbol": "H3",
      "count": 3,
-     "win": 10350,
+     "win": 11040,
      "positions": [
       {
        "reel": 0,
@@ -11653,7 +11653,7 @@
       }
      ],
      "meta": {
-      "basePay": 15,
+      "basePay": 16,
       "lineMult": 138,
       "connected": true,
       "groups": [
@@ -11675,7 +11675,7 @@
      "lineIndex": 17,
      "symbol": "L2",
      "count": 3,
-     "win": 3450,
+     "win": 4140,
      "positions": [
       {
        "reel": 0,
@@ -11691,7 +11691,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 138,
       "connected": true,
       "groups": [
@@ -11714,7 +11714,7 @@
   {
    "index": 186,
    "type": "updateStepWin",
-   "amount": 470380
+   "amount": 470440
   },
   {
    "index": 187,
@@ -11819,13 +11819,13 @@
    "index": 190,
    "type": "winInfo",
    "step": 3,
-   "totalWin": 271890,
+   "totalWin": 269760,
    "wins": [
     {
      "lineIndex": 2,
      "symbol": "L5",
      "count": 3,
-     "win": 2130,
+     "win": 1420,
      "positions": [
       {
        "reel": 0,
@@ -11841,7 +11841,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 142,
       "connected": true,
       "groups": [
@@ -11977,7 +11977,7 @@
      "lineIndex": 13,
      "symbol": "L5",
      "count": 3,
-     "win": 2130,
+     "win": 1420,
      "positions": [
       {
        "reel": 0,
@@ -11993,7 +11993,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 142,
       "connected": true,
       "groups": [
@@ -12015,7 +12015,7 @@
      "lineIndex": 17,
      "symbol": "L5",
      "count": 3,
-     "win": 2130,
+     "win": 1420,
      "positions": [
       {
        "reel": 0,
@@ -12031,7 +12031,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 142,
       "connected": true,
       "groups": [
@@ -12054,7 +12054,7 @@
   {
    "index": 191,
    "type": "updateStepWin",
-   "amount": 742270
+   "amount": 740200
   },
   {
    "index": 192,
@@ -12098,13 +12098,13 @@
   {
    "index": 194,
    "type": "setWin",
-   "amount": 742270,
-   "winLevel": 9
+   "amount": 740200,
+   "winLevel": 10
   },
   {
    "index": 195,
    "type": "setTotalWin",
-   "amount": 1486925
+   "amount": 1488630
   },
   {
    "index": 196,
@@ -12283,13 +12283,13 @@
    "index": 198,
    "type": "winInfo",
    "step": 0,
-   "totalWin": 62070,
+   "totalWin": 59880,
    "wins": [
     {
      "lineIndex": 2,
      "symbol": "L4",
      "count": 3,
-     "win": 2190,
+     "win": 1460,
      "positions": [
       {
        "reel": 0,
@@ -12305,7 +12305,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 146,
       "connected": true,
       "groups": [
@@ -12441,7 +12441,7 @@
      "lineIndex": 13,
      "symbol": "L4",
      "count": 3,
-     "win": 2190,
+     "win": 1460,
      "positions": [
       {
        "reel": 0,
@@ -12457,7 +12457,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 146,
       "connected": true,
       "groups": [
@@ -12479,7 +12479,7 @@
      "lineIndex": 17,
      "symbol": "L4",
      "count": 3,
-     "win": 2190,
+     "win": 1460,
      "positions": [
       {
        "reel": 0,
@@ -12495,7 +12495,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 146,
       "connected": true,
       "groups": [
@@ -12518,7 +12518,7 @@
   {
    "index": 199,
    "type": "updateStepWin",
-   "amount": 62070
+   "amount": 59880
   },
   {
    "index": 200,
@@ -12623,7 +12623,7 @@
    "index": 203,
    "type": "winInfo",
    "step": 1,
-   "totalWin": 172650,
+   "totalWin": 171900,
    "wins": [
     {
      "lineIndex": 2,
@@ -12794,7 +12794,7 @@
      "lineIndex": 13,
      "symbol": "L4",
      "count": 3,
-     "win": 2250,
+     "win": 1500,
      "positions": [
       {
        "reel": 0,
@@ -12810,7 +12810,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 150,
       "connected": true,
       "groups": [
@@ -12884,7 +12884,7 @@
   {
    "index": 204,
    "type": "updateStepWin",
-   "amount": 234720
+   "amount": 231780
   },
   {
    "index": 205,
@@ -13272,7 +13272,7 @@
   {
    "index": 209,
    "type": "updateStepWin",
-   "amount": 379620
+   "amount": 376680
   },
   {
    "index": 210,
@@ -13395,7 +13395,7 @@
    "index": 213,
    "type": "winInfo",
    "step": 3,
-   "totalWin": 323770,
+   "totalWin": 324560,
    "wins": [
     {
      "lineIndex": 2,
@@ -13553,7 +13553,7 @@
      "lineIndex": 13,
      "symbol": "L2",
      "count": 3,
-     "win": 3950,
+     "win": 4740,
      "positions": [
       {
        "reel": 0,
@@ -13569,7 +13569,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 158,
       "connected": true,
       "groups": [
@@ -13630,7 +13630,7 @@
   {
    "index": 214,
    "type": "updateStepWin",
-   "amount": 703390
+   "amount": 701240
   },
   {
    "index": 215,
@@ -13674,13 +13674,13 @@
   {
    "index": 217,
    "type": "setWin",
-   "amount": 703390,
-   "winLevel": 9
+   "amount": 701240,
+   "winLevel": 10
   },
   {
    "index": 218,
    "type": "setTotalWin",
-   "amount": 2190315
+   "amount": 2189870
   },
   {
    "index": 219,
@@ -13861,13 +13861,13 @@
    "index": 221,
    "type": "winInfo",
    "step": 0,
-   "totalWin": 139110,
+   "totalWin": 138300,
    "wins": [
     {
      "lineIndex": 2,
      "symbol": "L5",
      "count": 3,
-     "win": 2430,
+     "win": 1620,
      "positions": [
       {
        "reel": 0,
@@ -13883,7 +13883,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 162,
       "connected": true,
       "groups": [
@@ -14019,7 +14019,7 @@
      "lineIndex": 13,
      "symbol": "L2",
      "count": 3,
-     "win": 4050,
+     "win": 4860,
      "positions": [
       {
        "reel": 0,
@@ -14035,7 +14035,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 162,
       "connected": true,
       "groups": [
@@ -14057,7 +14057,7 @@
      "lineIndex": 17,
      "symbol": "L5",
      "count": 3,
-     "win": 2430,
+     "win": 1620,
      "positions": [
       {
        "reel": 0,
@@ -14073,7 +14073,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 162,
       "connected": true,
       "groups": [
@@ -14096,7 +14096,7 @@
   {
    "index": 222,
    "type": "updateStepWin",
-   "amount": 139110
+   "amount": 138300
   },
   {
    "index": 223,
@@ -14201,13 +14201,13 @@
    "index": 226,
    "type": "winInfo",
    "step": 1,
-   "totalWin": 686830,
+   "totalWin": 685100,
    "wins": [
     {
      "lineIndex": 2,
      "symbol": "L4",
      "count": 3,
-     "win": 2490,
+     "win": 1660,
      "positions": [
       {
        "reel": 0,
@@ -14223,7 +14223,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 166,
       "connected": true,
       "groups": [
@@ -14245,7 +14245,7 @@
      "lineIndex": 5,
      "symbol": "L4",
      "count": 3,
-     "win": 1350,
+     "win": 900,
      "positions": [
       {
        "reel": 0,
@@ -14261,7 +14261,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 90,
       "connected": true,
       "groups": [
@@ -14391,7 +14391,7 @@
      "lineIndex": 12,
      "symbol": "L4",
      "count": 3,
-     "win": 1350,
+     "win": 900,
      "positions": [
       {
        "reel": 0,
@@ -14407,7 +14407,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 90,
       "connected": true,
       "groups": [
@@ -14423,7 +14423,7 @@
      "lineIndex": 13,
      "symbol": "L2",
      "count": 3,
-     "win": 4150,
+     "win": 4980,
      "positions": [
       {
        "reel": 0,
@@ -14439,7 +14439,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 166,
       "connected": true,
       "groups": [
@@ -14461,7 +14461,7 @@
      "lineIndex": 17,
      "symbol": "L4",
      "count": 3,
-     "win": 2490,
+     "win": 1660,
      "positions": [
       {
        "reel": 0,
@@ -14477,7 +14477,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 166,
       "connected": true,
       "groups": [
@@ -14500,7 +14500,7 @@
   {
    "index": 227,
    "type": "updateStepWin",
-   "amount": 825940
+   "amount": 823400
   },
   {
    "index": 228,
@@ -14614,13 +14614,13 @@
    "index": 231,
    "type": "winInfo",
    "step": 2,
-   "totalWin": 99650,
+   "totalWin": 102200,
    "wins": [
     {
      "lineIndex": 2,
      "symbol": "H3",
      "count": 3,
-     "win": 12750,
+     "win": 13600,
      "positions": [
       {
        "reel": 0,
@@ -14636,7 +14636,7 @@
       }
      ],
      "meta": {
-      "basePay": 15,
+      "basePay": 16,
       "lineMult": 170,
       "connected": true,
       "groups": [
@@ -14772,7 +14772,7 @@
      "lineIndex": 13,
      "symbol": "L2",
      "count": 3,
-     "win": 4250,
+     "win": 5100,
      "positions": [
       {
        "reel": 0,
@@ -14788,7 +14788,7 @@
       }
      ],
      "meta": {
-      "basePay": 5,
+      "basePay": 6,
       "lineMult": 170,
       "connected": true,
       "groups": [
@@ -14810,7 +14810,7 @@
      "lineIndex": 17,
      "symbol": "H3",
      "count": 3,
-     "win": 12750,
+     "win": 13600,
      "positions": [
       {
        "reel": 0,
@@ -14826,7 +14826,7 @@
       }
      ],
      "meta": {
-      "basePay": 15,
+      "basePay": 16,
       "lineMult": 170,
       "connected": true,
       "groups": [
@@ -14849,7 +14849,7 @@
   {
    "index": 232,
    "type": "updateStepWin",
-   "amount": 925590
+   "amount": 925600
   },
   {
    "index": 233,
@@ -14954,7 +14954,7 @@
    "index": 236,
    "type": "winInfo",
    "step": 3,
-   "totalWin": 500970,
+   "totalWin": 500100,
    "wins": [
     {
      "lineIndex": 2,
@@ -15208,7 +15208,7 @@
      "lineIndex": 13,
      "symbol": "L4",
      "count": 3,
-     "win": 2610,
+     "win": 1740,
      "positions": [
       {
        "reel": 0,
@@ -15224,7 +15224,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 174,
       "connected": true,
       "groups": [
@@ -15349,7 +15349,7 @@
   {
    "index": 237,
    "type": "updateStepWin",
-   "amount": 1426560
+   "amount": 1425700
   },
   {
    "index": 238,
@@ -15393,13 +15393,13 @@
   {
    "index": 240,
    "type": "setWin",
-   "amount": 1426560,
-   "winLevel": 9
+   "amount": 1425700,
+   "winLevel": 10
   },
   {
    "index": 241,
    "type": "setTotalWin",
-   "amount": 3616875
+   "amount": 3615570
   },
   {
    "index": 242,
@@ -15582,13 +15582,13 @@
    "index": 244,
    "type": "winInfo",
    "step": 0,
-   "totalWin": 190200,
+   "totalWin": 193420,
    "wins": [
     {
      "lineIndex": 2,
      "symbol": "H3",
      "count": 3,
-     "win": 13350,
+     "win": 14240,
      "positions": [
       {
        "reel": 0,
@@ -15604,7 +15604,7 @@
       }
      ],
      "meta": {
-      "basePay": 15,
+      "basePay": 16,
       "lineMult": 178,
       "connected": true,
       "groups": [
@@ -15683,7 +15683,7 @@
      "lineIndex": 9,
      "symbol": "H3",
      "count": 3,
-     "win": 7200,
+     "win": 7680,
      "positions": [
       {
        "reel": 0,
@@ -15699,7 +15699,7 @@
       }
      ],
      "meta": {
-      "basePay": 15,
+      "basePay": 16,
       "lineMult": 96,
       "connected": true,
       "groups": [
@@ -15823,7 +15823,7 @@
      "lineIndex": 15,
      "symbol": "H3",
      "count": 3,
-     "win": 7200,
+     "win": 7680,
      "positions": [
       {
        "reel": 0,
@@ -15839,7 +15839,7 @@
       }
      ],
      "meta": {
-      "basePay": 15,
+      "basePay": 16,
       "lineMult": 96,
       "connected": true,
       "groups": [
@@ -15855,7 +15855,7 @@
      "lineIndex": 17,
      "symbol": "H3",
      "count": 3,
-     "win": 13350,
+     "win": 14240,
      "positions": [
       {
        "reel": 0,
@@ -15871,7 +15871,7 @@
       }
      ],
      "meta": {
-      "basePay": 15,
+      "basePay": 16,
       "lineMult": 178,
       "connected": true,
       "groups": [
@@ -15893,7 +15893,7 @@
      "lineIndex": 20,
      "symbol": "H3",
      "count": 3,
-     "win": 7200,
+     "win": 7680,
      "positions": [
       {
        "reel": 0,
@@ -15909,7 +15909,7 @@
       }
      ],
      "meta": {
-      "basePay": 15,
+      "basePay": 16,
       "lineMult": 96,
       "connected": true,
       "groups": [
@@ -15926,7 +15926,7 @@
   {
    "index": 245,
    "type": "updateStepWin",
-   "amount": 190200
+   "amount": 193420
   },
   {
    "index": 246,
@@ -16049,13 +16049,13 @@
    "index": 249,
    "type": "winInfo",
    "step": 1,
-   "totalWin": 107130,
+   "totalWin": 108040,
    "wins": [
     {
      "lineIndex": 2,
      "symbol": "H3",
      "count": 3,
-     "win": 13650,
+     "win": 14560,
      "positions": [
       {
        "reel": 0,
@@ -16071,7 +16071,7 @@
       }
      ],
      "meta": {
-      "basePay": 15,
+      "basePay": 16,
       "lineMult": 182,
       "connected": true,
       "groups": [
@@ -16207,7 +16207,7 @@
      "lineIndex": 13,
      "symbol": "L5",
      "count": 3,
-     "win": 2730,
+     "win": 1820,
      "positions": [
       {
        "reel": 0,
@@ -16223,7 +16223,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 182,
       "connected": true,
       "groups": [
@@ -16245,7 +16245,7 @@
      "lineIndex": 17,
      "symbol": "H3",
      "count": 3,
-     "win": 13650,
+     "win": 14560,
      "positions": [
       {
        "reel": 0,
@@ -16261,7 +16261,7 @@
       }
      ],
      "meta": {
-      "basePay": 15,
+      "basePay": 16,
       "lineMult": 182,
       "connected": true,
       "groups": [
@@ -16284,7 +16284,7 @@
   {
    "index": 250,
    "type": "updateStepWin",
-   "amount": 297330
+   "amount": 301460
   },
   {
    "index": 251,
@@ -16389,7 +16389,7 @@
    "index": 254,
    "type": "winInfo",
    "step": 2,
-   "totalWin": 565620,
+   "totalWin": 567480,
    "wins": [
     {
      "lineIndex": 1,
@@ -16427,7 +16427,7 @@
      "lineIndex": 2,
      "symbol": "H3",
      "count": 3,
-     "win": 13950,
+     "win": 14880,
      "positions": [
       {
        "reel": 0,
@@ -16443,7 +16443,7 @@
       }
      ],
      "meta": {
-      "basePay": 15,
+      "basePay": 16,
       "lineMult": 186,
       "connected": true,
       "groups": [
@@ -16649,7 +16649,7 @@
      "lineIndex": 17,
      "symbol": "H3",
      "count": 3,
-     "win": 13950,
+     "win": 14880,
      "positions": [
       {
        "reel": 0,
@@ -16665,7 +16665,7 @@
       }
      ],
      "meta": {
-      "basePay": 15,
+      "basePay": 16,
       "lineMult": 186,
       "connected": true,
       "groups": [
@@ -16688,7 +16688,7 @@
   {
    "index": 255,
    "type": "updateStepWin",
-   "amount": 862950
+   "amount": 868940
   },
   {
    "index": 256,
@@ -16802,7 +16802,7 @@
    "index": 259,
    "type": "winInfo",
    "step": 3,
-   "totalWin": 352150,
+   "totalWin": 353100,
    "wins": [
     {
      "lineIndex": 2,
@@ -17011,7 +17011,7 @@
      "lineIndex": 13,
      "symbol": "H3",
      "count": 3,
-     "win": 14250,
+     "win": 15200,
      "positions": [
       {
        "reel": 0,
@@ -17027,7 +17027,7 @@
       }
      ],
      "meta": {
-      "basePay": 15,
+      "basePay": 16,
       "lineMult": 190,
       "connected": true,
       "groups": [
@@ -17190,7 +17190,7 @@
   {
    "index": 260,
    "type": "updateStepWin",
-   "amount": 1215100
+   "amount": 1222040
   },
   {
    "index": 261,
@@ -17234,13 +17234,13 @@
   {
    "index": 263,
    "type": "setWin",
-   "amount": 1215100,
-   "winLevel": 9
+   "amount": 1222040,
+   "winLevel": 10
   },
   {
    "index": 264,
    "type": "setTotalWin",
-   "amount": 4831975
+   "amount": 4837610
   },
   {
    "index": 265,
@@ -17419,13 +17419,13 @@
    "index": 267,
    "type": "winInfo",
    "step": 0,
-   "totalWin": 389450,
+   "totalWin": 385500,
    "wins": [
     {
      "lineIndex": 1,
      "symbol": "L4",
      "count": 3,
-     "win": 1560,
+     "win": 1040,
      "positions": [
       {
        "reel": 0,
@@ -17441,7 +17441,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 104,
       "connected": true,
       "groups": [
@@ -17457,7 +17457,7 @@
      "lineIndex": 2,
      "symbol": "L5",
      "count": 3,
-     "win": 2910,
+     "win": 1940,
      "positions": [
       {
        "reel": 0,
@@ -17473,7 +17473,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 194,
       "connected": true,
       "groups": [
@@ -17603,7 +17603,7 @@
      "lineIndex": 7,
      "symbol": "L4",
      "count": 3,
-     "win": 1560,
+     "win": 1040,
      "positions": [
       {
        "reel": 0,
@@ -17619,7 +17619,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 104,
       "connected": true,
       "groups": [
@@ -17692,7 +17692,7 @@
      "lineIndex": 13,
      "symbol": "L4",
      "count": 3,
-     "win": 2910,
+     "win": 1940,
      "positions": [
       {
        "reel": 0,
@@ -17708,7 +17708,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 194,
       "connected": true,
       "groups": [
@@ -17730,7 +17730,7 @@
      "lineIndex": 17,
      "symbol": "L5",
      "count": 3,
-     "win": 2910,
+     "win": 1940,
      "positions": [
       {
        "reel": 0,
@@ -17746,7 +17746,7 @@
       }
      ],
      "meta": {
-      "basePay": 3,
+      "basePay": 2,
       "lineMult": 194,
       "connected": true,
       "groups": [
@@ -17820,7 +17820,7 @@
   {
    "index": 268,
    "type": "updateStepWin",
-   "amount": 389450
+   "amount": 385500
   },
   {
    "index": 269,
@@ -17841,7 +17841,7 @@
   {
    "index": 272,
    "type": "freeSpinEnd",
-   "amount": 4999975,
+   "amount": 4999970,
    "winLevel": 9
   },
   {
@@ -17851,7 +17851,7 @@
   }
  ],
  "criteria": "wincap",
- "baseGameWins": 0.25,
- "freeGameWins": 49999.75,
+ "baseGameWins": 0.3,
+ "freeGameWins": 49999.7,
  "mode": "base"
 }

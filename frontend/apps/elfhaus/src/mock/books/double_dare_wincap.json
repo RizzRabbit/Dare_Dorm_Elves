@@ -3901,7 +3901,7 @@
    "index": 60,
    "type": "setWin",
    "amount": 193000,
-   "winLevel": 9
+   "winLevel": 10
   },
   {
    "index": 61,
@@ -6056,7 +6056,7 @@
    "index": 83,
    "type": "setWin",
    "amount": 509100,
-   "winLevel": 9
+   "winLevel": 10
   },
   {
    "index": 84,
@@ -8065,7 +8065,7 @@
    "index": 106,
    "type": "setWin",
    "amount": 640750,
-   "winLevel": 9
+   "winLevel": 10
   },
   {
    "index": 107,
@@ -10293,7 +10293,7 @@
    "index": 129,
    "type": "setWin",
    "amount": 792800,
-   "winLevel": 9
+   "winLevel": 10
   },
   {
    "index": 130,
