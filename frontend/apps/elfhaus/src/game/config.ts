@@ -32,7 +32,7 @@ export const EPIC_STACK_X: number = G.epic.stackX;     // math GUAR_MIN_VAL.hidd
 export const EPIC_GROW_STEP: number = G.epic.step;     // math GROW_STEP.hidden (math v2: +2 per step)
 export const GROW_STEP: number = G.growStep.default;   // every other tier and base play (+1)
 export const GUARANTEE: { triple_dare: number; hidden: number } = G.guarantee; // full-reel wilds guaranteed at bonus start
-export const RETRIGGER = G.retrigger;                  // free-spin retrigger: 2 Dare Cards / 3 or more
+export const RETRIGGER = G.retrigger;                  // free-spin retrigger: 2 Ski Passes / 3 or more
 export const EGW_STACK_X: number = G.egwStackX;        // EGW full-reel wild value
 /** Math win_level edges (x bet): standard (setWin) and endFeature (freeSpinEnd); the big-win stages map onto these. */
 export const WIN_LEVELS: { standard: number[]; endFeature: number[]; byMode?: Record<string, number[]> } = G.winLevels;

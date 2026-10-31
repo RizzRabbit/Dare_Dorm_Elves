@@ -51,7 +51,7 @@ export async function loaderReady() {
 	done = total; progress();
 	await stingDone();
 	const pix = await px; if (!pix) preOut();   // DOM splash (no WebGL): the inline loader steps aside
-	if (pix && !noIntro()) await introLoaded();   // bar full, game primed behind the doors, TAP TO PARTY up
+	if (pix && !noIntro()) await introLoaded();   // bar full, game primed behind the doors, TAP TO START up
 	L.classList.add('ready');
 	// returning players who ticked "Don't show this again" go straight in once loading is done
 	if (!noIntro()) await new Promise<void>((res) => {

@@ -237,3 +237,4 @@ html body .ov>.wFrame{display:none!important}
 html body .ov.full.art::before{box-shadow:none!important}
 html body .ov.art{background:#26140f!important}
 html body .ov.win .ovWinO{box-shadow:inset 0 0 0 3px #f2b935,inset 0 0 0 6px #26140f!important;background:none!important;border-radius:10px}
+html body #loader #lGo::after{content:none!important;display:none!important}
