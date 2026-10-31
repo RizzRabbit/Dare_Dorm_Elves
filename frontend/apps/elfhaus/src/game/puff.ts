@@ -21,6 +21,17 @@ const FLAKE = (() => {
 })();
 const PUFF = `<svg viewBox="-30 -30 60 60" xmlns="${NS}"><circle r="26" fill="${CREAM}" stroke="${INK}" stroke-width="5"/><circle cx="-8" cy="-9" r="7" fill="#fff"/></svg>`;
 
+// chalet item 7 (pizzazz): the extra parts are frames on one trimmed sheet (assets/fx/puff_parts.webp, built by
+// elfhaus-chalet/build_puff.py): a small flake, a rounded glint, a soft flash, an ice-blue ring. Short and snappy: they
+// all live inside the puff's own ~0.55 s. Reduced motion: no particles, the symbol just fades.
+const PP = { url: 'assets/fx/puff_parts.webp', W: 444, H: 192, f: { flake: [0, 0, 72, 72], glint: [74, 0, 44, 44], flash: [120, 0, 128, 128], ring: [250, 0, 192, 192] } } as const;
+function partEl(fx: HTMLElement, n: keyof typeof PP.f, size: number) {
+	const [x, y, w, h] = PP.f[n], e = document.createElement('i'); e.className = 'pfP pf_' + n;
+	e.style.cssText = `width:${size}%;aspect-ratio:${w}/${h};background:url(${PP.url}) no-repeat;background-size:${(PP.W / w) * 100}% ${(PP.H / h) * 100}%;` +
+		`background-position:${PP.W === w ? 0 : (x / (PP.W - w)) * 100}% ${PP.H === h ? 0 : (y / (PP.H - h)) * 100}%`;
+	fx.appendChild(e); return e;
+}
+const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const turbo = () => S.turbo;
 const live = new Set<Animation>();
 const anim = (el: Element, kf: Keyframe[], o: KeyframeAnimationOptions) => { const a = el.animate(kf, o); live.add(a); a.finished.catch(() => {}).finally(() => live.delete(a)); return a; };
@@ -29,6 +40,7 @@ const done = (a: Animation) => a.finished.then(() => {}, () => {});
 /** Pop one cell's symbol and burst it into flakes. Resolves when the burst has cleared. */
 function puffCell(cell: HTMLElement, delay: number, kT: number) {
 	const sym = cell.querySelector<HTMLElement>('.sym'); if (!sym) return Promise.resolve();
+	if (reduced()) return done(anim(sym, [{ opacity: 1 }, { opacity: 0 }], { duration: 200, delay, easing: 'ease-out', fill: 'forwards' })).then(() => cell.classList.add('puffed'));
 	const fx = document.createElement('div'); fx.className = 'puffFx'; fx.setAttribute('aria-hidden', 'true'); cell.appendChild(fx);
 	const pop = anim(sym, [
 		{ transform: 'scale(1)', opacity: 1 },
@@ -60,6 +72,41 @@ function puffCell(cell: HTMLElement, delay: number, kT: number) {
 			{ transform: `translate(-50%,-50%) translate(${dx}%,${dy + 30}%) rotate(${rot}deg) scale(${sc * 0.7})`, opacity: 0 },
 		], { duration: 520 * kT, delay: at + i * 8, easing: 'cubic-bezier(.15,.75,.35,1)', fill: 'both' }));
 	}
+	// short flash + an ice-blue ring that rings out as the symbol bursts
+	const fl = partEl(fx, 'flash', 120);
+	parts.push(anim(fl, [
+		{ transform: 'translate(-50%,-50%) scale(.35)', opacity: 0 },
+		{ transform: 'translate(-50%,-50%) scale(.95)', opacity: .95, offset: 0.3 },
+		{ transform: 'translate(-50%,-50%) scale(1.15)', opacity: 0 },
+	], { duration: 200 * kT, delay: at - 20 * kT, easing: 'ease-out', fill: 'both' }));
+	const rg = partEl(fx, 'ring', 100);
+	parts.push(anim(rg, [
+		{ transform: 'translate(-50%,-50%) scale(.3)', opacity: 0 },
+		{ transform: 'translate(-50%,-50%) scale(.85)', opacity: 1, offset: 0.25 },
+		{ transform: 'translate(-50%,-50%) scale(1.45)', opacity: 0 },
+	], { duration: 380 * kT, delay: at, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'both' }));
+	// small flakes: thrown further, then drift down with a sway and a twinkle
+	for (let i = 0; i < 6; i++) {
+		const a = (i / 6) * Math.PI * 2 + 0.25 + Math.random() * 0.4, r = 230 + Math.random() * 90, f = partEl(fx, 'flake', 13 + Math.random() * 5);
+		const dx = Math.cos(a) * r, dy = Math.sin(a) * r - 40, sw = (Math.random() < 0.5 ? -1 : 1) * (30 + Math.random() * 25), rot = (Math.random() < 0.5 ? -1 : 1) * (160 + Math.random() * 160);
+		parts.push(anim(f, [
+			{ transform: 'translate(-50%,-50%) translate(0,0) rotate(0deg) scale(.3)', opacity: 0 },
+			{ transform: `translate(-50%,-50%) translate(${dx * 0.7}%,${dy * 0.7}%) rotate(${rot * 0.45}deg) scale(1)`, opacity: 1, offset: 0.3, easing: 'cubic-bezier(.45,0,.55,1)' },
+			{ transform: `translate(-50%,-50%) translate(${dx * 0.86 + sw}%,${dy * 0.86 + 70}%) rotate(${rot * 0.75}deg) scale(.9)`, opacity: .55, offset: 0.62, easing: 'cubic-bezier(.45,0,.55,1)' },
+			{ transform: `translate(-50%,-50%) translate(${dx * 0.92 + sw * 0.4}%,${dy * 0.92 + 110}%) rotate(${rot * 0.88}deg) scale(.85)`, opacity: 1, offset: 0.8, easing: 'cubic-bezier(.45,0,.55,1)' },
+			{ transform: `translate(-50%,-50%) translate(${dx + sw}%,${dy + 160}%) rotate(${rot}deg) scale(.6)`, opacity: 0 },
+		], { duration: 600 * kT, delay: at + 20 * kT + i * 10 * kT, easing: 'cubic-bezier(.15,.75,.35,1)', fill: 'both' }));
+	}
+	// glints: pop in round the burst and wink out
+	for (let i = 0; i < 4; i++) {
+		const a = (i / 4) * Math.PI * 2 + 0.8 + Math.random() * 0.5, r = 150 + Math.random() * 80, g = partEl(fx, 'glint', 20 + Math.random() * 6);
+		const dx = Math.cos(a) * r, dy = Math.sin(a) * r;
+		parts.push(anim(g, [
+			{ transform: `translate(-50%,-50%) translate(${dx}%,${dy}%) scale(0) rotate(0deg)`, opacity: 1 },
+			{ transform: `translate(-50%,-50%) translate(${dx}%,${dy}%) scale(1.1) rotate(45deg)`, opacity: 1, offset: 0.4 },
+			{ transform: `translate(-50%,-50%) translate(${dx}%,${dy - 12}%) scale(0) rotate(90deg)`, opacity: 0 },
+		], { duration: 320 * kT, delay: at + (60 + i * 45) * kT, easing: 'cubic-bezier(.3,0,.4,1)', fill: 'both' }));
+	}
 	return Promise.all(parts.map(done)).then(() => { fx.remove(); cell.classList.add('puffed'); });
 }
 /** Re-form a puffed symbol (no respin follows): a quick pop back in. */
@@ -67,6 +114,7 @@ function reform(cell: HTMLElement, delay: number, kT: number) {
 	const sym = cell.querySelector<HTMLElement>('.sym'); if (!sym) return Promise.resolve();
 	sym.getAnimations().forEach((a) => a.cancel());
 	cell.classList.remove('puffed');
+	if (reduced()) return done(anim(sym, [{ opacity: 0 }, { opacity: 1 }], { duration: 200, delay, easing: 'ease-out' }));
 	return done(anim(sym, [
 		{ transform: 'scale(0)', opacity: 0 },
 		{ transform: 'scale(1.12,1.08)', opacity: 1, offset: 0.6 },

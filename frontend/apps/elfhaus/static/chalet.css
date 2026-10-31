@@ -423,3 +423,6 @@ html body .cell.wild:not(.win) .rig[class*="k_W_R"] .rp.m_smile{animation:rgWSmi
 @keyframes rgWBlinkIdle{0%,94%{scale:1 0;animation-timing-function:cubic-bezier(.5,0,.9,.6)}95.8%,96.6%{scale:1 1;animation-timing-function:cubic-bezier(.1,.4,.4,1)}99%,100%{scale:1 0}}
 @keyframes rgWSmileIdle{0%,76%{scale:1 1;translate:0 0;animation-timing-function:cubic-bezier(.45,0,.55,1)}84%,92%{scale:1.06 .975;translate:0 -1.3%;animation-timing-function:cubic-bezier(.45,0,.55,1)}100%{scale:1 1;translate:0 0}}
 @media (prefers-reduced-motion:reduce){html body .rig[class*="k_W_R"] .rgBody,html body .rig[class*="k_W_R"] .rp{animation:none!important}}
+/* chalet item 7: snow puff extras (puff.ts partEl, sheet assets/fx/puff_parts.webp) */
+.cell .puffFx>i.pfP{position:absolute;left:50%;top:50%;display:block;opacity:0}
+.cell .puffFx>i.pf_flash,.cell .puffFx>i.pf_ring{z-index:-1}
