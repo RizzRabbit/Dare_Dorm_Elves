@@ -9,7 +9,7 @@ import RIG_JSON from './chalet/symrig.json';
 import SHEET_JSON from './chalet/symbols.sheet.json';
 import ART_JSON from './art.generated.json';
 
-type Part = { f: string; cls: string; pivot: number[] };
+type Part = { f: string; cls: string; pivot: number[]; hide?: boolean }; // hide: off at rest (the wild lids)
 type Rig = { src: number[]; pivot: number[]; parts: Part[]; spark: number[][]; glow: boolean };
 const RIG = RIG_JSON as unknown as Record<string, Rig>;
 export const hasRig = (key: string) => !!RIG[key];
@@ -50,7 +50,7 @@ function bake(page: HTMLImageElement, key: string): Promise<string | null> {
 	const r = RIG[key], b = FRAMES[key]; if (!r || !b) return Promise.resolve(null);
 	const cv = document.createElement('canvas'); cv.width = b.sourceSize.w; cv.height = b.sourceSize.h;
 	const g = cv.getContext('2d'); if (!g) return Promise.resolve(null);
-	for (const n of [key, ...r.parts.map((p) => p.f)]) {
+	for (const n of [key, ...r.parts.filter((p) => !p.hide).map((p) => p.f)]) {
 		const f = FRAMES[n]; if (!f) continue;
 		g.drawImage(page, f.frame.x, f.frame.y, f.frame.w, f.frame.h, f.spriteSourceSize.x, f.spriteSourceSize.y, f.spriteSourceSize.w, f.spriteSourceSize.h);
 	}
