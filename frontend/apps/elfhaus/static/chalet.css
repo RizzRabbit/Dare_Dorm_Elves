@@ -391,3 +391,6 @@ body.respinning #rsCtr{opacity:1;scale:1}
 html body #rsCtr .rd{display:inline-flex;gap:calc(var(--rsh,20px)*.16)}
 html body #rsCtr .rd i{width:calc(var(--rsh,20px)*.34);height:calc(var(--rsh,20px)*.34)}
 @media (prefers-reduced-motion:reduce){#rsCtr{transition:opacity .15s;scale:1}}
+/* ===== chalet task 3 item 2: buy + confirm card art = square group shots made for the card (assets/cards); fill the art
+   box edge to edge, no old contain/scale fits; in short (wide) boxes keep the faces in by anchoring near the top */
+html body #buyCards .bcard .bArt img,html body #bmConfirm .cfArt img{width:100%!important;height:100%!important;object-fit:cover!important;object-position:50% 18%!important;transform:none!important}

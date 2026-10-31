@@ -358,7 +358,9 @@ async function playReplay() {
 // 3-elf groups, Whiteout = the 5-wide group; Secret Santa is a wrapped gift with a "?" tag.
 // v3.6: Double / Triple / Elves Gone Wild use the approved stacks r8d stills (scripts/gen-stack-stills.py), not the old
 // static WM2 / WM3 / WM5 scenes.
-const CARD_ART: Partial<Record<ModeKey, string>> = { get dare() { return ART.W_R1_card || ART.W_R1 || ''; }, double_dare: 'assets/stacks/still/WM2_R1-2.webp', triple_dare: 'assets/stacks/still/WM3_R1-3.webp', egw: 'assets/stacks/still/WM5_R1-5.webp' };
+// Chalet (task 3 item 2): square group shots made for the cards (build_art.py cards), heads to thighs, so the art fills the
+// card at every size instead of a tall board still shrunk into a square.
+const CARD_ART: Partial<Record<ModeKey, string>> = { dare: 'assets/cards/card_dare.webp', double_dare: 'assets/cards/card_double_dare.webp', triple_dare: 'assets/cards/card_triple_dare.webp', egw: 'assets/cards/card_egw.webp' };
 // Secret Santa card: the wrapped Gift symbol art on cranberry with a gold "?" tag (approved symbol art + code only).
 const MYSTERY_CARD = () =>
 	`<span class="bMystFan" aria-hidden="true">${ART.L3 ? `<img class="gift" src="${ART.L3}" alt="" draggable="false">` : ''}` +
