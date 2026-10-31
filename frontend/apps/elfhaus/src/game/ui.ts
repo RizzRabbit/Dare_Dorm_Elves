@@ -11,6 +11,7 @@ import type { Group, LineWin } from './typesBookEvent';
 import { DOTS } from './respin';
 import { mxBurst, lockIconCSS, symWin, clearSymWins } from './fx';
 import STACKS from './chalet/stacks.json';
+import LETS_JSON from './chalet/stackletters.json';
 import { hasRig, ovEdgeHTML, rigGlowHTML, rigHTML, tileHTML } from './symrig';
 import { countTo, countMs, setAmount, countTiers, BIG_TIERS, tierPlan, isCounting, setWinLevels, levelOf, WIN_EDGES } from './countup';
 setWinLevels(WIN_LEVELS.standard); // v3.19: banner stages from the math's standard win levels
@@ -57,7 +58,18 @@ const img = (key: string) => (ART[key] ? `<img src="${ART[key]}" alt="" draggabl
 // of merge_idle (body) and the held last frame of letters_ignite (WILD), so an overlay shows the same elves and letters
 // from its first frame until its sheets decode (the canvases then cover them). Also the bonus-buy / splash card art.
 const stillPos = (reels: number[]) => (reels.length === 1 ? `WF_R${reels[0] + 1}` : `WM${reels.length}_R${reels[0] + 1}-${reels[reels.length - 1] + 1}`);
-const stillSrc = (reels: number[], letters = false) => `assets/stacks/still/${stillPos(reels)}${letters ? '_letters' : ''}.webp`;
+const stillSrc = (reels: number[]) => `assets/stacks/still/${stillPos(reels)}.webp`;
+/** The WILD letters still: one trimmed frame per overlay width on a shared sheet (stackletters.json; WM3-WM5 share one). */
+const LETS = LETS_JSON as unknown as { image: string; size: [number, number]; frames: Record<string, { x: number; y: number; w: number; h: number }>; place: Record<string, { f: string; src: [number, number]; box: [number, number, number, number] }> };
+function letsHTML(reels: number[]) {
+	const p = LETS.place[stillPos(reels)]; if (!p) return '';
+	const f = LETS.frames[p.f], [AW, AH] = LETS.size, [W, H] = p.src, [x0, y0, x1, y1] = p.box, q = (v: number) => v.toFixed(3) + '%';
+	const st = `left:${q((x0 / W) * 100)};top:${q((y0 / H) * 100)};width:${q(((x1 - x0) / W) * 100)};height:${q(((y1 - y0) / H) * 100)};` +
+		`background-image:url(${LETS.image});background-size:${q((AW / f.w) * 100)} ${q((AH / f.h) * 100)};background-position:${q((f.x / (AW - f.w)) * 100)} ${q((f.y / (AH - f.h)) * 100)}`;
+	return `<div class="mLets mStill"><i class="stkLets" style="${st}"></i></div>`;
+}
+/** Stack panels: one per reel for single stacks (each elf's colour), one per width for merges (positions only moved the flakes). */
+const panelSrc = (reels: number[]) => `assets/stacks/still/${reels.length === 1 ? stillPos(reels) : 'WM' + reels.length}_panel.webp`;
 // Chalet stacks: the panel plate + each full-body elf as her own cut-out layer (chalet/stacks.json boxes, art from
 // assets/rig), so the elves breathe / sway / react on the board (chalet.css .stkElf, real-time CSS animation) instead of
 // sitting in one flat picture. A merged stack shows each reel's elf over ONE panel and carries one multiplier.
@@ -65,12 +77,11 @@ const STK = STACKS as unknown as Record<string, { W: number; H: number; elves: {
 const ELF_PHASE: Record<string, number> = { roxy: 0, jade: 1.3, vi: 2.1, coco: 0.7, delilah: 2.8 };
 function stillHTML(reels: number[]) {
 	const L = STK[stillPos(reels)];
-	if (!L) return `<div class="wart"><img src="${stillSrc(reels)}" alt="" draggable="false"></div><div class="mLets mStill"><img src="${stillSrc(reels, true)}" alt="" draggable="false"></div>`;
+	if (!L) return `<div class="wart"><img src="${stillSrc(reels)}" alt="" draggable="false"></div>` + letsHTML(reels);
 	const px = (v: number, d: number) => ((v / d) * 100).toFixed(3) + '%';
 	const clip = `inset(${px(6, L.H)} ${px(7, L.W)} ${px(7, L.H)} ${px(6, L.W)} round ${px(34, L.W)} / ${px(34, L.H)})`;
 	const elves = L.elves.map((e) => `<img class="stkElf e_${e.elf}" src="assets/rig/elf_${e.elf}.webp" alt="" draggable="false" style="left:${(e.x * 100).toFixed(3)}%;top:${(e.y * 100).toFixed(3)}%;width:${(e.w * 100).toFixed(3)}%;height:${(e.h * 100).toFixed(3)}%;--ph:${ELF_PHASE[e.elf] ?? 0}s">`).join('');
-	return `<div class="wart chaletStk"><img class="stkPanel" src="assets/stacks/still/${stillPos(reels)}_panel.webp" alt="" draggable="false"><div class="stkElves" style="clip-path:${clip}"><div class="stkGrp">${elves}</div></div></div>` +
-		`<div class="mLets mStill"><img src="${stillSrc(reels, true)}" alt="" draggable="false"></div>`;
+	return `<div class="wart chaletStk"><img class="stkPanel" src="${panelSrc(reels)}" alt="" draggable="false"><div class="stkElves" style="clip-path:${clip}"><div class="stkGrp">${elves}</div></div></div>` + letsHTML(reels);
 }
 // Multiplier lettering: text only, flat gold with a thick ink outline and one light band across the cap tops (chalet.css).
 // All layers are SVG text sharing one viewBox (60 units high, 48-unit type), so it renders the same in Chrome and Safari.
