@@ -277,7 +277,7 @@ body:not(.portrait).short #hud{max-width:none}
 .ov .badge{max-width:none;transform:none;translate:-50% 0;bottom:6px;font-size:max(11px,calc(var(--cell)*.12));padding:0 8px;z-index:3}
 
 /* ---------- full-body Roxy (animated sprite, roxy.ts) between the room and the game UI ---------- */
-/* resub: the room layer (scene/scene.ts, Pixi): foyer + motes + rig Roxy on ONE canvas sized to the design stage */
+/* resub: the room layer (scene/scene.ts, Pixi): lodge + snow + rig Roxy on ONE canvas sized to the design stage */
 #scene{position:fixed;left:0;top:0;pointer-events:none;display:block}
 /* portrait: Roxy stands behind the game, so the reel plate (recess wall + board tint) is semi-transparent there */
 body.portrait.hasRoxy #alcoveRecess{opacity:.6} body.portrait.hasRoxy #board{background:transparent}
@@ -705,7 +705,7 @@ body:not(.portrait) #bigwin.chars .bw { top: calc(-17*var(--vh)); }
 html{background:#2A2533}
 #root{position:fixed;left:0;top:0;width:var(--dw,100vw);height:var(--dh,100vh);overflow:hidden;transform-origin:0 0;
   transform:translate(var(--ox,0),var(--oy,0)) scale(var(--s,1));contain:layout size}
-/* Dare Card flip (cardflip.ts): sprite card centred over the board, outcome name pops under it */
+/* Ski Pass flip (cardflip.ts): sprite card centred over the board, outcome name pops under it */
 #cardFlip{cursor:pointer;transition:opacity .25s} #cardFlip.out{opacity:0}
 #cardFlip .cfStage{position:relative;display:flex;flex-direction:column;align-items:center;gap:calc(var(--cell)*.12)}
 #cardFlip .cfCard{position:relative;width:calc(var(--cell)*2.4);aspect-ratio:240/320}
@@ -833,7 +833,7 @@ body.tb .modal.bm{width:min(860px,calc(94*var(--vw)/var(--tbm)))}
 .mx::before{content:"";position:absolute;left:-10%;top:-28%;width:62%;height:156%;z-index:-2;pointer-events:none;
   background:radial-gradient(closest-side,#2A0F24a6 30%,#2A0F2400)}
 .ov .mx.rGem{z-index:6}
-/* bonus-buy cards: Double / Triple Dare crops are top-weighted like EGW (heads + faces looking back, upper body, WILD tattoo); EGW (WF, 1 x 4 cells) shows her head too */
+/* bonus-buy cards: Black Diamond / Double Black crops are top-weighted like EGW (heads + faces looking back, upper body, WILD tattoo); EGW (WF, 1 x 4 cells) shows her head too */
 .bcard[data-m="double_dare"] .bArt img{object-position:50% 16%} .bcard[data-m="triple_dare"] .bArt img{object-position:50% 6%}
 .bArt.tall img{object-position:50% 14%}
 
@@ -999,9 +999,9 @@ canvas.wfxRing{display:none}
 #loader[data-o="port"] .spCard .spArt{width:300px;height:300px;flex:none}
 #loader[data-o="port"] .spCard h3{font-size:46px} #loader[data-o="port"] .spCard p{font-size:28px}
 #loader.in .spPanel{animation-duration:.6s}
-/* the painted TAP TO PARTY plate carries four-point star sparkles (audit 1): a plain lettered button instead, calm pulse */
+/* the painted TAP TO START plate carries four-point star sparkles (audit 1): a plain lettered button instead, calm pulse */
 #loader #lGo img{display:none}
-#loader #lGo::after{content:"TAP TO PARTY";display:block;box-sizing:border-box;padding:22px 0 20px;border:2px solid #4A2D58;border-radius:14px;
+#loader #lGo::after{content:"TAP TO START";display:block;box-sizing:border-box;padding:22px 0 20px;border:2px solid #4A2D58;border-radius:14px;
   background:linear-gradient(#2a1934f0,#1a0f21f0);font:800 34px/1 "Cinzel";letter-spacing:.08em;color:#FBEAF4;text-align:center}
 #loader #lGo{animation:tapPulse 2.2s ease-in-out infinite alternate}
 @keyframes tapPulse{from{opacity:.75;transform:scale(.985)}to{opacity:1;transform:scale(1.015)}}
