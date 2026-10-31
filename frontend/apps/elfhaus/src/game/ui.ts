@@ -69,7 +69,7 @@ function stillHTML(reels: number[]) {
 	const px = (v: number, d: number) => ((v / d) * 100).toFixed(3) + '%';
 	const clip = `inset(${px(6, L.H)} ${px(7, L.W)} ${px(7, L.H)} ${px(6, L.W)} round ${px(34, L.W)} / ${px(34, L.H)})`;
 	const elves = L.elves.map((e) => `<img class="stkElf e_${e.elf}" src="assets/rig/elf_${e.elf}.webp" alt="" draggable="false" style="left:${(e.x * 100).toFixed(3)}%;top:${(e.y * 100).toFixed(3)}%;width:${(e.w * 100).toFixed(3)}%;height:${(e.h * 100).toFixed(3)}%;--ph:${ELF_PHASE[e.elf] ?? 0}s">`).join('');
-	return `<div class="wart chaletStk"><img class="stkPanel" src="assets/stacks/still/${stillPos(reels)}_panel.webp" alt="" draggable="false"><div class="stkElves" style="clip-path:${clip}">${elves}</div></div>` +
+	return `<div class="wart chaletStk"><img class="stkPanel" src="assets/stacks/still/${stillPos(reels)}_panel.webp" alt="" draggable="false"><div class="stkElves" style="clip-path:${clip}"><div class="stkGrp">${elves}</div></div></div>` +
 		`<div class="mLets mStill"><img src="${stillSrc(reels, true)}" alt="" draggable="false"></div>`;
 }
 // Multiplier lettering: text only, flat gold with a thick ink outline and one light band across the cap tops (chalet.css).
