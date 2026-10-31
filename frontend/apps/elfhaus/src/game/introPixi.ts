@@ -1,37 +1,36 @@
-// @ts-nocheck  (geometry below is the approved mockup verbatim: /workspace/elfhaus-intro/intro.js, pass 2)
-// Elfhaus intro (approved PixiJS mockup, ported): replaces the old DOM splash / loader art.
-// Guest POV in the grand-foyer vestibule (plum wall, stone mouldings, thin gold trim, marble + inlays), closed double doors,
-// the approved stone ELFHAUS title (splash_title.webp, unchanged), black/gold info cards (4 Bonus Modes, Sticky Wilds,
-// Elves Gone Wild), a dark-gold loading bar, then TAP TO PARTY.
-// Tap: cards slide away -> doors open (~0.9 s, Roxy holding the left leaf, wink) -> camera push through the doorway ->
-// board + Roxy drop in together (Roxy surprised) -> logo + HUD follow -> idle. ~3.25 s; a second tap (or Enter / Space) skips.
+// @ts-nocheck  (door / camera geometry kept from the approved intro mockup; the look is the Winter Chalet set)
+// Elfhaus intro: the guest arrives at the chalet's front door on a snowy night. Timber log wall, cranberry double doors
+// with wreaths, lanterns either side, a snowy porch, snow falling, the hand-lettered ELFHAUS logo, cream info cards
+// (Bonus Modes, Sticky Wilds, Whiteout), a flat gold loading bar, then TAP TO START.
+// Tap: cards slide away -> doors open (~0.9 s, Roxy in the doorway with a wink) -> camera push through the doorway ->
+// board + Roxy drop in together -> logo + HUD follow -> idle. ~3.25 s; a second tap (or Enter / Space) skips.
 // Own transparent canvas (#introCv) inside #root just under #loader (which stays as the transparent tap / keyboard /
-// "Don't show this again" layer, so the loader hooks are unchanged). The game is driven with CSS individual transforms
-// (scale / translate / opacity, never the stage `transform`) and Roxy through the rig adapter. No WebGL -> initIntro()
-// resolves false and the old DOM splash shows instead.
+// "Don't show this again" layer). The game is driven with CSS individual transforms (scale / translate / opacity) and Roxy
+// through the rig adapter. No WebGL -> initIntro() resolves false and the DOM splash shows instead.
 import { Application, Container, Graphics, PerspectiveMesh, Sprite, Text, Texture } from 'pixi.js';
 import { ST, fitStage } from './stage';
 import { ctex, ease, clamp, seg, lerp, softBlob, glowDot } from './scene/util';
-import { loadSheet, loadTex } from './scene/load';
+import { loadTex } from './scene/load';
 import { rig, roxyAt, sceneHold } from './scene/scene';
-import TITLE from '../assets/intro/splash_title.webp?url';
+import ARTG from './art.generated.json';
+const TITLE = ARTG.logo || 'art/logo.webp';
 import { EGW_STACK_X } from './config';
 
-const FONT = "Montserrat, Nunito, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
-const PAL = { wall: 0x2e1a40, wallHi: 0x3a2350, wallLo: 0x24132f, stone: 0xa597b8, stoneHi: 0xd2c6dd, stoneSh: 0x6f6286, gold: 0xe0ac3a,
-  marble: 0xb7adc6, marbleBack: 0x7b6f92, inlay: 0x4a2768, sconce: 0xffc46a, ink: 0x1a0b24 };
-const GOLD = 0xffc83d;
+const FONT = "'Lilita One', Nunito, 'Segoe UI', Roboto, Arial, sans-serif";
+// Winter Chalet palette: timber, cranberry, cream, gold, pine, ink (flat fills, thick ink lines)
+const PAL = { wall: 0x5a3220, wallHi: 0x6e3d26, wallLo: 0x43241a, stone: 0x8a5530, stoneHi: 0xa86a3c, stoneSh: 0x4f2c18, gold: 0xf2b935,
+  marble: 0xf4eee2, marbleBack: 0xc9d6e2, inlay: 0x7a4526, sconce: 0xffc46a, ink: 0x26140f };
+const GOLD = 0xf2b935, CREAM = 0xfbf3e4, CRAN = 0xa61c34, PINE = 0x1f4b38;
 // timeline (seconds after the tap), pass 2 (James: "I think it's great")
 export const T = { cards: [0.0, 0.42], doorL: [0.40, 1.30], doorR: [0.50, 1.40], wink: [0.75, 1.45], push: [1.55, 2.13], roxyOut: [1.55, 1.73], over: [1.95, 2.13],
   cam: [1.55, 2.17], drop: [1.99, 2.37], logo: [2.15, 2.45], hud: [2.17, 2.47], btn: [2.23, 2.55], face: [3.01, 3.13], end: 3.25 };
 // the build's own feature cards (same titles + lines as the old splash), restyled black / gold
 const CARDS = [
-// v3.18 carousel (James 2026-10-30): each card swipes in with a little more detail (facts as in the rules; no amounts)
-  { key: 'modes', art: 'assets/intro/card_modes_S.webp', title: '4 Bonus Modes',
-    line: '3, 4 or 5 Dare Cards start Dare, Double Dare or Triple Dare free spins. A Mystery Spin always lands 2 Dare Cards and the other reels reveal the result.' },
-  { key: 'sticky', art: 'assets/intro/card_sticky_W_R2_card.webp', title: 'Sticky Wilds',
-    line: 'In Double Dare and Triple Dare the wilds lock in place and keep growing every free spin. Triple Dare guarantees at least one full-reel wild.' },
-  { key: 'egw', art: 'assets/intro/card_egw_WM2_R1-2.webp', title: 'Elves Gone Wild',
+  { key: 'modes', art: ARTG.S || 'art/S.webp', title: '4 Bonus Modes',
+    line: '3, 4 or 5 Ski Passes start Bunny Slope, Black Diamond or Double Black free spins. A Secret Santa spin always lands 2 Ski Passes and the other reels reveal the result.' },
+  { key: 'sticky', art: ARTG.W_R2 || 'art/W_R2.webp', title: 'Sticky Wilds',
+    line: 'In Black Diamond and Double Black the wilds lock in place and keep growing every free spin. Double Black guarantees at least one full-reel wild.' },
+  { key: 'egw', art: 'assets/stacks/still/WM2_R1-2.webp', title: 'Whiteout',
     line: `One supercharged spin: 2 to 5 reels land wilds that grow into full-reel wilds (x${EGW_STACK_X} each), then respins. Full wild reels side by side multiply.` },
 ];
 let app = null, state = 'off', t = 0, tt = 0, prog = 0, G = null, primed = false, roxyFree = false, faceOff = false, progFn = () => 0;
@@ -58,29 +57,44 @@ function holdL() {   // the left leaf stops where Roxy's door hand holds it: the
 const HANDLE_Y = 0.455;   // lever height (fraction of the leaf): Roxy's door hand meets it with the leaf open
 const hex = (c) => '#' + c.toString(16).padStart(6, '0');
 
-// door leaf (outside face): deep plum paint, stone moulded panels with a thin gold line, gold lever at the free edge
+// door leaf (outside face): flat cranberry paint, two inset panels (ink line + gold inner line), a wreath, gold lever
 function leafTex(w, h, hingeLeft) { return ctex(w, h, (g) => {
-  let gr = g.createLinearGradient(0, 0, w, 0); const a = hingeLeft ? 0 : 1;
-  gr.addColorStop(a, '#2b1638'); gr.addColorStop(0.5, '#3a2150'); gr.addColorStop(1 - a, '#331b46');
-  g.fillStyle = gr; g.fillRect(0, 0, w, h);
-  gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, 'rgba(255,240,255,0.06)'); gr.addColorStop(0.6, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(0,0,0,0.28)');
-  g.fillStyle = gr; g.fillRect(0, 0, w, h);
+  g.fillStyle = '#a61c34'; g.fillRect(0, 0, w, h);
+  g.fillStyle = '#c7344c'; g.fillRect(hingeLeft ? 0 : w - 10, 0, 10, h);           // one flat highlight on the hinge edge
   const m = w * 0.14, panel = (y0, y1) => { const x = m, pw = w - 2 * m;
-    g.fillStyle = '#2a1537'; g.fillRect(x, y0, pw, y1 - y0);
-    g.lineWidth = 7; g.strokeStyle = hex(PAL.stone); g.strokeRect(x, y0, pw, y1 - y0);
-    g.lineWidth = 2; g.strokeStyle = hex(PAL.ink); g.strokeRect(x - 4, y0 - 4, pw + 8, y1 - y0 + 8); g.strokeRect(x + 4, y0 + 4, pw - 8, y1 - y0 - 8);
-    g.lineWidth = 1.4; g.strokeStyle = 'rgba(224,172,58,0.9)'; g.strokeRect(x + 12, y0 + 12, pw - 24, y1 - y0 - 24);
-    g.beginPath(); g.moveTo(x - 3, y0 - 2); g.lineTo(x + pw + 3, y0 - 2); g.lineWidth = 1.6; g.strokeStyle = 'rgba(210,198,221,0.8)'; g.stroke(); };
-  panel(h * 0.07, h * (HANDLE_Y - 0.04)); panel(h * (HANDLE_Y + 0.035), h * 0.93);   // lever on the rail between the panels, at her hand height
-  g.lineWidth = 3; g.strokeStyle = hex(PAL.ink); g.strokeRect(1.5, 1.5, w - 3, h - 3);
-  // gold lever handle + rose near the free (meeting) edge
+    g.fillStyle = '#7d1226'; g.fillRect(x, y0, pw, y1 - y0);
+    g.lineWidth = 5; g.strokeStyle = hex(PAL.ink); g.strokeRect(x, y0, pw, y1 - y0);
+    g.lineWidth = 3; g.strokeStyle = hex(GOLD); g.strokeRect(x + 10, y0 + 10, pw - 20, y1 - y0 - 20); };
+  panel(h * 0.07, h * (HANDLE_Y - 0.04)); panel(h * (HANDLE_Y + 0.035), h * 0.93);
+  // wreath on the upper panel: pine ring, ink outline, red berries, cranberry bow
+  const cx = w / 2, cy = h * 0.24, R = w * 0.24;
+  g.lineWidth = R * 0.42 + 8; g.strokeStyle = hex(PAL.ink); g.beginPath(); g.arc(cx, cy, R, 0, Math.PI * 2); g.stroke();
+  g.lineWidth = R * 0.42; g.strokeStyle = '#2c6a4f'; g.beginPath(); g.arc(cx, cy, R, 0, Math.PI * 2); g.stroke();
+  g.lineWidth = R * 0.12; g.strokeStyle = '#3f8a66'; g.beginPath(); g.arc(cx, cy, R + R * 0.06, Math.PI * 1.05, Math.PI * 1.6); g.stroke();
+  for (let i = 0; i < 7; i++) { const a = i / 7 * Math.PI * 2 + 0.3; g.fillStyle = '#e8384f'; g.strokeStyle = hex(PAL.ink); g.lineWidth = 2;
+    g.beginPath(); g.arc(cx + Math.cos(a) * R, cy + Math.sin(a) * R, R * 0.09, 0, Math.PI * 2); g.fill(); g.stroke(); }
+  g.fillStyle = '#d42a44'; g.strokeStyle = hex(PAL.ink); g.lineWidth = 3;
+  for (const d of [-1, 1]) { g.beginPath(); g.moveTo(cx, cy + R); g.lineTo(cx + d * R * 0.55, cy + R - R * 0.3); g.lineTo(cx + d * R * 0.55, cy + R + R * 0.3); g.closePath(); g.fill(); g.stroke(); }
+  g.beginPath(); g.arc(cx, cy + R, R * 0.13, 0, Math.PI * 2); g.fill(); g.stroke();
+  g.lineWidth = 4; g.strokeStyle = hex(PAL.ink); g.strokeRect(2, 2, w - 4, h - 4);
+  // flat gold lever handle + rose near the free (meeting) edge, ink outlined
   const hx = hingeLeft ? w - w * 0.075 : w * 0.075, hy = h * HANDLE_Y, dir = hingeLeft ? -1 : 1;
-  g.save(); g.shadowColor = 'rgba(0,0,0,0.6)'; g.shadowBlur = 6; g.shadowOffsetY = 3;
-  gr = g.createLinearGradient(0, hy - 8, 0, hy + 8); gr.addColorStop(0, '#ffe08a'); gr.addColorStop(0.5, '#e0ac3a'); gr.addColorStop(1, '#7a5418');
-  g.fillStyle = gr; g.beginPath(); g.arc(hx, hy, 8, 0, Math.PI * 2); g.fill();
-  rr(g, Math.min(hx, hx + dir * 34), hy - 4, 34, 8, 4); g.fill(); g.restore();
-  g.lineWidth = 1.5; g.strokeStyle = hex(PAL.ink); g.beginPath(); g.arc(hx, hy, 8, 0, Math.PI * 2); g.stroke();
+  g.fillStyle = hex(GOLD); g.strokeStyle = hex(PAL.ink); g.lineWidth = 3;
+  rr(g, Math.min(hx, hx + dir * 34), hy - 5, 34, 10, 5); g.fill(); g.stroke();
+  g.beginPath(); g.arc(hx, hy, 9, 0, Math.PI * 2); g.fill(); g.stroke();
+  g.fillStyle = '#ffe08a'; g.beginPath(); g.arc(hx - 3, hy - 3, 3, 0, Math.PI * 2); g.fill();
 }); }
+// lantern (either side of the door): ink-outlined gold frame, warm glass
+const lanternTex = () => ctex(90, 150, (g) => {
+  g.lineWidth = 5; g.strokeStyle = '#26140f'; g.lineJoin = 'round';
+  g.fillStyle = '#26140f'; g.fillRect(41, 0, 8, 22);
+  g.fillStyle = '#f2b935'; g.beginPath(); g.moveTo(20, 40); g.lineTo(45, 18); g.lineTo(70, 40); g.closePath(); g.fill(); g.stroke();
+  g.fillStyle = '#ffd47a'; g.fillRect(22, 40, 46, 70); g.strokeRect(22, 40, 46, 70);
+  g.fillStyle = '#fff3c4'; g.beginPath(); g.ellipse(45, 80, 9, 15, 0, 0, Math.PI * 2); g.fill();
+  g.beginPath(); g.moveTo(45, 40); g.lineTo(45, 110); g.stroke();
+  g.fillStyle = '#f2b935'; g.fillRect(16, 110, 58, 12); g.strokeRect(16, 110, 58, 12);
+  g.fillStyle = '#fbf5ea'; g.beginPath(); g.ellipse(45, 22, 30, 8, 0, Math.PI, 0); g.fill(); g.stroke();
+});
 // warm floor spill through the opened doors (trapezoid fading toward the viewer)
 const spillTex = () => ctex(256, 256, (g) => { const gr = g.createLinearGradient(0, 0, 0, 256); gr.addColorStop(0, 'rgba(255,214,140,0.9)'); gr.addColorStop(1, 'rgba(255,190,110,0)');
   g.filter = 'blur(16px)'; g.fillStyle = gr; g.beginPath(); g.moveTo(84, -20); g.lineTo(172, -20); g.lineTo(226, 236); g.lineTo(30, 236); g.closePath(); g.fill(); });   // soft-edged light pool
@@ -97,7 +111,7 @@ function geo(W, H) {   // W, H: stage px (ST.w / ST.h); the card + skip-strip bu
   if (!port) {
     const ks = Math.min(W / 1920, H / 1080), k = ks / S, DW = W / ks, DH = H / ks, cx = DW / 2;
     const FL = DH / 2 + 400, dw = 520, dh = 580, top = FL - dh;
-    // TAP TO PARTY keeps a >= 46 screen-px plate on small landscape phones; v21 compact popouts: scales with the screen, no px floor
+    // TAP TO START keeps a >= 46 screen-px plate on small landscape phones; v21 compact popouts: scales with the screen, no px floor
     const lbh = ST.compact ? 100 : Math.max(100, 46 / ks);
     const logo = { y: top - 64 - 122, w: 560 }, btn = { y: FL + 64, w: 470 * lbh / 100, h: lbh };
     const ar = tex.title ? tex.title.height / tex.title.width : 0.56;
@@ -121,21 +135,15 @@ function geo(W, H) {   // W, H: stage px (ST.w / ST.h); the card + skip-strip bu
 }
 
 // ---------------- build ----------------
-let cardsC, cardEls = [], wallC, leafL, leafR, glowL, spill, holeG, sconces = [], logoS, logoBack, barC, barFill, barGlow, btnC, btnGlow, doorLight;
-function drawFloor(g, CX, HZ, FL, x0, x1, y1) {   // same one-point marble as the foyer (tile seams + purple/gold diamond inlays)
-  const K = (FL - HZ) * 10, F = K / 1.6, Tt = 1.25, D = 0.2, P2 = (X, z) => [CX + F * X / z, HZ + K / z];
-  g.rect(x0, FL, x1 - x0, y1 - FL).fill(PAL.marble);
-  const bands = 14; for (let i = 0; i < bands; i++) { const ya = FL + (y1 - FL) * Math.pow(i / bands, 1.6), yb = FL + (y1 - FL) * Math.pow((i + 1) / bands, 1.6);
-    g.rect(x0, ya, x1 - x0, yb - ya + 1).fill({ color: PAL.marbleBack, alpha: 0.75 * Math.pow(1 - i / bands, 2.2) }); }
-  const zMin = K / (y1 - HZ);
-  for (let z = 10; z >= zMin - Tt; z -= Tt) for (let X = -12 * Tt; X <= 12 * Tt; X += Tt) {
-    const [ax, ay] = P2(X, z), [bx, by] = P2(X + Tt, z), [c2, d2] = P2(X, z - Tt); if (z - Tt > 0) { g.moveTo(ax, ay).lineTo(bx, by); g.moveTo(ax, ay).lineTo(c2, d2); } }
-  g.stroke({ width: 1.5, color: 0xffffff, alpha: 0.22 });
-  for (let z = 10; z > zMin - Tt && z - D > 0.3; z -= Tt) for (let X = -12 * Tt; X <= 12 * Tt; X += Tt) {
-    const p = [P2(X, z + D), P2(X + D, z), P2(X, z - D), P2(X - D, z)].map(([x, y]) => [x, Math.max(FL, y)]).flat(); if (p[1] > y1 + 40) continue;
-    const gold = Math.abs(X) < 0.1 && ((Math.round(z / Tt)) & 1) === 0;
-    g.poly(p).fill(gold ? PAL.gold : PAL.inlay).stroke({ width: 1.6, color: gold ? PAL.ink : PAL.gold, alpha: 0.9 }); }
-  g.moveTo(x0, FL).lineTo(x1, FL).stroke({ width: 3, color: PAL.ink }); g.rect(x0, FL, x1 - x0, 26).fill({ color: 0x140820, alpha: 0.35 });
+let snowC, flakes = [], cardsC, cardEls = [], wallC, leafL, leafR, glowL, spill, holeG, sconces = [], logoS, logoBack, barC, barFill, barGlow, btnC, btnGlow, doorLight;
+function drawFloor(g, CX, HZ, FL, x0, x1, y1) {   // snowy porch: timber deck boards under a soft snow drift, ink lines
+  g.rect(x0, FL, x1 - x0, y1 - FL).fill(0x7a4526);
+  for (let y = FL + 26, i = 0; y < y1; y += 26 + i * 6, i++) g.moveTo(x0, y).lineTo(x1, y);
+  g.stroke({ width: 3, color: PAL.ink, alpha: 0.55 });
+  // drift: cream snow piled along the wall and both sides of the path, the path to the door swept clear
+  const drift = (xa, xb) => { g.moveTo(xa, FL); for (let x = xa; x <= xb; x += 40) g.lineTo(x, FL + 30 + 12 * Math.sin(x * 0.02)); g.lineTo(xb, FL); g.closePath(); };
+  drift(x0, CX - 330); g.fill(PAL.marble).stroke({ width: 3, color: PAL.ink }); drift(CX + 330, x1); g.fill(PAL.marble).stroke({ width: 3, color: PAL.ink });
+  g.moveTo(x0, FL).lineTo(x1, FL).stroke({ width: 4, color: PAL.ink });
 }
 function build() {
   root.removeChildren().forEach(o => o.destroy({ children: true })); sconces = [];
@@ -157,21 +165,22 @@ function build() {
   doorLight.rect(cx - 1.5, top + 6, 3, dh - 8).fill({ color: 0xffc46a, alpha: 0.9 }); doorLight.rect(cx - 5, top + 6, 10, dh - 8).fill({ color: 0xffb455, alpha: 0.25 });
   doorLight.rect(XL + 6, FL - 4, dw - 12, 4).fill({ color: 0xffd27a, alpha: 0.9 });
   ov.addChild(doorLight);
-  // wall with the doorway cut out (inverse mask), drawn like the foyer: plum wall, stone panels + gold inner line, stone dado + base
+  // timber log wall with the doorway cut out (inverse mask), timber base rail
   wallC = new Container(); ov.addChild(wallC);
   const g = new Graphics(); wallC.addChild(g);
   const X0 = -DW, X1 = DW * 2, Y0 = -DH;
   g.rect(X0, Y0, X1 - X0, FL - Y0).fill(PAL.wall); const dado = FL - 150;
   const pw = G.port ? 200 : 230, gap = 44, pTop = Math.min(top - lint - 40, FL - 560);
-  const frame = (x, y0, y1) => { g.rect(x, y0, pw, y1 - y0).fill(PAL.wallHi).stroke({ width: 12, color: PAL.stone, alignment: 0.5 });
-    g.rect(x - 6, y0 - 6, pw + 12, y1 - y0 + 12).stroke({ width: 2.5, color: PAL.ink }); g.rect(x + 6, y0 + 6, pw - 12, y1 - y0 - 12).stroke({ width: 2, color: PAL.ink, alpha: 0.8 });
-    g.rect(x + 16, y0 + 16, pw - 32, y1 - y0 - 32).stroke({ width: 1.6, color: PAL.gold, alpha: 0.85 }); };
+  // log wall: stacked timber logs, each with an ink seam and one flat highlight band
+  for (let y = FL - 52; y > Y0; y -= 52) { g.rect(X0, y - 52, X1 - X0, 52).fill(((FL - y) / 52) % 2 ? PAL.wall : PAL.wallHi);
+    g.rect(X0, y - 46, X1 - X0, 8).fill({ color: PAL.stoneHi, alpha: 0.35 }); g.moveTo(X0, y).lineTo(X1, y).stroke({ width: 4, color: PAL.ink }); }
+  void pw; void gap; void pTop; const frame = () => {};
   const clear = 150 + (G.port ? 60 : 110);  // keep panels clear of the door surround + sconces
   for (let side of [-1, 1]) for (let i = 0; i < 8; i++) { const x = side < 0 ? XL - clear - pw - i * (pw + gap) : XR + clear + i * (pw + gap);
     frame(x, pTop, dado - 46); frame(x, dado + 30, FL - 52); }
   const band = (y, h, c, hi) => { g.rect(X0, y, X1 - X0, h).fill(c); g.moveTo(X0, y + 2).lineTo(X1, y + 2).stroke({ width: 2, color: hi, alpha: 0.8 });
     g.moveTo(X0, y).lineTo(X1, y).stroke({ width: 3, color: PAL.ink }); g.moveTo(X0, y + h).lineTo(X1, y + h).stroke({ width: 3, color: PAL.ink }); };
-  band(dado - 10, 22, PAL.stone, PAL.stoneHi); g.moveTo(X0, dado + 6).lineTo(X1, dado + 6).stroke({ width: 2, color: PAL.gold }); band(FL - 34, 34, PAL.stoneSh, PAL.stone);
+  band(FL - 34, 34, PAL.stoneSh, PAL.stone); void dado;
   // stone door surround: two pilasters + a lintel with a cornice and one thin gold line
   const S = 54;
   g.rect(XL - S, top - 6, S, dh + 6).fill(PAL.stone).stroke({ width: 3, color: PAL.ink }); g.rect(XR, top - 6, S, dh + 6).fill(PAL.stone).stroke({ width: 3, color: PAL.ink });
@@ -183,39 +192,46 @@ function build() {
   g.rect(XL, top - 8, dw, 8).fill(PAL.stoneSh);   // head jamb
   // floor + stone threshold
   drawFloor(g, cx, top + dh * 0.33, FL, X0, X1, DH * 2);
-  g.rect(XL - S - 10, FL - 2, dw + 2 * S + 20, 16).fill(PAL.stoneHi).stroke({ width: 2.5, color: PAL.ink });
+  g.rect(XL - S - 10, FL - 2, dw + 2 * S + 20, 16).fill(PAL.stoneHi).stroke({ width: 3, color: PAL.ink });
+  // snow cap on the cornice (cream, scalloped drips, ink outline)
+  { const x0 = XL - S - 40, x1 = XR + S + 40, y = top - lint - 16; g.moveTo(x0, y + 4); for (let x = x0; x <= x1; x += 28) g.quadraticCurveTo(x + 14, y - 22, x + 28, y + 2);
+    for (let x = x1; x >= x0; x -= 34) g.lineTo(x, y + 6 + (((x / 34) | 0) % 3 === 0 ? 14 : 4)); g.closePath(); g.fill(PAL.marble).stroke({ width: 3, color: PAL.ink }); }
   holeG = new Graphics().rect(XL, top, dw, dh).fill(0xffffff); ov.addChild(holeG); wallC.setMask({ mask: holeG, inverse: true });
-  // sconces (the foyer's own sconce part) + candle breathe
-  for (const s of [-1, 1]) { const sp = new Sprite(tex.sconce); sp.anchor.set(0.5); sp.scale.set(G.sc.s * (s > 0 ? -1 : 1), G.sc.s);
+  // lanterns either side of the door + candle breathe
+  for (const s of [-1, 1]) { const sp = new Sprite(tex.sconce); sp.anchor.set(0.5); sp.scale.set(G.sc.s * 1.3, G.sc.s * 1.3);
     const x = cx + s * G.sc.dx, y = G.sc.y; sp.position.set(x, y); wallC.addChild(sp);
-    const gx = x + (s > 0 ? 1 : -1) * 22 * G.sc.s, gy = y - 46 * G.sc.s;
+    const gx = x, gy = y + 4 * G.sc.s;
     const halo = new Sprite(tex.blob); halo.anchor.set(0.5); halo.tint = PAL.sconce; halo.blendMode = 'add'; halo.scale.set(2.4 * G.sc.s); halo.position.set(gx, gy);
     const core = new Sprite(tex.dot); core.anchor.set(0.5); core.tint = 0xffe2a0; core.blendMode = 'add'; core.position.set(gx, gy);
     const wash = new Sprite(tex.blob); wash.anchor.set(0.5); wash.tint = PAL.sconce; wash.blendMode = 'add'; wash.scale.set(3.2 * G.sc.s, 4.2 * G.sc.s); wash.position.set(gx, gy + 120 * G.sc.s); wash.alpha = 0.09;
     wallC.addChild(wash, halo, core); sconces.push({ halo, core, ph: s }); }
+  // snowfall in front of the wall (calm, real time), pushed past the lens with the vestibule
+  snowC = new Container(); ov.addChild(snowC); flakes = [];
+  for (let i = 0; i < (G.port ? 70 : 110); i++) { const f = new Sprite(tex.dot); f.anchor.set(0.5); f.tint = 0xffffff;
+    const z = 0.5 + Math.random(); f.scale.set(0.35 * z); f.alpha = 0.5 + 0.4 * (z - 0.5);
+    f.position.set(Math.random() * DW, Math.random() * DH); snowC.addChild(f); flakes.push({ f, z, ph: Math.random() * 6.28 }); }
   // warm spill on the floor when the doors open (in front of everything but the UI)
   spill = new Sprite(tex.spill); spill.blendMode = 'add'; spill.anchor.set(0.5, 0); spill.position.set(cx, FL); spill.width = dw * 2.6; spill.height = (DH - FL) * 1.1; spill.alpha = 0; ov.addChild(spill);
   glowL = new Sprite(tex.blob); glowL.blendMode = 'add'; glowL.anchor.set(0.5); glowL.tint = 0xffc46a; glowL.position.set(cx, top + dh * 0.62); glowL.scale.set(dw / 160, dh / 200); glowL.alpha = 0; ov.addChild(glowL);
   // title: approved stone ELFHAUS logo with the five silhouettes, unchanged; a soft dark pool behind it keeps it reading
-  logoBack = new Sprite(tex.blob); logoBack.anchor.set(0.5); logoBack.tint = 0x0a0410; logoBack.alpha = 0.85; logoBack.position.set(cx, G.logo.y); logoBack.scale.set(G.logo.w / 150, G.logo.w / 260);
+  logoBack = new Sprite(tex.blob); logoBack.anchor.set(0.5); logoBack.tint = 0x1a0d08; logoBack.alpha = 0.5; logoBack.position.set(cx, G.logo.y); logoBack.scale.set(G.logo.w / 150, G.logo.w / 260);
   logoS = new Sprite(tex.title); logoS.anchor.set(0.5); logoS.width = G.logo.w; logoS.scale.y = logoS.scale.x; logoS.position.set(cx, G.logo.y);
   root.addChild(logoBack, logoS);
   // loading bar: semi-transparent black plate, gold border + glow (the new HUD plate)
   barC = new Container(); barC.position.set(cx, G.bar.y); root.addChild(barC);
   const { w: bw, h: bh } = G.bar; barGlow = new Graphics();
-  for (const [sw, a] of [[30, 0.05], [18, 0.09], [10, 0.16], [5, 0.3]]) barGlow.roundRect(-bw / 2 - 2, -bh / 2 - 2, bw + 4, bh + 4, bh / 2 + 2).stroke({ width: sw, color: GOLD, alpha: a });
-  const plate = new Graphics().roundRect(-bw / 2, -bh / 2, bw, bh, bh / 2).fill({ color: 0x000000, alpha: 0.55 })
-    .roundRect(-bw / 2, -bh / 2, bw, bh, bh / 2).stroke({ width: 3, color: GOLD }).roundRect(-bw / 2 + 5, -bh / 2 + 5, bw - 10, bh - 10, bh / 2 - 5).stroke({ width: 1.2, color: 0xffeab0, alpha: 0.45 });
+  barGlow.roundRect(-bw / 2, -bh / 2 + 6, bw, bh, bh / 2).fill({ color: PAL.ink, alpha: 0.6 });   // flat offset shadow
+  const plate = new Graphics().roundRect(-bw / 2, -bh / 2, bw, bh, bh / 2).fill(CREAM).stroke({ width: 5, color: PAL.ink });
   barFill = new Graphics(); barC.addChild(barGlow, plate, barFill);
-  // TAP TO PARTY: same plate, gold type (replaces the old pink glow art with its four-point sparkles)
+  // TAP TO START: cranberry plate, ink + gold rings, cream lettering
   btnC = new Container(); btnC.position.set(cx, G.btn.y); btnC.alpha = 0; root.addChild(btnC);
   const { w: tw, h: th } = G.btn; btnGlow = new Graphics();
-  for (const [sw, a] of [[44, 0.05], [28, 0.09], [16, 0.16], [8, 0.3]]) btnGlow.roundRect(-tw / 2 - 3, -th / 2 - 3, tw + 6, th + 6, th / 2 + 3).stroke({ width: sw, color: GOLD, alpha: a });
-  const bp = new Graphics().roundRect(-tw / 2, -th / 2, tw, th, th / 2).fill({ color: 0x000000, alpha: 0.58 })
-    .roundRect(-tw / 2 + 4, -th / 2 + 4, tw - 8, th * 0.45, th / 2 - 4).fill({ color: 0xffffff, alpha: 0.05 })
-    .roundRect(-tw / 2, -th / 2, tw, th, th / 2).stroke({ width: 4, color: GOLD }).roundRect(-tw / 2 + 7, -th / 2 + 7, tw - 14, th - 14, th / 2 - 7).stroke({ width: 1.5, color: 0xffeab0, alpha: 0.5 });
-  const lab = new Text({ text: 'TAP TO PARTY', style: { fontFamily: FONT, fontWeight: '900', fontSize: th * 0.42, fill: GOLD, letterSpacing: th * 0.05,
-    dropShadow: { color: 0x000000, alpha: 0.6, blur: 3, distance: 2, angle: Math.PI / 2 } } }); lab.anchor.set(0.5); lab.y = 2;
+  btnGlow.roundRect(-tw / 2, -th / 2 + 8, tw, th, th / 2).fill({ color: PAL.ink, alpha: 0.7 });   // flat offset shadow
+  const bp = new Graphics().roundRect(-tw / 2, -th / 2, tw, th, th / 2).fill(CRAN)
+    .roundRect(-tw / 2 + 10, -th / 2 + 7, tw - 20, th * 0.2, th * 0.1).fill(0xc7344c)
+    .roundRect(-tw / 2, -th / 2, tw, th, th / 2).stroke({ width: 6, color: PAL.ink }).roundRect(-tw / 2 + 8, -th / 2 + 8, tw - 16, th - 16, th / 2 - 8).stroke({ width: 3, color: GOLD });
+  const lab = new Text({ text: 'TAP TO START', style: { fontFamily: FONT, fontWeight: '400', fontSize: th * 0.44, fill: CREAM, letterSpacing: th * 0.04,
+    stroke: { color: PAL.ink, width: th * 0.08, join: 'round' }, dropShadow: { color: PAL.ink, alpha: 1, blur: 0, distance: th * 0.05, angle: Math.PI / 2 } } }); lab.anchor.set(0.5); lab.y = 1;
   btnC.addChild(btnGlow, bp, lab);
   buildCards();
   setDoors(0, 0);
@@ -227,10 +243,9 @@ const CAR = { pos: 0, from: 0, to: 0, t0: -1, dur: 0.24, drag: null as any, eatU
 let dotsG = null;
 function cardSpacing() { const { cw } = G.pc; return Math.max(G.Ws / 2 + 0.235 * cw, 0.925 * cw + 14); }   // screen px between card centres
 function cardText(c, size, wrapW, maxH) {   // title + detail, shrinking the detail until it fits maxH (screen px)
-  const ti = new Text({ text: c.title.toUpperCase(), style: { fontFamily: FONT, fontWeight: '900', fontSize: size.t, fill: GOLD, letterSpacing: 0.5, align: size.al,
-    dropShadow: { color: 0x000000, alpha: 0.6, blur: 2, distance: 1.5, angle: Math.PI / 2 } } });
+  const ti = new Text({ text: c.title.toUpperCase(), style: { fontFamily: FONT, fontWeight: '400', fontSize: size.t, fill: CRAN, letterSpacing: 0.5, align: size.al } });
   let fl = size.l, ln;
-  for (;;) { ln?.destroy(); ln = new Text({ text: c.line, style: { fontFamily: FONT, fontWeight: '700', fontSize: fl, fill: 0xeee3f2, align: size.al, wordWrap: true, wordWrapWidth: wrapW, lineHeight: Math.round(fl * 1.3) } });
+  for (;;) { ln?.destroy(); ln = new Text({ text: c.line, style: { fontFamily: "Nunito, 'Segoe UI', sans-serif", fontWeight: '800', fontSize: fl, fill: PAL.ink, align: size.al, wordWrap: true, wordWrapWidth: wrapW, lineHeight: Math.round(fl * 1.3) } });
     if (ti.height + 6 + ln.height <= maxH || fl <= (ST.compact ? 7 : 11)) break; fl -= 0.5; }
   if (ti.width > wrapW) ti.scale.set(wrapW / ti.width);
   return { ti, ln };
@@ -240,9 +255,9 @@ function buildCards() {
   const { cw: w, ch: h, row } = G.pc;
   CARDS.forEach((c, i) => { const C = new Container(); C.scale.set(1 / G.ks); cardsC.addChild(C);
     const R = 16, g = new Graphics();
-    for (const [sw, a] of [[16, 0.04], [10, 0.08], [6, 0.14], [3, 0.26]]) g.roundRect(-w / 2 - 1.5, -h / 2 - 1.5, w + 3, h + 3, R + 1.5).stroke({ width: sw, color: GOLD, alpha: a });
-    g.roundRect(-w / 2, -h / 2, w, h, R).fill({ color: 0x000000, alpha: 0.82 }).roundRect(-w / 2 + 3, -h / 2 + 3, w - 6, Math.min(56, h * 0.2), R - 3).fill({ color: 0xffffff, alpha: 0.04 })
-      .roundRect(-w / 2, -h / 2, w, h, R).stroke({ width: 2, color: GOLD }).roundRect(-w / 2 + 5, -h / 2 + 5, w - 10, h - 10, R - 4).stroke({ width: 1, color: 0xffeab0, alpha: 0.45 });
+    g.roundRect(-w / 2, -h / 2 + 7, w, h, R).fill({ color: PAL.ink, alpha: 0.7 });   // flat offset shadow
+    g.roundRect(-w / 2, -h / 2, w, h, R).fill(CREAM).roundRect(-w / 2, -h / 2, w, h, R).stroke({ width: 4, color: PAL.ink })
+      .roundRect(-w / 2 + 7, -h / 2 + 7, w - 14, h - 14, R - 5).stroke({ width: 2.5, color: GOLD });
     C.addChild(g);
     const art = new Sprite(tex['card_' + c.key]); art.anchor.set(0.5); const tw = art.texture.width, th = art.texture.height;
     if (row) {   // landscape: art left, title + detail right
@@ -258,7 +273,7 @@ function buildCards() {
       art.scale.set(fit); art.position.set(0, -h / 2 + 14 + ab / 2); C.addChild(art);
       ti.anchor.set(0.5, 0); ti.position.set(0, -h / 2 + 14 + ab + 8); ln.anchor.set(0.5, 0); ln.position.set(0, ti.y + ti.height + 6); C.addChild(ti, ln);
     }
-    const shade = new Graphics().roundRect(-w / 2 - 2, -h / 2 - 2, w + 4, h + 4, R + 2).fill(0x000000); shade.alpha = 0; C.addChild(shade);   // darkens the neighbours
+    const shade = new Graphics().roundRect(-w / 2 - 2, -h / 2 - 2, w + 4, h + 4, R + 2).fill(0x1a0d08); shade.alpha = 0; C.addChild(shade);   // darkens the neighbours
     cardEls.push({ C, i, shade }); });
   dotsG = new Graphics(); root.addChild(dotsG);
   placeCards(0, 0);
@@ -280,9 +295,9 @@ function placeCards(inK, outT) {   // inK: global clock for the calm fade-in; ou
     e.shade.alpha = 0.55 * ar; e.C.zIndex = 10 - Math.round(Math.abs(r) * 4); e.C.visible = Math.abs(r) < 1.6; }
   // page dots: small gold pills under the card (no pink circles)
   const idx = carIndex(), y = (cy + h / 2 + 13 + rise) / ks, gap = 16 / ks;
-  dotsG.clear(); dotsG.roundRect(G.cx - 34 / ks, y - 8 / ks, 68 / ks, 16 / ks, 8 / ks).fill({ color: 0x000000, alpha: 0.55 });
+  dotsG.clear(); dotsG.roundRect(G.cx - 34 / ks, y - 8 / ks, 68 / ks, 16 / ks, 8 / ks).fill(CREAM).stroke({ width: 2.5 / ks, color: PAL.ink });
   CARDS.forEach((_, i) => { const on = i === idx, x = G.cx + (i - 1) * gap, rw = (on ? 14 : 7) / ks, rh = 7 / ks;
-    dotsG.roundRect(x - rw / 2, y - rh / 2, rw, rh, rh / 2).fill({ color: on ? GOLD : 0xffeab0, alpha: on ? 1 : 0.35 }); });
+    dotsG.roundRect(x - rw / 2, y - rh / 2, rw, rh, rh / 2).fill({ color: on ? CRAN : 0x8a6a58, alpha: 1 }); });
 }
 // pointer: the transparent #loader sits over the canvas, so listen on the document and map client -> screen px
 function toScreen(e) { const r = app?.canvas?.getBoundingClientRect?.(); if (!r || !r.width) return null; return { x: (e.clientX - r.left) / r.width * G.Ws, y: (e.clientY - r.top) / r.height * G.Hs }; }
@@ -306,7 +321,7 @@ function carCancel() { if (CAR.drag?.on) { CAR.drag.on = false; carGo(Math.round
 export function introEatClick(e?: Event) { if (!app || state === 'done' || state === 'off') return false;
   if (performance.now() < CAR.eatUntil) { CAR.eatUntil = 0; return true; }
   const q = e && 'clientX' in e ? toScreen(e) : null; return !!(q && (e as any).detail !== 0 && inBand(q)); }
-function setDoors(aL, aR) {   // 0 = closed, 1 = ~80 deg open, swinging INTO the foyer (away from the guest)
+function setDoors(aL, aR) {   // 0 = closed, 1 = ~80 deg open, swinging INTO the chalet (away from the guest)
   G.aL = aL;
   const { cx, dw, dh, top, FL, F } = G, w = dw / 2, XL = cx - dw / 2, XR = cx + dw / 2, HZ = top + dh * 0.33, VX = cx;
   const pr = (X, Y, z) => { const p = F / (F + z); return [VX + (X - VX) * p, HZ + (Y - HZ) * p]; };
@@ -407,20 +422,21 @@ function update(dt) {
   if (state === 'loading') { const target = Math.min(0.97, progFn()); prog += (target - prog) * Math.min(1, dt * 4); }
   else if (state !== 'trans') prog += (1 - prog) * Math.min(1, dt * 8);
   const { w: bw, h: bh } = G.bar; barFill.clear();
-  const fw = Math.max(bh - 12, (bw - 12) * prog); barFill.roundRect(-bw / 2 + 6, -bh / 2 + 6, fw, bh - 12, (bh - 12) / 2).fill({ color: GOLD, alpha: 0.95 })
-    .roundRect(-bw / 2 + 8, -bh / 2 + 7, fw - 4, (bh - 12) * 0.4, (bh - 12) / 4).fill({ color: 0xfff1c4, alpha: 0.5 });
-  barGlow.alpha = 0.6 + 0.4 * br;
+  const fw = Math.max(bh - 14, (bw - 14) * prog); barFill.roundRect(-bw / 2 + 7, -bh / 2 + 7, fw, bh - 14, (bh - 14) / 2).fill(GOLD)
+    .roundRect(-bw / 2 + 12, -bh / 2 + 9, Math.max(0, fw - 10), (bh - 14) * 0.3, (bh - 14) / 6).fill(0xffe08a);
+  for (const q of flakes) { const f = q.f; f.y += dt * 60 * q.z; f.x += dt * (14 * Math.sin(t * 0.7 + q.ph) + 6) * q.z;
+    if (f.y > G.DH + 10) { f.y = -10; f.x = Math.random() * G.DW; } if (f.x > G.DW + 10) f.x = -10; }
   carStep(); if (state !== 'trans') placeCards(t, 0);
   if (state === 'tap') { tt += dt; barC.alpha = 1 - seg(tt, 0, 0.18); const k = seg(tt, 0.08, 0.4);
     btnC.alpha = seg(tt, 0.08, 0.2); const pulse = 0.5 + 0.5 * Math.sin((tt - 0.4) * Math.PI * 2 / 1.6);
-    btnC.scale.set(k < 1 ? lerp(0.85, 1, ease.outBack(k, 2.2)) : 1 + 0.015 * pulse); btnGlow.alpha = k < 1 ? 1 : 0.55 + 0.45 * pulse;
+    btnC.scale.set(k < 1 ? lerp(0.85, 1, ease.outBack(k, 2.2)) : 1 + 0.025 * pulse); btnGlow.alpha = 1;
     if (tt > 0.4) tapRes(); }
   doorLight.alpha = state === 'trans' ? 0 : 0.75 + 0.25 * br;
   if (state === 'trans') {
     tt += dt;
     placeCards(t, tt); barC.alpha = 0;
     btnC.scale.set(lerp(1, 0.92, seg(tt, 0, 0.08))); btnC.alpha = 1 - seg(tt, 0.02, 0.16);
-    logoS.alpha = logoBack.alpha = 1 - seg(tt, T.push[0], T.push[0] + 0.2); logoS.y = G.logo.y - 30 * seg(tt, T.push[0], T.push[0] + 0.2, ease.inCubic); logoBack.alpha *= 0.85;
+    logoS.alpha = logoBack.alpha = 1 - seg(tt, T.push[0], T.push[0] + 0.2); logoS.y = G.logo.y - 30 * seg(tt, T.push[0], T.push[0] + 0.2, ease.inCubic); logoBack.alpha *= 0.5;
     const aL = seg(tt, ...T.doorL, ease.inOutSine), aR = seg(tt, ...T.doorR, ease.inOutSine); setDoors(Math.min(aL, holdL()), aR);
     const open = Math.max(aL, aR); spill.alpha = 0.32 * open; glowL.alpha = 0.18 * open * (1 - seg(tt, ...T.push));
     const kp = seg(tt, ...T.push, ease.inCubic), s = lerp(1, G.sMax, kp);   // camera push: the vestibule flies past the lens
@@ -451,8 +467,8 @@ export async function initIntro(progress: () => number): Promise<boolean> {
     await a.init({ canvas: cv, width: ST.w, height: ST.h, resolution: Math.min(2, Math.max(0.5, ST.s * (window.devicePixelRatio || 1))), autoDensity: false,
       backgroundAlpha: 0, antialias: true, preference: 'webgl', sharedTicker: false, hello: false, autoStart: false });
     app = a; size();
-    const [title, { sheet }, ...cardT] = await Promise.all([loadTex(TITLE), loadSheet('assets/foyer/', 'foyer'), ...CARDS.map((c) => loadTex(c.art))]);
-    tex.title = title; tex.sconce = sheet.textures.sconce;
+    const [title, ...cardT] = await Promise.all([loadTex(TITLE), ...CARDS.map((c) => loadTex(c.art))]);
+    tex.title = title; tex.sconce = lanternTex();
     CARDS.forEach((c, i) => { tex['card_' + c.key] = cardT[i]; try { cardT[i].source.autoGenerateMipmaps = true; cardT[i].source.updateMipmaps(); } catch {} });
     try { title.source.autoGenerateMipmaps = true; title.source.updateMipmaps(); } catch {}
     tex.blob = softBlob(); tex.dot = glowDot(); tex.spill = spillTex();
@@ -475,7 +491,7 @@ export async function initIntro(progress: () => number): Promise<boolean> {
   }
 }
 export const introOn = () => !!app && state !== 'done' && state !== 'off';
-/** Loading finished: fill the bar, prime the game behind the doors, show TAP TO PARTY (resolves once it is up). */
+/** Loading finished: fill the bar, prime the game behind the doors, show TAP TO START (resolves once it is up). */
 export function introLoaded(): Promise<void> {
   if (!introOn()) return Promise.resolve();
   prime(); state = 'tap'; tt = 0;

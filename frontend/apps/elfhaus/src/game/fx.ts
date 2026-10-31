@@ -34,7 +34,7 @@ export function symWin(cell: HTMLElement) {
 	cell.classList.add('sprWin');
 	return true;
 }
-/** Scatter land: the Dare Card's own land sheet (squash-pop + ring flash + sparkles); the only symbol with one. */
+/** Scatter land: the Ski Pass's own land sheet (squash-pop + ring flash + sparkles); the only symbol with one. */
 export function symLand(cell: HTMLElement) {
 	const sym = symOf(cell); if (!SYM_STRIPS || !sym || symName(cell) !== 'S' || !hasSheet('sym_S')) return;
 	sym.querySelectorAll('canvas.fxLand').forEach((c) => c.remove());

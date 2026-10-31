@@ -34,7 +34,7 @@ const scattersOnBoard = (): Pos[] => S.sym.flatMap((col, reel) => col.map((n, ro
 const TL = (t: Tier) => TIER_LABEL[t].toUpperCase();
 const setFsTotal = (n: number) => { const el = $('#fsCount'); el.textContent = el.textContent!.replace(/\/ \d+/, '/ ' + n); };
 const showFsBar = () => { setBg(true); S.inBonus = true; document.body.classList.add('inBonus'); $('#fsBar').classList.remove('hidden'); };
-/** Scatter highlight: the Dare Cards play their win loop, everything else dims. */
+/** Scatter highlight: the Ski Passes play their win loop, everything else dims. */
 async function showScatters(ps: Pos[], ms: number) {
 	if (!ps.length) return;
 	const on = new Set(ps.map((p) => k(p.reel, p.row)));

@@ -124,7 +124,7 @@
 	<div class="spStage">
 		<img class="spEl spTitle" alt="Elfhaus" draggable="false" />
 		<div class="spEl spBarWrap"><div id="lBar" role="progressbar" aria-label="Loading"><i></i></div></div>
-		<button id="lGo" class="spEl" aria-label="Tap to start"><img alt="" draggable="false" /></button>
+		<button id="lGo" class="spEl" aria-label="Tap to start">TAP TO START</button>
 	</div>
 	<label class="spSkip"><input id="spSkip" type="checkbox" /> Don't show this again</label>
 	<div id="sting" aria-hidden="true"><div class="stBox"><img class="stGlow" alt="" /><img class="stLogo" alt="Rizzin Games" /><div class="stGlint"></div></div></div>
