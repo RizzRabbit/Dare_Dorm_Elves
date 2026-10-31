@@ -1,323 +1,212 @@
 {
-  "_comment": "Elfhaus art manifest. For each key, the first existing path (relative to the repo root) is copied into static/art/ at build time by scripts/sync-art.mjs. Drop final art at the first path under assets/final/ and rebuild: no code changes. Keys with no file render a clearly-marked PLACEHOLDER.",
-  "H1": [
-    "assets/final/webp/symbol_H1.webp",
-    "assets/final/symbol_H1.png",
-    "assets/final/H1.png",
-    "assets/concepts/H1_roxy_final_user.jpg"
-  ],
-  "H1_win": [
-    "assets/final/webp/symbol_H1_win.webp"
-  ],
-  "H2": [
-    "assets/final/webp/symbol_H2.webp",
-    "assets/final/symbol_H2.png",
-    "assets/final/H2.png",
-    "assets/concepts/H2_jade_final_user.jpg"
-  ],
-  "H2_win": [
-    "assets/final/webp/symbol_H2_win.webp"
-  ],
-  "H3": [
-    "assets/final/webp/symbol_H3.webp",
-    "assets/final/symbol_H3.png",
-    "assets/final/H3.png",
-    "assets/concepts/H3_vi_final_user.jpg"
-  ],
-  "H3_win": [
-    "assets/final/webp/symbol_H3_win.webp"
-  ],
-  "H4": [
-    "assets/final/webp/symbol_H4.webp",
-    "assets/final/symbol_H4.png",
-    "assets/final/H4.png",
-    "assets/concepts/H4_coco_final_user.jpg"
-  ],
-  "H4_win": [
-    "assets/final/webp/symbol_H4_win.webp"
-  ],
-  "L1": [
-    "assets/final/webp/symbol_L1_spin_bottle.webp",
-    "assets/final/symbol_L1_spin_bottle.png",
-    "assets/final/L1.png"
-  ],
-  "L1_win": [
-    "assets/final/webp/symbol_L1_spin_bottle_win.webp"
-  ],
-  "L2": [
-    "assets/final/webp/symbol_L2_lips.webp",
-    "assets/final/symbol_L2_lips.png",
-    "assets/final/L2.png"
-  ],
-  "L2_win": [
-    "assets/final/webp/symbol_L2_lips_win.webp"
-  ],
-  "L3": [
-    "assets/final/webp/symbol_L3_pink_phone.webp",
-    "assets/final/symbol_L3_pink_phone.png",
-    "assets/final/L3.png"
-  ],
-  "L3_win": [
-    "assets/final/webp/symbol_L3_pink_phone_win.webp"
-  ],
-  "L4": [
-    "assets/final/webp/symbol_L4_red_cup.webp",
-    "assets/final/symbol_L4_red_cup.png",
-    "assets/final/L4.png"
-  ],
-  "L4_win": [
-    "assets/final/webp/symbol_L4_red_cup_win.webp"
-  ],
-  "L5": [
-    "assets/final/webp/symbol_L5_leaf.webp",
-    "assets/final/symbol_L5_leaf.png",
-    "assets/final/L5.png"
-  ],
-  "L5_win": [
-    "assets/final/webp/symbol_L5_leaf_win.webp"
-  ],
-  "W_R1": [
-    "assets/final/webp/wild_W_R1.webp"
-  ],
-  "W_R2": [
-    "assets/final/webp/wild_W_R2.webp"
-  ],
-  "W_R3": [
-    "assets/final/webp/wild_W_R3.webp"
-  ],
-  "W_R4": [
-    "assets/final/webp/wild_W_R4.webp"
-  ],
-  "W_R5": [
-    "assets/final/webp/wild_W_R5.webp"
-  ],
-  "W_R1_card": [
-    "assets/final/webp/wild_W_R1_card.webp"
-  ],
-  "W_R2_card": [
-    "assets/final/webp/wild_W_R2_card.webp"
-  ],
-  "H1_glow": [
-    "assets/final/webp/symbol_H1_glow.webp"
-  ],
-  "H2_glow": [
-    "assets/final/webp/symbol_H2_glow.webp"
-  ],
-  "H3_glow": [
-    "assets/final/webp/symbol_H3_glow.webp"
-  ],
-  "H4_glow": [
-    "assets/final/webp/symbol_H4_glow.webp"
-  ],
-  "L1_glow": [
-    "assets/final/webp/symbol_L1_spin_bottle_glow.webp"
-  ],
-  "L2_glow": [
-    "assets/final/webp/symbol_L2_lips_glow.webp"
-  ],
-  "L3_glow": [
-    "assets/final/webp/symbol_L3_pink_phone_glow.webp"
-  ],
-  "L4_glow": [
-    "assets/final/webp/symbol_L4_red_cup_glow.webp"
-  ],
-  "L5_glow": [
-    "assets/final/webp/symbol_L5_leaf_glow.webp"
-  ],
-  "S_glow": [
-    "assets/final/webp/symbol_S_scatter_glow.webp"
-  ],
-  "W_R1_glow": [
-    "assets/final/webp/wild_W_R1_glow.webp"
-  ],
-  "W_R2_glow": [
-    "assets/final/webp/wild_W_R2_glow.webp"
-  ],
-  "W_R3_glow": [
-    "assets/final/webp/wild_W_R3_glow.webp"
-  ],
-  "W_R4_glow": [
-    "assets/final/webp/wild_W_R4_glow.webp"
-  ],
-  "W_R5_glow": [
-    "assets/final/webp/wild_W_R5_glow.webp"
-  ],
-  "background": [
-    "assets/final/webp/bg_base_noroxy_1920x1080.webp",
-    "assets/final/background_base.jpg",
-    "assets/final/background_base.png"
-  ],
-  "background_portrait": [
-    "assets/final/webp/bg_base_mobile_noroxy_1080x1920.webp",
-    "assets/final/background_base_portrait.jpg",
-    "assets/final/background_base_portrait.png"
-  ],
-  "logo": [
-    "assets/final/webp/logo.webp",
-    "assets/final/logo.png"
-  ],
-  "logo_full": [
-    "assets/final/webp/logo_full.webp",
-    "assets/final/logo_full.png"
-  ],
-  "frame": [
-    "assets/final/reel_frame.png"
-  ],
-  "alcove_crown_landscape": [
-    "assets/final/webp/frame/b2_crown_landscape.webp"
-  ],
-  "alcove_crown_fs_landscape": [
-    "assets/final/webp/frame/b2_crown_fs_landscape.webp"
-  ],
-  "alcove_recess_landscape": [
-    "assets/final/webp/frame/b2_recess_landscape.webp"
-  ],
-  "alcove_recess_fs_landscape": [
-    "assets/final/webp/frame/b2_recess_fs_landscape.webp"
-  ],
-  "alcove_twinkle0_landscape": [
-    "assets/final/webp/frame/b2_twinkle0_landscape.webp"
-  ],
-  "alcove_twinkle1_landscape": [
-    "assets/final/webp/frame/b2_twinkle1_landscape.webp"
-  ],
-  "alcove_twinkle2_landscape": [
-    "assets/final/webp/frame/b2_twinkle2_landscape.webp"
-  ],
-  "alcove_glow_landscape": [
-    "assets/final/webp/frame/b2_glow_landscape.webp"
-  ],
-  "alcove_glow_portrait": [
-    "assets/final/webp/frame/b2_glow_portrait.webp"
-  ],
-  "alcove_crown_portrait": [
-    "assets/final/webp/frame/b2_crown_portrait.webp"
-  ],
-  "alcove_crown_fs_portrait": [
-    "assets/final/webp/frame/b2_crown_fs_portrait.webp"
-  ],
-  "alcove_rail_portrait": [
-    "assets/final/webp/frame/b2_rail_portrait.webp"
-  ],
-  "alcove_recess_portrait": [
-    "assets/final/webp/frame/b2_recess_portrait.webp"
-  ],
-  "alcove_recess_fs_portrait": [
-    "assets/final/webp/frame/b2_recess_fs_portrait.webp"
-  ],
-  "alcove_twinkle0_portrait": [
-    "assets/final/webp/frame/b2_twinkle0_portrait.webp"
-  ],
-  "alcove_twinkle1_portrait": [
-    "assets/final/webp/frame/b2_twinkle1_portrait.webp"
-  ],
-  "alcove_twinkle2_portrait": [
-    "assets/final/webp/frame/b2_twinkle2_portrait.webp"
-  ],
-  "alcove_ledge": [
-    "assets/final/webp/frame/b2_ledge_9slice.webp"
-  ],
-  "buy_icon": [
-    "assets/final/ui/buy_icon_rizzin_256.png",
-    "assets/final/buy_icon.png"
-  ],
-  "buy_icon_128": [
-    "assets/final/ui/buy_icon_rizzin_128.png"
-  ],
-  "intro_dare": [
-    "assets/final/intro_dare.jpg",
-    "assets/final/intro_dare.png"
-  ],
-  "intro_double_dare": [
-    "assets/final/intro_double_dare.jpg",
-    "assets/final/intro_double_dare.png"
-  ],
-  "intro_triple_dare": [
-    "assets/final/intro_triple_dare.jpg",
-    "assets/final/intro_triple_dare.png"
-  ],
-  "intro_hidden": [
-    "assets/final/intro_hidden.jpg",
-    "assets/final/intro_hidden.png"
-  ],
-  "_atlases": "Pixi atlases + idle sprite sheets: static/assets/atlases (scripts/pack-atlases.py)",
-  "fx_ui": [
-    "assets/final/fx/fx_ui.webp"
-  ],
-  "sym_H1": [
-    "assets/final/fx/sym_H1.webp"
-  ],
-  "sym_H2": [
-    "assets/final/fx/sym_H2.webp"
-  ],
-  "sym_H3": [
-    "assets/final/fx/sym_H3.webp"
-  ],
-  "sym_H4": [
-    "assets/final/fx/sym_H4.webp"
-  ],
-  "sym_L1": [
-    "assets/final/fx/sym_L1.webp"
-  ],
-  "sym_L2": [
-    "assets/final/fx/sym_L2.webp"
-  ],
-  "sym_L3": [
-    "assets/final/fx/sym_L3.webp"
-  ],
-  "sym_L4": [
-    "assets/final/fx/sym_L4.webp"
-  ],
-  "sym_L5": [
-    "assets/final/fx/sym_L5.webp"
-  ],
-  "S": [
-    "assets/final/webp/symbol_S_scatter.webp",
-    "assets/final/symbol_S_scatter.png"
-  ],
-  "S_win": [
-    "assets/final/webp/symbol_S_scatter_win.webp"
-  ],
-  "sym_S": [
-    "assets/final/fx/sym_S.webp"
-  ],
-  "card_flip": [
-    "assets/final/fx/card_flip.webp"
-  ],
-  "reel_stripA": [
-    "assets/final/fx/reel_stripA.webp"
-  ],
-  "reel_stripB": [
-    "assets/final/fx/reel_stripB.webp"
-  ],
-  "fx_wild": [
-    "assets/final/fx/fx_wild.webp"
-  ],
-  "fx_feat": [
-    "assets/final/fx/fx_feat.webp"
-  ],
-  "fx_btn": [
-    "assets/final/fx/fx_btn.webp"
-  ],
-  "fx_burst": [
-    "assets/final/fx/fx_burst.webp"
-  ],
-  "fx_winplate_glint": [
-    "assets/final/fx/fx_winplate_glint.webp"
-  ],
-  "title_bigwin": [
-    "assets/final/titles/title_bigwin.webp"
-  ],
-  "title_megawin": [
-    "assets/final/titles/title_megawin.webp"
-  ],
-  "title_superwin": [
-    "assets/final/titles/title_superwin.webp"
-  ],
-  "title_epicwin": [
-    "assets/final/titles/title_epicwin.webp"
-  ],
-  "title_legendarywin": [
-    "assets/final/titles/title_legendarywin.webp"
-  ]
+ "_comment": "Winter Chalet art (assets/chalet, built by the chalet art pipeline). Empty list = not used (code draws it or skips it).",
+ "H1": [
+  "assets/chalet/sym/H1.webp"
+ ],
+ "H1_win": [],
+ "H2": [
+  "assets/chalet/sym/H2.webp"
+ ],
+ "H2_win": [],
+ "H3": [
+  "assets/chalet/sym/H3.webp"
+ ],
+ "H3_win": [],
+ "H4": [
+  "assets/chalet/sym/H4.webp"
+ ],
+ "H4_win": [],
+ "L1": [
+  "assets/chalet/sym/L1.webp"
+ ],
+ "L1_win": [],
+ "L2": [
+  "assets/chalet/sym/L2.webp"
+ ],
+ "L2_win": [],
+ "L3": [
+  "assets/chalet/sym/L3.webp"
+ ],
+ "L3_win": [],
+ "L4": [
+  "assets/chalet/sym/L4.webp"
+ ],
+ "L4_win": [],
+ "L5": [
+  "assets/chalet/sym/L5.webp"
+ ],
+ "L5_win": [],
+ "W_R1": [
+  "assets/chalet/sym/W_R1.webp"
+ ],
+ "W_R2": [
+  "assets/chalet/sym/W_R2.webp"
+ ],
+ "W_R3": [
+  "assets/chalet/sym/W_R3.webp"
+ ],
+ "W_R4": [
+  "assets/chalet/sym/W_R4.webp"
+ ],
+ "W_R5": [
+  "assets/chalet/sym/W_R5.webp"
+ ],
+ "W_R1_card": [
+  "assets/chalet/sym/W_R1.webp"
+ ],
+ "W_R2_card": [
+  "assets/chalet/sym/W_R2.webp"
+ ],
+ "H1_glow": [
+  "assets/chalet/sym/H1_glow.webp"
+ ],
+ "H2_glow": [
+  "assets/chalet/sym/H2_glow.webp"
+ ],
+ "H3_glow": [
+  "assets/chalet/sym/H3_glow.webp"
+ ],
+ "H4_glow": [
+  "assets/chalet/sym/H4_glow.webp"
+ ],
+ "L1_glow": [
+  "assets/chalet/sym/L1_glow.webp"
+ ],
+ "L2_glow": [
+  "assets/chalet/sym/L2_glow.webp"
+ ],
+ "L3_glow": [
+  "assets/chalet/sym/L3_glow.webp"
+ ],
+ "L4_glow": [
+  "assets/chalet/sym/L4_glow.webp"
+ ],
+ "L5_glow": [
+  "assets/chalet/sym/L5_glow.webp"
+ ],
+ "S_glow": [
+  "assets/chalet/sym/S_glow.webp"
+ ],
+ "W_R1_glow": [
+  "assets/chalet/sym/W_R1_glow.webp"
+ ],
+ "W_R2_glow": [
+  "assets/chalet/sym/W_R2_glow.webp"
+ ],
+ "W_R3_glow": [
+  "assets/chalet/sym/W_R3_glow.webp"
+ ],
+ "W_R4_glow": [
+  "assets/chalet/sym/W_R4_glow.webp"
+ ],
+ "W_R5_glow": [
+  "assets/chalet/sym/W_R5_glow.webp"
+ ],
+ "background": [
+  "assets/chalet/scene/bg_land.webp"
+ ],
+ "background_portrait": [
+  "assets/chalet/scene/bg_port.webp"
+ ],
+ "logo": [
+  "assets/chalet/ui/logo.webp"
+ ],
+ "logo_full": [
+  "assets/chalet/ui/logo.webp"
+ ],
+ "frame": [],
+ "alcove_crown_landscape": [],
+ "alcove_crown_fs_landscape": [],
+ "alcove_recess_landscape": [],
+ "alcove_recess_fs_landscape": [],
+ "alcove_twinkle0_landscape": [],
+ "alcove_twinkle1_landscape": [],
+ "alcove_twinkle2_landscape": [],
+ "alcove_glow_landscape": [],
+ "alcove_glow_portrait": [],
+ "alcove_crown_portrait": [],
+ "alcove_crown_fs_portrait": [],
+ "alcove_rail_portrait": [],
+ "alcove_recess_portrait": [],
+ "alcove_recess_fs_portrait": [],
+ "alcove_twinkle0_portrait": [],
+ "alcove_twinkle1_portrait": [],
+ "alcove_twinkle2_portrait": [],
+ "alcove_ledge": [],
+ "buy_icon": [
+  "assets/chalet/ui/buy_icon_256.png"
+ ],
+ "buy_icon_128": [
+  "assets/chalet/ui/buy_icon_128.png"
+ ],
+ "intro_dare": [],
+ "intro_double_dare": [],
+ "intro_triple_dare": [],
+ "intro_hidden": [],
+ "_atlases": "Pixi atlases + idle sprite sheets: static/assets/atlases (scripts/pack-atlases.py)",
+ "fx_ui": [],
+ "sym_H1": [],
+ "sym_H2": [],
+ "sym_H3": [],
+ "sym_H4": [],
+ "sym_L1": [],
+ "sym_L2": [],
+ "sym_L3": [],
+ "sym_L4": [],
+ "sym_L5": [],
+ "S": [
+  "assets/chalet/sym/S.webp"
+ ],
+ "S_win": [],
+ "sym_S": [],
+ "card_flip": [],
+ "reel_stripA": [],
+ "reel_stripB": [],
+ "fx_wild": [],
+ "fx_feat": [],
+ "fx_btn": [],
+ "fx_burst": [],
+ "fx_winplate_glint": [],
+ "title_bigwin": [
+  "assets/chalet/titles/title_big.webp"
+ ],
+ "title_megawin": [
+  "assets/chalet/titles/title_mega.webp"
+ ],
+ "title_superwin": [
+  "assets/chalet/titles/title_super.webp"
+ ],
+ "title_epicwin": [
+  "assets/chalet/titles/title_epic.webp"
+ ],
+ "title_legendarywin": [
+  "assets/chalet/titles/title_legendary.webp"
+ ],
+ "garland": [
+  "assets/chalet/ui/garland.webp"
+ ],
+ "bonus_bunny": [
+  "assets/chalet/titles/bonus_bunny.webp"
+ ],
+ "bonus_blackdiamond": [
+  "assets/chalet/titles/bonus_blackdiamond.webp"
+ ],
+ "bonus_doubleblack": [
+  "assets/chalet/titles/bonus_doubleblack.webp"
+ ],
+ "bonus_powder": [
+  "assets/chalet/titles/bonus_powder.webp"
+ ],
+ "bonus_santa": [
+  "assets/chalet/titles/bonus_santa.webp"
+ ],
+ "bonus_whiteout": [
+  "assets/chalet/titles/bonus_whiteout.webp"
+ ],
+ "title_maxwin": [
+  "assets/chalet/titles/title_max.webp"
+ ],
+ "title_wild": [
+  "assets/chalet/titles/title_wild.webp"
+ ]
 }
