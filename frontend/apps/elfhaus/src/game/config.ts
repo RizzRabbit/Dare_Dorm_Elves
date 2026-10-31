@@ -35,7 +35,9 @@ export const GUARANTEE: { triple_dare: number; hidden: number } = G.guarantee; /
 export const RETRIGGER = G.retrigger;                  // free-spin retrigger: 2 Dare Cards / 3 or more
 export const EGW_STACK_X: number = G.egwStackX;        // EGW full-reel wild value
 /** Math win_level edges (x bet): standard (setWin) and endFeature (freeSpinEnd); the big-win stages map onto these. */
-export const WIN_LEVELS: { standard: number[]; endFeature: number[] } = G.winLevels;
+export const WIN_LEVELS: { standard: number[]; endFeature: number[]; byMode?: Record<string, number[]> } = G.winLevels;
+/** math WIN_LEVEL_EDGES_BY_MODE (James 2026-10-30 19:28 CDT): the bonus buys DD / TD / Mystery / EGW size every banner tier x10. */
+export const winEdgesFor = (mode?: string): number[] => (mode && WIN_LEVELS.byMode?.[mode]) || WIN_LEVELS.standard;
 export const MYSTERY_ODDS: { none: number; double_dare: number; triple_dare: number; hidden: number } = G.mysteryOdds;
 export type Tier = 'dare' | 'double_dare' | 'triple_dare' | 'hidden';
 export const TIER_LABEL: Record<Tier, string> = { dare: 'Dare', double_dare: 'Double Dare', triple_dare: 'Triple Dare', hidden: 'Epic' }; // math tier id 'hidden' = UI name Epic (EVENTS.md)

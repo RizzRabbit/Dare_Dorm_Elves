@@ -71,13 +71,13 @@ export const hasStack = (a: StackAnim, ov: HTMLElement) => ok(sheetId(a, ov));
 /** Is there art for it at all (decoded or not)? Use this to decide between the art and an old placeholder effect. */
 export const stackListed = (a: StackAnim, ov: HTMLElement) => listed.has(sheetId(a, ov));
 const live = new WeakMap<HTMLElement, Partial<Record<'body' | 'letters' | 'win', Anim>>>();
-function run(a: StackAnim, ov: HTMLElement, layer: 'body' | 'letters' | 'win', o: { loop?: boolean; hold?: boolean; still?: boolean; onEnd?: () => void } = {}) {
+function run(a: StackAnim, ov: HTMLElement, layer: 'body' | 'letters' | 'win', o: { loop?: boolean; hold?: boolean; still?: boolean; from?: number; onEnd?: () => void } = {}) {
 	if (!hasStack(a, ov)) return null;
 	const id = sheetId(a, ov), slots = live.get(ov) || {};
 	const old = slots[layer]; if (old && !old.done) stop(old);
 	used.set(id, performance.now());
 	const once = !o.loop && !o.hold && !o.still; if (once) playing.add(id);
-	const an = play(id, names.get(id)!, ov, { cls: `stk stk_${layer}`, blend: !o.still, loop: o.still ? false : o.loop, hold: o.hold || o.still, ...(o.still ? { fps: 1e-6, rate: 1 } : {}), onEnd: () => { if (once) { playing.delete(id); used.set(id, performance.now()); sweepSoon(); } o.onEnd?.(); } });
+	const an = play(id, names.get(id)!, ov, { cls: `stk stk_${layer}`, blend: !o.still, loop: o.still ? false : o.loop, hold: o.hold || o.still, ...(o.still ? { fps: 1e-6, rate: 1 } : {}), from: o.from, onEnd: () => { if (once) { playing.delete(id); used.set(id, performance.now()); sweepSoon(); } o.onEnd?.(); } });
 	if (an) { slots[layer] = an; live.set(ov, slots); } else if (once) playing.delete(id); // CSS (:has canvas.stk_<layer>) hides the placeholder it replaces
 	return an;
 }
@@ -162,11 +162,15 @@ export function stackIdle(ov: HTMLElement) {
 	if (!live.get(ov)?.letters) stackLetters(ov, true);
 	sweepSoon();
 }
+/** v20 (James, turbo: "a white streak flashes across each elf every time it expands to fill its reel, on all reels"):
+ *  the one-shots start past their baked flash. stack_form frames 0-1 are a light column and 2-4 a white silhouette with a
+ *  white wipe bar; merge_join frame 0 is the group as a white silhouette and 1-2 a washed-out fade. The overlay's own fade / scale is the entrance. */
+export const CLEAN_FROM: Record<'stack_form' | 'merge_join', number> = { stack_form: 5, merge_join: 3 };
 /** A one-shot (stack_form / merge_join) and then the idle loop. Resolves when the one-shot ends (or at once if absent). */
 export function stackOnce(a: 'stack_form' | 'merge_join', ov: HTMLElement) {
 	return new Promise<void>((res) => {
 		const id = sheetId(a, ov);
-		if (!run(a, ov, 'body', { onEnd: () => { run('merge_idle', ov, 'body', { loop: true }); drop([id]); res(); } })) return res();
+		if (!run(a, ov, 'body', { from: CLEAN_FROM[a], onEnd: () => { run('merge_idle', ov, 'body', { loop: true }); drop([id]); res(); } })) return res();
 		if (a === 'stack_form') stackLetters(ov); // re-ignite: its blank lead-in waits for the build-up
 	});
 }

@@ -91,7 +91,7 @@ export function levelOf(x: number, edges: readonly number[]) { for (let i = 0; i
 /** The banner stages from the math's edges: level L starts at edges[L - 2] (x bet). */
 export function buildBigTiers(edges: readonly number[]): BigTier[] {
 	return Object.entries(STAGE_OF_LEVEL).map(([l, name]) => ({ level: +l, name, x: edges[+l - 2] }))
-		.filter((t) => Number.isFinite(t.x)).sort((a, b) => a.level - b.level);
+		.filter((t) => Number.isFinite(t.x) && t.x < edges[edges.length - 1]).sort((a, b) => a.level - b.level);   // a tier at or above the cap edge is skipped
 }
 /** Set from the synced math (ui.ts calls setWinLevels(MATH.winLevels.standard) at load). */
 export let BIG_TIERS: BigTier[] = [];

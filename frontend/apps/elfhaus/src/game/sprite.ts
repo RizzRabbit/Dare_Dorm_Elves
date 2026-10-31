@@ -17,7 +17,7 @@
 import { spriteRate } from './tempo';
 export type Atlas = { size: [number, number]; anims: Record<string, { fps: number; loop: boolean; frames: number[][]; canvas?: [number, number] }> };
 type Sheet = { img: CanvasImageSource; atlas: Atlas; src: string };
-export type PlayOpts = { cls?: string; style?: string; loop?: boolean; hold?: boolean; reverse?: boolean; fps?: number; delay?: number; prepend?: boolean; rate?: number; blend?: boolean; onEnd?: () => void };
+export type PlayOpts = { cls?: string; style?: string; loop?: boolean; hold?: boolean; reverse?: boolean; fps?: number; delay?: number; prepend?: boolean; rate?: number; blend?: boolean; from?: number; onEnd?: () => void };
 export type Anim = { cv: HTMLCanvasElement; sheet: Sheet; frames: number[][]; fps: number; loop: boolean; hold: boolean; t0: number; last: number; done: boolean; onEnd?: () => void; plan?: Plan; lastF?: number };
 
 const sheets = new Map<string, Sheet>();
@@ -156,7 +156,8 @@ function tick(t: number) {
 export function play(id: string, name: string, host: Element, o: PlayOpts = {}): Anim | null {
 	const sheet = sheets.get(id); const def = sheet?.atlas.anims[name];
 	if (!sheet || !def || !host.isConnected) return null;
-	const frames = o.reverse ? [...def.frames].reverse() : def.frames;
+	// v20: `from` skips a sheet's lead-in frames (the baked light-column / white-silhouette flash of stack_form / merge_join)
+	const all = o.reverse ? [...def.frames].reverse() : def.frames, frames = o.from ? all.slice(Math.min(o.from, all.length - 1)) : all;
 	const cv = def.canvas ? take(def.canvas[0], def.canvas[1]) : take(frames[0][2], frames[0][3]);
 	if (o.cls) cv.className += ' ' + o.cls;
 	if (o.style) cv.setAttribute('style', o.style);

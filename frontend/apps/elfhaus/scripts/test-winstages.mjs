@@ -50,7 +50,7 @@ const L_LEG = +Object.entries(C.STAGE_OF_LEVEL).find(([, n]) => n === 'LEGENDARY
 ok(C.BIG_TIERS.find((t) => t.name === 'LEGENDARY WIN')?.x === 1000 && C.BIG_TIERS.find((t) => t.name === 'EPIC WIN')?.x === 100 && L_LEG === top - 1, `LEGENDARY WIN = math level ${L_LEG} from the synced 1000x edge, EPIC WIN = level ${L_EPIC} (100-1000x), max win = level ${top}`);
 const ui = readFileSync(new URL('../src/game/ui.ts', import.meta.url), 'utf8'), bem = readFileSync(new URL('../src/game/bookEventHandlerMap.ts', import.meta.url), 'utf8'), cu = readFileSync(new URL('../src/game/countup.ts', import.meta.url), 'utf8');
 ok(!/x:\s*(10|25|50|100|1000)\b/.test(cu) && !/>=\s*1000\b/.test(ui) && /bigWin\(x, undefined, lvl\)/.test(bem), 'no frontend win thresholds; setWin passes the level');
-ok(/const lv = levelOf\(ev\.amount \/ 100, WIN_LEVELS\.standard\)/.test(bem) && /lv < LEGEND_ELVES_LEVEL && ev\.winLevel !== lv/.test(bem), 'banner level = synced edges applied to the amount; book winLevel cross-checked only below LEGENDARY');
+ok(/const lv = levelOf\(ev\.amount \/ 100, WIN_EDGES\)/.test(bem) && /lv < LEGEND_ELVES_LEVEL && ev\.winLevel !== lv/.test(bem), 'banner level = synced edges of the round mode (v20: buy modes x10) applied to the amount; book winLevel cross-checked only below LEGENDARY');
 
 console.log('\n=== character layer per stage level (bigwinElves.ts) ===');
 const stub = { ElfRig: class { constructor(h, c) { this.c = c; stub.rigs.push(c.map((x) => x.id)); } enter() {} set() {} start() { return this; } destroy() {} }, TEMPO: 1.8, rigs: [],

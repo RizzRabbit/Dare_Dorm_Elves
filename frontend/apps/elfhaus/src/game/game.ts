@@ -1,6 +1,7 @@
 // Game controller: RGS flow (authenticate / play / end-round / replay / resume), controls, buy menu, rules, layout.
 // Carries the Vault Breakers 3afc6d6 release fixes: rgs_url gating + error modal, bet levels from authenticate,
 // balance checks, Space-to-spin, Intl/social currency, replay mode, social wording, jurisdiction flags.
+import { creditedBalance } from './balance';
 import { skipMerge } from './mergefx';
 import { requestAuthenticate, requestBet, requestEndRound, requestReplay } from 'rgs-requests';
 // The offline mock RGS (fixture books) exists only in dev (vite dev). In the
@@ -26,7 +27,7 @@ import { initSettings, popOpen, closePop } from './settings';
 import { initAudio, sfx } from './audio';
 import { initVoiceIdle, voice } from './voice';
 import { setSocial, isSocial, t } from './strings';
-import { $, S, ART, bet, buildCells, renderAll, renderOverlays, setOverlayHook, resetWinMeter, setWinMeter, banner, wait, waitRaw } from './ui';
+import { $, S, ART, bet, buildCells, renderAll, renderOverlays, setOverlayHook, resetWinMeter, setWinMeter, setRoundMode, banner, wait, waitRaw } from './ui';
 import { skipHolds, syncTempo } from './tempo';
 import { playBookEvents, endBonusUi } from './bookEventHandlerMap';
 import { initRoxy, placeRoxy } from './roxy';
@@ -150,6 +151,7 @@ const setAuto = () => {
 	$('#autoBtn').classList.toggle('on', S.auto > 0); $('#spinBtn').classList.toggle('auto', S.auto > 0);
 	$('#autoN').textContent = S.auto > 0 ? String(S.auto) : '';
 	$('#spinBtn').setAttribute('aria-label', S.auto > 0 ? `Stop autoplay (${S.auto} left)` : 'Spin');
+	$('#autoBtn').setAttribute('aria-label', S.auto > 0 ? 'Stop autoplay' : 'Autoplay'); $('#autoBtn').title = S.auto > 0 ? 'Stop autoplay' : 'Autoplay';
 };
 const stopAuto = () => { S.auto = 0; setAuto(); };
 const parseAmt = (v: string) => { const x = v.trim().replace(',', '.'); if (!x) return 0; return /^\d*\.?\d+$|^\d+\.$/.test(x) ? Number(x) : NaN; };
@@ -200,11 +202,23 @@ function skipBoard(reels = true, lines = true) {
 }
 
 // ---------- RGS round ----------
+/** This round's payout in currency units: the RGS's own payout, else multiplier x bet amount. */
+function roundPayout(round: any) {
+	if (Number.isFinite(round?.payout)) return round.payout / API_AMOUNT_MULTIPLIER;
+	if (Number.isFinite(round?.payoutMultiplier) && Number.isFinite(round?.amount)) return (round.payoutMultiplier * round.amount) / API_AMOUNT_MULTIPLIER;
+	return 0;
+}
 async function finishRound(round: any) {
 	if (round?.active) { // v3.16e (#221): end-round only for an open round (the RGS returns wins active, 0x rounds already closed)
 		const end: any = import.meta.env.DEV && url.mock ? await (await import('../mock/mockRgs')).mockEndRound({}) : await requestEndRound({ sessionID: url.sessionID, rgsUrl: url.rgsUrl });
 		if (end?.error) throw end;
-		if (end?.balance) S.balance = end.balance.amount / API_AMOUNT_MULTIPLIER;
+		// v20 (James on Stake: a $5.368 win only reached the balance at the next press, $974.57 -> $979.94 -> $972.44):
+		// the win is credited here, at the end of the round after its presentation. The end-round balance is the server
+		// truth; if it comes back without this round's payout yet (the operator credit lags), the strip shows the play
+		// balance + the round's own payout so the next press only takes the bet. The next play response resets it.
+		const playBal = S.balance, payout = roundPayout(round);
+		const endBal = end?.balance ? end.balance.amount / API_AMOUNT_MULTIPLIER : NaN;
+		S.balance = creditedBalance(playBal, payout, endBal);
 	}
 	setStrip();
 }
@@ -213,7 +227,7 @@ async function round(mode: ModeKey) {
 	if (S.busy || !sessionReady) return;
 	const cost = modeCost(mode) * bet();
 	if (S.balance + 1e-9 < cost) { S.auto = 0; setAuto(); sfx('ui_error'); message('INSUFFICIENT BALANCE', t('noFunds')); return; }
-	setBusy(true); resetWinMeter(); endBonusUi();
+	setBusy(true); resetWinMeter(); endBonusUi(); setRoundMode(mode);   // v20: this mode's win-level edges
 	// base-game state never carries: clear last spin's stacks, then the reels start turning at the press
 	S.full.clear(); S.groups = []; S.vals.clear(); renderOverlays(false); hideRespin();
 	// cells hidden under last round's full-reel wilds must spin again (a hidden cell is skipped by startSpin,
@@ -275,7 +289,7 @@ async function resume(rd: any) {
 	// costMultiplier, and payout = payoutMultiplier x amount: rgs-fetcher schema.ts:170, :195). The resumed round is shown
 	// and paid at exactly that stake; the bet level is snapped only for the next new spin, after the round ends.
 	const amt = rd.amount > 0 ? rd.amount / API_AMOUNT_MULTIPLIER : 0;
-	S.roundBet = amt;
+	S.roundBet = amt; setRoundMode(rd.mode);
 	setArm(null, rd.mode === 'ante');
 	setStrip(); setBusy(true);
 	// v3.16c (James): ask first. The round's final win (book finalWin, x100) at its own stake, when the book has one.
@@ -317,7 +331,7 @@ async function loadReplay() {
 	S.replayBet = url.amount > 0 ? url.amount / API_AMOUNT_MULTIPLIER : 1; replayNoAmt = !(url.amount > 0);
 	if (import.meta.env.DEV && (url.mock || !url.rgsUrl)) {
 		const d: any = await (await import('../mock/mockRgs')).mockReplay({ mode: url.mode, event: url.event || url.book || '' });
-		replayState = d.state; replayCost = Number(d.costMultiplier) || modeCost(url.mode as ModeKey) || 1;
+		replayState = d.state; replayCost = Number(d.costMultiplier) || modeCost(url.mode as ModeKey) || 1; setRoundMode(url.mode);
 		$('#replayMode').textContent = replayLabel();
 		show('#replayBar', true); setStrip(); placeReplayBar(document.body.classList.contains('portrait'));
 		return;
@@ -326,7 +340,7 @@ async function loadReplay() {
 	const d: any = await requestReplay({ rgsUrl: url.rgsUrl, game: url.game, version: url.version, mode: url.mode, event: url.event });
 	if (d?.error) throw d;
 	if (!d?.state?.length) throw { error: 'ERR_REPLAY', message: 'The replay returned no round data.' };
-	replayState = d.state; replayCost = Number(d.costMultiplier) || modeCost(url.mode as ModeKey) || 1;
+	replayState = d.state; replayCost = Number(d.costMultiplier) || modeCost(url.mode as ModeKey) || 1; setRoundMode(url.mode);
 	$('#replayMode').textContent = replayLabel();
 	show('#replayBar', true); setStrip(); placeReplayBar(document.body.classList.contains('portrait'));
 }

@@ -30,6 +30,7 @@ export const AVAILABLE_BOOKS = Object.keys(books);
 // API amounts are micro-units: 1,000,000 = $1.00 (constants-shared/bet).
 const $ = (dollars: number) => Math.round(dollars * API_AMOUNT_MULTIPLIER);
 let mockBalance = $(1000); // $1,000.00
+let mockPending = 0; // v20: the open round's win, credited by end-round
 let mockCurrency = 'USD';
 
 export function setMockBalance(amount: number) {
@@ -102,7 +103,10 @@ export async function mockBet(params: { currency: string; amount: number; mode: 
 	// 100x units (cents of x bet). The mode cost (ante 3x, buys) is charged up front, as the RGS does.
 	const amount = $(params.amount);
 	const winAmount = Math.round(((book.payoutMultiplier ?? 0) / 100) * amount);
-	mockBalance += winAmount - Math.round(amount * mockModeCost(params.mode));
+	// v20: like the RGS, /wallet/play only takes the cost; a win stays on the open round and /wallet/end-round credits it
+	// (the mock used to credit at play, which hid the late balance credit James saw on Stake)
+	mockBalance -= Math.round(amount * mockModeCost(params.mode));
+	mockPending = winAmount;
 
 	return {
 		balance: {
@@ -122,6 +126,7 @@ export async function mockBet(params: { currency: string; amount: number; mode: 
 }
 
 export async function mockEndRound(_params: any) {
+	mockBalance += mockPending; mockPending = 0;
 	return {
 		balance: {
 			amount: mockBalance,

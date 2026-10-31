@@ -20,12 +20,13 @@ import { frameIn } from './wildframe';
 /** stack_form sheets decode ahead for reels with 2+ wilds that are not full yet (stacks.ts loads sheets on demand). */
 const warmStacks = () => stackPrefetch(S.sym.flatMap((c, r) => (!S.full.has(r) && c.filter((x) => x === 'W').length >= 2 ? [r] : [])));
 import { featOpen, featPop, featClose } from './featfx';
-import { countTo, countMs, setAmount, skipCounts, BIG_TIERS, levelOf, maxLevel } from './countup';
+import { countTo, countMs, setAmount, skipCounts, BIG_TIERS, levelOf, maxLevel, WIN_EDGES } from './countup';
 import { grab, combineInto } from './combine';
 import { tempo, hold, gtempo } from './tempo';
 import { sfx, loop, music, duck, duckFor, type Handle } from './audio';
 import { voice, voiceSpin, teaseOk } from './voice';
 import { payoutFlow } from './payoutFlow';
+import { bannerLevel } from './bannerLevel';
 // Pauses here use ui.wait: the old pace x ANIM_TEMPO, skippable by tap / Space (tempo.ts); turbo keeps its short values.
 
 const scattersOnBoard = (): Pos[] => S.sym.flatMap((col, reel) => col.map((n, row) => ({ reel, row, n }))).filter((c) => c.n === 'S').map(({ reel, row }) => ({ reel, row }));
@@ -247,7 +248,7 @@ export const bookEventHandlerMap: Handlers = {
 	// is cross-checked, winLevel()); below the first banner level is a normal win, the max level is the wincap screen
 	async setWin(ev) {
 		const x = ev.amount / 100, lvl = winLevel(ev);
-		if (BIG_TIERS.length && lvl >= BIG_TIERS[0].level && lvl < maxLevel() && x < MAX_WIN_X) { roxy('win'); await bigWin(x, undefined, lvl); }
+		if (BIG_TIERS.length && bannerLevel(ev.amount, WIN_EDGES, BIG_TIERS[0].level, MAX_WIN_X)) { roxy('win'); await bigWin(x, undefined, lvl); }
 	},
 	async setTotalWin(ev) { const x = Math.min(ev.amount / 100, MAX_WIN_X); setWinMeter(x, !!(ev as { payout?: boolean }).payout); S.roundBase = x; },
 	async cardFlip(ev) {
@@ -363,8 +364,8 @@ export function egwFlow(events: BookEvent[]): BookEvent[] {
  *  cross-checked only below the LEGENDARY edge, where it matches books made before the 1000x edge was added (those
  *  books say 9 / 10 above 1000x; the synced edges say 10 / 11). A mismatch there warns in dev and the edges win. */
 export const winLevel = (ev: { amount: number; winLevel?: number }) => {
-	const lv = levelOf(ev.amount / 100, WIN_LEVELS.standard);
-	if (import.meta.env?.DEV && Number.isFinite(ev.winLevel) && lv < LEGEND_ELVES_LEVEL && ev.winLevel !== lv) console.warn(`setWin ${ev.amount}: book winLevel ${ev.winLevel} != math edges ${lv}`);
+	const lv = levelOf(ev.amount / 100, WIN_EDGES);   // v20: the round's mode edges (bonus buys x10, setRoundMode)
+	if (import.meta.env?.DEV && WIN_EDGES === WIN_LEVELS.standard && Number.isFinite(ev.winLevel) && lv < LEGEND_ELVES_LEVEL && ev.winLevel !== lv) console.warn(`setWin ${ev.amount}: book winLevel ${ev.winLevel} != math edges ${lv}`);
 	return lv;
 };
 export async function playBookEvents(events: BookEvent[]) {

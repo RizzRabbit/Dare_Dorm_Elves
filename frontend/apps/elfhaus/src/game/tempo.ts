@@ -16,7 +16,7 @@ export const tempo = () => (S.turbo ? 1 : ANIM_TEMPO);
 // anim-v4 (James, reviewer feedback "Poor animations"): gameplay feedback is NOT slowed any more. Reel spin / stops,
 // small-win line highlights and the WIN count-ups run at studio pace (GAME_TEMPO = 1); idle / ambient / feature
 // set pieces keep ANIM_TEMPO. Turbo keeps its own (faster) values everywhere.
-export const GAME_TEMPO = 1;
+export const GAME_TEMPO = 1.15;   // v20 (James 19:2x CDT): normal win presentation a beat calmer (+15%); turbo unchanged
 export const gtempo = () => (S.turbo ? 1 : GAME_TEMPO);
 /** A gameplay-feedback duration (win lines, win highlights, count-ups): studio pace, not stretched. */
 export const TG = (ms: number) => Math.round(ms * gtempo());

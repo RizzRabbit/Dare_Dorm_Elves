@@ -117,6 +117,9 @@ export async function playWins(wins: LineWin[], base: number, stepTotal?: number
 	// the step total is the book's winInfo.totalWin (math); the line sum is only a fallback for a book without it
 	const tot = base + (Number.isFinite(stepTotal) ? stepTotal! : wins.reduce((a, w) => a + w.win, 0)) / 100;
 	const Ps = wins.map((w) => path(w.lineIndex));
+	// v20 (James: ~4 s of count-up on a 0.05x win): the presentation scales with the step's size (x bet): the line cycle is
+	// capped at 0.9 s under 1x, 1.6 s under 5x, else 2.4 s; the all-lines hold at 0.5 s under 1x
+	const sx = tot - base, small = sx < 1, cycleMs = sx < 1 ? 900 : sx < 5 ? 1600 : 2400;
 	// a) all at once: symbols pop, lines draw on together; the meter starts counting to the step total (it keeps
 	//    counting through a / b skips: its own stage is c)
 	if (n) sfx('winline_highlight');
@@ -127,13 +130,13 @@ export async function playWins(wins: LineWin[], base: number, stepTotal?: number
 	const drawOn = turbo ? 160 : TG(420);
 	await stage('a', () => { skipLine = true; }, async () => {
 		await run(drawOn, (t) => drawAll(Ps, easeIO(t), 1));
-		await hold(turbo ? 120 : TG(Math.min(900, 380 + 120 * n)));
+		await hold(turbo ? 120 : TG(Math.min(small ? 500 : 900, 380 + 120 * n)));
 	});
 	skipLine = false;
 	// b) cycle: each line alone with its amount (more than one line, not turbo); capped at ~2.4 s in total
 	if (n > 1 && !turbo) {
 		await stage('b', () => { skipAll = true; }, async () => {
-			const per = TG(Math.max(240, Math.min(520, 2400 / n)));
+			const per = TG(Math.max(240, Math.min(520, cycleMs / n)));
 			for (let i = 0; i < n && !skipAll; i++) {
 				skipLine = false; const w = wins[i];
 				document.querySelectorAll('.cell.win').forEach((c) => c.classList.add('soft'));
@@ -159,7 +162,7 @@ export async function playWins(wins: LineWin[], base: number, stepTotal?: number
 		if (n && lv < bl) sfx(turbo || lv < medL ? 'win_small' : lv === medL ? 'win_medium' : 'win_big');
 		if (n && !turbo && lv >= medL && lv < bl) voice('win');
 		wins.forEach((w) => w.positions.forEach((p) => { ovWin(p.reel); const c = cellEl(p.reel, p.row); c.classList.remove('dim'); c.classList.add('win'); litOn(c); symWin(c); }));
-		if (!skipC) { const t0 = performance.now(), ms = turbo ? 200 : TG(500); while (performance.now() - t0 < ms && !skipC) await frame(); }
+		if (!skipC) { const t0 = performance.now(), ms = turbo ? 200 : TG(small ? 300 : 500); while (performance.now() - t0 < ms && !skipC) await frame(); }
 	});
 	document.querySelectorAll('.cell.pulse').forEach((c) => c.classList.remove('pulse'));
 	} finally { active = false; skipAll = false; skipLine = false; presenting(false); }

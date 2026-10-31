@@ -4,14 +4,16 @@ import { sfx, loop, duck } from './audio';
 import { voice, VOICE } from './voice';
 import { frameHTML } from './wildframe';
 import ART_JSON from './art.generated.json';
-import { LINES, MAX_WIN_X, ROWS, REELS, SYMBOL_NAMES, WIN_LEVELS } from './config';
+import { LINES, MAX_WIN_X, ROWS, REELS, SYMBOL_NAMES, WIN_LEVELS, winEdgesFor } from './config';
 import { elvesLevel } from './bigwinElves';
 import { money } from './format';
 import type { Group, LineWin } from './typesBookEvent';
 import { DOTS } from './respin';
 import { mxBurst, lockIconCSS, symWin, clearSymWins } from './fx';
-import { countTo, countMs, setAmount, countTiers, BIG_TIERS, tierPlan, isCounting, setWinLevels, levelOf } from './countup';
+import { countTo, countMs, setAmount, countTiers, BIG_TIERS, tierPlan, isCounting, setWinLevels, levelOf, WIN_EDGES } from './countup';
 setWinLevels(WIN_LEVELS.standard); // v3.19: banner stages from the math's standard win levels
+/** v20: the round's win-level edges by its mode (math WIN_LEVEL_EDGES_BY_MODE; base / ante / Dare = standard). Called at every round start. */
+export function setRoundMode(mode?: string) { setWinLevels(winEdgesFor(mode)); }
 import { presenting, beginStage, endStage, skipStage } from './winstage';
 import { hold, tempo, gtempo } from './tempo';
 
@@ -269,7 +271,7 @@ function tierHit(T: HTMLElement, amt: HTMLElement, name: string, first: boolean,
 export async function bigWin(x: number, label?: string, level?: number) {
 	const B = $('#bigwin'), T = B.querySelector('.bwTier') as HTMLElement;
 	const at = S.turbo ? 0.6 : 1;
-	const lvl = Number.isFinite(level) ? level! : levelOf(x, WIN_LEVELS.standard), top = elvesLevel(lvl);
+	const lvl = Number.isFinite(level) ? level! : levelOf(x, WIN_EDGES), top = elvesLevel(lvl);
 	const { tiers } = tierPlan(x, S.turbo, lvl), idx = tiers.map((t) => t.i);
 	T.textContent = label || ''; T.classList.toggle('on', !!label); T.classList.remove('spr', 'pop'); delete T.dataset.tier; if (label) T.dataset.tier = 'label';
 	(B.querySelector('.bwX') as HTMLElement).textContent = `${x.toLocaleString('en-US')}x`;

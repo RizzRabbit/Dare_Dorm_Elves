@@ -25,9 +25,17 @@ const bedOff = () => { bed?.stop(150); bed = null; };
 // ~1.3 s after the press (was 2.72 s in spinfix). Anticipation reels keep a long glow hold and a slow brake, so the
 // tease reads against the snappy normal stops. Turbo / quick spin keeps the old fast values exactly.
 const sp = (ms: number) => Math.round(ms * SPIN_TEMPO);
+// v20 (James 19:2x CDT, regular video: 1.63 s press-to-last-stop, stop gaps 0.20-0.23 s, "slow it down a beat"): normal
+// first 800 -> 860 ms, stop gap 130 -> 195 ms (x1.5: on-screen gaps ~0.30-0.35 s, ~2.0-2.1 s total). Turbo unchanged.
+// v20b (James 19:41 CDT, Stake 'poor animation' risk: the first spin scrolled whole strips, respins spun single cells):
+// EVERY spin is now the per-cell spin the respins use (CELL_SPIN). A cell stop has no brake / settle tail, so normal pace
+// is set on the stop times themselves: first reel ~0.80 s after the press, reels 0.32 s apart, last reel lands ~2.08 s
+// after the press (+ its 0.24 s drop-in bounce). Cells in a reel cascade top to bottom `casc` ms. Turbo unchanged.
+export const CELL_SPIN = true;
 export const timing = () => (S.turbo
-	? { first: 420, gap: 70, ant: 450, antD: 420, resp: 380, land: 60, cell: 35 }
-	: { first: 800, gap: 130, ant: sp(720), antD: sp(760), resp: sp(420), land: 90, cell: sp(70) });
+	? { first: 420, gap: 70, ant: 450, antD: 420, resp: 380, land: 60, cell: 35, casc: 12 }
+	: CELL_SPIN ? { first: 800, gap: 320, ant: sp(720), antD: sp(760), resp: sp(420), land: 90, cell: sp(70), casc: 28 }
+		: { first: 860, gap: 195, ant: sp(720), antD: sp(760), resp: sp(420), land: 90, cell: sp(70), casc: 0 });
 // acc: spin-up ms; v: cells/s; D: nominal brake ms; ov: overshoot (cells); set: settle ms; pw: brake ease-out power;
 // soft: one-way cosine settle (else the old damped spring); dMin/dMax: brake clamp; bl / td: blur strip max / tape dim
 const P = () => (S.turbo
@@ -38,7 +46,7 @@ const P = () => (S.turbo
  *  late (real latency 300-800 ms on phones; the mock has none) the old `at = max(first, now + 120)` put every reel's
  *  brake start in the past, all five got clamped to "now" and landed together. bookEventHandlerMap schedules the
  *  first stop at least this far out, so every reel keeps its own brake and the T.gap stagger survives. */
-export const stopLead = () => { const p = P(); return p.D + p.set + 40; };
+export const stopLead = () => { if (CELL_SPIN) return 3 * timing().casc + 90; const p = P(); return p.D + p.set + 40; };
 void STOP_TEMPO; // normal stops no longer derive from STOP_TEMPO (kept exported in tempo.ts for the respin mini cells)
 
 type Slot = HTMLElement & { n?: number };
@@ -166,6 +174,7 @@ function startReel(R: Reel, rows: number[], now: number) {
 }
 /** Spin the given free cells (grouped by reel). */
 export function spinCells(cells: { reel: number; row: number }[]) {
+	if (CELL_SPIN) { cellStops.forEach((c) => clearTimeout(c.timer)); cellStops.clear(); spinMini(cells); return; }
 	if (!ensure()) return;
 	const now = performance.now(); t0 = now; spinning = true;
 	const by = new Map<number, number[]>(); cells.forEach((c) => by.set(c.reel, [...(by.get(c.reel) || []), c.row]));
@@ -182,10 +191,11 @@ export function startSpin(keep: (reel: number, row: number) => boolean = () => f
 	}
 	spinCells(cells);
 }
-export const reelSpinning = (r: number) => !!reels[r]?.on;
+export const reelSpinning = (r: number) => !!reels[r]?.on || [...minis.keys()].some((id) => id[0] === String(r));
 /** Land reels: `at` = ms after the spin start when the reel must be settled; `finals` = 4 row HTML strings. */
 /** `slow` (ms) = anticipation: the reel glows from `glowAt` (ms after spin start) and brakes over `slow` ms. */
 export function stopReel(r: number, at: number, finals: string[], onLand: () => void, slow = 0, glowAt = 0) {
+	if (CELL_SPIN) return stopCells(r, at, onLand, slow, glowAt);
 	const R = reels[r];
 	if (!R?.on) { onLand(); return Promise.resolve(); }
 	return new Promise<void>((res) => {
@@ -205,6 +215,7 @@ export function stopReel(r: number, at: number, finals: string[], onLand: () => 
 }
 /** Tap to skip: every reel that hasn't started braking lands now, left to right, with the normal (fast) brake. */
 export function hurry() {
+	if (CELL_SPIN) { hurryCells(); return; }
 	const now = performance.now(); let i = 0;
 	reels.forEach((R) => {
 		const st = R.stop; if (!R.on || !st || st.s0 !== undefined) return;
@@ -214,6 +225,8 @@ export function hurry() {
 }
 /** Hard stop (errors / resume): hide strips, unhide cells. */
 export function abortSpin() {
+	cellStops.forEach((c) => { clearTimeout(c.timer); c.res(); }); cellStops.clear();
+	minis.forEach((m) => m.remove()); minis.clear(); antOff();
 	reels.forEach((R) => { R.on = false; R.stop?.res(); R.stop = undefined; R.el.style.visibility = 'hidden'; });
 	document.querySelectorAll('#cells .cell.spinning').forEach((c) => c.classList.remove('spinning'));
 	spinning = false; bedOff();
@@ -239,18 +252,75 @@ export function spinMini(cells: { reel: number; row: number }[]) {
 		host.appendChild(m); minis.set(`${reel}${row}`, m);
 	});
 }
+// ---------- v20b: every spin is a per-cell spin (CELL_SPIN) ----------
+// stopReel() lands a reel's spinning cells at `at` (ms after the spin start), top to bottom `casc` ms apart, each with the
+// respin drop-in. onLand (the reveal's: renders the reel's four cells from the book's board) runs at the reel's first
+// cell stop; the reel's cells still spinning are kept hidden under their minis until their own stop. Anticipation: the
+// reel's cells spin at half speed from `glowAt` and the reel's edge glow (.strip.ant antGlow) shows until it lands.
+type CellStop = { r: number; at: number; onLand: () => void; res: () => void; timer: number; done: boolean };
+const cellStops = new Map<number, CellStop>();
+const antEls = new Map<number, HTMLElement>();
+function antOn(r: number) {
+	if (!ensure()) return; const R = reels[r];
+	R.el.style.cssText = `left:${r * S.cell}px;visibility:visible`; R.tape.style.opacity = '0'; R.blur.style.opacity = '0';
+	R.el.classList.add('ant'); antEls.set(r, R.el);
+	minis.forEach((m, id) => { if (id[0] === String(r)) m.classList.add('slow'); });
+}
+function antOff(r?: number) {
+	antEls.forEach((el, rr) => { if (r !== undefined && rr !== r) return; el.classList.remove('ant'); el.style.visibility = 'hidden'; el.querySelector<HTMLElement>('.tape')!.style.opacity = ''; antEls.delete(rr); });
+}
+function stopCells(r: number, at: number, onLand: () => void, slow = 0, glowAt = 0) {
+	const mine = [...minis.keys()].filter((id) => id[0] === String(r)).map((id) => +id[1]).sort((a, b) => a - b);
+	if (!mine.length) { onLand(); return Promise.resolve(); }
+	return new Promise<void>((res) => {
+		const st: CellStop = { r, at, onLand, res, timer: 0, done: false };
+		cellStops.get(r)?.res(); cellStops.set(r, st);
+		if (slow) { const dt = t0 + glowAt - performance.now(); if (dt > 0) setTimeout(() => { if (cellStops.get(r) === st && !st.done) antOn(r); }, dt); else antOn(r); }
+		st.timer = window.setTimeout(() => landCells(st, mine), Math.max(0, t0 + at - (mine.length - 1) * timing().casc - performance.now()));
+	});
+}
+async function landCells(st: CellStop, rows: number[]) {
+	if (st.done) return; st.done = true;
+	const r = st.r, casc = timing().casc;
+	const still = (row: number) => minis.has(`${r}${row}`);
+	st.onLand(); // the reel's cells now hold the book's symbols; the ones still under a mini stay hidden
+	rows.forEach((row) => { if (still(row)) document.getElementById(`c${r}${row}`)?.classList.add('spinning'); });
+	for (let i = 0; i < rows.length; i++) {
+		if (i && casc) await sleep(casc);
+		landMini(r, rows[i]);
+	}
+	antOff(r);
+	if (cellStops.get(r) === st) cellStops.delete(r);
+	st.res();
+}
+function hurryCells() {
+	const now = performance.now(); let i = 0;
+	[...cellStops.values()].sort((a, b) => a.r - b.r).forEach((st) => {
+		if (st.done) return;
+		const rows = [...minis.keys()].filter((id) => id[0] === String(st.r)).map((id) => +id[1]).sort((a, b) => a - b);
+		const due = t0 + st.at - (rows.length - 1) * timing().casc;
+		if (due <= now + 60 * i) { i++; return; }
+		clearTimeout(st.timer); st.timer = window.setTimeout(() => landCells(st, rows), 60 * i++);
+	});
+	antOff();
+}
+/** One cell's stop: the mini goes, the cell shows its symbol with the respin drop-in (squash and bounce). */
+function landMini(reel: number, row: number) {
+	const m = minis.get(`${reel}${row}`);
+	m?.remove(); minis.delete(`${reel}${row}`);
+	const c = document.getElementById(`c${reel}${row}`);
+	c?.classList.remove('spinning');
+	if (!S.turbo) sfx('reel_stop_3', { throttle: 60 }); else if (!minis.size) sfx('reel_stop_3', { gain: 0.7 });
+	if (!minis.size) bedOff();
+	const sym = c?.querySelector<HTMLElement>('.sym');
+	if (S.turbo) sym?.animate([{ transform: 'translateY(-28%) scale(.94,1.06)' }, { transform: 'translateY(4%) scale(1.07,.92)', offset: .45 }, { transform: 'translateY(-2%) scale(.98,1.02)', offset: .75 }, { transform: 'none' }], { duration: 160, easing: 'ease-out' });
+	else sym?.animate([{ transform: 'translateY(-22%) scale(.96,1.04)', opacity: 0.5 }, { transform: 'translateY(3%) scale(1.05,.94)', opacity: 1, offset: .5 }, { transform: 'translateY(-1%) scale(.99,1.01)', offset: .78 }, { transform: 'none' }], { duration: 240, easing: 'ease-out' });
+}
 /** Land one mini-spinning cell at `at` ms after the respin started; onLand renders the final symbol. */
 export function stopMini(reel: number, row: number, at: number, onLand: () => void) {
 	const m = minis.get(`${reel}${row}`);
 	return new Promise<void>((res) => setTimeout(() => {
-		m?.remove(); minis.delete(`${reel}${row}`);
-		const c = document.getElementById(`c${reel}${row}`);
-		c?.classList.remove('spinning'); onLand();
-		if (!S.turbo) sfx('reel_stop_3', { throttle: 60 }); else if (!minis.size) sfx('reel_stop_3', { gain: 0.7 });
-		if (!minis.size) bedOff();
-		const sym = c?.querySelector<HTMLElement>('.sym'); // drop-in + squash and bounce (WAAPI, transform only, no reflow)
-		if (S.turbo) sym?.animate([{ transform: 'translateY(-28%) scale(.94,1.06)' }, { transform: 'translateY(4%) scale(1.07,.92)', offset: .45 }, { transform: 'translateY(-2%) scale(.98,1.02)', offset: .75 }, { transform: 'none' }], { duration: 160, easing: 'ease-out' });
-		else sym?.animate([{ transform: 'translateY(-22%) scale(.96,1.04)', opacity: 0.5 }, { transform: 'translateY(3%) scale(1.05,.94)', opacity: 1, offset: .5 }, { transform: 'translateY(-1%) scale(.99,1.01)', offset: .78 }, { transform: 'none' }], { duration: 240, easing: 'ease-out' }); // anim-v4: quick drop-in with one bounce
+		void m; onLand(); landMini(reel, row); // same drop-in as every spin (v20b landMini)
 		res();
 	}, Math.max(0, t0 + at - performance.now())));
 }

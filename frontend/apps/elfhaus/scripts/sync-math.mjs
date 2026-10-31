@@ -35,7 +35,9 @@ function lit(name) {
 const need = (v, what) => { if (v === undefined || v === null || Number.isNaN(v)) throw new Error(`math: ${what} missing`); return v; };
 const retrig = py.match(/def retrigger_spins\(n\):[\s\S]*?return (\d+) if n >= (\d+) else (\d+) if n == (\d+) else 0/);
 // Stake Engine standard win levels: win_level(c, key) edges in x bet; level = 1 + index of the first edge above the win
-const wl = py.match(/def win_level\(c, key\):[\s\S]*?if key == "standard":\s*edges = (\[[^\]]*\])\s*else:\s*edges = (\[[^\]]*\])/);
+// math 8e2a048: WIN_LEVEL_EDGES {standard, endFeature} + WIN_LEVEL_EDGES_BY_MODE {mode: standard edges} (bonus buys x10)
+const wlE = /^WIN_LEVEL_EDGES\s*=/m.test(py) ? lit('WIN_LEVEL_EDGES') : null, wlM = /^WIN_LEVEL_EDGES_BY_MODE\s*=/m.test(py) ? lit('WIN_LEVEL_EDGES_BY_MODE') : {};
+const wl = wlE ? [null, JSON.stringify(wlE.standard), JSON.stringify(wlE.endFeature)] : py.match(/def win_level\(c, key\):[\s\S]*?if key == "standard":\s*edges = (\[[^\]]*\])\s*else:\s*edges = (\[[^\]]*\])/);
 const egwVal = py.match(/emit\("egwStart",[^\n]*value=(\d+)\)/);
 const params = JSON.parse(readFileSync(join(dir, 'reel_params.json'), 'utf8'));
 let commit = 'unknown';
@@ -57,7 +59,7 @@ const cfg = {
 	epic: { stackX: need(guarMin.hidden, 'GUAR_MIN_VAL.hidden'), step: need(grow.hidden, 'GROW_STEP.hidden') },
 	retrigger: { two: retrig ? Number(retrig[3]) : need(null, 'retrigger_spins'), threePlus: Number(retrig[1]) },
 	egwStackX: egwVal ? Number(egwVal[1]) : need(null, 'egwStart value'),
-	winLevels: wl ? { standard: JSON.parse(wl[1]), endFeature: JSON.parse(wl[2]) } : need(null, 'win_level edges'),
+	winLevels: wl ? { standard: JSON.parse(wl[1]), endFeature: JSON.parse(wl[2]), byMode: wlM } : need(null, 'win_level edges'),
 };
 writeFileSync(join(snap, 'game_config.json'), '{\n' + Object.entries(cfg).map(([k, v]) => ` ${JSON.stringify(k)}: ${JSON.stringify(v).replace(/,/g, ', ').replace(/":/g, '": ')}`).join(',\n') + '\n}\n');
 const pub = process.argv[3] ? resolve(process.argv[3]) : join(dir, 'library/publish_files');

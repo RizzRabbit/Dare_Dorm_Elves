@@ -19,7 +19,7 @@
 // letters_ignite / merge_win play at these same beats and merge_idle loops; any sheet not there keeps its placeholder.
 import { S, $, setGem, gemHTML, ovMx, cellEl, pos } from './ui';
 import { burst } from './fx';
-import { mergeFx, stackForm, wfExpand } from './wildfx';
+import { mergeFx, wfExpand } from './wildfx';
 import { grab } from './combine';
 import { toStage } from './stage';
 import { hasStack, stackOnce, stackLetters, stackWin, stackWinOff, stackPrepare, stackRelease, stackWarm, stackReact, stackReactSkip } from './stacks';
@@ -75,13 +75,13 @@ export async function stackIn(reel: number, render: (frameDelay?: number) => voi
 		const cells = cellsOf(reel), c = S.cell;
 		const probe = document.createElement('div'); probe.className = 'ov full'; probe.dataset.reel = String(reel);
 		if (hasStack('stack_form', probe)) { // the sheet does the flash + build-up itself
-			render(); const ov = ovOf(reel); if (ov) { ov.style.animation = 'none'; await Promise.race([stackOnce('stack_form', ov), sw(700)]); }
+			// v20: the sheet starts past its baked light-column / white wipe (stacks.ts CLEAN_FROM); a short fade + settle is the entrance
+			render(); const ov = ovOf(reel); if (ov) { ov.style.animation = 'none'; ov.style.transformOrigin = '50% 50%'; A(ov, [{ opacity: 0, transform: 'scale(1.03)' }, { opacity: 1, transform: 'none' }], { duration: 200, easing: 'cubic-bezier(.3,.1,.3,1)' }); await Promise.race([stackOnce('stack_form', ov), sw(700)]); }
 			return;
 		}
-		stackForm(reel); // light column sprite (flash)
+		// v20: no light-column flash and no white 'lock' burst column here any more (James: the white streak on every expand)
 		cells.forEach((el, row) => { const s = el.querySelector('.sym') || el; A(s, [{ transform: 'none', opacity: 1 }, { transform: `translateY(${(1.5 - row) * c * 0.42}px) scale(.72,.6)`, opacity: 0.35 }], { duration: 230, easing: 'cubic-bezier(.5,0,.9,.4)', fill: 'forwards' }); });
 		await sw(230);
-		const h = col(pos(reel, 0).x, S.cell); burst(h, 'lock'); setTimeout(() => h.remove(), T(900));
 		render();
 		cells.forEach((el) => (el.querySelector('.sym') || el).getAnimations().forEach((a) => a.cancel()));
 		const ov = ovOf(reel);

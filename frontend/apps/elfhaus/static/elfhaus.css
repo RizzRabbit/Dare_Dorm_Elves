@@ -161,7 +161,7 @@ body:not(.portrait) #fsBar:not(.hidden) ~ #banner{top:calc(50% - var(--cell)*2 -
   display:grid;grid-template-columns:1fr 64px 112px 64px 1fr;align-items:center;padding:0 18px}
 #menuBtn{justify-self:start;width:52px;height:52px} #autoBtn{justify-self:end;width:52px;height:52px;position:relative}
 #betDown,#betUp{width:56px;height:56px;justify-self:center} #betDown svg,#betUp svg{width:34px;height:34px}
-#autoBtn.on svg{stroke:var(--gold)} #autoBtn.on svg .fill,#autoBtn.on svg text{fill:var(--gold)}
+#autoBtn .aStop{display:none} #autoBtn.on .aStop{display:inline} #autoBtn.on .aPlay{display:none} /* v20 */ #autoBtn.on svg{stroke:var(--gold)} #autoBtn.on svg .fill,#autoBtn.on svg text{fill:var(--gold)}
 #autoBtn[data-n]:not([data-n=""])::after{content:attr(data-n);position:absolute;right:-2px;top:2px;font:900 11px "Nunito";color:#1A1722;background:var(--gold);border-radius:8px;padding:0 4px}
 #spinBtn{justify-self:center;width:104px;height:104px;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;
   background:#17141E;border:3px solid #46404F;box-shadow:0 0 0 2px #0008,0 8px 16px -6px #000a}
@@ -542,7 +542,8 @@ body{--bw:calc(var(--sp)*.86)}
 #armTag.hidden{display:none}
 #armTag svg{flex:none;width:.9em;height:.9em;stroke:#ffc83d;stroke-width:2;fill:none}
 /* autoplay: spins left as a small number under the spin icon */
-#autoN{position:absolute;left:50%;bottom:9%;translate:-50% 0;font-size:max(10px,calc(var(--sp)*.15));font-weight:900;letter-spacing:.5px;color:#FFE6F2;
+/* v20 (James 19:31 CDT): autoplay countdown +6 screen px over the old size, same style */
+#autoN{position:absolute;left:50%;bottom:9%;translate:-50% 0;font-size:calc(max(10px,calc(var(--sp)*.15)) + 6px / var(--s,1));font-weight:900;letter-spacing:.5px;color:#FFE6F2;
   font-variant-numeric:tabular-nums;pointer-events:none}
 #app #spinBtn.auto svg{opacity:.55}
 
@@ -726,6 +727,9 @@ html{background:#2A2533}
 #board{--cellMask:0}
 .mini{position:absolute;width:var(--cell);height:var(--cell);overflow:hidden;border-radius:var(--cellMask);contain:strict}
 .mini i{position:absolute;left:0;top:0;width:100%;height:calc(var(--cell)*12);background-repeat:repeat-y;background-size:100% calc(var(--cell)*6);will-change:transform;animation:miniRun .32s linear infinite}
+/* v20b: every spin is per-cell; an anticipation reel's cells run at half speed under the reel glow */
+.mini.slow i{animation-duration:.64s}
+.strip.ant{z-index:5}
 @keyframes miniRun{from{transform:translate3d(0,calc(var(--cell)*-6),0)}to{transform:translate3d(0,0,0)}}
 canvas.wfxMerge{position:absolute;left:-30%;top:calc(50% - 80%);width:160%;height:auto;aspect-ratio:1}
 /* impact bursts (fx.ts burst): centred on the host, above the symbol */
@@ -799,7 +803,7 @@ body.tb #app #stepToast{font-size:calc(22px*var(--tb));min-height:calc(32px*var(
 body.tb:not(.portrait) #app #banner{font-size:calc(20px*var(--tb))}
 body.tb:not(.portrait) #app #fsBar{font-size:calc(20px*var(--tb))} body.tb #fsCap{font-size:calc(13px*var(--tb))}
 body.tb #autoBtn[data-n]:not([data-n=""])::after{font-size:calc(11px*var(--tb))}
-body.tb #armTag{font-size:calc(var(--sp)*.13*var(--tbs))} body.tb #autoN{font-size:calc(var(--sp)*.15*var(--tbs))}
+body.tb #armTag{font-size:calc(var(--sp)*.13*var(--tbs))} body.tb #autoN{font-size:calc(var(--sp)*.15*var(--tbs) + 6px / var(--s,1))}
 body.tb .spins{font-size:calc(30px*var(--tbs))} body.tb .cont{font-size:calc(15px*var(--tb));padding:calc(12px*var(--tbs)) calc(28px*var(--tbs))}
 body.tb .carried{font-size:calc(15px*var(--tb))} body.tb .otHint{font-size:calc(12px*var(--tb))}
 body.tb .bwX{font-size:calc(16px*var(--tb))} body.tb .bwAmt{font-size:calc(62px*var(--tbs))}
