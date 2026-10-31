@@ -11,7 +11,7 @@ import type { Group, LineWin } from './typesBookEvent';
 import { DOTS } from './respin';
 import { mxBurst, lockIconCSS, symWin, clearSymWins } from './fx';
 import STACKS from './chalet/stacks.json';
-import { hasRig, rigGlowHTML, rigHTML } from './symrig';
+import { hasRig, rigGlowHTML, rigHTML, tileHTML } from './symrig';
 import { countTo, countMs, setAmount, countTiers, BIG_TIERS, tierPlan, isCounting, setWinLevels, levelOf, WIN_EDGES } from './countup';
 setWinLevels(WIN_LEVELS.standard); // v3.19: banner stages from the math's standard win levels
 /** v20: the round's win-level edges by its mode (math WIN_LEVEL_EDGES_BY_MODE; base / ante / Dare = standard). Called at every round start. */
@@ -127,7 +127,7 @@ export function symHTML(name: string, v?: number, reel?: number) {
 		return `<div class="sym W${wArt ? ' art' : ''}${rk ? ' wReel' : ''}${rk && hasRig(rk) ? ' rigd' : ''}">${wArt ? wArt : `<span class="nm">WILD</span>${ph('W')}<span class="plate">WILD</span>`}</div>${v === 0 ? '' : gemHTML(val, '', nudgeCSS('W'))}<div class="lock"><i class="lkI" style="${lockIconCSS()}"></i><span class="lkT">LOCKED</span>${DOTS}</div>`;
 	}
 	const t = name[0];
-	if (hasRig(name)) return `<div class="sym ${t} ${name} art rigd">${rigGlowHTML(name)}${rigHTML(name)}</div>`;
+	if (hasRig(name)) { const fr = tileHTML(name); return `<div class="sym ${t} ${name} art rigd${fr ? ' fr' : ''}">${fr}${rigGlowHTML(name)}${rigHTML(name)}</div>`; }
 	if (ART[name]) return `<div class="sym ${t} ${name} art">${glowLayer(name)}${img(name)}${winFx(name)}</div>`;
 	return `<div class="sym ${t} ${name}"><span class="nm">${(SYMBOL_NAMES[name] || name).toUpperCase()}</span>${ph(name)}</div>`;
 }

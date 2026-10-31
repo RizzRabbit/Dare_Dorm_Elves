@@ -13,6 +13,12 @@ type Part = { f: string; cls: string; pivot: number[]; hide?: boolean }; // hide
 type Rig = { src: number[]; pivot: number[]; parts: Part[]; spark: number[][]; glow: boolean };
 const RIG = RIG_JSON as unknown as Record<string, Rig>;
 export const hasRig = (key: string) => !!RIG[key];
+/** Regular symbols (H / L / S) sit on a tier-coloured framed tile from the sheet (_fr_hi / _fr_lo / _fr_sp, the same
+ * ink rim + gold ring + banded panel as the wild cards); the wilds carry their own frame in their art. */
+export const frameTier = (key: string) => (key[0] === 'H' ? 'hi' : key[0] === 'L' ? 'lo' : key === 'S' ? 'sp' : '');
+/** The symbol inside its frame: the rig box is inset by FR_IN on each side (~85% of the panel, chalet.css .sym.fr). */
+export const FR_IN = 0.095;
+export function tileHTML(key: string) { const t = frameTier(key); return t ? `<i class="rp f__fr_${t} symFr"></i>` : ''; }
 const pc = (v: number, d: number) => ((v / d) * 100).toFixed(2) + '%';
 
 /** The symbol's win glow (1/4-scale sheet frame, scaled to its source box); n layers (wilds draw it twice). */
@@ -74,6 +80,11 @@ const STRIP_T = 144;
 const STRIPS: Record<string, string[]> = { reel_stripA: ['H1', 'L3', 'H4', 'L1', 'W_R1', 'L5'], reel_stripB: ['L2', 'H3', 'L4', 'H2', 'S', 'H1'] };
 function drawKey(g: CanvasRenderingContext2D, page: HTMLImageElement, key: string, x: number, y: number, size: number) {
 	const r = RIG[key], b = FRAMES[key]; if (!r || !b) return;
+	const fr = FRAMES['_fr_' + frameTier(key)];
+	if (fr) { // the tile first (full box), then the symbol inset inside it, as on the cells
+		g.drawImage(page, fr.frame.x, fr.frame.y, fr.frame.w, fr.frame.h, x, y, size, size);
+		const d = size * FR_IN; x += d; y += d; size -= 2 * d;
+	}
 	const k = size / Math.max(b.sourceSize.w, b.sourceSize.h), ox = x + (size - b.sourceSize.w * k) / 2, oy = y + (size - b.sourceSize.h * k) / 2;
 	for (const n of [key, ...r.parts.filter((p) => !p.hide).map((p) => p.f)]) {
 		const f = FRAMES[n]; if (!f) continue;

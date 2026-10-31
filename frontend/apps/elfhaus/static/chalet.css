@@ -267,7 +267,6 @@ html body .sym:has(canvas.symFx)>.rig{visibility:hidden}
 html body .rig.still{position:absolute;inset:0;display:block}
 html body .rig.still .rgBody{position:absolute;inset:0;display:block}
 /* the old flat-art rules, carried over to the rig container */
-#cells .sym.H.art.rigd>.rig,#cells .sym.H.art.rigd>.symGlow{-webkit-mask:linear-gradient(#000 0,#000 80%,transparent 98%);mask:linear-gradient(#000 0,#000 80%,transparent 98%)}
 #board:not(.busyB) .cell:not(.win):not(.dim):not(.spinning) .sym.H.art.rigd>.rig,
 #board:not(.busyB) .cell:not(.win):not(.dim):not(.spinning) .sym.S.art.rigd>.rig{animation:idBreathe 3.6s ease-in-out infinite;transform-origin:50% 85%}
 #cells .cell:not(.win):nth-child(5n+2) .sym.rigd>.rig{animation-delay:-.7s}
@@ -426,3 +425,11 @@ html body .cell.wild:not(.win) .rig[class*="k_W_R"] .rp.m_smile{animation:rgWSmi
 /* chalet item 7: snow puff extras (puff.ts partEl, sheet assets/fx/puff_parts.webp) */
 .cell .puffFx>i.pfP{position:absolute;left:50%;top:50%;display:block;opacity:0}
 .cell .puffFx>i.pf_flash,.cell .puffFx>i.pf_ring{z-index:-1}
+
+/* ---- item 8: regular symbols on tier-coloured framed tiles (sheet frames _fr_hi / _fr_lo / _fr_sp, built with the wild
+   card's ink rim + gold ring + banded panel). The tile holds still; the symbol (rig + glow) sits at ~85% of the panel and
+   keeps all of its own land / win / idle motion inside it. Wilds are untouched (their art carries its own frame). ---- */
+html body .sym.fr{background:none!important;border:0!important;box-shadow:none!important}
+html body .sym.fr::after{display:none}
+html body .sym.fr>.symFr{left:0;top:0;width:100%;height:100%;z-index:0}
+html body .sym.fr>.rig,html body .sym.fr>.symGlow{inset:9.5%}
