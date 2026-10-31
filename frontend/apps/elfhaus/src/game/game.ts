@@ -27,7 +27,7 @@ import { initSettings, popOpen, closePop } from './settings';
 import { initAudio, sfx } from './audio';
 import { initVoiceIdle, voice } from './voice';
 import { setSocial, isSocial, t } from './strings';
-import { $, S, ART, bet, buildCells, renderAll, renderOverlays, setOverlayHook, resetWinMeter, setWinMeter, setRoundMode, banner, wait, waitRaw } from './ui';
+import { $, S, ART, bet, titleHTML, buildCells, renderAll, renderOverlays, setOverlayHook, resetWinMeter, setWinMeter, setRoundMode, banner, wait, waitRaw } from './ui';
 import { skipHolds, syncTempo } from './tempo';
 import { playBookEvents, endBonusUi } from './bookEventHandlerMap';
 import { initRoxy, placeRoxy } from './roxy';
@@ -71,9 +71,9 @@ const modeCost = (m: ModeKey) => (m === 'ante' ? ANTE_COST : MODES[m]?.cost ?? 1
 let armed: ModeKey | null = null;
 const spinMode = (): ModeKey => armed ?? (S.ante ? 'ante' : 'base');
 // re-audit M5: the tag spells the full mode name ("DOUBLE" alone was ambiguous)
-const SHORT: Partial<Record<ModeKey, string>> = { ante: 'ANTE', dare: 'DARE', double_dare: 'DOUBLE DARE', triple_dare: 'TRIPLE DARE', mystery: 'MYSTERY SPIN', egw: 'ELVES GONE WILD' };
+const SHORT: Partial<Record<ModeKey, string>> = { ante: 'ANTE', dare: 'BUNNY SLOPE', double_dare: 'BLACK DIAMOND', triple_dare: 'DOUBLE BLACK', mystery: 'SECRET SANTA', egw: 'WHITEOUT' };
 /** v3.17 armTag abbreviations when the full name doesn't fit the slim pill next to SPIN. */
-const ABBR: Partial<Record<ModeKey, string>> = { ante: 'ANTE', dare: 'DARE', double_dare: '2X DARE', triple_dare: '3X DARE', mystery: 'MYSTERY', egw: 'EGW' };
+const ABBR: Partial<Record<ModeKey, string>> = { ante: 'ANTE', dare: 'BUNNY', double_dare: 'DIAMOND', triple_dare: 'DBL BLACK', mystery: 'SANTA', egw: 'WHITEOUT' };
 function setArm(m: ModeKey | null, ante = false) {
 	armed = m; S.ante = !m && ante;
 	const mode = spinMode(), on = mode !== 'base';
@@ -353,18 +353,15 @@ async function playReplay() {
 }
 
 // ---------- bonus menu: Ante toggle, activate a bonus, bet -/+ with live prices ----------
-// aifix (audit 5): real in-game art on every card: Dare = a single (per-reel) wild, Double / Triple = the merged 2- and
-// 3-elf groups, Elves Gone Wild = the 5-wide group; Mystery Spin is a face-down card with an ink "?" (not the studio logo).
+// Real in-game art on every card: Bunny Slope = a single (per-reel) wild, Black Diamond / Double Black = the merged 2- and
+// 3-elf groups, Whiteout = the 5-wide group; Secret Santa is a wrapped gift with a "?" tag.
 // v3.6: Double / Triple / Elves Gone Wild use the approved stacks r8d stills (scripts/gen-stack-stills.py), not the old
 // static WM2 / WM3 / WM5 scenes.
 const CARD_ART: Partial<Record<ModeKey, string>> = { dare: ART.W_R1_card || ART.W_R1 || '', double_dare: 'assets/stacks/still/WM2_R1-2.webp', triple_dare: 'assets/stacks/still/WM3_R1-3.webp', egw: 'assets/stacks/still/WM5_R1-5.webp' };
-// re-audit M11: the Mystery card is built from the approved art it can reveal (the Dare wild, the Double and Triple
-// stills), fanned face-down in shadow with a gold "?" seal: code + approved art only, no new paint.
-const MYSTERY_CARD = () => {
-	const src = [CARD_ART.dare, CARD_ART.double_dare, CARD_ART.triple_dare].filter(Boolean) as string[];
-	return `<span class="bMystFan" aria-hidden="true">${src.map((u, i) => `<img class="f${i}" src="${u}" alt="" draggable="false">`).join('')}` +
-		`<b class="bMystQ"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17"/><text x="20" y="28.5" text-anchor="middle">?</text></svg></b></span>`;
-};
+// Secret Santa card: the wrapped Gift symbol art on cranberry with a gold "?" tag (approved symbol art + code only).
+const MYSTERY_CARD = () =>
+	`<span class="bMystFan" aria-hidden="true">${ART.L3 ? `<img class="gift" src="${ART.L3}" alt="" draggable="false">` : ''}` +
+	`<b class="bMystQ"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17"/><text x="20" y="28.5" text-anchor="middle">?</text></svg></b></span>`;
 function buildBuy() {
 	const off = !!S.jur.disabledBuyFeature;
 	$('#buyTitle').textContent = t('buyTitle');
@@ -372,7 +369,7 @@ function buildBuy() {
 	$('#buyCards').innerHTML = off ? '' : BUY_MODES.map((m) => {
 		const a = CARD_ART[m];
 		return `<button class="bcard" data-m="${m}" aria-pressed="false"><span class="bArt">${m === 'mystery' ? MYSTERY_CARD() : a ? `<img src="${a}" alt="" draggable="false">` : ''}</span>` +
-			`<span class="bName">${MODE_LABEL[m].toUpperCase()}</span><span class="bPrice"></span><span class="bX">${mult(modeCost(m))}</span></button>`;
+			`<span class="bName">${titleHTML(m, MODE_LABEL[m].toUpperCase())}</span><span class="bPrice"></span><span class="bX">${mult(modeCost(m))}</span></button>`;
 	}).join('');
 	$('#buyCards').querySelectorAll<HTMLElement>('.bcard').forEach((b) => (b.onclick = () => {
 		const m = b.dataset.m as ModeKey;
@@ -465,11 +462,11 @@ function buildRules() {
 <h3>How to play</h3>
 <p>5 reels × 4 rows with 20 fixed lines. Wins ${isSocial() ? 'are awarded' : 'pay'} left to right for 3, 4 or 5 matching symbols on a line, starting on the leftmost reel. Only the highest win per line counts. Line wins are multiplied by the ${isSocial() ? 'play amount' : 'bet'} per line (the total ${isSocial() ? 'play amount' : 'bet'} divided by 20).</p>
 <h3>Wilds and respins</h3>
-<p>Wilds substitute for every symbol. Each wild carries its own multiplier, starting at x1. A winning line through a wild triggers a respin: wilds lock, the other symbols of the winning lines respin, and everything else stays. Every locked wild that connects again gains +${GROW_STEP} (+${EPIC_GROW_STEP} in Epic). Up to ${MAX_RESPINS} respins per spin; every step ${win} as it lands. Dots on locked wilds show the respins left.</p>
+<p>Wilds substitute for every symbol. Each wild carries its own multiplier, starting at x1. A winning line through a wild triggers a respin: wilds lock, the other symbols of the winning lines respin, and everything else stays. Every locked wild that connects again gains +${GROW_STEP} (+${EPIC_GROW_STEP} in Powder Day). Up to ${MAX_RESPINS} respins per spin; every step ${win} as it lands. Dots on locked wilds show the respins left.</p>
 <p>Four wilds on one reel become a full-reel wild worth the sum of their multipliers. A stack completed by wilds that all landed on the same spin is an instant stack. Adjacent full-reel wilds merge into one wide wild worth the product of their values; non-adjacent ones add. A line's multiplier is the product of merged groups plus the sum of the other wilds it uses.</p>
-<h3>Dare Cards and free spins</h3>
-<p>The Dare Card is the scatter: at most one per reel, it never awards a win and can land on any spin or respin. 3 Dare Cards on the final board start Dare (${START_FS.dare} free spins), 4 start Double Dare (${START_FS.double_dare}). 5 flip the Dare Card: Triple Dare (${START_FS.triple_dare}) or Epic (${START_FS.hidden}).</p>
-<p>In Dare, wilds clear after each spin. From Double Dare up, the trigger spin's wilds stay in place for the bonus and all wilds stay locked. Triple Dare starts with at least ${GUARANTEE.triple_dare} full-reel wild${GUARANTEE.triple_dare === 1 ? '' : 's'}, Epic with at least ${GUARANTEE.hidden} (guaranteed stacks are added if missing; Epic's start at x${EPIC_STACK_X} or more). During free spins, 2 Dare Cards add +${RETRIGGER.two} spins and 3 or more add +${RETRIGGER.threePlus}, up to ${SPIN_CAP} spins in total.</p>
+<h3>Ski Passes and free spins</h3>
+<p>The Ski Pass is the scatter: at most one per reel, it never awards a win and can land on any spin or respin. 3 Ski Passes on the final board start Bunny Slope (${START_FS.dare} free spins), 4 start Black Diamond (${START_FS.double_dare}). 5 flip the Ski Pass: Double Black (${START_FS.triple_dare}) or Powder Day (${START_FS.hidden}).</p>
+<p>In Bunny Slope, wilds clear after each spin. From Black Diamond up, the trigger spin's wilds stay in place for the bonus and all wilds stay locked. Double Black starts with at least ${GUARANTEE.triple_dare} full-reel wild${GUARANTEE.triple_dare === 1 ? '' : 's'}, Powder Day with at least ${GUARANTEE.hidden} (guaranteed stacks are added if missing; Powder Day's start at x${EPIC_STACK_X} or more). During free spins, 2 Ski Passes add +${RETRIGGER.two} spins and 3 or more add +${RETRIGGER.threePlus}, up to ${SPIN_CAP} spins in total.</p>
 <h3>Modes</h3>
 <p>${(['ante', ...BUY_MODES] as ModeKey[]).map((m) => `<b>${MODE_LABEL[m]}</b> (${mult(modeCost(m))}): ${modeDesc(m as CopyMode, cc)}`).join('<br>')}</p>
 <table><tr><th>Mode</th><th>${costHeader(isSocial())}</th><th>RTP</th><th>Max win</th></tr>${modeRows}</table>

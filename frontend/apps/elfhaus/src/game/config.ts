@@ -24,7 +24,7 @@ export const LINES: number[][] = G.lines;
 // Pays in line-bet units for 3/4/5 of a kind; total play = 20 line units, so x play = lb / 20.
 export const PAYTABLE = G.paytable as Record<string, [number, number, number]>; // math PAY
 export const SYMBOL_NAMES: Record<string, string> = {
-	H1: 'Roxy', H2: 'Jade', H3: 'Vi', H4: 'Coco', L1: 'Bottle', L2: 'Lips', L3: 'Phone', L4: 'Red Cup', L5: 'Leaf', W: 'Wild', S: 'Dare Card',
+	H1: 'Star', H2: 'Sled', H3: 'Skis', H4: 'Cocoa', L1: 'Bell', L2: 'Bauble', L3: 'Gift', L4: 'Candy Cane', L5: 'Mulled Wine', W: 'Wild', S: 'Ski Pass',
 };
 
 export const START_FS: { dare: number; double_dare: number; triple_dare: number; hidden: number } = G.startFs; // math START_FS
@@ -40,12 +40,14 @@ export const WIN_LEVELS: { standard: number[]; endFeature: number[]; byMode?: Re
 export const winEdgesFor = (mode?: string): number[] => (mode && WIN_LEVELS.byMode?.[mode]) || WIN_LEVELS.standard;
 export const MYSTERY_ODDS: { none: number; double_dare: number; triple_dare: number; hidden: number } = G.mysteryOdds;
 export type Tier = 'dare' | 'double_dare' | 'triple_dare' | 'hidden';
-export const TIER_LABEL: Record<Tier, string> = { dare: 'Dare', double_dare: 'Double Dare', triple_dare: 'Triple Dare', hidden: 'Epic' }; // math tier id 'hidden' = UI name Epic (EVENTS.md)
+export const TIER_LABEL: Record<Tier, string> = { dare: 'Bunny Slope', double_dare: 'Black Diamond', triple_dare: 'Double Black', hidden: 'Powder Day' }; // math tier ids unchanged; Winter Chalet UI names (math 'hidden' = Powder Day)
 
 export type ModeKey = 'base' | 'ante' | 'dare' | 'double_dare' | 'triple_dare' | 'mystery' | 'egw';
 export const BUY_MODES: ModeKey[] = ['dare', 'double_dare', 'triple_dare', 'mystery', 'egw'];
+/** Winter Chalet: hand-lettered title art per bonus (ART['bonus_' + key]); math ids unchanged. */
+export const TITLE_ART: Record<string, string> = { dare: 'bunny', double_dare: 'blackdiamond', triple_dare: 'doubleblack', hidden: 'powder', mystery: 'santa', egw: 'whiteout' };
 export const MODE_LABEL: Record<ModeKey, string> = {
-	base: 'Spin', ante: 'Ante', dare: 'Dare', double_dare: 'Double Dare', triple_dare: 'Triple Dare', mystery: 'Mystery Spin', egw: 'Elves Gone Wild',
+	base: 'Spin', ante: 'Ante', dare: 'Bunny Slope', double_dare: 'Black Diamond', triple_dare: 'Double Black', mystery: 'Secret Santa', egw: 'Whiteout',
 };
 type ModeInfo = { cost: number; rtp: number | null; maxWinX: number; pBonus?: number | null };
 export const MODES: Record<ModeKey, ModeInfo> = (generated as any).modes;

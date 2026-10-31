@@ -7,9 +7,9 @@ import { initIntro, introLoaded, introEnter, introSkip, introEatClick } from './
 // Card titles (checked by the social-mode word scan in scripts/test-books.mjs).
 // Feature-panel alt text, keyed by the panel art (splash_layout.json decides which panels show and where).
 export const LOADER_CARDS = [
-	'4 Bonus Modes: Dare, Double Dare, Triple Dare and ???. Three dares… and one dirty little secret.',
-	'Sticky Wilds: x1, x2, x3. Once she’s in, she stays… and gets hotter every respin.',
-	'Elves Gone Wild Feature Spins: x4 × x5 = x20. Whole reels go WILD. Side by side? They multiply.',
+	'4 Bonus Modes: Bunny Slope, Black Diamond, Double Black and a hidden Powder Day.',
+	'Sticky Wilds: x1, x2, x3. Once she lands she stays, and her multiplier grows every respin.',
+	'Whiteout: whole reels go wild. Side by side, their multipliers multiply.',
 ] as const;
 
 let total = 0, done = 0;

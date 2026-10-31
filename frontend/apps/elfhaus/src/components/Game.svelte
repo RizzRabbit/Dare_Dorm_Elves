@@ -21,7 +21,7 @@
 		{/if}
 	</header>
 	<div id="stage">
-		<div id="fsBar" class="hidden"><span id="fsTier">DARE</span><span id="fsCount">FREE SPIN 0 / 8</span></div>
+		<div id="fsBar" class="hidden"><span id="fsTier">BUNNY SLOPE</span><span id="fsCount">FREE SPIN 0 / 8</span></div>
 		<div id="banner" class="hidden"></div>
 		<div id="frame" class:art={!!art.frame} style={art.frame ? `border-image: url(${art.frame}) 30 fill / 30px stretch` : ''}>
 			<div id="board">
@@ -124,7 +124,7 @@
 	<div class="spStage">
 		<img class="spEl spTitle" alt="Elfhaus" draggable="false" />
 		<div class="spEl spBarWrap"><div id="lBar" role="progressbar" aria-label="Loading"><i></i></div></div>
-		<button id="lGo" class="spEl" aria-label="Tap to party"><img alt="" draggable="false" /></button>
+		<button id="lGo" class="spEl" aria-label="Tap to start"><img alt="" draggable="false" /></button>
 	</div>
 	<label class="spSkip"><input id="spSkip" type="checkbox" /> Don't show this again</label>
 	<div id="sting" aria-hidden="true"><div class="stBox"><img class="stGlow" alt="" /><img class="stLogo" alt="Rizzin Games" /><div class="stGlint"></div></div></div>

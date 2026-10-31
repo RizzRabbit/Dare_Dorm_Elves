@@ -10,8 +10,9 @@ import { showRespin, endRespin, hideRespin } from './respin';
 import { mxBurst, lockFx, clearSymWins, symLand, symWin, landBump } from './fx';
 import { cardFlip } from './cardflip';
 import { timing, isSpinning, startSpin, markStopped, sinceStart, sleep, spinMini, stopMini, stopReel, stopLead } from './reels';
-import { $, S, k, bet, wait, banner, toast, hideToast, bigWin, setWinMeter, clearLines, renderCell, renderOverlays, cellEl, setGem, ovMx, symHTML } from './ui';
+import { $, S, k, bet, wait, titleHTML, banner, toast, hideToast, bigWin, setWinMeter, clearLines, renderCell, renderOverlays, cellEl, setGem, ovMx, symHTML } from './ui';
 import { playWins } from './winlines';
+import { puffWins } from './puff';
 import { wildLand, wfExpand } from './wildfx';
 import { setBg } from './bg';
 import { stackIn, mergeIn, growIn, clearOvWins } from './mergefx';
@@ -184,6 +185,8 @@ export const bookEventHandlerMap: Handlers = {
 	async winInfo(ev) {
 		// one thin line at a time races along each payline; its amount ticks into WIN (winlines.ts)
 		await playWins(ev.wins, S.roundBase, ev.totalWin);
+		// then the winning symbols pop and puff into snowflakes; a following respin refills them (puff.ts)
+		await puffWins(ev.wins, boardNext);
 	},
 	async updateStepWin(ev) { setWinMeter(S.roundBase + ev.amount / 100); },
 	async wildGrow(ev) {
@@ -263,7 +266,7 @@ export const bookEventHandlerMap: Handlers = {
 		await showScatters(ev.scatters, 1100);
 		lockCarried(ev.carried);
 		const I = $('#intro');
-		(I.querySelector('.tierName') as HTMLElement).textContent = TL(ev.tier) + '!';
+		(I.querySelector('.tierName') as HTMLElement).innerHTML = titleHTML(ev.tier, TL(ev.tier) + '!');
 		(I.querySelector('.spins') as HTMLElement).textContent = `${ev.totalFs} FREE SPINS`;
 		I.dataset.tier = ev.tier; I.classList.remove('hidden');
 		sfx('fs_intro'); music('bonus');
@@ -368,6 +371,9 @@ export const winLevel = (ev: { amount: number; winLevel?: number }) => {
 	if (import.meta.env?.DEV && WIN_EDGES === WIN_LEVELS.standard && Number.isFinite(ev.winLevel) && lv < LEGEND_ELVES_LEVEL && ev.winLevel !== lv) console.warn(`setWin ${ev.amount}: book winLevel ${ev.winLevel} != math edges ${lv}`);
 	return lv;
 };
+/** The next book event that changes the board (puff.ts: a respinStart there refills the popped cells). */
+const BOARD_EVENTS = new Set<string>(['respinStart', 'respinEnd', 'reveal', 'freeSpinTrigger', 'freeSpinEnd', 'cardFlip', 'wincap', 'finalWin']);
+let boardNext: BookEvent | undefined;
 export async function playBookEvents(events: BookEvent[]) {
 	events = payoutFlow(egwFlow(events));   // the closing amounts land on the paid (0.1x-rounded) finalWin
 	S.roundBase = 0; capHit = false; voiceSpin();
@@ -376,7 +382,9 @@ export async function playBookEvents(events: BookEvent[]) {
 	if (events.some((e) => e.type === 'wincap')) void preloadMaxWin();
 	else { const top = Math.max(0, ...events.filter((e) => e.type === 'setWin').map((e) => winLevel(e as { amount: number; winLevel?: number }))); if (elvesLevel(top)) void preloadBigWinElves(top); } // that level's layers only
 	if (roxyState() === 'anticipation') roxy('idle');
-	for (const ev of events) {
+	for (let i = 0; i < events.length; i++) {
+		const ev = events[i];
+		boardNext = events.slice(i + 1).find((e) => BOARD_EVENTS.has(e.type));
 		const h = (bookEventHandlerMap as any)[ev.type];
 		if (!h) { if (import.meta.env.DEV) throw new Error(`Unknown book event: ${ev.type}`); console.warn('skipped unknown book event', ev.type); continue; }
 		await h(ev);

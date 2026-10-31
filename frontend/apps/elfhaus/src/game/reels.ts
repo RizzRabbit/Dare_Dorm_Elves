@@ -243,7 +243,7 @@ export function spinMini(cells: { reel: number; row: number }[]) {
 	if (cells.length) spinSound();
 	cells.forEach(({ reel, row }, i) => {
 		const c = document.getElementById(`c${reel}${row}`); if (!c) return;
-		c.classList.remove('win', 'dim', 'sprWin', 'replace', 'out', 'locked', 'mLand'); c.querySelectorAll('canvas').forEach((x) => x.remove());
+		c.classList.remove('win', 'dim', 'sprWin', 'replace', 'out', 'locked', 'mLand', 'puffed'); c.querySelectorAll('.puffFx').forEach((x) => x.remove()); c.querySelectorAll('canvas').forEach((x) => x.remove());
 		c.classList.add('spinning');
 		const m = document.createElement('div'); m.className = 'mini';
 		m.style.cssText = `left:${reel * S.cell}px;top:${row * S.cell}px`;

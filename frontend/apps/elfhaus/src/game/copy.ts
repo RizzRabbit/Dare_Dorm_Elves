@@ -11,7 +11,7 @@ export type CopyCtx = {
 	fs: { dare: number; double_dare: number; triple_dare: number };
 	odds: { none: number; double_dare: number; triple_dare: number; hidden: number };
 	egwX: number;      // EGW full-reel wild value (math)
-	tdGuar: number;    // Triple Dare guaranteed full-reel wilds (math GUARANTEE)
+	tdGuar: number;    // Double Black guaranteed full-reel wilds (math GUARANTEE)
 };
 
 /** Rules "Modes" paragraph descriptions (the long form). */
@@ -20,10 +20,10 @@ export function modeDesc(m: CopyMode, c: CopyCtx): string {
 		case 'ante': return c.social
 			? `Plays for ${c.anteX} the play amount; a bonus triggers naturally ${c.anteOdds} spins, versus ${c.baseOdds} in base play. Same symbols, wins and rules.`
 			: `Costs ${c.anteX} the bet; a bonus triggers naturally ${c.anteOdds} spins, versus ${c.baseOdds} in base play. Same symbols, wins and rules.`;
-		case 'dare': return `One real trigger spin with 3 Dare Cards (it wins as normal), then ${c.fs.dare} free spins. Dare wilds clear after each spin.`;
-		case 'double_dare': return `One real trigger spin with 4 Dare Cards, then ${c.fs.double_dare} free spins. The trigger spin's wilds stay in place; all wilds stay locked and keep growing.`;
-		case 'triple_dare': return `One real trigger spin with 5 Dare Cards, then ${c.fs.triple_dare} free spins. The trigger spin's wilds stay in place, with at least ${c.tdGuar} full-reel wild${c.tdGuar === 1 ? '' : 's'} guaranteed.`;
-		case 'mystery': return `One spin that always lands 2 Dare Cards; the remaining reels are the reveal. The result was decided before the spin: No bonus ${c.odds.none}% · Double Dare ${c.odds.double_dare}% · Triple Dare ${c.odds.triple_dare}% · Epic ${c.odds.hidden}%. A bonus continues on the same board.`;
+		case 'dare': return `One real trigger spin with 3 Ski Passes (it wins as normal), then ${c.fs.dare} free spins. Bunny Slope wilds clear after each spin.`;
+		case 'double_dare': return `One real trigger spin with 4 Ski Passes, then ${c.fs.double_dare} free spins. The trigger spin's wilds stay in place; all wilds stay locked and keep growing.`;
+		case 'triple_dare': return `One real trigger spin with 5 Ski Passes, then ${c.fs.triple_dare} free spins. The trigger spin's wilds stay in place, with at least ${c.tdGuar} full-reel wild${c.tdGuar === 1 ? '' : 's'} guaranteed.`;
+		case 'mystery': return `One spin that always lands 2 Ski Passes; the remaining reels are the reveal. The result was decided before the spin: No bonus ${c.odds.none}% · Black Diamond ${c.odds.double_dare}% · Double Black ${c.odds.triple_dare}% · Powder Day ${c.odds.hidden}%. A bonus continues on the same board.`;
 		case 'egw': return `One supercharged spin: 2 to 5 reels land wilds that grow into full-reel wilds (x${c.egwX} each) once the spin stops, then respins. It never awards free spins.`;
 	}
 }
@@ -32,10 +32,10 @@ export function modeDesc(m: CopyMode, c: CopyCtx): string {
 export function shortDesc(m: CopyMode, c: CopyCtx): string {
 	switch (m) {
 		case 'ante': return `Bonuses trigger more often: ${c.anteOdds} spins instead of ${c.baseOdds}. Same symbols, wins and rules.`;
-		case 'dare': return `3 Dare Cards. ${c.fs.dare} free spins, wilds reset.`;
-		case 'double_dare': return `4 Dare Cards. ${c.fs.double_dare} free spins, sticky wilds that grow.`;
-		case 'triple_dare': return `5 Dare Cards. ${c.fs.triple_dare} free spins, sticky wilds, ${c.tdGuar === 1 ? 'a full-reel wild' : `${c.tdGuar} full-reel wilds`} guaranteed.`;
-		case 'mystery': return `One spin that always lands 2 Dare Cards; the other reels reveal the result. No bonus ${c.odds.none}% · Double Dare ${c.odds.double_dare}% · Triple Dare ${c.odds.triple_dare}% · Epic ${c.odds.hidden}%.`;
+		case 'dare': return `3 Ski Passes. ${c.fs.dare} free spins, wilds reset.`;
+		case 'double_dare': return `4 Ski Passes. ${c.fs.double_dare} free spins, sticky wilds that grow.`;
+		case 'triple_dare': return `5 Ski Passes. ${c.fs.triple_dare} free spins, sticky wilds, ${c.tdGuar === 1 ? 'a full-reel wild' : `${c.tdGuar} full-reel wilds`} guaranteed.`;
+		case 'mystery': return `One spin that always lands 2 Ski Passes; the other reels reveal the result. No bonus ${c.odds.none}% · Black Diamond ${c.odds.double_dare}% · Double Black ${c.odds.triple_dare}% · Powder Day ${c.odds.hidden}%.`;
 		case 'egw': return `2 to 5 full-reel wilds (x${c.egwX} each) with respins. No scatters.`;
 	}
 }
@@ -68,7 +68,7 @@ export const controlsTurbo = () => ' Turbo (the lightning button, or the switch 
 export const controlsAuto = (c: CopyCtx) =>
 	' Autoplay runs 10 to 1,000 spins. AUTO-PLAY BONUS is off by default: when off, autoplay waits for your tap at the start of a bonus and at its total win;' +
 	' when on, it plays through both by itself after a short pause. ADVANCED opens the optional stops: stop on loss, stop on single win, stop on balance increase' +
-	' (leave a box empty for off) and stop on feature (a bonus triggered by the reels, or a Mystery Spin that reveals a bonus); net loss and gain count ' +
+	' (leave a box empty for off) and stop on feature (a bonus triggered by the reels, or a Secret Santa that reveals a bonus); net loss and gain count ' +
 	(c.social ? "each spin's full play amount." : "each spin's full cost.") + ' It also stops on any error or low balance; press the spin button or the autoplay button to stop it.';
 /** v21 (#235): the menu's Mute all row. */
 export const controlsSound = () =>

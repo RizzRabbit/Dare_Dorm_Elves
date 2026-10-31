@@ -1,0 +1,188 @@
+/* ==== Winter Chalet skin (loaded last) ====
+   One flat cartoon look for every piece of UI: thick ink outlines, flat fills with one hard highlight, hard drop shadows,
+   no blur glows, no gradients except flat hard-stop rays. Palette: cranberry, cream, gold, pine (+ timber, ink).
+   Display type is the painted title art; Lilita One (OFL, static/fonts) is only for small UI text and numbers. */
+@font-face{font-family:"Lilita One";src:url(fonts/LilitaOne.woff2) format("woff2");font-weight:400;font-display:block}
+:root{--c-ink:#26140f;--c-cream:#fbf3e4;--c-paper:#f1e2c6;--c-cran:#a61c34;--c-cran2:#7d1226;--c-gold:#f2b935;--c-gold2:#c98a1c;--c-goldhi:#ffe08a;
+  --c-pine:#1f4b38;--c-pine2:#163a2b;--c-wood:#7a4526;--c-snow:#fbf5ea;--c-ice:#b9cfe0;--ui:"Lilita One","Nunito",system-ui,sans-serif;
+  --tt-ink:#26140f;--tt-fill:#fbf3e4;--tt-neon:transparent}
+html,body{background:#2a1810!important}
+
+/* ---------------- HUD bar: pine plank, ink rim, gold top line ---------------- */
+html body.mk #app #hud{background:var(--c-pine2)!important;border:max(2px,calc(5px*var(--mkk))) solid var(--c-ink)!important;
+  box-shadow:0 calc(8px*var(--mkk)) 0 rgba(20,8,4,.55)!important}
+html body.mk #app #hud::before{background:var(--c-gold)!important;height:max(2px,calc(4px*var(--mkk)))!important;top:max(2px,calc(5px*var(--mkk)))!important;opacity:.9}
+html body.mk #app #strip label{font-family:var(--ui)!important;font-weight:400!important;color:var(--c-gold)!important;letter-spacing:calc(var(--ls)*.12)!important}
+html body.mk #app #strip .m span{font-family:var(--ui)!important;font-weight:400!important;color:var(--c-cream)!important;
+  -webkit-text-stroke:0;text-shadow:0 .07em 0 var(--c-ink)!important}
+
+/* square buttons: cranberry with ink rim + hard shadow; turbo / autoplay on = gold; SPIN = big gold ring */
+html body.mk #app #hud :is(#menuBtn,#turboBtn,#autoBtn,#betDown,#betUp,#spinBtn){background:var(--c-cran)!important;border-color:var(--c-ink)!important;
+  box-shadow:inset 0 calc(var(--bh,60px)*.1) 0 #c7344c,0 calc(var(--bh,60px)*.06) 0 var(--c-ink)!important;color:var(--c-cream)!important}
+html body.mk #app #hud :is(#betDown,#betUp){background:var(--c-pine)!important;box-shadow:inset 0 calc(var(--bh,60px)*.1) 0 #2c6a4f,0 calc(var(--bh,60px)*.06) 0 var(--c-ink)!important}
+html body.mk #app #hud #spinBtn{background:var(--c-gold)!important;border-color:var(--c-ink)!important;border-radius:50%!important;
+  box-shadow:inset 0 calc(var(--bh)*.09) 0 var(--c-goldhi),inset 0 calc(var(--bh)*-.08) 0 var(--c-gold2),0 0 0 calc(var(--bh)*.045) var(--c-cran),0 0 0 calc(var(--bh)*.07) var(--c-ink),0 calc(var(--bh)*.1) 0 calc(var(--bh)*.07) rgba(20,8,4,.6)!important}
+html body.mk #app #hud #spinBtn svg.mkI [style*="fill:none"]{fill:none!important;stroke:var(--c-ink)!important;stroke-width:8px!important}
+html body.mk #app #hud #spinBtn svg.mkI [style*="fill:#fff"]{fill:var(--c-ink)!important}
+html body.mk #app #hud svg.mkI{fill:var(--c-cream)!important}
+html body.mk #app #hud :is(#turboBtn,#autoBtn).on,html body.mk #app #hud #autoBtn[aria-pressed="true"],html body.mk #app #hud #turboBtn[aria-pressed="true"]{
+  background:var(--c-gold)!important;border-color:var(--c-ink)!important;box-shadow:inset 0 calc(var(--bh)*.1) 0 var(--c-goldhi),0 calc(var(--bh)*.06) 0 var(--c-ink)!important}
+html body.mk #app #hud :is(#turboBtn,#autoBtn):is(.on,[aria-pressed="true"]) svg.mkI :is([style*="fill:#fff"],[fill="#fff"]){fill:var(--c-ink)!important}
+html body.mk #app #hud :is(#turboBtn,#autoBtn):is(.on,[aria-pressed="true"]) svg.mkI [style*="fill:none"]{stroke:var(--c-ink)!important}
+html body.mk #app #hud :is(#menuBtn,#turboBtn,#autoBtn,#betDown,#betUp,#spinBtn):active:not(:disabled){transform:translateY(2px) scale(.95)}
+
+/* BUY BONUS plate: cream ticket with an ink rim, cranberry label, gold sticker icon (no halo) */
+html body.mk #app #hud #mkBuyGlow{display:none!important}
+html body.mk #app #hud #buyBtn.plate{background:var(--c-cream)!important;border:calc(6px*var(--ps)) solid var(--c-ink)!important;color:var(--c-cran)!important;
+  box-shadow:inset 0 0 0 calc(5px*var(--ps)) var(--c-gold),inset 0 calc(-26px*var(--ps)) 0 var(--c-paper),0 calc(9px*var(--ps)) 0 rgba(20,8,4,.6)!important}
+html body.mk #app #hud #buyBtn.plate .disc{background:transparent!important}
+html body.mk #app #hud #buyBtn.plate .lbl{font-family:var(--ui)!important;font-weight:400!important;color:var(--c-cran)!important;text-shadow:none!important}
+html body.mk #app #hud #buyBtn.plate::after{background:linear-gradient(90deg,transparent 46%,rgba(255,255,255,.55) 46% 54%,transparent 54%)!important;mix-blend-mode:normal}
+
+/* armed pill by SPIN */
+html body.mk #app #armTag{background:var(--c-gold)!important;color:var(--c-ink)!important;border:2px solid var(--c-ink)!important;font-family:var(--ui)!important;font-weight:400!important;
+  box-shadow:0 2px 0 var(--c-ink)!important}
+html body.mk #app #armTag svg *{stroke:var(--c-ink)!important;fill:none}
+
+/* ---------------- board extras ---------------- */
+html body.mk #app #fsBar,html body #app #fsBar{background:var(--c-cran)!important;border:3px solid var(--c-ink)!important;border-radius:999px!important;color:var(--c-cream)!important;
+  font-family:var(--ui)!important;font-weight:400!important;letter-spacing:.04em!important;box-shadow:0 3px 0 var(--c-ink)!important;text-shadow:none!important}
+html body #app #fsBar #fsTier{color:var(--c-gold)!important}
+html body #app #banner,html body #app #stepToast{background:var(--c-cream)!important;color:var(--c-ink)!important;border:3px solid var(--c-ink)!important;border-radius:14px!important;
+  font-family:var(--ui)!important;font-weight:400!important;box-shadow:0 4px 0 var(--c-ink)!important;text-shadow:none!important}
+html body #app #stepToast small{color:var(--c-cran)!important}
+/* win line + dim: darken (never fade) non-winners */
+html body .cell.dim{opacity:1!important;filter:brightness(.55) saturate(.8)!important}
+/* bust wilds: the painted frame carries the look, no extra card border */
+html body .sym.W.art{background:none!important;border:0!important;box-shadow:none!important}
+
+/* multiplier: flat gold lettering, thick ink outline, hard offset shadow (no gem gradients, no pink) */
+html body .mx svg{filter:drop-shadow(0 calc(var(--cell)*.018) 0 var(--c-ink))!important}
+html body .mx text{font-family:var(--ui)!important;font-weight:400!important;letter-spacing:0!important}
+html body .mx svg .o{fill:var(--c-ink)!important;stroke:var(--c-ink)!important;stroke-width:11!important}
+html body .mx svg .i{fill:var(--c-gold)!important;stroke:var(--c-gold)!important;stroke-width:1.5!important}
+html body .mx svg .f{fill:var(--c-gold)!important}
+html body .mx svg .h{fill:var(--c-goldhi)!important;clip-path:inset(0 0 62% 0)}
+
+/* ---------------- overlays and modals: cream cards, ink rims, cranberry headers ---------------- */
+html body .overlay{background:rgba(26,12,8,.62)!important;backdrop-filter:none!important}
+html body .modal{background:var(--c-cream)!important;color:var(--c-ink)!important;border:5px solid var(--c-ink)!important;border-radius:22px!important;
+  box-shadow:0 10px 0 rgba(20,8,4,.7)!important}
+html body .modal::before,html body .modal::after{display:none!important}
+html body .modal h2{font-family:var(--ui)!important;font-weight:400!important;color:var(--c-cran)!important;letter-spacing:.04em!important;text-shadow:0 2px 0 var(--c-paper)!important;
+  background:none!important;-webkit-text-fill-color:currentColor!important}
+html body .modal :is(p,label,.lbl,td,th,li,span,small){color:var(--c-ink)}
+html body .modal .row{background:var(--c-paper)!important;border:2px solid var(--c-ink)!important;border-radius:12px!important;box-shadow:none!important}
+html body .modal .row .lbl,html body .modal .row small{font-family:var(--ui)!important;font-weight:400!important;color:var(--c-ink)!important;letter-spacing:.04em}
+html body .modal .ico.flat{background:var(--c-pine)!important;border:3px solid var(--c-ink)!important;border-radius:12px!important;box-shadow:0 3px 0 var(--c-ink)!important}
+html body .modal .ico.flat svg path{stroke:var(--c-cream)!important}
+html body .modal #bmBetV{font-family:var(--ui)!important;font-weight:400!important;color:var(--c-ink)!important}
+html body .mX{background:var(--c-cran)!important;border:3px solid var(--c-ink)!important;border-radius:50%!important;box-shadow:0 3px 0 var(--c-ink)!important}
+html body .mX svg path,html body .mX .xb{fill:var(--c-cream)!important;stroke:var(--c-ink)!important}
+html body .sw{background:#d8c7a6!important;border:3px solid var(--c-ink)!important;box-shadow:none!important}
+html body .sw i{display:block!important;background:var(--c-cream)!important;border:2px solid var(--c-ink);box-sizing:border-box;top:1px!important;left:1px!important}
+html body .sw.on{background:var(--c-pine)!important;border-color:var(--c-ink)!important}
+html body .sw.on i{left:calc(100% - 21px)!important;background:var(--c-gold)!important}
+html body .go,html body .cont,html body #lGo.cont{background:var(--c-cran)!important;color:var(--c-cream)!important;border:4px solid var(--c-ink)!important;border-radius:16px!important;
+  font-family:var(--ui)!important;font-weight:400!important;letter-spacing:.06em!important;box-shadow:inset 0 5px 0 #c7344c,0 5px 0 var(--c-ink)!important;text-shadow:0 2px 0 var(--c-ink)!important}
+html body .go:hover,html body .cont:hover{background:#b52240!important}
+html body .advBtn{font-family:var(--ui)!important;color:var(--c-cran)!important;background:none!important;border:0!important}
+html body .advBtn svg path{stroke:var(--c-cran)!important}
+html body .modal input{background:#fff!important;color:var(--c-ink)!important;border:2px solid var(--c-ink)!important;border-radius:8px!important;font-family:var(--ui)!important}
+html body #autoCounts button{background:var(--c-paper)!important;color:var(--c-ink)!important;border:3px solid var(--c-ink)!important;border-radius:12px!important;font-family:var(--ui)!important;font-weight:400!important;box-shadow:0 3px 0 var(--c-ink)!important}
+html body #autoCounts button:is(.on,[aria-checked="true"]){background:var(--c-gold)!important}
+html body #autoErr,html body .err{color:var(--c-cran)!important}
+
+/* buy cards: cream tickets; art window, hand-lettered title, price; armed = gold rim + pine tag */
+html body #buyCards .bcard{background:var(--c-paper)!important;border:4px solid var(--c-ink)!important;border-radius:16px!important;box-shadow:0 5px 0 var(--c-ink)!important;color:var(--c-ink)!important}
+html body #buyCards .bcard:hover{background:#f6e9cf!important;transform:translateY(-2px)}
+html body #buyCards .bcard.armed{background:var(--c-gold)!important;border-color:var(--c-ink)!important;box-shadow:0 0 0 4px var(--c-cran),0 5px 0 4px var(--c-ink)!important}
+html body #buyCards .bcard.off{opacity:.5;filter:grayscale(.6)}
+html body #buyCards .bcard .bArt{background:var(--c-pine2)!important;border:3px solid var(--c-ink)!important;border-radius:10px!important;overflow:hidden;box-shadow:none!important}
+html body #buyCards .bcard .bName{display:flex;align-items:center;justify-content:center;min-height:2.3em;color:var(--c-cran)!important;font-family:var(--ui)!important;font-weight:400!important}
+html body #buyCards .bcard .bName img.tTitle{display:block;width:100%;height:auto;max-height:3.2em;object-fit:contain}
+html body #buyCards .bcard :is(.bPrice,.price){font-family:var(--ui)!important;font-weight:400!important;color:var(--c-ink)!important;text-shadow:none!important}
+html body #buyCards .bcard .bX{font-family:var(--ui)!important;color:var(--c-cran2)!important;background:none!important}
+html body .bMystFan{background:var(--c-cran)!important}
+html body .bMystFan>img.gift{top:10%!important;left:10%!important;width:80%!important;height:80%!important;object-fit:contain!important;object-position:50% 50%!important;border:0!important;border-radius:0!important;transform:none!important;filter:none!important}
+html body .bMystQ{filter:drop-shadow(0 3px 0 var(--c-ink))!important;width:34%!important;left:72%!important;top:24%!important}
+html body .bMystQ svg circle{fill:var(--c-gold)!important;stroke:var(--c-ink)!important;stroke-width:3px!important}
+html body .bMystQ svg text{fill:var(--c-ink)!important;font-family:var(--ui)!important}
+html body #bmConfirm .cfArt{background:var(--c-pine2)!important;border:4px solid var(--c-ink)!important;border-radius:14px!important}
+html body #bmConfirm .cfAmt b{font-family:var(--ui)!important;font-weight:400!important;color:var(--c-cran)!important}
+html body #bmConfirm .cfHint{color:#7a5a48!important}
+
+/* menu popout */
+html body #popMenu{background:var(--c-cream)!important;border:4px solid var(--c-ink)!important;border-radius:16px!important;box-shadow:0 6px 0 rgba(20,8,4,.7)!important}
+html body #popMenu .pmRow{color:var(--c-ink)!important;font-family:var(--ui)!important;font-weight:400!important;background:none!important}
+html body #popMenu .pmRow:hover{background:var(--c-paper)!important}
+html body #popMenu svg :is(path,circle){stroke:var(--c-cran)!important}
+html body #popMenu input[type=range]{accent-color:var(--c-cran)}
+
+/* rules / paytable */
+html body .rules{color:var(--c-ink)!important}
+html body .rules h3{font-family:var(--ui)!important;font-weight:400!important;color:var(--c-cream)!important;background:var(--c-cran)!important;display:inline-block;
+  padding:.18em .7em;border:3px solid var(--c-ink);border-radius:10px;letter-spacing:.04em;box-shadow:0 3px 0 var(--c-ink)}
+html body .rules p,html body .rules td,html body .rules th{color:var(--c-ink)!important}
+html body .rules b{color:var(--c-cran2)!important}
+html body .rules table{background:var(--c-paper)!important;border:3px solid var(--c-ink)!important;border-radius:10px;overflow:hidden;border-collapse:separate!important;border-spacing:0}
+html body .rules th{background:var(--c-pine)!important;color:var(--c-cream)!important;font-family:var(--ui)!important;font-weight:400!important}
+html body .rules td{border-top:2px solid rgba(38,20,15,.25)!important}
+html body .rules img.ri{background:var(--c-pine2);border:2px solid var(--c-ink);border-radius:8px}
+html body .rules .plGrid figure{background:var(--c-paper)!important;border:2px solid var(--c-ink)!important;border-radius:8px}
+html body .rules .plGrid rect{fill:#d8c7a6!important;stroke:none!important}
+html body .rules .plGrid rect.on{fill:var(--c-gold)!important}
+html body .rules .plGrid polyline{stroke:var(--c-cran)!important}
+html body .rules .plGrid figcaption{color:var(--c-ink)!important;font-family:var(--ui)!important}
+html body .rules .disc{color:#5a4034!important}
+html body .mView{scrollbar-color:var(--c-cran) var(--c-paper)}
+
+/* ---------------- bonus intro / outro / more spins: snow-capped cream sign ---------------- */
+html body #intro .card,html body #outro .card,html body #fsMore .card{background:var(--c-cream)!important;border:6px solid var(--c-ink)!important;border-radius:26px!important;
+  box-shadow:inset 0 0 0 6px var(--c-gold),inset 0 0 0 9px var(--c-ink),0 12px 0 rgba(20,8,4,.7)!important;color:var(--c-ink)!important}
+html body #intro .tierName,html body #outro .tierName,html body #fsMore .fmBig{font-family:var(--ui)!important;font-weight:400!important;color:var(--c-cran)!important;
+  background:none!important;-webkit-text-fill-color:currentColor!important;-webkit-text-stroke:0!important;text-shadow:0 3px 0 var(--c-paper)!important;filter:none!important}
+html body #intro .tierName img.tTitle{display:block;width:min(560px,70vw);height:auto;margin:-1.6em auto .1em;filter:drop-shadow(0 6px 0 rgba(20,8,4,.45))}
+html body #intro .spins,html body #fsMore .fmSub,html body #outro .otHint{font-family:var(--ui)!important;font-weight:400!important;color:var(--c-pine)!important;letter-spacing:.06em;text-shadow:none!important}
+html body #outro .otAmt{font-family:var(--ui)!important;font-weight:400!important;color:var(--c-cream)!important;-webkit-text-stroke:.09em var(--c-ink);paint-order:stroke fill;text-shadow:0 .07em 0 var(--c-ink)!important}
+
+/* ---------------- big win: flat sunburst, painted title, cream amount with ink outline ---------------- */
+html body #bigwin{background:rgba(26,12,8,.55)!important}
+html body #bigwin .bw::before{display:none!important}
+html body #bigwin .bwFx{background:repeating-conic-gradient(from 0deg at 50% 50%,rgba(242,185,53,.22) 0 7.5deg,rgba(251,243,228,.10) 7.5deg 15deg)!important;
+  -webkit-mask:radial-gradient(closest-side,#000 40%,transparent 100%);mask:radial-gradient(closest-side,#000 40%,transparent 100%);animation:cRays 24s linear infinite}
+@keyframes cRays{to{transform:rotate(360deg)}}
+html body .bwGlow{display:none!important}
+html body .bwAmt,html body .mwAmt,html body .mwX{font-family:var(--ui)!important;font-weight:400!important;color:var(--c-cream)!important;filter:none!important;
+  -webkit-text-stroke:.1em var(--c-ink)!important;paint-order:stroke fill!important;text-shadow:0 .08em 0 var(--c-ink)!important;letter-spacing:.02em}
+html body .bwX{font-family:var(--ui)!important;font-weight:400!important;color:var(--c-gold)!important;-webkit-text-stroke:.08em var(--c-ink)!important;paint-order:stroke fill!important;text-shadow:0 .06em 0 var(--c-ink)!important}
+html body .bwTier:not(.spr){font-family:var(--ui)!important;font-weight:400!important;color:var(--c-gold)!important;-webkit-text-stroke:.1em var(--c-ink)!important;text-shadow:0 .08em 0 var(--c-ink)!important;filter:none!important}
+html body .mwHint{font-family:var(--ui)!important;color:var(--c-cream)!important;text-shadow:0 2px 0 var(--c-ink)!important}
+
+/* ---------------- Ski Pass flip ---------------- */
+html body #cardFlip .cfCard{width:calc(var(--cell)*2.3);aspect-ratio:3/4;perspective:1400px}
+html body #cardFlip .cpPass{position:absolute;inset:0;transform-style:preserve-3d}
+html body #cardFlip .cpFace{position:absolute;inset:0;backface-visibility:hidden;border:6px solid var(--c-ink);border-radius:22px;overflow:hidden;box-shadow:0 10px 0 rgba(20,8,4,.6)}
+html body #cardFlip .cpFront{background:var(--c-cream);display:flex;align-items:center;justify-content:center}
+html body #cardFlip .cpFront img{width:92%;height:auto}
+html body #cardFlip .cpBack{background:var(--c-cran);transform:rotateY(180deg)}
+html body #cardFlip .cpBack img{position:absolute;left:50%;bottom:-2%;height:104%;width:auto;translate:-50% 0}
+html body #cardFlip .cfName{font-family:var(--ui)!important;text-shadow:none!important;color:var(--c-cream)!important}
+html body #cardFlip .cfName img.tTitle{display:block;width:min(620px,86vw);height:auto;filter:drop-shadow(0 6px 0 rgba(20,8,4,.45))}
+
+/* messages / resume / replay */
+html body #msg{background:var(--c-cream)!important;color:var(--c-ink)!important;border:5px solid var(--c-ink)!important;border-radius:20px!important;box-shadow:0 8px 0 rgba(20,8,4,.7)!important}
+html body #msg h2{font-family:var(--ui)!important;font-weight:400!important;color:var(--c-cran)!important}
+html body #replayBar{background:var(--c-cream)!important;color:var(--c-ink)!important;border:3px solid var(--c-ink)!important;font-family:var(--ui)!important}
+
+/* garland over the frame top; logo stays above it */
+html body.mk #app #top{z-index:7}
+#mkGarland{display:block;user-select:none}
+
+/* win pop + snowflake puff (puff.ts): flakes / cloud blobs over the cell; a popped cell stays empty until the respin */
+.cell .puffFx{position:absolute;inset:0;z-index:6;pointer-events:none;overflow:visible}
+.cell .puffFx>i{position:absolute;left:50%;top:50%;display:block;will-change:transform,opacity}
+.cell .puffFx>i svg{display:block;width:100%;height:100%;overflow:visible}
+.cell .puffFx .pfCloud{width:34%;aspect-ratio:1}
+.cell .puffFx .pfFlake{width:26%;aspect-ratio:1}
+html body .cell.puffed .sym,html body .cell.puffed .symGlow,html body .cell.puffed .symSh{opacity:0!important}

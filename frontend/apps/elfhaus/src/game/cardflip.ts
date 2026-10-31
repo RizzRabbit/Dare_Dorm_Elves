@@ -1,37 +1,32 @@
-// Dare Card flip (cardFlip event: 5 scatters on a base / ante / Mystery board). The card lifts and turns edge-on
-// (card_flip, loaded with the fx sheets), then the outcome face turns up (card_triple | card_epic .reveal) and holds
-// on its loop. The two outcome sheets are lazy: fetched when the flip starts, released after it.
-import { $, S, wait } from './ui';
+// Ski Pass flip (cardFlip event: 5 scatters on a base / ante / Secret Santa board). The pass lifts with a squash,
+// turns over in 3D (CSS transforms on two faces, real-time WAAPI) and shows the outcome: the hand-lettered bonus title
+// over the elves that run it (Double Black = the 3-elf group, Powder Day = all five). Tap skips the hold.
+import { $, S, ART, wait, titleHTML } from './ui';
 import { TIER_LABEL } from './config';
-import { loadSheet, hasSheet, play, stop, unloadSheet, type Anim, type Atlas } from './sprite';
 
-const ATL = import.meta.glob('./card/*.json', { eager: true, import: 'default' }) as Record<string, Atlas>;
-const IMG = import.meta.glob('../assets/card/*.webp', { eager: true, import: 'default', query: '?url' }) as Record<string, string>;
-const sheetOf = (r: 'triple_dare' | 'hidden') => (r === 'hidden' ? 'card_epic' : 'card_triple');
-function load(id: string) {
-	if (hasSheet(id)) return Promise.resolve();
-	const src = Object.entries(IMG).find(([p]) => p.endsWith('/' + id + '.webp'))?.[1], atlas = ATL['./card/' + id + '.json'];
-	return src && atlas ? loadSheet(id, src, atlas).catch((e) => console.warn('card sheet', id, e)) : Promise.resolve();
-}
+const BACK: Record<'triple_dare' | 'hidden', string> = { triple_dare: 'assets/stacks/still/WM3_R2-4.webp', hidden: 'assets/stacks/still/WM5_R1-5.webp' };
 
 export async function cardFlip(result: 'triple_dare' | 'hidden') {
-	const id = sheetOf(result), ready = load(id);
 	const O = $('#cardFlip'), host = O.querySelector<HTMLElement>('.cfCard')!, name = O.querySelector<HTMLElement>('.cfName')!;
-	name.textContent = ''; name.classList.remove('pop'); O.dataset.tier = result;
+	const label = TIER_LABEL[result].toUpperCase() + '!';
+	name.innerHTML = ''; name.classList.remove('pop'); O.dataset.tier = result;
+	host.innerHTML = `<div class="cpPass"><div class="cpFace cpFront">${ART.S ? `<img src="${ART.S}" alt="" draggable="false">` : ''}</div>` +
+		`<div class="cpFace cpBack"><img src="${BACK[result]}" alt="" draggable="false"></div></div>`;
+	const pass = host.querySelector<HTMLElement>('.cpPass')!;
 	O.classList.remove('hidden');
-	const anims: Anim[] = [];
-	const run = (sheet: string, anim: string, o: Parameters<typeof play>[3] = {}) => { const a = play(sheet, anim, host, { cls: 'fxFill', ...o }); if (a) anims.push(a); return a; };
 	let skip = () => {}; const tapped = new Promise<void>((r) => (skip = r)); O.onclick = () => skip();
-	await wait(S.turbo ? 150 : 350);
-	await new Promise<void>((res) => { if (!run('card_flip', 'flip', { hold: true, onEnd: () => res() })) res(); });
-	await ready;
-	const prev = anims.slice();
-	await new Promise<void>((res) => { if (!run(id, 'reveal', { hold: true, onEnd: () => res() })) res(); requestAnimationFrame(() => requestAnimationFrame(() => prev.forEach(stop))); });
-	const rv = anims[anims.length - 1]; run(id, 'loop'); requestAnimationFrame(() => requestAnimationFrame(() => rv && stop(rv)));
-	name.textContent = TIER_LABEL[result].toUpperCase() + '!'; void name.offsetWidth; name.classList.add('pop');
+	const k = S.turbo ? 0.45 : 1;
+	await pass.animate([{ transform: 'translateY(30%) scale(.6)', opacity: 0 }, { transform: 'translateY(-4%) scale(1.06,.94)', opacity: 1, offset: 0.7 }, { transform: 'none', opacity: 1 }],
+		{ duration: 360 * k, easing: 'cubic-bezier(.3,1.4,.5,1)', fill: 'forwards' }).finished;
+	await wait(S.turbo ? 80 : 260);
+	// anticipation: a little crouch and wobble, then the turn
+	await pass.animate([{ transform: 'none' }, { transform: 'scale(1.04,.95) rotate(-3deg)', offset: 0.4 }, { transform: 'scale(.97,1.04) rotate(3deg)', offset: 0.75 }, { transform: 'none' }],
+		{ duration: 320 * k, easing: 'ease-in-out' }).finished;
+	await pass.animate([{ transform: 'perspective(1400px) rotateY(0deg) scale(1)' }, { transform: 'perspective(1400px) rotateY(90deg) scale(1.12)', offset: 0.5 }, { transform: 'perspective(1400px) rotateY(180deg) scale(1)' }],
+		{ duration: 560 * k, easing: 'cubic-bezier(.45,0,.25,1)', fill: 'forwards' }).finished;
+	name.innerHTML = titleHTML(result, label); void name.offsetWidth; name.classList.add('pop');
 	await Promise.race([wait(S.turbo ? 900 : 1700), tapped]);
 	O.onclick = null; O.classList.add('out'); await wait(250);
-	anims.forEach(stop); host.querySelectorAll('canvas').forEach((c) => c.remove());
+	pass.getAnimations().forEach((a) => a.cancel()); host.innerHTML = '';
 	O.classList.add('hidden'); O.classList.remove('out');
-	unloadSheet(id);
 }

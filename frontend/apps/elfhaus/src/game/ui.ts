@@ -4,7 +4,7 @@ import { sfx, loop, duck } from './audio';
 import { voice, VOICE } from './voice';
 import { frameHTML } from './wildframe';
 import ART_JSON from './art.generated.json';
-import { LINES, MAX_WIN_X, ROWS, REELS, SYMBOL_NAMES, WIN_LEVELS, winEdgesFor } from './config';
+import { LINES, MAX_WIN_X, ROWS, REELS, SYMBOL_NAMES, WIN_LEVELS, winEdgesFor, TITLE_ART } from './config';
 import { elvesLevel } from './bigwinElves';
 import { money } from './format';
 import type { Group, LineWin } from './typesBookEvent';
@@ -38,6 +38,11 @@ export const pos = (r: number, row: number) => ({ x: r * S.cell, y: row * S.cell
 
 const ph = (_key: string) => ''; // no visible placeholder labels in release builds
 // frameless set: the lit (win) outline is a second layer over the idle art, crossfaded by .cell.win (opacity only)
+/** Hand-lettered bonus title (img, the label as its alt text) or the plain label when the art is missing. */
+export function titleHTML(key: string, text: string) {
+	const src = ART['bonus_' + (TITLE_ART[key] || key)], e = text.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
+	return src ? `<img class="tTitle" src="${src}" alt="${e}" draggable="false">` : e;
+}
 const winLayer = (key: string) => (ART[key + '_win'] ? `<img class="olWin" src="${ART[key + '_win']}" alt="" draggable="false">` : '');
 // Win glow: the symbol's own outline as a neon sprite (<KEY>_glow, same size + registration as the symbol art), drawn
 // BEHIND the art and shown only on .cell.win (CSS: opacity fade in, slow opacity/scale pulse, fade out). The outer <i>
@@ -53,25 +58,13 @@ const stillPos = (reels: number[]) => (reels.length === 1 ? `WF_R${reels[0] + 1}
 const stillSrc = (reels: number[], letters = false) => `assets/stacks/still/${stillPos(reels)}${letters ? '_letters' : ''}.webp`;
 const stillHTML = (reels: number[]) => `<div class="wart"><img src="${stillSrc(reels)}" alt="" draggable="false"></div>` +
 	`<div class="mLets mStill"><img src="${stillSrc(reels, true)}" alt="" draggable="false"></div>`;
-// Multiplier lettering: text only, in a faceted pink "gemstone" fill (repeating diagonal hard-stop bands) with a
-// light-pink inner outline, a thin dark-plum outer stroke, a white specular band across the cap tops and a few
-// tiny 4-point glints (sprite sheet, fx.ts) that twinkle now and then. All layers are SVG text sharing one viewBox (60 units high,
-// 48-unit Nunito Black, caps ~34 units), so it renders identically in Chrome and Safari. Gradients live once
-// in a hidden <svg> (userSpaceOnUse, so every instance gets the same facet scale).
+// Multiplier lettering: text only, flat gold with a thick ink outline and one light band across the cap tops (chalet.css).
+// All layers are SVG text sharing one viewBox (60 units high, 48-unit type), so it renders the same in Chrome and Safari.
 const MX_H = 60, MX_FS = 48, MX_BASE = 50, CHAR_W = 27;
 function ensureMxDefs() {
 	if (document.getElementById('mxDefs')) return;
 	const d = document.createElement('div');
-	d.innerHTML = `<svg id="mxDefs" width="0" height="0" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true"><defs>` +
-		`<linearGradient id="mxFacet" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="15" y2="21" spreadMethod="repeat">` +
-		`<stop offset="0" stop-color="#FF96C8"/><stop offset=".3" stop-color="#FF96C8"/><stop offset=".3" stop-color="#E44792"/>` +
-		`<stop offset=".55" stop-color="#E44792"/><stop offset=".55" stop-color="#FFC4E0"/><stop offset=".68" stop-color="#FFC4E0"/>` +
-		`<stop offset=".68" stop-color="#C42A78"/><stop offset="1" stop-color="#C42A78"/></linearGradient>` +
-		`<linearGradient id="mxShade" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="${MX_H}">` +
-		`<stop offset=".27" stop-color="#fff" stop-opacity="0"/><stop offset=".3" stop-color="#fff" stop-opacity=".85"/>` +
-		`<stop offset=".39" stop-color="#fff" stop-opacity=".3"/><stop offset=".43" stop-color="#fff" stop-opacity="0"/>` +
-		`<stop offset=".62" stop-color="#3A0A26" stop-opacity="0"/><stop offset=".84" stop-color="#3A0A26" stop-opacity=".38"/></linearGradient>` +
-		`</defs></svg>`;
+	d.innerHTML = `<svg id="mxDefs" width="0" height="0" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true"></svg>`;
 	document.body.appendChild(d.firstChild!);
 }
 type Anchor = 'start' | 'end' | 'middle';
@@ -87,7 +80,7 @@ function mxSpan(t: string, w: number, anchor: Anchor) {
 	const pc = (v: number) => ((v / w) * 100).toFixed(1);
 	return `data-tl="${pc(l)}" data-tr="${pc(l + tw)}" data-cx="${pc(l + tw / 2)}"`;
 }
-// Every wild's multiplier is ONE pink gem in the wild's top-left corner (single wild cell, full reel, merged group =
+// Every wild's multiplier is ONE gold multiplier in the wild's top-left corner (single wild cell, full reel, merged group =
 // the product). Left-aligned in a 150-wide box so "x4" .. "x1000" all start at the corner. MX_NUDGE moves it per
 // art key (fractions of a cell, +x right, +y down) if an art set ever puts a face there; the current set's corners
 // are hair / ceiling / props, so all zero.
@@ -137,7 +130,7 @@ export function renderCell(r: number, row: number, cls?: string | null, delayMs 
 	d.innerHTML = symHTML(S.sym[r]?.[row] ?? 'L5', S.vals.get(k(r, row)), r);
 	d.classList.toggle('wild', S.sym[r]?.[row] === 'W');
 	d.style.visibility = S.full.has(r) ? 'hidden' : 'visible';
-	d.classList.remove('sprWin', 'spinning', 'noBlur');
+	d.classList.remove('sprWin', 'spinning', 'noBlur', 'puffed');
 	if (cls) {
 		d.classList.remove(cls); void d.offsetWidth; d.classList.add(cls);
 		if (delayMs) (d.querySelector('.sym') as HTMLElement | null)?.style.setProperty('animation-delay', delayMs + 'ms');

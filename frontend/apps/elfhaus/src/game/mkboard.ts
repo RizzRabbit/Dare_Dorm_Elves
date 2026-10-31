@@ -5,18 +5,18 @@
 //         full-width HUD bar at the bottom (BALANCE | - BET + | WIN | SPIN), logo over the frame top, Roxy right.
 //   port  (phones, D 1080 x DH): full-width board, [autoplay][turbo] .... [BUY BONUS] row, 2-row HUD bar + big SPIN.
 //   cmp   (old phone landscape, D 1000 x 562; unused since v3.17: phones in landscape get 'land', stage.ts PHL_MAX_H).
-// The frame (slim plum frame, recessed well, one rounded tile per cell, gold studs) and its pink neon edge are the
-// mockup's frameTex / neonTex canvas code, drawn at device resolution on two canvases inside #frame.
+// The frame (Winter Chalet: timber band, gold trim, pine panel with one tile per cell, cranberry sill, snow caps) is
+// canvas code drawn at device resolution inside #frame (drawFrame), plus the painted garland image.
 // Game-only pieces the mockup never had: the menu button (top-left corner, same square style), the armed-mode tag
 // (over SPIN), the free-spins bar (on the sill), and 48 px tap floors (controls grow when the mockup size is smaller).
 import { ST } from './stage';
+import ART_G from './art.generated.json';
 // Chrome floors border widths to whole device px, so a 2.9px stroke would draw at 2; round in screen space instead.
 const bwPx = (w: number) => { const d = ST.s * (window.devicePixelRatio || 1); return (Math.max(1, Math.round(w * d)) + 0.01) / d + 'px'; };
 
 export const CELL = 160, FT = 34, FB = 52, BW = 800, BH = 640, FW = BW + 2 * FT, FH = BH + FT + FB, M = 40;
 /** portrait board scale for a frame ~95% of the 1080 design width */
 const BS_W = 1026 / FW;
-const NEON = '#ff4fc3';
 type Btn = { x: number; y: number; s: number; ic: number };          // centre, size, icon scale (mockup design units)
 type Field = { x: number; y: number; ls: number; vs: number; w: number };
 export type MkGeo = {
@@ -190,7 +190,7 @@ export function mkPlace(cell: number) {
 	return { fx, fy, fw, fh };
 }
 
-// ---------------------------------------------------------------- frame + neon (mockup frameTex / neonTex)
+// ---------------------------------------------------------------- chalet frame
 function rr(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
 	g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
 }
@@ -202,43 +202,68 @@ function canvasIn(id: string, before: boolean) {
 const BET_VK = 0.82;
 let drawn = '';
 function drawFrame(u: number) {
-	// v3.17 (James 03:04 / 03:06): on phones the inner panel (well + cell tiles) is 78% opaque so Roxy's lower half, standing
-	// behind the board (canvas#scene < #mkFrame < #cells), is only faintly visible; the frame body, bevel, sill, studs and the
-	// neon edge stay 100% solid. Desktop unchanged (PANEL_A = 1).
-	const PANEL_A = document.body.classList.contains('phone') ? 0.78 : 1;
+	// Winter Chalet frame (flat cartoon): ink outline, timber band with one cel highlight and plank seams, gold trim around
+	// the window, a pine-green panel with one flat tile per cell, a cranberry sill with gold rivets, snow caps on the top
+	// edge; a painted garland (#mkGarland, ART.garland) hangs across the top behind the logo. No gradients, no neon.
+	// The inner panel is see-through (PANEL_A) so the room / Roxy read faintly behind the reels; frame and sill are solid.
+	const PANEL_A = document.body.classList.contains('phone') ? 0.78 : 0.82;
 	const dpr = Math.min(2, (window.devicePixelRatio || 1) * ST.s), key = `${u.toFixed(4)}|${dpr.toFixed(3)}|${PANEL_A}`;
-	const fc = canvasIn('mkFrame', true), nc = canvasIn('mkNeon', false);
+	const fc = canvasIn('mkFrame', true);
+	document.getElementById('mkNeon')?.remove();
 	const cw = (FW + 2 * M) * u, ch = (FH + 2 * M) * u;
-	for (const c of [fc, nc]) css(c, { position: 'absolute', left: -M * u, top: -M * u, width: cw, height: ch });
+	css(fc, { position: 'absolute', left: -M * u, top: -M * u, width: cw, height: ch });
+	garland(u);
 	if (drawn === key) return; drawn = key;
 	const sc = u * dpr;
-	for (const c of [fc, nc]) { c.width = Math.ceil(cw * dpr); c.height = Math.ceil(ch * dpr); }
-	let g = fc.getContext('2d')!; g.setTransform(sc, 0, 0, sc, M * sc, M * sc);
-	g.save(); g.shadowColor = 'rgba(0,0,0,0.85)'; g.shadowBlur = 40 * sc; g.shadowOffsetY = 14 * sc; rr(g, 0, 0, FW, FH, 30); g.fillStyle = '#140c1d'; g.fill(); g.restore();
-	let gr = g.createLinearGradient(0, 0, 0, FH); gr.addColorStop(0, '#3b2c4c'); gr.addColorStop(0.18, '#251a33'); gr.addColorStop(0.8, '#1a1124'); gr.addColorStop(1, '#0e0914');
-	rr(g, 0, 0, FW, FH, 30); g.fillStyle = gr; g.fill();
-	gr = g.createLinearGradient(0, 0, FW, FH); gr.addColorStop(0, 'rgba(255,240,255,0.10)'); gr.addColorStop(0.5, 'rgba(255,240,255,0)'); gr.addColorStop(1, 'rgba(0,0,0,0.25)');
-	rr(g, 0, 0, FW, FH, 30); g.fillStyle = gr; g.fill();
-	gr = g.createLinearGradient(0, 0, 0, FH); gr.addColorStop(0, 'rgba(255,255,255,0.35)'); gr.addColorStop(0.3, 'rgba(255,255,255,0.06)'); gr.addColorStop(1, 'rgba(0,0,0,0.6)');
-	rr(g, 1.5, 1.5, FW - 3, FH - 3, 29); g.lineWidth = 3; g.strokeStyle = gr; g.stroke();
-	gr = g.createLinearGradient(0, FT + BH + 6, 0, FH); gr.addColorStop(0, '#4a3860'); gr.addColorStop(0.12, '#2a1d38'); gr.addColorStop(1, '#120b19');
-	g.fillStyle = gr; g.fillRect(14, FT + BH + 6, FW - 28, FB - 18);
-	if (PANEL_A < 1) { g.save(); g.globalCompositeOperation = 'destination-out'; rr(g, FT - 6, FT - 6, BW + 12, BH + 12, 18); g.fill(); g.restore(); }
-	g.save(); rr(g, FT - 6, FT - 6, BW + 12, BH + 12, 18); g.fillStyle = '#05030a'; g.fill();
-	g.shadowColor = 'rgba(0,0,0,0.9)'; g.shadowBlur = 16 * sc; rr(g, FT - 6, FT - 6, BW + 12, BH + 12, 18); g.lineWidth = 5; g.strokeStyle = '#020104'; g.stroke(); g.restore();
-	for (let i = 0; i < 5; i++) for (let r = 0; r < 4; r++) {
-		const x = FT + i * CELL + 4, y = FT + r * CELL + 4;
-		gr = g.createLinearGradient(0, y, 0, y + CELL - 8); gr.addColorStop(0, '#1e1430'); gr.addColorStop(1, '#120b1d');
-		rr(g, x, y, CELL - 8, CELL - 8, 14); g.fillStyle = gr; g.fill();
-		rr(g, x + 0.5, y + 0.5, CELL - 9, CELL - 9, 14); g.lineWidth = 1; g.strokeStyle = 'rgba(255,255,255,0.05)'; g.stroke();
+	fc.width = Math.ceil(cw * dpr); fc.height = Math.ceil(ch * dpr);
+	const g = fc.getContext('2d')!; g.setTransform(sc, 0, 0, sc, M * sc, M * sc);
+	const INK = '#26140f', WOOD = '#7a4526', WOOD_HI = '#9c5d33', SEAM = '#56301a', GOLD = '#f2b935', GOLD_HI = '#ffe08a', CRAN = '#a61c34', PINE = '#163a2b', TILE = '#1f4b38', SNOW = '#fbf5ea';
+	// ink silhouette + timber band
+	g.save(); g.shadowColor = 'rgba(20,8,4,0.55)'; g.shadowBlur = 0; g.shadowOffsetY = 10 * sc; rr(g, 0, 0, FW, FH, 30); g.fillStyle = INK; g.fill(); g.restore();
+	rr(g, 5, 5, FW - 10, FH - 10, 26); g.fillStyle = WOOD; g.fill();
+	g.save(); rr(g, 5, 5, FW - 10, FH - 10, 26); g.clip();
+	g.fillStyle = WOOD_HI; g.fillRect(5, 5, FW - 10, 9); g.fillRect(5, 5, 9, FH - 10);   // one flat cel highlight (top + left edge)
+	g.strokeStyle = SEAM; g.lineWidth = 2.5; g.lineCap = 'round';
+	for (const x of [FW * 0.18, FW * 0.47, FW * 0.79]) { g.beginPath(); g.moveTo(x, 8); g.lineTo(x, FT - 8); g.stroke(); }
+	for (const y of [FH * 0.3, FH * 0.66]) { g.beginPath(); g.moveTo(9, y); g.lineTo(FT - 9, y); g.stroke(); g.beginPath(); g.moveTo(FW - FT + 9, y); g.lineTo(FW - 9, y); g.stroke(); }
+	g.restore();
+	// cranberry sill with gold rivets
+	const sy = FT + BH + 14;
+	rr(g, 16, sy, FW - 32, FB - 24, 10); g.fillStyle = INK; g.fill();
+	rr(g, 19, sy + 3, FW - 38, FB - 30, 8); g.fillStyle = CRAN; g.fill();
+	g.fillStyle = '#c7344c'; g.fillRect(25, sy + 5, FW - 50, 4);
+	// window: gold trim (ink both sides), then the pine panel at PANEL_A
+	rr(g, FT - 13, FT - 13, BW + 26, BH + 26, 22); g.fillStyle = INK; g.fill();
+	rr(g, FT - 10, FT - 10, BW + 20, BH + 20, 20); g.fillStyle = GOLD; g.fill();
+	g.fillStyle = GOLD_HI; g.save(); rr(g, FT - 10, FT - 10, BW + 20, BH + 20, 20); g.clip(); g.fillRect(FT - 10, FT - 10, BW + 20, 3.5); g.restore();
+	rr(g, FT - 5, FT - 5, BW + 10, BH + 10, 16); g.fillStyle = INK; g.fill();
+	g.save(); g.globalCompositeOperation = 'destination-out'; rr(g, FT - 3, FT - 3, BW + 6, BH + 6, 14); g.fill(); g.restore();
+	g.save(); g.globalAlpha = PANEL_A; rr(g, FT - 3, FT - 3, BW + 6, BH + 6, 14); g.fillStyle = PINE; g.fill();
+	for (let i = 0; i < 5; i++) for (let r = 0; r < 4; r++) { rr(g, FT + i * CELL + 5, FT + r * CELL + 5, CELL - 10, CELL - 10, 16); g.fillStyle = TILE; g.fill(); }
+	g.restore();
+	const rivet = (x: number, y: number) => { g.beginPath(); g.arc(x, y, 6.5, 0, 7); g.fillStyle = INK; g.fill(); g.beginPath(); g.arc(x, y, 4.2, 0, 7); g.fillStyle = GOLD; g.fill();
+		g.beginPath(); g.arc(x - 1.3, y - 1.4, 1.5, 0, 7); g.fillStyle = GOLD_HI; g.fill(); };
+	const ry = sy + (FB - 24) / 2;
+	[40, FW - 40, FW / 2 - 150, FW / 2 + 150].forEach((x) => rivet(x, ry));
+	[[17, 17], [FW - 17, 17], [17, FH - 17], [FW - 17, FH - 17]].forEach(([x, y]) => rivet(x, y));
+	// snow caps along the top edge (flat cream lumps with an ink outline and one cool shade line)
+	g.save(); g.lineJoin = 'round';
+	const caps: [number, number, number][] = [[26, 70, 15], [118, 120, 17], [262, 64, 13], [FW - 266, 74, 14], [FW - 160, 112, 18], [FW - 40, 60, 14]];
+	for (const [x0, w, h] of caps) {
+		g.beginPath(); g.moveTo(x0, 4); g.bezierCurveTo(x0 + w * 0.08, -h * 0.9, x0 + w * 0.42, -h * 1.15, x0 + w * 0.55, -h * 0.55);
+		g.bezierCurveTo(x0 + w * 0.7, -h * 1.05, x0 + w * 0.98, -h * 0.7, x0 + w, 4);
+		g.bezierCurveTo(x0 + w * 0.9, 12, x0 + w * 0.82, 15, x0 + w * 0.74, 9); g.bezierCurveTo(x0 + w * 0.66, 18, x0 + w * 0.56, 19, x0 + w * 0.5, 10);
+		g.bezierCurveTo(x0 + w * 0.36, 14, x0 + w * 0.16, 13, x0, 4); g.closePath();
+		g.fillStyle = SNOW; g.fill(); g.lineWidth = 3.5; g.strokeStyle = INK; g.stroke();
+		g.beginPath(); g.moveTo(x0 + w * 0.2, 2); g.quadraticCurveTo(x0 + w * 0.5, 7, x0 + w * 0.8, 2); g.lineWidth = 2.2; g.strokeStyle = '#b9cfe0'; g.stroke();
 	}
-	// phone: knock the whole inner panel (well + tiles, drawn solid above) back to PANEL_A in one pass, so it is a uniform 78%
-	if (PANEL_A < 1) { g.save(); g.globalCompositeOperation = 'destination-out'; g.globalAlpha = 1 - PANEL_A; rr(g, FT - 6, FT - 6, BW + 12, BH + 12, 18); g.fill(); g.restore(); }
-	const stud = (x: number, y: number) => { g.save(); g.translate(x, y); g.rotate(Math.PI / 4); const s = 5, sg = g.createLinearGradient(-s, -s, s, s);
-		sg.addColorStop(0, '#d9cfe6'); sg.addColorStop(1, '#4a3d58'); g.fillStyle = sg; g.fillRect(-s, -s, 2 * s, 2 * s); g.restore(); };
-	[[17, 17], [FW - 17, 17], [17, FH - 22], [FW - 17, FH - 22], [FW / 2 - 140, FH - 22], [FW / 2 + 140, FH - 22]].forEach(([x, y]) => stud(x, y));
-	g = nc.getContext('2d')!; g.setTransform(sc, 0, 0, sc, M * sc, M * sc); const t = 17;
-	for (const [w, a, b] of [[10, 0.35, 26], [5, 0.7, 12]]) { g.save(); g.shadowColor = NEON; g.shadowBlur = b * sc; rr(g, t, t, FW - 2 * t, FH - 2 * t - 6, 22);
-		g.lineWidth = w; g.strokeStyle = `rgba(255,79,195,${a})`; g.stroke(); g.restore(); }
-	rr(g, t, t, FW - 2 * t, FH - 2 * t - 6, 22); g.lineWidth = 1.6; g.strokeStyle = 'rgba(255,235,250,0.95)'; g.stroke();
+	g.restore();
+}
+/** Painted garland across the frame top (behind the logo), sized to the frame; never reaches the reels (FT band only). */
+function garland(u: number) {
+	const src = (ART_G as Record<string, string | null>).garland; if (!src) return;
+	let im = document.getElementById('mkGarland') as HTMLImageElement | null;
+	if (!im) { im = document.createElement('img'); im.id = 'mkGarland'; im.alt = ''; im.draggable = false; im.setAttribute('aria-hidden', 'true'); im.src = src; $('#frame').appendChild(im); }
+	const w = FW * 1.05 * u, h = w * 177 / 1235;
+	css(im, { position: 'absolute', left: (FW * u - w) / 2, top: Math.min(-h * 0.7, (FT - 6) * u - h), width: w, height: h, 'z-index': '4', 'pointer-events': 'none', margin: '0' });
 }

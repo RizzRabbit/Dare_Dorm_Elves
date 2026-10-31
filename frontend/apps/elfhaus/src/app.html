@@ -7,14 +7,14 @@
 		<link rel="preload" href="%sveltekit.assets%/fonts/Cinzel-VF.ttf" as="font" type="font/ttf" crossorigin />
 		<link rel="preload" href="%sveltekit.assets%/fonts/Nunito-VF.ttf" as="font" type="font/ttf" crossorigin />
 		<link rel="preload" href="%sveltekit.assets%/fonts/Montserrat-VF.ttf" as="font" type="font/ttf" crossorigin />
-		<meta name="theme-color" content="#120C18" />
-		<style>html,body{background:#120C18;margin:0}
-			/* L1: branded first paint (inline, before any JS): stone ELFHAUS logo + gold progress shimmer; hidden under the studio sting, back until the foyer is up */
+		<meta name="theme-color" content="#2A1810" />
+		<style>html,body{background:#2A1810;margin:0}
+			/* L1: branded first paint (inline, before any JS): the ELFHAUS logo + a flat gold progress bar; hidden under the studio sting, back until the intro is up */
 			#preL{position:fixed;inset:0;z-index:1000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(14px,3vh,28px);
-				background:radial-gradient(ellipse at 50% 45%,#2a1638 0,#120C18 70%);pointer-events:none;opacity:0;animation:preIn .3s ease-out .12s forwards}
-			#preL img{width:min(62vw,460px);height:auto;filter:drop-shadow(0 6px 18px rgba(0,0,0,.6))}
-			#preL .pb{width:min(48vw,300px);height:6px;border-radius:3px;background:rgba(255,212,90,.16);overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,200,61,.3)}
-			#preL .pb i{display:block;width:40%;height:100%;border-radius:3px;background:linear-gradient(90deg,transparent,#FFC83D,#FFE7A0,#FFC83D,transparent);animation:preBar 1.1s ease-in-out infinite}
+				background:#2A1810;pointer-events:none;opacity:0;animation:preIn .3s ease-out .12s forwards}
+			#preL img{width:min(62vw,460px);height:auto}
+			#preL .pb{width:min(48vw,300px);height:10px;border-radius:6px;background:#FBF3E4;overflow:hidden;border:3px solid #26140F}
+			#preL .pb i{display:block;width:40%;height:100%;border-radius:3px;background:#F2B935;animation:preBar 1.1s ease-in-out infinite}
 			#preL.out{animation:preOut .2s ease-in forwards}
 			#preL.hold{animation:none;opacity:0} body:has(#loader.pxOn) #preL,body:has(#loader.ready) #preL,body:has(#loader.out) #preL{display:none}
 			@keyframes preIn{to{opacity:1}} @keyframes preOut{from{opacity:1}to{opacity:0}} @keyframes preBar{from{transform:translateX(-110%)}to{transform:translateX(260%)}}
@@ -24,6 +24,7 @@
 		<link rel="stylesheet" href="%sveltekit.assets%/elfhaus.css" />
 		<link rel="stylesheet" href="%sveltekit.assets%/resub-fix.css" />
 		<link rel="stylesheet" href="%sveltekit.assets%/board.css" />
+		<link rel="stylesheet" href="%sveltekit.assets%/chalet.css" />
 		%sveltekit.head%
 	</head>
 	<body>
