@@ -12,7 +12,7 @@ import { cardFlip } from './cardflip';
 import { timing, isSpinning, startSpin, markStopped, sinceStart, sleep, spinMini, stopMini, stopReel, stopLead } from './reels';
 import { $, S, k, bet, wait, titleHTML, banner, toast, hideToast, bigWin, setWinMeter, clearLines, renderCell, renderOverlays, cellEl, setGem, ovMx, symHTML } from './ui';
 import { playWins } from './winlines';
-import { puffWins } from './puff';
+import { puffWith } from './puff';
 import { wildLand, wfExpand } from './wildfx';
 import { setBg } from './bg';
 import { stackIn, mergeIn, growIn, clearOvWins } from './mergefx';
@@ -185,9 +185,9 @@ export const bookEventHandlerMap: Handlers = {
 	async winInfo(ev) {
 		// one thin line at a time races along each payline; its amount ticks into WIN (winlines.ts); Roxy smiles on it
 		if (ev.wins?.length) roxySmile();
-		await playWins(ev.wins, S.roundBase, ev.totalWin);
-		// then the winning symbols pop and puff into snowflakes; a following respin refills them (puff.ts)
-		await puffWins(ev.wins, boardNext);
+		// chalet item 6: the line hit and the pop + snow puff play together (puff.ts puffWith, started by playWins as the
+		// lines draw on); a following respin then refills the popped cells
+		await playWins(ev.wins, S.roundBase, ev.totalWin, puffWith(ev.wins, boardNext));
 	},
 	async updateStepWin(ev) { setWinMeter(S.roundBase + ev.amount / 100); },
 	async wildGrow(ev) {

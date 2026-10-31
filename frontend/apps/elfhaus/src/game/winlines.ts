@@ -108,7 +108,8 @@ export function clearRace() {
  *  jump). Then, when there is more than one line, each line is shown once on its own with its amount (a short cycle,
  *  capped so a step never drags). v3.17 stages (winstage.ts): a = draw-on + hold, b = the line cycle, c = the meter
  *  landing on the step total; a skip ends only the current stage. base = WIN meter value (x bet) before this step. */
-export async function playWins(wins: LineWin[], base: number, stepTotal?: number) {
+export type WithLines = { start: () => Promise<void>; finish: () => void; holes: boolean } | null;
+export async function playWins(wins: LineWin[], base: number, stepTotal?: number, fx: WithLines = null) {
 	ensure(); active = true; skipAll = false; skipLine = false;
 	presenting(true);
 	try {
@@ -128,13 +129,18 @@ export async function playWins(wins: LineWin[], base: number, stepTotal?: number
 		const fresh = !c.classList.contains('win'); c.classList.add('win'); litOn(c); symWin(c); if (fresh && !turbo) burst(c, 'pop'); }));
 	const meter = setWinMeter(tot);
 	const drawOn = turbo ? 160 : TG(420);
-	await stage('a', () => { skipLine = true; }, async () => {
+	// chalet item 6: the winning symbols pop and puff into snow WHILE the lines draw on (fx, puff.ts puffWith): the
+	// puff fires as the lines reach across (~half the draw-on) and stage a holds until both are done
+	await stage('a', () => { skipLine = true; fx?.finish(); }, async () => {
+		const puff = fx ? new Promise<void>((r) => setTimeout(r, skipLine ? 0 : drawOn * 0.45)).then(fx.start) : null;
 		await run(drawOn, (t) => drawAll(Ps, easeIO(t), 1));
 		await hold(turbo ? 120 : TG(Math.min(small ? 500 : 900, 380 + 120 * n)));
+		if (puff) await puff;
 	});
 	skipLine = false;
 	// b) cycle: each line alone with its amount (more than one line, not turbo); capped at ~2.4 s in total
-	if (n > 1 && !turbo) {
+	// (a respin refills the puffed cells next: no per-line cycle over the empty cells)
+	if (n > 1 && !turbo && !fx?.holes) {
 		await stage('b', () => { skipAll = true; }, async () => {
 			const per = TG(Math.max(240, Math.min(520, cycleMs / n)));
 			for (let i = 0; i < n && !skipAll; i++) {

@@ -89,21 +89,30 @@ export function puffTargets(wins: { positions: Pos[] }[], next: BookEvent | unde
 	}
 	return { cells: out, refill: !!repl };
 }
-/** The pop + puff stage after a win's line hit. `next` = the book event after this win (a respinStart refills). */
-export async function puffWins(wins: { positions: Pos[] }[], next: BookEvent | undefined) {
+/** Chalet item 6: the pop + puff runs WITH the line hit (winlines.ts playWins starts it as the lines draw on), not after
+ *  it. Returns null when nothing puffs. `start` resolves when the puff (and, with no respin next, the re-form) is done;
+ *  `finish` jumps every running puff animation to its end (a skip of the line stage); `holes` = a respin refills them. */
+export function puffWith(wins: { positions: Pos[] }[], next: BookEvent | undefined) {
 	const { cells, refill } = puffTargets(wins, next);
-	if (!cells.length) return;
+	if (!cells.length) return null;
 	const kT = turbo() ? 0.5 : 1;
 	const els = cells.sort((a, b) => a.reel - b.reel || a.row - b.row).map((p) => document.getElementById(`c${p.reel}${p.row}`)).filter(Boolean) as HTMLElement[];
-	const finishAll = () => [...live].forEach((a) => a.finish());
-	await stage('puff', finishAll, () => Promise.all(els.map((c, i) => puffCell(c, i * 35 * kT, kT))));
-	if (refill) return;   // the respin's mini spins take these cells over (reels.ts spinMini clears .puffed)
 	let fast = false;
-	await stage('reform', () => { fast = true; finishAll(); }, async () => {
-		await new Promise<void>((r) => setTimeout(r, 120 * kT));
+	const finish = () => { fast = true; [...live].forEach((a) => a.finish()); };
+	const start = async () => {
+		await Promise.all(els.map((c, i) => puffCell(c, fast ? 0 : i * 35 * kT, kT)));
+		if (fast) finish();
+		if (refill) return;   // the respin's mini spins take these cells over (reels.ts spinMini clears .puffed)
+		if (!fast) await new Promise<void>((r) => setTimeout(r, 120 * kT));
 		await Promise.all(els.map((c, i) => reform(c, fast ? 0 : i * 25 * kT, kT)));
-		if (fast) finishAll();
-	});
+		if (fast) finish();
+	};
+	return { start, finish, holes: refill };
+}
+/** The pop + puff as its own stage (kept for callers that play it after the lines). */
+export async function puffWins(wins: { positions: Pos[] }[], next: BookEvent | undefined) {
+	const p = puffWith(wins, next); if (!p) return;
+	await stage('puff', p.finish, p.start);
 }
 /** Spin start / re-render: drop any leftover puff state. */
 export function clearPuffs() {
