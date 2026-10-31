@@ -1,13 +1,9 @@
 // MAX WIN celebration (sprite version): shown ONLY when a round hits the 50,000x cap (wincap event).
-// Five elves (Coco | Jade | Delilah | Roxy | Vi) packed shoulder to shoulder lean in over the player (first-person
-// POV), gawk at the count-up, then lose it one by one (not on a grid): each breaks into a comedic ecstatic face.
-// Round 4: each elf is her OWN sheet (maxwin_elf_*: drawn expression frames + blush/heart overlays) driven by elfrig.ts:
-// 30 fps expression steps with drawn in-betweens, transform-only bob/sway/squash/tilt/hop/giggle, staggered rise-in.
-// Sheets are lazy: nothing is decoded at idle. preloadMaxWin() starts the decode the moment a max win is known (playBookEvents
-// sees a wincap in the round's book, i.e. before the reels even spin); maxWinCelebration() awaits it before the entrance, so
-// nothing pops in, and releaseMaxWin() closes the ImageBitmaps after the screen closes (~8.5 MB decoded for the five elf sheets).
-// Round 6 (anti-AI-look art pass): new cast art (distinct poses / faces / outfits per elf, full figures; expression frames are
-// face patches over one base frame), a blurred Lounge plate replaces the black backdrop, no four-point star glints.
+// The five chalet elves (Coco | Jade | Delilah | Roxy | Vi, full-body cartoon cast cropped at the thigh, build_crowd.py)
+// rise in shoulder to shoulder over a blurred, darkened chalet room, then react one by one (not on a grid) to the count-up:
+// squash / tilt / hop / giggle beats from elfrig.ts on one rAF clock, transform/opacity only. The title is the hand-lettered
+// MAX WIN with a scale-in and a cream shine sweep. Sheets are lazy: preloadMaxWin() starts the decode as soon as the
+// round's book has a wincap, maxWinCelebration() awaits it, releaseMaxWin() frees it after the screen closes.
 import { sfx, loop, duck } from './audio';
 import { voice, VOICE } from './voice';
 import { $, bet } from './ui';
@@ -24,7 +20,7 @@ const ids = Object.keys(ATL).map((p) => p.split('/').pop()!.replace('.json', '')
 const src = (id: string) => Object.entries(IMG).find(([p]) => p.endsWith('/' + id + '.webp'))?.[1] || '';
 
 const RISE = 150;                     // ms: first elf starts rising (staggered, centre out)
-// The backdrop is a pre-blurred, dimmed render of the grand foyer (base mode, no reels / Roxy / HUD; 2026-10-29), loaded with the sheets
+// The backdrop is a pre-blurred, dimmed chalet room plate (build_crowd.py), loaded with the sheets
 const BG = { land: src('maxwin_bg_land'), port: src('maxwin_bg_port') };
 let bgImg: HTMLImageElement | null = null;
 const bgUrl = () => (document.body.classList.contains('portrait') ? BG.port : BG.land);
@@ -135,3 +131,4 @@ export async function maxWinCelebration(capX: number = MAX_WIN_X) {
 	duck(false);
 	releaseMaxWin();
 }
+if (import.meta.env.DEV) (window as any).__maxWin = maxWinCelebration; // dev-only test hook (headless shots of the max-win screen)

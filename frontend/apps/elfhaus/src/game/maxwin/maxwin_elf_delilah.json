@@ -1,1 +1,171 @@
-{"image":"maxwin_elf_delilah.webp","size":[537,949],"anims":{"gawk":{"fps":30,"loop":false,"frames":[[0,0,537,709]]},"blinkh":{"fps":30,"loop":false,"frames":[[112,863,110,83,178,105]]},"blink":{"fps":30,"loop":false,"frames":[[0,863,110,86,178,103]]},"ant":{"fps":30,"loop":false,"frames":[[345,711,110,149,178,103]]},"half":{"fps":30,"loop":false,"frames":[[0,711,112,150,178,103]]},"peak":{"fps":30,"loop":false,"frames":[[114,711,112,150,178,103]]},"ahe":{"fps":30,"loop":false,"frames":[[228,711,115,150,178,103]]},"blush":{"fps":30,"loop":false,"frames":[[285,863,101,55,179,149]],"canvas":[537,709]},"heart":{"fps":30,"loop":false,"frames":[[224,863,59,59,289,49]],"canvas":[537,709]},"heart2":{"fps":30,"loop":false,"frames":[[388,863,40,40,272,20]],"canvas":[537,709]}},"box":[478,87,537,709],"group":[1467,796],"z":4,"head":[0.4256,0.2089],"states":["gawk","blinkh","blink","ant","half","peak","ahe"]}
+{
+ "image": "maxwin_elf_delilah.webp",
+ "size": [
+  419,
+  664
+ ],
+ "box": [
+  609,
+  4,
+  419,
+  660
+ ],
+ "group": [
+  1614,
+  694
+ ],
+ "z": 4,
+ "head": [
+  0.4169,
+  0.22
+ ],
+ "states": [
+  "gawk",
+  "blinkh",
+  "blink",
+  "ant",
+  "half",
+  "peak",
+  "ahe"
+ ],
+ "anims": {
+  "gawk": {
+   "fps": 30,
+   "loop": false,
+   "frames": [
+    [
+     0,
+     0,
+     419,
+     660
+    ]
+   ]
+  },
+  "blinkh": {
+   "fps": 30,
+   "loop": false,
+   "frames": [
+    [
+     0,
+     0,
+     419,
+     660
+    ]
+   ]
+  },
+  "blink": {
+   "fps": 30,
+   "loop": false,
+   "frames": [
+    [
+     0,
+     0,
+     419,
+     660
+    ]
+   ]
+  },
+  "ant": {
+   "fps": 30,
+   "loop": false,
+   "frames": [
+    [
+     0,
+     0,
+     419,
+     660
+    ]
+   ]
+  },
+  "half": {
+   "fps": 30,
+   "loop": false,
+   "frames": [
+    [
+     0,
+     0,
+     419,
+     660
+    ]
+   ]
+  },
+  "peak": {
+   "fps": 30,
+   "loop": false,
+   "frames": [
+    [
+     0,
+     0,
+     419,
+     660
+    ]
+   ]
+  },
+  "ahe": {
+   "fps": 30,
+   "loop": false,
+   "frames": [
+    [
+     0,
+     0,
+     419,
+     660
+    ]
+   ]
+  },
+  "blush": {
+   "fps": 30,
+   "loop": false,
+   "frames": [
+    [
+     0,
+     661,
+     2,
+     2,
+     209,
+     220
+    ]
+   ],
+   "canvas": [
+    419,
+    660
+   ]
+  },
+  "heart": {
+   "fps": 30,
+   "loop": false,
+   "frames": [
+    [
+     0,
+     661,
+     2,
+     2,
+     209,
+     220
+    ]
+   ],
+   "canvas": [
+    419,
+    660
+   ]
+  },
+  "heart2": {
+   "fps": 30,
+   "loop": false,
+   "frames": [
+    [
+     0,
+     661,
+     2,
+     2,
+     209,
+     220
+    ]
+   ],
+   "canvas": [
+    419,
+    660
+   ]
+  }
+ }
+}

@@ -1,1 +1,122 @@
-{"image":"maxwin_elf_roxy.webp","size":[467,951],"anims":{"gawk":{"fps":30,"loop":false,"frames":[[0,0,467,727]]},"blinkh":{"fps":30,"loop":false,"frames":[[0,875,119,76,166,169]]},"blink":{"fps":30,"loop":false,"frames":[[121,875,120,76,165,169]]},"ant":{"fps":30,"loop":false,"frames":[[0,729,119,144,166,169]]},"half":{"fps":30,"loop":false,"frames":[[121,729,119,144,166,169]]},"peak":{"fps":30,"loop":false,"frames":[[242,729,119,139,166,169]]},"blush":{"fps":30,"loop":false,"frames":[[243,875,101,37,179,214]],"canvas":[467,727]}},"box":[748,69,467,727],"group":[1467,796],"z":3,"head":[0.4907,0.283],"states":["gawk","blinkh","blink","ant","half","peak"]}
+{
+ "image": "maxwin_elf_roxy.webp",
+ "size": [
+  447,
+  668
+ ],
+ "box": [
+  902,
+  30,
+  447,
+  664
+ ],
+ "group": [
+  1614,
+  694
+ ],
+ "z": 3,
+ "head": [
+  0.398,
+  0.22
+ ],
+ "states": [
+  "gawk",
+  "blinkh",
+  "blink",
+  "ant",
+  "half",
+  "peak"
+ ],
+ "anims": {
+  "gawk": {
+   "fps": 30,
+   "loop": false,
+   "frames": [
+    [
+     0,
+     0,
+     447,
+     664
+    ]
+   ]
+  },
+  "blinkh": {
+   "fps": 30,
+   "loop": false,
+   "frames": [
+    [
+     0,
+     0,
+     447,
+     664
+    ]
+   ]
+  },
+  "blink": {
+   "fps": 30,
+   "loop": false,
+   "frames": [
+    [
+     0,
+     0,
+     447,
+     664
+    ]
+   ]
+  },
+  "ant": {
+   "fps": 30,
+   "loop": false,
+   "frames": [
+    [
+     0,
+     0,
+     447,
+     664
+    ]
+   ]
+  },
+  "half": {
+   "fps": 30,
+   "loop": false,
+   "frames": [
+    [
+     0,
+     0,
+     447,
+     664
+    ]
+   ]
+  },
+  "peak": {
+   "fps": 30,
+   "loop": false,
+   "frames": [
+    [
+     0,
+     0,
+     447,
+     664
+    ]
+   ]
+  },
+  "blush": {
+   "fps": 30,
+   "loop": false,
+   "frames": [
+    [
+     0,
+     665,
+     2,
+     2,
+     223,
+     221
+    ]
+   ],
+   "canvas": [
+    447,
+    664
+   ]
+  }
+ }
+}

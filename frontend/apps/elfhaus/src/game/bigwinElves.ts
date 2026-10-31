@@ -1,15 +1,11 @@
-// Big-win character layers, one per top stage, packed shoulder to shoulder and leaning over the player (first-person
-// POV) behind the amount, transform/opacity-only motion on one rAF clock (elfrig.ts):
-//  - EPIC WIN (math level 9, 100-1000x): Vi | Roxy | Coco (bigwin_elf_*: base / mid / kiss (+ Roxy's wink) + blush),
-//    a calm kiss cycle. ~3.9 MB decoded.
-//  - LEGENDARY WIN (math level 10, 1000x up to the cap): the four younger elves Coco | Jade | Roxy | Vi on the max-win
-//    cast sheets (maxwin_elf_*, the same rig config as maxwin.ts via maxwinCast.ts; Delilah, the house mom, stays out),
-//    re-grouped without her gap, same lean-in rise and hold as the EPIC layer, a gawk / peak cycle. ~7 MB decoded.
-//  - MAX WIN keeps all five (maxwin.ts, unchanged).
+// Big-win character layers, one per top stage, the chalet elves standing shoulder to shoulder behind the amount
+// (full-body cartoon cast cropped at the thigh, build_crowd.py), transform/opacity-only motion on one rAF clock (elfrig.ts):
+// idle bob + sway, squash / tilt on every beat, a hop on the peak, a staggered ease-out-back rise-in.
+//  - EPIC WIN (math level 9): Vi | Roxy | Coco.
+//  - LEGENDARY WIN (math level 10, up to the cap): Coco | Jade | Roxy | Vi on the max-win cast sheets (Delilah stays for MAX WIN).
+//  - MAX WIN keeps all five (maxwin.ts).
 // On a LEGENDARY win the EPIC group rises at EPIC WIN, then hands over to the four at LEGENDARY WIN (short fade).
-// Lazy: each level's sheets decode only when the round's book has a win at that level (playBookEvents, the banner's
-// start hook as a backup) and are released (ImageBitmap.close) when the banner closes. If a decode isn't done when the
-// stage lands, the entrance waits for it instead of popping in.
+// Lazy: each level's sheets decode only when the round's book has a win at that level and are released when the banner closes.
 import { loadSheet, hasSheet, unloadSheet } from './sprite';
 import { ElfRig, TEMPO, type ElfCfg } from './elfrig';
 import { STAGE_OF_LEVEL } from './countup';
@@ -41,13 +37,11 @@ const E_TRANS: ElfCfg['trans'] = { 'base>kiss': [['mid', 3]], 'kiss>base': [['mi
 const E_FX: ElfCfg['fx'] = { kiss: ['squash', 'tilt'], wink: ['squash', 'tilt', 'hop'], base: ['tilt0'] };
 // one kiss/wink beat per elf, NOT on a grid: ms offsets inside a 3.4 s cycle
 const E_CYCLE: [number, string, number, number][] = [[CO, 'kiss', 350, 620], [RX, 'kiss', 1350, 560], [VI, 'kiss', 1900, 640], [RX, 'wink', 2700, 470]];
-// LEGENDARY: Coco | Jade | Roxy | Vi on the max-win sheets. Their boxes sit in the five-elf frame (1467x796) with Delilah
-// in the middle; here the left pair moves right and the right pair left by 114 px each (Jade / Roxy overlap like the
-// others) and the frame is cropped to 1237x796. Sizes, z order and art unchanged.
+// LEGENDARY: Coco | Jade | Roxy | Vi on the max-win sheets, re-spaced without Delilah (build_crowd.py prints L_GROUP / L_AT).
 const L_NAMES = ['coco', 'jade', 'roxy', 'vi'];
 const LC = 0, LJ = 1, LR = 2, LV = 3;
-export const L_GROUP: [number, number] = [1237, 796];
-export const L_AT: Record<string, [number, number]> = { coco: [0, 218], jade: [213, 1], roxy: [518, 69], vi: [813, 121] };
+export const L_GROUP: [number, number] = [1321, 694];
+export const L_AT: Record<string, [number, number]> = { coco: [0, 45], jade: [305, 73], roxy: [609, 30], vi: [922, 72] };
 const L_CYCLE: [number, string, number, number][] = [[LC, 'peak', 350, 620], [LR, 'peak', 1150, 560], [LJ, 'peak', 1750, 600], [LV, 'peak', 2450, 640]];
 const CYCLE_MS = 3400;   // all beats are stretched by elfrig TEMPO (the elves are up ~2.7 s: one calm beat each)
 

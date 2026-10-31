@@ -657,7 +657,7 @@ canvas.uiFill{position:absolute;inset:0;width:100%;height:100%}
 
 /* MAX WIN sprite layout. Group frame 1467x796 (round 6): Coco | Jade | Delilah | Roxy | Vi, full figures cropped at the thigh. */
 #maxwin .mwCrowd{position:absolute;inset:0;z-index:3;pointer-events:none;overflow:hidden}
-#maxwin .mwGroup{position:absolute;left:50%;bottom:calc(-1*var(--vh));height:calc(62*var(--vh));aspect-ratio:1467/796;transform:translate(-50%,0)}
+#maxwin .mwGroup{position:absolute;left:50%;bottom:calc(-1*var(--vh));height:calc(62*var(--vh));aspect-ratio:1614/694;transform:translate(-50%,0)}
 body.portrait #maxwin .mwGroup{height:auto;width:calc(132*var(--vw));bottom:0}
 #maxwin .mwSpr{position:absolute;inset:0;width:100%;height:100%;image-rendering:auto}
 /* round 4: per-elf puppet layers (elfrig.ts), each animated by transform/opacity only; exit = fade + slide down */
@@ -684,13 +684,13 @@ body.portrait #maxwin .mwTier.spr{width:calc(80*var(--vw))}
 #bigwin .bwElves { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
 #bigwin .bw { position: relative; z-index: 2; }
 #bigwin .bwFx { z-index: 1; }
-#bigwin .bwGroup {                       /* frame 778x564 (round 6): Vi | Roxy | Coco, cropped under the bust */
-	position: absolute; left: 50%; bottom: calc(-1*var(--vh)); height: calc(74*var(--vh)); aspect-ratio: 778 / 564;
+#bigwin .bwGroup {                       /* frame 1028x694 (chalet): Vi | Roxy | Coco, cropped at the thigh */
+	position: absolute; left: 50%; bottom: calc(-1*var(--vh)); height: calc(74*var(--vh)); aspect-ratio: 1028 / 694;
 	transform: translate(-50%, 0);           /* round 4: the elves rise in individually (elfrig.ts) */
 }
 #bigwin .bwGroup.in { transform: translate(-50%, 0); opacity: 1; }
-/* v3.19 LEGENDARY WIN: the four younger elves on the max-win cast sheets, re-grouped frame 1237x796 (bigwinElves.ts L_GROUP) */
-#bigwin .bwGroup.bwLegend { aspect-ratio: 1237 / 796; }
+/* v3.19 LEGENDARY WIN: the four younger elves on the max-win cast sheets, re-grouped frame 1321x694 (bigwinElves.ts L_GROUP) */
+#bigwin .bwGroup.bwLegend { aspect-ratio: 1321 / 694; }
 #bigwin .bwSpr { position: absolute; inset: 0; width: 100%; height: 100%; }
 body.portrait #bigwin .bwGroup { height: auto; width: calc(100*var(--vw)); bottom: calc(-7*var(--vh)); }   /* smaller + sunk: covers less of the board */
 /* landscape: smaller + sunk group, and the title block lifted clear of the heads while the group is up */

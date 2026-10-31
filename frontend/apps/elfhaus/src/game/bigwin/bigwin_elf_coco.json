@@ -1,1 +1,83 @@
-{"image":"bigwin_elf_coco.webp","size":[365,558],"anims":{"base":{"fps":30,"loop":false,"frames":[[0,0,365,414]]},"mid":{"fps":30,"loop":false,"frames":[[0,416,118,142,148,62]]},"kiss":{"fps":30,"loop":false,"frames":[[120,416,117,142,148,62]]},"blush":{"fps":30,"loop":false,"frames":[[239,416,101,46,155,107]],"canvas":[365,414]}},"box":[413,150,365,414],"group":[778,564],"z":2,"head":[0.5607,0.2476],"states":["base","mid","kiss"]}
+{
+ "image": "bigwin_elf_coco.webp",
+ "size": [
+  436,
+  653
+ ],
+ "box": [
+  592,
+  45,
+  436,
+  649
+ ],
+ "group": [
+  1028,
+  694
+ ],
+ "z": 1,
+ "head": [
+  0.4553,
+  0.22
+ ],
+ "states": [
+  "base",
+  "mid",
+  "kiss"
+ ],
+ "anims": {
+  "base": {
+   "fps": 30,
+   "loop": false,
+   "frames": [
+    [
+     0,
+     0,
+     436,
+     649
+    ]
+   ]
+  },
+  "mid": {
+   "fps": 30,
+   "loop": false,
+   "frames": [
+    [
+     0,
+     0,
+     436,
+     649
+    ]
+   ]
+  },
+  "kiss": {
+   "fps": 30,
+   "loop": false,
+   "frames": [
+    [
+     0,
+     0,
+     436,
+     649
+    ]
+   ]
+  },
+  "blush": {
+   "fps": 30,
+   "loop": false,
+   "frames": [
+    [
+     0,
+     650,
+     2,
+     2,
+     218,
+     216
+    ]
+   ],
+   "canvas": [
+    436,
+    649
+   ]
+  }
+ }
+}
