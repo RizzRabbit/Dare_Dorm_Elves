@@ -39,6 +39,9 @@ export interface RoxyAdapter {
 	/** free-spins party light, 0 = base look (untouched) .. 1 = full; side = which way the party light comes from (-1 left, 1 right) */
 	setParty?(k: number, side?: number): void;
 	shadow(on: boolean): void;          // cast + contact shadow (landscape floor); off in the portrait peek
+	/** v8 mouth variants (optional per rig): a wider smile held for `sec`, a talking mouth for `sec` (0 = stop) */
+	smile?(sec?: number): void;
+	talk?(sec: number): void;
 	destroy(): void;
 }
 export type RoxyFactory = () => Promise<RoxyAdapter>;

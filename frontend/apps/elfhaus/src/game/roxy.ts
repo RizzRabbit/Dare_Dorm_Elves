@@ -5,6 +5,7 @@
 // disappointed (tease that missed) -> disappointed() (v7: just eases back to idle). One-shots fall back to idle by themselves.
 // The old keyed roxy_full_* frame sheets (static/assets/atlases) are no longer loaded.
 import { initScene, placeScene, rig } from './scene/scene';
+import { setVoiceStartHook } from './audio';
 export type RoxyState = 'idle' | 'anticipation' | 'disappointed' | 'excited' | 'win';
 let want: RoxyState = 'idle', back: ReturnType<typeof setTimeout> | null = null;
 /** rig source box (kept for callers that size against it) */
@@ -17,6 +18,8 @@ export async function initRoxy(onReady: () => void) {
 	const ok = await initScene();
 	if (!ok || !rig) return;
 	roxySize = { w: rig.srcW, h: rig.srcH };
+	// v8: her mouth moves while one of her own voice lines / giggles plays
+	setVoiceStartHook((name, ms) => { if (/_roxy_/.test(name)) rig?.talk?.(ms / 1000); });
 	document.body.classList.add('hasRoxy'); onReady();
 }
 export function roxy(s: RoxyState) {
@@ -29,3 +32,5 @@ export function roxy(s: RoxyState) {
 	else if (s === 'idle') r.idle();
 }
 export const roxyState = () => want;
+/** v8: a held smile on any paying win (the big-win / bonus reactions smile by themselves). */
+export function roxySmile(sec = 1.8) { rig?.smile?.(sec); }

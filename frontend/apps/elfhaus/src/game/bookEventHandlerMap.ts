@@ -3,7 +3,7 @@ import { MAX_WIN_X, ROWS, REELS, WIN_LEVELS, TIER_LABEL, SPIN_CAP as MAX_FS, typ
 import { egwParts } from './egwParts';
 import { money } from './format';
 import type { BookEvent, BookEventOf, BookEventType, Locked, Pos } from './typesBookEvent';
-import { roxy, roxyState } from './roxy';
+import { roxy, roxyState, roxySmile } from './roxy';
 import { maxWinCelebration, preloadMaxWin } from './maxwin';
 import { elvesLevel, preloadBigWinElves, LEGEND_ELVES_LEVEL } from './bigwinElves';
 import { showRespin, endRespin, hideRespin } from './respin';
@@ -183,7 +183,8 @@ export const bookEventHandlerMap: Handlers = {
 		once();
 	},
 	async winInfo(ev) {
-		// one thin line at a time races along each payline; its amount ticks into WIN (winlines.ts)
+		// one thin line at a time races along each payline; its amount ticks into WIN (winlines.ts); Roxy smiles on it
+		if (ev.wins?.length) roxySmile();
 		await playWins(ev.wins, S.roundBase, ev.totalWin);
 		// then the winning symbols pop and puff into snowflakes; a following respin refills them (puff.ts)
 		await puffWins(ev.wins, boardNext);

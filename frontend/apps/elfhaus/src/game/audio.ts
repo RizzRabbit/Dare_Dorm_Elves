@@ -235,6 +235,9 @@ export const voiceStats = () => ({ started: vStarted, busy: voiceBusy(), pending
  * in the gap after it) the request is dropped; a 'high' one instead takes the single pending slot (if empty) and
  * plays after the gap only while still relevant (<= VPEND ms after the current clip ends).
  */
+/** v8: told when a voice clip actually starts (name, length ms): Roxy's side rig moves her mouth for her own lines. */
+let onVoiceStart: ((name: string, ms: number) => void) | null = null;
+export function setVoiceStartHook(f: ((name: string, ms: number) => void) | null) { onVoiceStart = f; }
 export function playVoice(name: string, pri: VoicePri = 'normal'): boolean {
 	return safe(() => {
 		if (!vlive() || !vbuf.has(name)) return false;
@@ -260,6 +263,7 @@ function startVoice(name: string): boolean {
 	s.connect(g); g.connect(voxBus!); s.start(0);
 	const x = { s, g }; vcur = x; vStarted++;
 	vBusyUntil = performance.now() + b.duration * 1000 + 30;
+	try { onVoiceStart?.(name, b.duration * 1000); } catch { /* the hook never breaks playback */ }
 	if (vduckG) ramp(vduckG.gain, name.startsWith('gig_') ? VDUCK_GIG : VDUCK_LINE, 0.08);
 	const end = () => {
 		if (vcur !== x) return; vcur = null;
