@@ -20,6 +20,7 @@ export const hasRig = (key: string) => !!RIG[key];
 export const frameTier = (key: string) => (key[0] === 'H' ? 'hi' : key[0] === 'L' ? 'lo' : key === 'S' ? 'sp' : '');
 /** The symbol inside its tile: the rig box is inset by FR_IN on each side (it comes forward over the inner border, chalet.css .cell>.sym.fr). */
 export const FR_IN = 0.06;
+const frIn = (_key: string) => FR_IN;
 /** 9-slice geometry of _border / _recess: 256 px pieces, 52 px corners (= 0.203 of a cell). */
 export const NINE = { size: 256, slice: 52 };
 /** Dark separation halo behind each bust (chalet.css .m_fig); Roxy's red jacket on her red card needs the most. */
@@ -142,17 +143,17 @@ function composeCell(page: HTMLImageElement, key: string, size: number, bare = f
 	const t = frameTier(key), bw = size * (NINE.slice / NINE.size);
 	if (t && bare) {   // the lifted symbol alone, as the live cell draws it over its tile (the cell spinner's slots)
 		const sym = flat(page, key); if (!sym) return c;
-		const box = size * (1 - 2 * FR_IN), k = box / Math.max(sym.width, sym.height), cell = size / 0.925;
+		const fi = frIn(key), box = size * (1 - 2 * fi), k = box / Math.max(sym.width, sym.height), cell = size / 0.925;
 		g.filter = 'contrast(1.06) saturate(1.1)';
-		drawLifted(g, sym, size * FR_IN + (box - sym.width * k) / 2, size * FR_IN + (box - sym.height * k) / 2, sym.width * k, sym.height * k, cell);
+		drawLifted(g, sym, size * fi + (box - sym.width * k) / 2, size * fi + (box - sym.height * k) / 2, sym.width * k, sym.height * k, cell);
 		return c;
 	}
 	if (t) {
 		const tf = FRAMES['_tile_' + t]; if (tf) g.drawImage(page, tf.frame.x, tf.frame.y, tf.frame.w, tf.frame.h, 0, 0, size, size);
 		drawNine(g, page, '_recess', 0, 0, size, size, bw); drawNine(g, page, t === 'sp' ? '_border_sp' : '_border', 0, 0, size, size, bw);
 		const sym = flat(page, key); if (!sym) return c;
-		const box = size * (1 - 2 * FR_IN), k = box / Math.max(sym.width, sym.height);
-		drawLifted(g, sym, size * FR_IN + (box - sym.width * k) / 2, size * FR_IN + (box - sym.height * k) / 2, sym.width * k, sym.height * k, size);
+		const fi = frIn(key), box = size * (1 - 2 * fi), k = box / Math.max(sym.width, sym.height);
+		drawLifted(g, sym, size * fi + (box - sym.width * k) / 2, size * fi + (box - sym.height * k) / 2, sym.width * k, sym.height * k, size);
 		return c;
 	}
 	// bust wild: card, recess, border, the lifted bust, the other details, the raised WILD
@@ -166,6 +167,18 @@ function composeCell(page: HTMLImageElement, key: string, size: number, bare = f
 	if (lets) drawLifted(g, lets, 0, 0, size, size, size, true);
 	return c;
 }
+/** The tile alone (colour + recess + border, or a bust wild's card + recess + border) at `size` px: the tile half of a
+ *  cell spinner unit (reels.ts), always paired with its own symbol, never recoloured. */
+function composeTile(page: HTMLImageElement, key: string, size: number) {
+	const c = cv(size, size), g = c.getContext('2d'); if (!g) return null;
+	const t = frameTier(key), bw = size * (NINE.slice / NINE.size);
+	if (t) { const tf = FRAMES['_tile_' + t]; if (tf) g.drawImage(page, tf.frame.x, tf.frame.y, tf.frame.w, tf.frame.h, 0, 0, size, size); }
+	else { const b = FRAMES[key]; if (!b) return null; drawFr(g, page, key, 0, 0, size / Math.max(b.sourceSize.w, b.sourceSize.h)); }
+	drawNine(g, page, '_recess', 0, 0, size, size, bw); drawNine(g, page, t === 'sp' ? '_border_sp' : '_border', 0, 0, size, size, bw);
+	return c;
+}
+/** ART key of a symbol's spinner tile (one per tier, one per bust wild card). */
+export const unitTileKey = (key: string) => '_utile_' + (frameTier(key) || key);
 /** The 9-slice pieces as their own images for CSS border-image (any cell, stack or merged size). */
 async function bakeEdges(page: HTMLImageElement) {
 	const root = document.documentElement.style;
@@ -191,6 +204,8 @@ async function bakeAll() {
 			// cell spinner slot (reels.ts): the lifted symbol alone (tiers) / the whole card (bust wilds), tile-box sized
 			const sc = composeCell(page, k, SPIN_PX, true), us = sc && (await blobURL(sc));
 			if (us) ART[k + '_spin'] = us;
+			const tk = unitTileKey(k);
+			if (!ART[tk]) { ART[tk] = ''; const tc = composeTile(page, k, SPIN_PX), ut = tc && (await blobURL(tc)); if (ut) ART[tk] = ut; }
 		}));
 	} catch (e) { console.warn('symbol sheet', e); }
 }

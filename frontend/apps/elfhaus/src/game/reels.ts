@@ -1,21 +1,21 @@
 // Cell spin engine (chalet B, James: "each cell is its own mini-spinner"). Every spinning cell is an independent spinner:
-// its tile stays fixed in place and real symbols scroll vertically through that one cell, masked to the tile's inner
-// panel. Nothing scrolls across cells or as a column. One rAF loop drives every spinner with closed-form motion on
+// a fixed window (the tile box) through which whole units scroll vertically: each unit is a symbol together with its
+// own tile (red highs, green lows, the scatter and wild tiles), so no tile is ever neutral or recoloured. Nothing scrolls across cells or as a column. One rAF loop drives every spinner with closed-form motion on
 // real elapsed time (performance.now), so it is the same at 60, 120 or 144 Hz:
 //   wind-up  : a small upward tug (cosine ease, velocity 0 at both ends)
 //   accel    : smoothstep velocity ramp to full speed
-//   run      : constant speed; only near full speed a light trail + stretch (two faint copies of the same sharp symbol)
+//   run      : constant speed; only near full speed a light vertical stretch of the units
 //   slow     : anticipation cells ease down to a tease speed (smoothstep velocity)
 //   brake    : power ease-out planned when the stop is issued: it starts at the running speed (continuous velocity),
 //              ends exactly on time and runs PAST the final symbol by `ov` of a pitch
 //   settle   : back onto the final symbol with one small rebound, (1-u)^3(1+3u)cos(1.5 pi u): no velocity jump
-// The final symbol is chosen while it is still out of view, so it scrolls in for real and lands exactly. At the brake's
-// end (the impact) the tile does its own thud + border glint and its tier crossfades to the landing symbol's; at the end
-// of the settle the cell is rendered with the same symbol in the same place and the spinner goes in the same frame.
+// The final unit is chosen while it is still out of view, so it scrolls in for real and lands exactly. At the end of
+// the settle the cell is rendered with the same tile + symbol in the same place, the spinner goes in the same frame and
+// the cell's tile plays its border glint.
 // Starts and stops are staggered left to right, top to bottom within each reel (the cell order). Turbo = the same
-// motion, faster. Respins spin only the popped cells. Each spinner = a static tile replica + a clipped window with
-// three recycled slots moved by translate3d only (baked lifted-symbol images, symrig.ts ART[key + '_spin']).
-import { rigAnt, rigLand, tileParts, hasRig } from './symrig';
+// motion, faster. Respins spin only the popped cells. Each spinner = a fixed clipped window with three
+// recycled units moved by translate3d only (unit = ART[unitTileKey(key)] tile + ART[key + '_spin'] symbol, symrig.ts).
+import { rigAnt, rigLand, hasRig, frameTier, unitTileKey } from './symrig';
 import { S, ART } from './ui';
 import { ROWS, REELS } from './config';
 import { SPIN_TEMPO, STOP_TEMPO } from './tempo';
@@ -50,8 +50,8 @@ export const stopLead = () => { const p = P(); return p.D + p.set + 3 * timing()
 type Slot = HTMLElement & { n?: number };
 type Plan = { tq: number; sq: number; dist: number; D: number; E: number; sEnd: number; end: number };
 type Cell = {
-	r: number; row: number; el: HTMLElement; win: HTMLElement; under: HTMLElement; over: HTMLElement; slots: Slot[];
-	t0: number; p: Prm; init: string; fin?: string; slowAt?: number; plan?: Plan; impacted?: boolean; open?: boolean;
+	r: number; row: number; el: HTMLElement; win: HTMLElement; slots: Slot[];
+	t0: number; p: Prm; init: string; empty?: boolean; fin?: string; slowAt?: number; plan?: Plan; impacted?: boolean;
 	end?: number; onLand?: () => void; res?: () => void; tr?: number;
 };
 const cells = new Map<string, Cell>();
@@ -82,24 +82,25 @@ function slotKey(C: Cell, n: number) {
 	if (C.plan && n === C.plan.sEnd && C.fin) return C.fin;
 	return filler(C, n);
 }
+// A slot is a whole unit: the symbol's own tile (.slT) + the symbol (.slS) in one container, so every passing symbol
+// carries its correct tile and the landed one is simply the final unit. Nothing is ever recoloured; the cell's window
+// (.cwin) stays fixed and only the units move.
 function setSlot(C: Cell, s: Slot, n: number) {
-	s.n = n; const u = spinImg(slotKey(C, n));
-	const bg = u ? `url(${u})` : 'none';
-	if (s.dataset.bg !== bg) { s.dataset.bg = bg; s.style.backgroundImage = bg; }
+	s.n = n; const k = slotKey(C, n);
+	const empty = n === 0 && !!C.empty, id = empty ? k + ':empty' : k;
+	if (s.dataset.id === id) return;
+	s.dataset.id = id; s.dataset.k = k; s.dataset.tier = frameTier(k) || 'wild'; s.dataset.empty = empty ? '1' : '';
+	const t = ART[unitTileKey(k)], u = empty ? null : spinImg(k);
+	(s.firstElementChild as HTMLElement).style.backgroundImage = t ? `url(${t})` : 'none';
+	(s.lastElementChild as HTMLElement).style.backgroundImage = u ? `url(${u})` : 'none';
 }
-const tileHTMLOf = (key: string) => {
-	const t = tileParts(key) || tileParts('L1')!;
-	const light = `<i class="tGl${t.sp ? ' sp' : ''}"></i><i class="tGw${t.sp ? ' sp' : ''}"></i>`;
-	return { under: `<div class="tile${key.startsWith('W_') ? ' tW' : ''}">${t.under}</div>`, over: `<div class="tile tTop">${t.over}${light}</div>` };
-};
 function makeCell(r: number, row: number, now: number, host: HTMLElement) {
-	const key = keyOf(S.sym[r]?.[row] ?? 'L5', r), p = P(), t = tileHTMLOf(key);
+	const key = keyOf(S.sym[r]?.[row] ?? 'L5', r), p = P();
 	const el = document.createElement('div'); el.className = 'cspin';
-	el.style.cssText = `left:${r * S.cell}px;top:${row * S.cell}px;--thd:${p.thd}ms`;
-	el.innerHTML = `${t.under}<div class="cwin">${'<i class="sl"></i>'.repeat(3)}</div>${t.over}`;
+	el.style.cssText = `left:${r * S.cell}px;top:${row * S.cell}px`;
+	el.innerHTML = `<div class="cwin">${'<i class="sl"><i class="slT"></i><i class="slS"></i></i>'.repeat(3)}</div>`;
 	host.appendChild(el);
-	const C: Cell = { r, row, el, win: el.querySelector('.cwin')!, under: el.firstElementChild as HTMLElement, over: el.lastElementChild as HTMLElement,
-		slots: [...el.querySelectorAll<Slot>('.sl')], t0: now + r * p.stR + row * p.stW, p, init: key };
+	const C: Cell = { r, row, el, win: el.querySelector('.cwin')!, slots: [...el.querySelectorAll<Slot>('.sl')], t0: now + r * p.stR + row * p.stW, p, init: key };
 	return C;
 }
 // ---- closed-form motion (s in pitches, v in pitches/s, t in ms since the cell's own start) ----
@@ -167,8 +168,6 @@ function frame(now: number) {
 		// light trail + stretch only at full speed
 		const k = Math.round(Math.max(0, Math.min(1, (Math.abs(m.v) / C.p.v - 0.8) / 0.2)) * 20) / 20;
 		if (k !== C.tr) { C.tr = k; C.win.style.setProperty('--tr', String(k)); }
-		// the last moments of the settle: the final symbol may come forward over the inner border, as in the cell
-		if (m.ph === 2 && (m.u ?? 0) > 0.72 && !C.open) { C.open = true; C.el.classList.add('open'); }
 	}
 	if (cells.size) raf = requestAnimationFrame(frame);
 }
@@ -176,13 +175,6 @@ function impact(C: Cell) {
 	C.impacted = true;
 	C.el.classList.add('tLand');
 	if (!S.turbo) sfx('reel_stop_3', { throttle: 60 }); else if ([...cells.values()].every((x) => x === C || x.impacted)) sfx('reel_stop_3', { gain: 0.7 });
-	// the tile turns to the landing symbol's tier under the thud
-	if (C.fin && C.fin !== C.init) {
-		const t = tileHTMLOf(C.fin), tmp = document.createElement('div'); tmp.innerHTML = t.under + t.over;
-		const u = tmp.firstElementChild as HTMLElement, o = tmp.lastElementChild as HTMLElement;
-		C.under.after(u); u.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 120, easing: 'ease-out' }).finished.then(() => C.under.remove(), () => {});
-		C.under = u; C.over.replaceWith(o); C.over = o;
-	}
 }
 function finish(C: Cell) {
 	cells.delete(`${C.r}${C.row}`);
@@ -206,10 +198,15 @@ export function spinCells(list: { reel: number; row: number }[]) {
 	list.forEach(({ reel, row }) => {
 		const id = `${reel}${row}`; const old = cells.get(id); if (old) { old.el.remove(); old.res?.(); cells.delete(id); }
 		const c = document.getElementById(`c${reel}${row}`); if (!c) return;
+		seeds.delete(reel + ':' + row);
+		// a popped cell (its symbol burst into snow) starts from its own tile alone: that empty unit scrolls away as the
+		// new units drop in (the popped symbol never reappears, the tile never changes colour)
+		const symEl = c.querySelector(':scope>.sym'), wasPuffed = c.classList.contains('puffed') || !!symEl?.getAnimations().length && getComputedStyle(symEl!).opacity === '0';
+		const prev = symEl && (symEl.classList.contains('W') ? keyOf('W', reel) : [...symEl.classList].find((x) => /^(H\d|L\d|S)$/.test(x)));
+		const C = makeCell(reel, row, now, host);
+		if (wasPuffed && prev) { C.init = prev; C.empty = true; }
 		c.classList.remove('win', 'dim', 'sprWin', 'replace', 'out', 'locked', 'mLand', 'puffed', 'tLand', 'tGlint', 'rgLand');
 		c.querySelectorAll('.puffFx').forEach((x) => x.remove()); c.querySelectorAll('canvas').forEach((x) => x.remove());
-		seeds.delete(reel + ':' + row);
-		const C = makeCell(reel, row, now, host);
 		c.classList.add('spinning'); cells.set(id, C);
 	});
 	if (list.length) spinSound();

@@ -181,6 +181,8 @@ html body.mk #app #top{z-index:7}
 
 /* win pop + snowflake puff (puff.ts): flakes / cloud blobs over the cell; a popped cell stays empty until the respin */
 .cell .puffFx{position:absolute;inset:0;z-index:6;pointer-events:none;overflow:visible}
+/* a bursting cell paints over its neighbours (winning cells share z 2), so the flakes are never hidden under the next tile */
+html body #cells .cell:has(>.puffFx){z-index:8}
 .cell .puffFx>i{position:absolute;left:50%;top:50%;display:block;will-change:transform,opacity}
 .cell .puffFx>i svg{display:block;width:100%;height:100%;overflow:visible}
 .cell .puffFx .pfCloud{width:34%;aspect-ratio:1}
@@ -537,21 +539,18 @@ html body .cell.puffed>.tile{opacity:1!important}
   html body .cell.win>.sym{transition:none!important}
 }
 
-/* ===== cell spinners (reels.ts): each spinning cell = its own fixed tile + a window on its inner panel where real
-   symbols scroll (three recycled slots, translate3d only). Near full speed a light trail + stretch (--tr). In the last
-   moments of the settle the window opens so the final symbol comes forward over the border exactly as in the cell. */
+/* ===== cell spinners (reels.ts): each spinning cell = a fixed window (the tile box) where whole units scroll: a unit is
+   a symbol together with its own tile (three recycled units, translate3d only), so no tile is ever neutral or recoloured
+   and the landed unit is exactly the cell that replaces it. Near full speed a light stretch of the units (--tr). */
 #strips .cspin{position:absolute;width:var(--cell);height:var(--cell);z-index:1;pointer-events:none;contain:layout style}
-#strips .cspin>.cwin{position:absolute;inset:0;z-index:1;overflow:hidden;clip-path:inset(6.4% round 10%);--tr:0}
+/* the fixed window = the tile box (+ a hair for the symbol's forward overhang), rounded like the tile */
+#strips .cspin>.cwin{position:absolute;inset:0;z-index:1;clip-path:inset(-2.5% round 16%);--tr:0}
 body.mk #app #strips .cspin>.cwin{inset:3.75%}
-#strips .cspin.open>.cwin{clip-path:none;overflow:visible}
-#strips .cspin>.cwin>.sl{position:absolute;left:0;top:0;width:100%;height:100%;display:block;background:no-repeat 0 0/100% 100%;will-change:transform;
-  scale:1 calc(1 + .07*var(--tr));transform-origin:50% 50%}
-#strips .cspin>.cwin>.sl::before,#strips .cspin>.cwin>.sl::after{content:"";position:absolute;inset:0;background:inherit;pointer-events:none}
-#strips .cspin>.cwin>.sl::before{translate:0 -7%;opacity:calc(.34*var(--tr))}
-#strips .cspin>.cwin>.sl::after{translate:0 -14%;opacity:calc(.16*var(--tr))}
-#strips .cspin.open>.cwin>.sl::before,#strips .cspin.open>.cwin>.sl::after{display:none}
-#strips .cspin>.tile.tTop{z-index:2}
-#strips .cspin.ant>.tile>.tGl{opacity:.38;animation:tShim 1.4s linear infinite}
+/* a unit = the symbol's own tile + the symbol, one container: they move as one, centred on each other */
+#strips .cspin>.cwin>.sl{position:absolute;left:0;top:0;width:100%;height:100%;display:block;will-change:transform;
+  scale:1 calc(1 + .06*var(--tr));transform-origin:50% 50%}
+#strips .cspin>.cwin>.sl>i{position:absolute;inset:0;display:block;background:no-repeat 0 0/100% 100%}
+#strips .cspin>.cwin>.sl>.slS{z-index:1}
 /* landings come out of the spinner's own settle bounce, so the symbol's follow-through starts from rest (no pop) */
 @keyframes rgLandB{0%{scale:1 1}24%{scale:1.035 .96}58%{scale:.99 1.015}100%{scale:1 1}}
 @keyframes tLiftLand{0%{--lift:.3;scale:1}30%{--lift:1;scale:1.012}100%{--lift:0;scale:1}}
@@ -562,7 +561,7 @@ body.mk #app #strips .cspin>.cwin{inset:3.75%}
 	66%{scale:.99 1.012;translate:0 -.5%;animation-timing-function:cubic-bezier(.45,0,.55,1)}100%{scale:1 1;translate:0 0}}
 @keyframes rgWLets{0%{scale:1;animation-timing-function:cubic-bezier(.3,0,.5,1)}40%{scale:1.05;animation-timing-function:cubic-bezier(.45,0,.55,1)}100%{scale:1}}
 @keyframes rgShLand{0%{opacity:0}30%{opacity:.4}100%{opacity:0}}
-@media (prefers-reduced-motion:reduce){#strips .cspin>.tile,#strips .cspin .tGl{animation:none!important}#strips .cspin>.cwin{--tr:0!important}}
+@media (prefers-reduced-motion:reduce){#strips .cspin>.cwin{--tr:0!important}}
 
 /* Wild Winter Spins (egw) title is two lines: a little more height so each line reads as large as the one-line titles */
 html body #buyCards .bcard[data-m="egw"] .bName img.tTitle{max-height:3.9em}

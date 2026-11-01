@@ -107,6 +107,8 @@ function puffCell(cell: HTMLElement, delay: number, kT: number) {
 			{ transform: `translate(-50%,-50%) translate(${dx}%,${dy - 12}%) scale(0) rotate(90deg)`, opacity: 0 },
 		], { duration: 320 * kT, delay: at + (60 + i * 45) * kT, easing: 'cubic-bezier(.3,0,.4,1)', fill: 'both' }));
 	}
+	// the symbol has burst: its tile stays and plays its border glint (the next unit drops in over it on a respin)
+	setTimeout(() => { cell.style.setProperty('--gd', '0ms'); cell.classList.remove('tGlint'); void cell.offsetWidth; cell.classList.add('tGlint'); }, Math.max(0, at + 60 * kT));
 	return Promise.all(parts.map(done)).then(() => { fx.remove(); cell.classList.add('puffed'); });
 }
 /** Re-form a puffed symbol (no respin follows): a quick pop back in. */
@@ -143,7 +145,7 @@ export function puffTargets(wins: { positions: Pos[] }[], next: BookEvent | unde
 export function puffWith(wins: { positions: Pos[] }[], next: BookEvent | undefined) {
 	const { cells, refill } = puffTargets(wins, next);
 	if (!cells.length) return null;
-	const kT = turbo() ? 0.5 : 1;
+	const kT = turbo() ? 0.7 : 1;   // turbo: shortened but still a clear pop + puff
 	const els = cells.sort((a, b) => a.reel - b.reel || a.row - b.row).map((p) => document.getElementById(`c${p.reel}${p.row}`)).filter(Boolean) as HTMLElement[];
 	let fast = false;
 	const finish = () => { fast = true; [...live].forEach((a) => a.finish()); };
