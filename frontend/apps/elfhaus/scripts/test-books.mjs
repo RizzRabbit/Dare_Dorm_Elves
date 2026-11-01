@@ -184,9 +184,11 @@ if (disclaimerMatch) {
 	const dir = join(appDir, 'build/_app/immutable');
 	let bundles = [];
 	try { bundles = readdirSync(dir, { recursive: true }).filter((f) => String(f).endsWith('.js')).map((f) => readFileSync(join(dir, String(f)), 'utf8')); } catch {}
+	// the build inlines the app bundle into index.html and drops the duplicate .js (scripts-build.mjs), so look there too
+	try { bundles.push(readFileSync(join(appDir, 'build/index.html'), 'utf8')); } catch {}
 	const esc = WANT.replace('©', '\\xA9'), esc2 = WANT.replace('©', '\\u00A9');
 	if (bundles.some((b) => b.includes(WANT) || b.includes(esc) || b.includes(esc2))) console.log('  OK DISCLAIMER exact text present in the build');
-	else { console.error('  VIOLATION: exact DISCLAIMER text not found in build/_app/immutable (build first)'); violations++; }
+	else { console.error('  VIOLATION: exact DISCLAIMER text not found in build/index.html or build/_app/immutable (build first)'); violations++; }
 }
 
 // v3.13: copy.ts (bonus confirm cards, Turbo toggle, mode descriptions, cost-related rules lines) rendered in social

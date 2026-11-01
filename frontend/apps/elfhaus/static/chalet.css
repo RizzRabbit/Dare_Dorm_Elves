@@ -581,3 +581,12 @@ html body #cells .cell.sLand>.tile.tS>.tGl{animation:tGlint .4s cubic-bezier(.3,
 @keyframes sAnt{0%{opacity:.18}100%{opacity:.62}}
 body.rgAnt #cells .cell:not(.spinning):not(.win)>.tile.tS>.tGw{animation:sAnt .9s cubic-bezier(.45,0,.55,1) infinite alternate}
 @media (prefers-reduced-motion:reduce){html body #cells .cell>.tile.tS>:is(.tGl,.tGw),html body #cells .cell.sLand>.sym.S{animation:none!important}}
+/* room depth (scene/room.ts + scene/depth.ts): the Pixi planes paint the room, so the #bg painting hides; the frame's
+   share of the fire key light (lip AO on the board edge, flicker spill on the left, a glint when the fire flares) */
+body.hasRoom #bg,body.hasRoom #bgFade{visibility:hidden}
+#boardAO,#frameLit,#frameGlint{position:absolute;pointer-events:none;margin:0}
+#boardAO{z-index:2}
+#frameLit{inset:0;z-index:3;opacity:.7;will-change:opacity;background:radial-gradient(62% 80% at -4% 62%,rgba(255,146,54,.24),rgba(255,138,48,.08) 46%,rgba(255,138,48,0) 74%)}
+#frameGlint{inset:0;z-index:3;overflow:hidden;box-sizing:border-box;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+#frameGlint>i{position:absolute;top:-12%;bottom:-12%;left:0;width:14%;opacity:0;background:linear-gradient(90deg,rgba(255,236,190,0),rgba(255,246,220,.6) 50%,rgba(255,236,190,0));will-change:transform,opacity}
+@media (prefers-reduced-motion:reduce){#frameGlint{display:none}}

@@ -4,16 +4,23 @@
 // the painting, chalet/bglights.json). Plus Roxy (the swappable rig adapter, ../roxyrig) beside the board.
 // Free spins: the room drops to a night grade (CSS on #bg) and the snow thickens. Everything runs on real elapsed time.
 // No WebGL -> the app never starts and the game runs on the #bg painting with no Roxy (nothing else depends on this layer).
+// Depth pass (room.ts / depth.ts): once the room planes load, this layer paints the room itself as separate planes under
+// one camera (#bg hides, body.hasRoom), and everything here rides the plane it belongs to: snow outside the glass in two
+// depths (far: small, slow; near the glass: larger, soft, sparse), the fire / embers / dust / fire light with the
+// fireplace, the bulbs with the wall / fireplace / tree they hang on. Cast shadows of the board, HUD bar and BUY plate.
 import { Application, Container, Graphics, Sprite } from 'pixi.js';
 import { ST } from '../stage';
 import { G as MKG, FW, FT, BW, BH } from '../mkboard';
 import { glowDot, softBlob } from './util';
 import { createRoxy, type RoxyAdapter } from '../roxyrig';
 import LIGHTS from '../chalet/bglights.json';
+import { toStage } from '../stage';
+import { P as PL, ROOMS, buildRoom, camTick, dAt, listenCam, loadFx, loadRoom, placeShadows, reduced, roomOn, tex, tickRoom, wallItem, type Key } from './room';
+import { frameFire, frameGlint, placeDepth } from './depth';
 
 export let app: Application | null = null;
 export let rig: RoxyAdapter | null = null;
-const amb = new Container(), snowL = new Container(), snowMask = new Graphics(), fireL = new Container(), twL = new Container(), roxyL = new Container(), fx = new Container();
+const amb = new Container(), snowL = new Container(), glassL = new Container(), snowMask = new Graphics(), fireL = new Container(), twL = new Container(), twC = new Container(), twT = new Container(), roxyL = new Container(), fx = new Container();
 const roxyMask = new Graphics();
 let now = 0, bonus = false, nightK = 0, snap = false, roxyOn = true, hold = false, free = false, last: [boolean, DOMRect] | null = null;
 const WAIST = 60;
@@ -24,69 +31,89 @@ const PAINT = {
 	land: { iw: 1920, ih: 1080, wins: [[0.248, 0.215, 0.345, 0.575], [0.727, 0.19, 0.862, 0.575]], fire: [0.108, 0.66, 0.075] },
 	port: { iw: 1080, ih: 1920, wins: [[0.33, 0.125, 0.89, 0.645]], fire: [0.06, 0.69, 0.11] },
 } as const;
-let fit = { c: 1, ox: 0, oy: 0, key: 'land' as 'land' | 'port' };
+let fit = { c: 1, ox: 0, oy: 0, key: 'land' as Key, A: 1 };
 const toS = (u: number, v: number) => ({ x: fit.ox + u * PAINT[fit.key].iw * fit.c, y: fit.oy + v * PAINT[fit.key].ih * fit.c });
 
-type Flake = { g: Sprite; x: number; y: number; vy: number; ph: number; s: number; win: number; heavy: boolean };
+type Flake = { g: Sprite; x: number; y: number; vy: number; ph: number; s: number; win: number; heavy: boolean; near: boolean };
 let flakes: Flake[] = [];
 type Tw = { g: Sprite; ph: number; sp: number; base: number };
 let tws: Tw[] = [];
 type Ember = { g: Sprite; t: number; life: number; x: number; y: number; vx: number; vy: number };
-let embers: Ember[] = [], fireGlow: Sprite | null = null, fireCore: Sprite | null = null, emberAt = 0;
+let embers: Ember[] = [], fireGlow: Sprite | null = null, fireCore: Sprite | null = null, fireSpill: Sprite | null = null, emberAt = 0;
+type Mote = { g: Sprite; t: number; life: number; x: number; y: number; vx: number; vy: number; s: number };
+let motes: Mote[] = [], moteAt = 0, flare = 0, flareAt = 6, fl = 0.5;
+const MOTES = 16, EMBERS = 14;
 
 function build() {
-	const P = PAINT[fit.key];
-	// snow: drawn only inside the window panes (mask), base count + an extra "heavy" set that fades in for free spins
-	snowL.removeChildren().forEach((o) => o.destroy()); flakes = [];
+	const P = PAINT[fit.key], room = roomOn();
+	// snow outside the glass. With the room planes it falls in the view plane (far: small, slow) and just outside the
+	// glass (near: larger, soft, sparse), both behind the wall plate whose panes are cut out. Without them it is masked
+	// to the window rects over the #bg painting (the old layer).
+	snowL.removeChildren().forEach((o) => o.destroy()); glassL.removeChildren().forEach((o) => o.destroy()); flakes = [];
 	snowMask.clear();
 	P.wins.forEach(([u0, v0, u1, v1], wi) => {
 		const a = toS(u0, v0), b = toS(u1, v1); snowMask.rect(a.x, a.y, b.x - a.x, b.y - a.y).fill(0xffffff);
-		const area = (b.x - a.x) * (b.y - a.y), n = Math.round(Math.min(70, area / 2600));
-		for (let i = 0; i < n * 2; i++) {
-			const g = new Sprite(glowDot()); g.anchor.set(0.5); g.tint = 0xffffff; snowL.addChild(g);
-			const heavy = i >= n;
-			flakes.push({ g, x: a.x + Math.random() * (b.x - a.x), y: a.y + Math.random() * (b.y - a.y), vy: 14 + Math.random() * 22, ph: Math.random() * 6.3,
-				s: (heavy ? 0.1 : 0.08) + Math.random() * 0.12, win: wi, heavy });
+		const area = (b.x - a.x) * (b.y - a.y), n = Math.round(Math.min(70, area / 2600)), nn = room ? Math.round(Math.min(9, area / 26000)) : 0;
+		for (let i = 0; i < n * 2 + nn * 2; i++) {
+			const near = i >= n * 2, heavy = near ? i >= n * 2 + nn : i >= n;
+			const g = new Sprite(near && tex.fx ? tex.fx.flake : glowDot()); g.anchor.set(0.5); g.tint = near ? 0xe8f0ff : 0xffffff; (near ? glassL : snowL).addChild(g);
+			flakes.push({ g, x: a.x + Math.random() * (b.x - a.x), y: a.y + Math.random() * (b.y - a.y), vy: near ? 46 + Math.random() * 26 : 14 + Math.random() * 22, ph: Math.random() * 6.3,
+				s: near ? (0.3 + Math.random() * 0.18) : (heavy ? 0.1 : 0.08) + Math.random() * 0.12, win: wi, heavy, near });
 		}
 	});
-	snowL.mask = snowMask;
-	// twinkle lights: a warm additive dot over each painted bulb, each on its own slow phase
-	twL.removeChildren().forEach((o) => o.destroy()); tws = [];
-	for (const [u, v, r] of (LIGHTS as Record<string, number[][]>)[fit.key === 'land' ? 'bg_land' : 'bg_port']) {
-		const p = toS(u, v), g = new Sprite(glowDot()); g.anchor.set(0.5); g.blendMode = 'add'; g.tint = 0xffd27a; g.position.set(p.x, p.y);
-		const sz = Math.max(10, r * P.iw * fit.c * 5.5); g.scale.set(sz / 64); twL.addChild(g);
+	snowL.mask = room ? null : snowMask; snowMask.visible = !room;
+	// twinkle lights: a warm additive dot over each painted bulb, each on its own slow phase, on the plane it hangs on
+	for (const l of [twL, twC, twT]) l.removeChildren().forEach((o) => o.destroy());
+	tws = [];
+	const lay = room ? ROOMS[fit.key].lights : '';
+	(LIGHTS as Record<string, number[][]>)[fit.key === 'land' ? 'bg_land' : 'bg_port'].forEach(([u, v, r], i) => {
+		const p = toS(u, v), g = new Sprite(glowDot()); g.anchor.set(0.5); g.blendMode = 'add'; g.tint = 0xffd27a;
+		const sz = Math.max(10, r * P.iw * fit.c * 5.5); g.scale.set(sz / 64);
+		const L = lay[i] || 'w';
+		if (L === 'c') { twC.addChild(g); g.position.set(p.x, p.y); } else if (L === 't') { twT.addChild(g); g.position.set(p.x, p.y); }
+		else { twL.addChild(g); if (room) wallItem(fit.key, g, p.x, p.y, v); else g.position.set(p.x, p.y); }
 		tws.push({ g, ph: Math.random() * 6.3, sp: 0.6 + Math.random() * 1.1, base: 0.25 + Math.random() * 0.2 });
-	}
-	// fire: a warm glow pool that flickers + embers rising from the logs
-	fireL.removeChildren().forEach((o) => o.destroy()); embers = [];
+	});
+	// fire: a warm glow pool that flickers + embers rising from the logs + the firelight spilling onto the room
+	fireL.removeChildren().forEach((o) => o.destroy()); embers = []; motes = [];
 	const [fu, fv, fr] = P.fire, fp = toS(fu, fv), R = fr * P.iw * fit.c;
+	fireSpill = room ? new Sprite(softBlob()) : null;
+	if (fireSpill) { fireSpill.anchor.set(0.5); fireSpill.blendMode = 'add'; fireSpill.tint = 0xff7a26; fireSpill.position.set(fp.x + R * 0.6, fp.y - R * 0.2); fireSpill.scale.set((R * 11) / 256); fireL.addChild(fireSpill); }
 	fireGlow = new Sprite(softBlob()); fireGlow.anchor.set(0.5); fireGlow.blendMode = 'add'; fireGlow.tint = 0xff8a2a; fireGlow.position.set(fp.x, fp.y - R * 0.2);
 	fireGlow.scale.set((R * 3.2) / 256); fireL.addChild(fireGlow);
 	fireCore = new Sprite(softBlob()); fireCore.anchor.set(0.5); fireCore.blendMode = 'add'; fireCore.tint = 0xffd060; fireCore.position.set(fp.x, fp.y - R * 0.1);
 	fireCore.scale.set((R * 1.5) / 256); fireL.addChild(fireCore);
 }
 function tick(dt: number) {
-	const P = PAINT[fit.key];
-	// snow
+	const P = PAINT[fit.key], room = roomOn();
+	if (room) { camTick(dt, now, fit.A); tickRoom(fit.key, fit, nightK * nightK * (3 - 2 * nightK)); }
+	// snow (the near-glass flakes fall faster: closer to the eye)
 	const wb = P.wins.map(([u0, v0, u1, v1]) => [toS(u0, v0), toS(u1, v1)] as const), k = fit.c * (fit.key === 'land' ? 1.8 : 1.5);
 	for (const f of flakes) {
 		const [a, b] = wb[f.win];
-		f.y += f.vy * dt * k * (1 + nightK * 0.6); f.x += Math.sin(now * 0.8 + f.ph) * 10 * dt * k + nightK * 14 * dt * k;
-		if (f.y > b.y + 6) { f.y = a.y - 6; f.x = a.x + Math.random() * (b.x - a.x); }
-		if (f.x > b.x + 6) f.x = a.x - 6;
-		f.g.position.set(f.x, f.y); f.g.scale.set(f.s * k);
-		f.g.alpha = f.heavy ? nightK * 0.85 : 0.8;
+		f.y += f.vy * dt * k * (1 + nightK * 0.6); f.x += Math.sin(now * 0.8 + f.ph) * (f.near ? 16 : 10) * dt * k + nightK * (f.near ? 22 : 14) * dt * k;
+		if (f.y > b.y + 12) { f.y = a.y - 12; f.x = a.x + Math.random() * (b.x - a.x); }
+		if (f.x > b.x + 12) f.x = a.x - 12;
+		f.g.position.set(f.x, f.y); f.g.scale.set(f.s * (f.near ? fit.c : k));
+		f.g.alpha = f.near ? (f.heavy ? nightK * 0.5 : 0.42) : f.heavy ? nightK * 0.85 : 0.8;
 	}
 	// twinkle: each bulb breathes; now and then one sparkles brighter
 	for (const t of tws) { const s = 0.5 + 0.5 * Math.sin(now * t.sp * 2.4 + t.ph); t.g.alpha = t.base + 0.55 * s * s * s; }
-	// fire flicker: two incommensurate sines + a little noise, eased (no strobe)
+	// fire flicker: incommensurate sines + a little noise, eased (no strobe); every 6-12 s a log flares (a brighter pulse,
+	// a puff of embers) and the frame catches it
 	if (fireGlow && fireCore) {
-		const fl = 0.5 + 0.22 * Math.sin(now * 7.3) + 0.14 * Math.sin(now * 11.7 + 1.3) + 0.1 * Math.sin(now * 3.1);
+		const calm = reduced();
+		flareAt -= dt; if (flareAt <= 0) { flareAt = 6 + Math.random() * 6; if (!calm) { flare = 1; frameGlint(); emberAt = 0; } }
+		flare = Math.max(0, flare - dt / 0.9);
+		fl = calm ? 0.5 : 0.5 + 0.22 * Math.sin(now * 7.3) + 0.14 * Math.sin(now * 11.7 + 1.3) + 0.1 * Math.sin(now * 3.1) + 0.35 * flare * flare;
 		fireGlow.alpha = 0.32 + 0.16 * fl; fireCore.alpha = 0.35 + 0.25 * fl;
+		if (fireSpill) fireSpill.alpha = 0.075 + 0.06 * fl;
+		frameFire(Math.min(1, fl));
+		const [fu, fv, fr] = P.fire, fp = toS(fu, fv), R = fr * P.iw * fit.c;
 		emberAt -= dt;
-		if (emberAt <= 0 && embers.length < 14) {
-			emberAt = 0.18 + Math.random() * 0.3;
-			const [fu, fv, fr] = P.fire, fp = toS(fu, fv), R = fr * P.iw * fit.c, g = new Sprite(glowDot());
+		if (emberAt <= 0 && embers.length < EMBERS) {
+			emberAt = flare > 0.5 ? 0.05 : 0.18 + Math.random() * 0.3;
+			const g = new Sprite(glowDot());
 			g.anchor.set(0.5); g.blendMode = 'add'; g.tint = 0xffb347; fireL.addChild(g);
 			embers.push({ g, t: 0, life: 1 + Math.random() * 0.8, x: fp.x + (Math.random() - 0.5) * R * 0.9, y: fp.y, vx: (Math.random() - 0.5) * 18, vy: -(40 + Math.random() * 40) });
 		}
@@ -95,6 +122,21 @@ function tick(dt: number) {
 			const u = e.t / e.life; e.x += (e.vx + Math.sin(now * 5 + e.life * 9) * 14) * dt * fit.c; e.y += e.vy * dt * fit.c;
 			e.g.position.set(e.x, e.y); e.g.scale.set(0.12 * fit.c * 1.6 * (1 - u * 0.6)); e.g.alpha = Math.sin(u * Math.PI) * 0.9; return true;
 		});
+		// dust motes drifting up in the fire's warm air, lit by it (brighter nearer the fire)
+		if (room && !calm && tex.fx) {
+			moteAt -= dt;
+			if (moteAt <= 0 && motes.length < MOTES) {
+				moteAt = 0.35 + Math.random() * 0.5;
+				const g = new Sprite(tex.fx.mote); g.anchor.set(0.5); g.blendMode = 'add'; g.tint = 0xffc890; fireL.addChild(g);
+				motes.push({ g, t: 0, life: 6 + Math.random() * 5, x: fp.x + (Math.random() * 3.2 - 0.6) * R, y: fp.y + (Math.random() * 1.6 - 1.3) * R, vx: (Math.random() - 0.3) * 7, vy: -(4 + Math.random() * 7), s: 0.18 + Math.random() * 0.16 });
+			}
+			motes = motes.filter((m) => {
+				m.t += dt; if (m.t >= m.life) { m.g.destroy(); return false; }
+				const u = m.t / m.life; m.x += (m.vx + Math.sin(now * 0.7 + m.life) * 5) * dt * fit.c; m.y += m.vy * dt * fit.c;
+				const near = Math.max(0, 1 - Math.hypot(m.x - fp.x, m.y - fp.y) / (R * 4.5));
+				m.g.position.set(m.x, m.y); m.g.scale.set(m.s * fit.c); m.g.alpha = Math.sin(u * Math.PI) * (0.25 + 0.55 * near) * (0.75 + 0.35 * fl); return true;
+			});
+		} else if (motes.length) { motes.forEach((m) => m.g.destroy()); motes = []; }
 	}
 }
 
@@ -105,11 +147,20 @@ export async function initScene(): Promise<boolean> {
 		const a = new Application();
 		await a.init({ canvas: cv, width: ST.w, height: ST.h, resolution: res(), autoDensity: false, backgroundAlpha: 0, antialias: true,
 			preference: 'webgl', autoStart: true, sharedTicker: false, hello: false, powerPreference: 'high-performance' });
-		const r = await createRoxy();
+		const [r] = await Promise.all([createRoxy(), loadFx(), loadRoom(ST.portrait ? 'port' : 'land')]);
 		rig = r; app = a;
 		roxyL.addChild(r.view, roxyMask); clipRoxy(null);
-		amb.addChild(snowL, snowMask, fireL, twL);
-		a.stage.addChild(amb, roxyL, fx);
+		// Roxy's cast shadow: the key light is the fire (left), so a soft oval stretches right of her boots across the
+		// log round's top, inside the rig's own shadow group (it follows her hop and hides with it in the portrait peek)
+		const shG = r.view.children[1] as Container | undefined;
+		if (tex.fx && shG) { const c = new Sprite(tex.fx.oval); c.anchor.set(0.08, 0.5); c.position.set(-34, -4); c.scale.set(300 / 160, 52 / 64); c.alpha = 0.32; c.tint = 0x1a0804; shG.addChild(c); }
+		twC.zIndex = 1; twT.zIndex = 1;
+		PL.chim.addChild(twC); PL.tree.addChild(twT); PL.out.sortableChildren = false;
+		PL.chimFx.addChild(fireL);
+		amb.addChild(PL.out, snowL, snowMask, PL.glass, PL.wall, twL, PL.chim, PL.tree, PL.grade, PL.chimFx, PL.shadow);
+		PL.glass.addChild(glassL);
+		a.stage.addChild(amb, roxyL, PL.near, fx);
+		listenCam();
 		a.ticker.add((t) => {
 			const dt = Math.min(0.05, t.deltaMS / 1000); now += dt;
 			const tk = bonus ? 1 : 0;
@@ -118,7 +169,7 @@ export async function initScene(): Promise<boolean> {
 			tick(dt); if (roxyOn) r.update(dt);
 		});
 		document.body.classList.add('hasScene');
-		(window as any).__scene = { app: a, rig: r, roxyAt, roxyL };
+		(window as any).__scene = { app: a, rig: r, roxyAt, roxyL, planes: PL };
 		return true;
 	} catch (e) { console.warn('scene off (no WebGL?)', e); cv.style.display = 'none'; return false; }
 }
@@ -134,8 +185,14 @@ export function placeScene(portrait: boolean, fr: DOMRect) {
 	const W = ST.w, H = ST.h, cv = app.canvas as HTMLCanvasElement;
 	app.renderer.resize(W, H, res()); cv.style.width = W + 'px'; cv.style.height = H + 'px';
 	// #bg: background-size cover, centred, over the whole stage
-	const key = portrait ? 'port' : 'land', P = PAINT[key], c = Math.max(W / P.iw, H / P.ih);
-	fit = { c, ox: (W - P.iw * c) / 2, oy: (H - P.ih * c) / 2, key };
+	const key: Key = portrait ? 'port' : 'land', P = PAINT[key], c0 = Math.max(W / P.iw, H / P.ih);
+	if (!tex.room[key]) void loadRoom(key).then((ok) => { if (ok && last && last[0] === portrait) placeScene(...last); });
+	// with the room planes: a little overscan so the camera never shows a plane's edge (#bg is hidden then)
+	const m = tex.room[key] && tex.fx ? 16 * c0 : 0, c = Math.max((W + 2 * m) / P.iw, (H + 2 * m) / P.ih);
+	fit = { c, ox: (W - P.iw * c) / 2, oy: (H - P.ih * c) / 2, key, A: c0 * (P.iw === 1920 ? 1 : 1920 / 1080) * 0.95 };
+	const room = buildRoom(key, fit, W, H);
+	document.body.classList.toggle('hasRoom', room);
+	if (!room) for (const o of Object.values(PL)) o.position.set(0, 0);
 	build();
 	const R = rig, cutRow = R.rows.hips, hopTop = R.rows.hopTop;
 	const g = MKG, u = fr.width / FW;
@@ -174,7 +231,12 @@ export function placeScene(portrait: boolean, fr: DOMRect) {
 		clipRoxy(hold && free ? null : fr.top + 14); roxyL.visible = true; R.shadow(false);
 		Object.assign(roxyAt, { x: rx * kp, y: feet * kp, s: rs * kp, portrait });
 	}
-	void BW;
+	// cast shadows (stage px) + the frame's share of the light (DOM)
+	const buy = document.getElementById('buyBtn'), br = buy && buy.offsetParent ? toStage(buy.getBoundingClientRect()) : null;
+	const hud = g ? { x: g.ox + g.hud.x * g.k, y: g.oy + g.hud.y * g.k, w: g.hud.w * g.k, h: g.hud.h * g.k } : null;
+	placeShadows(fr, hud, br && br.width > 4 ? br : null, u);
+	placeDepth(fr);
+	void BW; void dAt;
 }
 /** Bonus: night grade + heavier snow (the #bg grade is CSS, body.inBonus). instant = no fade (reload into a bonus). */
 export function sceneBonus(on: boolean, instant = false) { if (instant && on !== bonus) snap = true; bonus = on; }
