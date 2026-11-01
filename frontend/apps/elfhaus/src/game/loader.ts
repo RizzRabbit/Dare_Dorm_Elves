@@ -9,7 +9,7 @@ import { initIntro, introLoaded, introEnter, introSkip, introEatClick } from './
 export const LOADER_CARDS = [
 	'4 Bonus Modes: Bunny Slope, Black Diamond, Double Black and a hidden Powder Day.',
 	'Sticky Wilds: x1, x2, x3. Once she lands she stays, and her multiplier grows every respin.',
-	'Whiteout: whole reels go wild. Side by side, their multipliers multiply.',
+	'Wild Winter Spins: whole reels go wild. Side by side, their multipliers multiply.',
 ] as const;
 
 let total = 0, done = 0;

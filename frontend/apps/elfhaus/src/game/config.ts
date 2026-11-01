@@ -45,9 +45,9 @@ export const TIER_LABEL: Record<Tier, string> = { dare: 'Bunny Slope', double_da
 export type ModeKey = 'base' | 'ante' | 'dare' | 'double_dare' | 'triple_dare' | 'mystery' | 'egw';
 export const BUY_MODES: ModeKey[] = ['dare', 'double_dare', 'triple_dare', 'mystery', 'egw'];
 /** Winter Chalet: hand-lettered title art per bonus (ART['bonus_' + key]); math ids unchanged. */
-export const TITLE_ART: Record<string, string> = { dare: 'bunny', double_dare: 'blackdiamond', triple_dare: 'doubleblack', hidden: 'powder', mystery: 'santa', egw: 'whiteout' };
+export const TITLE_ART: Record<string, string> = { dare: 'bunny', double_dare: 'blackdiamond', triple_dare: 'doubleblack', hidden: 'powder', mystery: 'santa', egw: 'wildwinter' };
 export const MODE_LABEL: Record<ModeKey, string> = {
-	base: 'Spin', ante: 'Ante', dare: 'Bunny Slope', double_dare: 'Black Diamond', triple_dare: 'Double Black', mystery: 'Secret Santa', egw: 'Whiteout',
+	base: 'Spin', ante: 'Ante', dare: 'Bunny Slope', double_dare: 'Black Diamond', triple_dare: 'Double Black', mystery: 'Secret Santa', egw: 'Wild Winter Spins',
 };
 type ModeInfo = { cost: number; rtp: number | null; maxWinX: number; pBonus?: number | null };
 export const MODES: Record<ModeKey, ModeInfo> = (generated as any).modes;

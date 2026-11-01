@@ -1,7 +1,7 @@
 // @ts-nocheck  (door / camera geometry kept from the approved intro mockup; the look is the Winter Chalet set)
 // Elfhaus intro: the guest arrives at the chalet's front door on a snowy night. Timber log wall, cranberry double doors
 // with wreaths, lanterns either side, a snowy porch, snow falling, the hand-lettered ELFHAUS logo, cream info cards
-// (Bonus Modes, Sticky Wilds, Whiteout), a flat gold loading bar, then TAP TO START.
+// (Bonus Modes, Sticky Wilds, Wild Winter Spins), a flat gold loading bar, then TAP TO START.
 // Tap: cards slide away -> doors open (~0.9 s, Roxy in the doorway with a wink) -> camera push through the doorway ->
 // board + Roxy drop in together -> logo + HUD follow -> idle. ~3.25 s; a second tap (or Enter / Space) skips.
 // Own transparent canvas (#introCv) inside #root just under #loader (which stays as the transparent tap / keyboard /
@@ -31,7 +31,7 @@ const CARDS = [
     line: '3, 4 or 5 Ski Passes start Bunny Slope, Black Diamond or Double Black free spins. A Secret Santa spin always lands 2 Ski Passes and the other reels reveal the result.' },
   { key: 'sticky', art: 'W_R2', title: 'Sticky Wilds',
     line: 'In Black Diamond and Double Black the wilds lock in place and keep growing every free spin. Double Black guarantees at least one full-reel wild.' },
-  { key: 'egw', art: 'assets/stacks/still/WM2_R1-2.webp', title: 'Whiteout',
+  { key: 'egw', art: 'assets/stacks/still/WM2_R1-2.webp', title: 'Wild Winter Spins',
     line: `One supercharged spin: 2 to 5 reels land wilds that grow into full-reel wilds (x${EGW_STACK_X} each), then respins. Full wild reels side by side multiply.` },
 ];
 let app = null, state = 'off', t = 0, tt = 0, prog = 0, G = null, primed = false, roxyFree = false, faceOff = false, progFn = () => 0;

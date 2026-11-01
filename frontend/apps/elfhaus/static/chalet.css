@@ -563,3 +563,6 @@ body.mk #app #strips .cspin>.cwin{inset:3.75%}
 @keyframes rgWLets{0%{scale:1;animation-timing-function:cubic-bezier(.3,0,.5,1)}40%{scale:1.05;animation-timing-function:cubic-bezier(.45,0,.55,1)}100%{scale:1}}
 @keyframes rgShLand{0%{opacity:0}30%{opacity:.4}100%{opacity:0}}
 @media (prefers-reduced-motion:reduce){#strips .cspin>.tile,#strips .cspin .tGl{animation:none!important}#strips .cspin>.cwin{--tr:0!important}}
+
+/* Wild Winter Spins (egw) title is two lines: a little more height so each line reads as large as the one-line titles */
+html body #buyCards .bcard[data-m="egw"] .bName img.tTitle{max-height:3.9em}

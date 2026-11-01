@@ -72,9 +72,9 @@ const modeCost = (m: ModeKey) => (m === 'ante' ? ANTE_COST : MODES[m]?.cost ?? 1
 let armed: ModeKey | null = null;
 const spinMode = (): ModeKey => armed ?? (S.ante ? 'ante' : 'base');
 // re-audit M5: the tag spells the full mode name ("DOUBLE" alone was ambiguous)
-const SHORT: Partial<Record<ModeKey, string>> = { ante: 'ANTE', dare: 'BUNNY SLOPE', double_dare: 'BLACK DIAMOND', triple_dare: 'DOUBLE BLACK', mystery: 'SECRET SANTA', egw: 'WHITEOUT' };
+const SHORT: Partial<Record<ModeKey, string>> = { ante: 'ANTE', dare: 'BUNNY SLOPE', double_dare: 'BLACK DIAMOND', triple_dare: 'DOUBLE BLACK', mystery: 'SECRET SANTA', egw: 'WILD WINTER SPINS' };
 /** v3.17 armTag abbreviations when the full name doesn't fit the slim pill next to SPIN. */
-const ABBR: Partial<Record<ModeKey, string>> = { ante: 'ANTE', dare: 'BUNNY', double_dare: 'DIAMOND', triple_dare: 'DBL BLACK', mystery: 'SANTA', egw: 'WHITEOUT' };
+const ABBR: Partial<Record<ModeKey, string>> = { ante: 'ANTE', dare: 'BUNNY', double_dare: 'DIAMOND', triple_dare: 'DBL BLACK', mystery: 'SANTA', egw: 'WILD WINTER' };
 function setArm(m: ModeKey | null, ante = false) {
 	armed = m; S.ante = !m && ante;
 	const mode = spinMode(), on = mode !== 'base';
@@ -355,7 +355,7 @@ async function playReplay() {
 
 // ---------- bonus menu: Ante toggle, activate a bonus, bet -/+ with live prices ----------
 // Real in-game art on every card: Bunny Slope = a single (per-reel) wild, Black Diamond / Double Black = the merged 2- and
-// 3-elf groups, Whiteout = the 5-wide group; Secret Santa is a wrapped gift with a "?" tag.
+// 3-elf groups, Wild Winter Spins = the 5-wide group; Secret Santa is a wrapped gift with a "?" tag.
 // v3.6: Double / Triple / Elves Gone Wild use the approved stacks r8d stills (scripts/gen-stack-stills.py), not the old
 // static WM2 / WM3 / WM5 scenes.
 // Chalet (task 3 item 2): square group shots made for the cards (build_art.py cards), heads to thighs, so the art fills the

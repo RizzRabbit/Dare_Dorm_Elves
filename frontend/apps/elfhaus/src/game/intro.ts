@@ -16,7 +16,7 @@ const url = (f: string) => U['../assets/intro/' + f] || '';
 const CARDS: Record<'modes' | 'sticky' | 'egw', { art: string; title: string; line: string }> = {
 	modes: { art: 'S', title: '4 Bonus Modes', line: 'Bunny Slope, Black Diamond, Double Black or Secret Santa.' },
 	sticky: { art: 'W_R2', title: 'Sticky Wilds', line: 'Wilds lock in place and grow every respin.' },
-	egw: { art: 'assets/stacks/still/WM2_R1-2.webp', title: 'Whiteout', line: 'Full wild reels side by side multiply.' },
+	egw: { art: 'assets/stacks/still/WM2_R1-2.webp', title: 'Wild Winter Spins', line: 'Full wild reels side by side multiply.' },
 };
 
 const KEY = 'elfhaus.skipSplash';
