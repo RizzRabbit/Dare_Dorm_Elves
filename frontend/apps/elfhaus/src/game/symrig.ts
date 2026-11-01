@@ -8,6 +8,7 @@
 import RIG_JSON from './chalet/symrig.json';
 import SHEET_JSON from './chalet/symbols.sheet.json';
 import ART_JSON from './art.generated.json';
+import DEPTH_JSON from './chalet/symdepth.json';
 
 type Part = { f: string; cls: string; pivot: number[]; hide?: boolean }; // hide: off at rest (the wild lids)
 type Rig = { src: number[]; pivot: number[]; parts: Part[]; spark: number[][]; glow: boolean };
@@ -15,7 +16,7 @@ const RIG = RIG_JSON as unknown as Record<string, Rig>;
 export const hasRig = (key: string) => !!RIG[key];
 /** Every cell is assembled from shared sheet parts (build_symrig.py + tileparts.py), never from baked per-symbol tiles:
  *  tile colour (_tile_hi / _tile_lo / _tile_sp) -> recess (_recess, 9-slice) -> bevelled gold border (_border / _border_sp,
- *  9-slice) -> symbol (its own layers) with a drop shadow + top rim light from its own alpha (CSS / canvas) -> glow / FX.
+ *  9-slice) -> symbol (its own layers) over its baked depth sprites (drop shadow, raised edge, top rim light) -> glow / FX.
  *  Bust wilds: their card -> recess -> border -> the bust (fig, its own pixels lifted) -> the shared raised WILD (_wild). */
 export const frameTier = (key: string) => (key[0] === 'H' ? 'hi' : key[0] === 'L' ? 'lo' : key === 'S' ? 'sp' : '');
 /** The symbol inside its tile: the rig box is inset by FR_IN on each side (it comes forward over the inner border, chalet.css .cell>.sym.fr). */
@@ -25,8 +26,6 @@ const FR_IN_S = 0.033;
 const frIn = (key: string) => (key === 'S' ? FR_IN_S : FR_IN);
 /** 9-slice geometry of _border / _recess: 256 px pieces, 52 px corners (= 0.203 of a cell). */
 export const NINE = { size: 256, slice: 52 };
-/** Dark separation halo behind each bust (chalet.css .m_fig); Roxy's red jacket on her red card needs the most. */
-const FIG_HALO: Record<string, number> = { W_R1: 0.85 };
 const edgeHTML = (sp = false) => `<i class="tRec"></i><i class="tBd${sp ? ' sp' : ''}"></i>`;
 /** The tile's own light layers (chalet.css .tGl / .tGw): a glint copy of the border (land sweep, win shimmer,
  *  anticipation shimmer) and a soft glow copy of it (win pulse). Only opacity / mask position animate. */
@@ -51,6 +50,9 @@ export const tileTopHTML = (key: string) => (key.startsWith('W_') && RIG[key] ? 
 /** Recess + border (+ the tile light) for a stacked / merged wild overlay (any size; 9-slice). */
 export const ovEdgeHTML = () => edgeHTML() + lightHTML();
 const pc = (v: number, d: number) => ((v / d) * 100).toFixed(2) + '%';
+/** The symbol's baked depth (scripts/gen-symdepth-sprites.mjs, static/symdepth.css): its soft drop shadow (`d_`, follows
+ *  --lift by translate / scale only) and its raised edge + rim light (`e_`), sprite siblings under the body. */
+const depthHTML = (k: string) => `<i class="sd sdD d_${k}"></i><i class="sd e_${k}"></i>`;
 
 /** The symbol's win glow (1/4-scale sheet frame, scaled to its source box); n layers (wilds draw it twice). */
 export function rigGlowHTML(key: string, n = 1) {
@@ -61,7 +63,8 @@ export function rigHTML(key: string, still = false) {
 	const r = RIG[key]; if (!r) return '';
 	const [W, H] = r.src, org = `transform-origin:${pc(r.pivot[0], W)} ${pc(r.pivot[1], H)}`;
 	const pt = (p: Part) => `<i class="rp f_${p.f} m_${p.cls}"></i>`, parts = r.parts.map(pt).join('');
-	if (still) return `<i class="rig still k_${key}"><i class="rgBody"><i class="rp f_${key}"></i>${parts}</i></i>`;
+	if (still) return key.startsWith('W_') ? `<i class="rig still k_${key}"><i class="rgBody"><i class="rp f_${key}"></i>${depthHTML(key)}${parts}</i></i>`
+		: `<i class="rig still k_${key}"><i class="rgBody">${depthHTML(key)}<i class="rp f_${key}"></i>${parts}</i></i>`;
 	const sparks = r.spark.map(([x, y, s], i) => `<i class="rp f__spark rgSp" style="left:${pc(x - 48 * s, W)};top:${pc(y - 48 * s, H)};width:${pc(96 * s, W)};height:${pc(96 * s, H)};--d:${i * 0.09}s"></i>`).join('');
 	const sh = `<i class="rp f__shadow rgSh" style="left:${pc(r.pivot[0] - 150, W)};top:${pc(Math.min(H - 40, r.pivot[1] < H * 0.6 ? H * 0.86 : r.pivot[1]) - 22, H)};width:${pc(300, W)};height:${pc(66, H)}"></i>`;
 	// bust wild: the bust and details only; the card + recess under it and the SAME gold border as the tiles over it are
@@ -69,16 +72,16 @@ export function rigHTML(key: string, still = false) {
 	if (key.startsWith('W_')) {
 		const body = r.parts.filter((p) => p.cls !== 'lets').map(pt).join('');
 		// the card, recess and border are the tile (tileHTML / tileTopHTML); here only the bust and its details
-		return `<i class="rig k_${key}">${sh}<i class="rgBody" style="${org}">${body}<i class="rgShine s_${key}"></i></i>${sparks}</i>`;
+		return `<i class="rig k_${key}">${sh}<i class="rgBody" style="${org}">${depthHTML(key)}${body}<i class="rgShine s_${key}"></i></i>${sparks}</i>`;
 	}
-	return `<i class="rig k_${key}">${sh}<i class="rgBody" style="${org}"><i class="rp f_${key}"></i>${parts}<i class="rgShine s_${key}"></i></i>${sparks}</i>`;
+	return `<i class="rig k_${key}">${sh}<i class="rgBody" style="${org}">${depthHTML(key)}<i class="rp f_${key}"></i>${parts}<i class="rgShine s_${key}"></i></i>${sparks}</i>`;
 }
 /** The raised WILD lettering of a bust wild, over the tile border: its own piece with the bust's pivot, so the same
  *  rgBody land / win / anticipation keyframes move bust and lettering in step, never the tile. */
 export function wildLetsHTML(key: string) {
 	const r = RIG[key]; if (!r || !key.startsWith('W_')) return '';
 	const [W, H] = r.src, lets = r.parts.filter((p) => p.cls === 'lets').map((p) => `<i class="rp f_${p.f} m_${p.cls}"></i>`).join('');
-	return lets ? `<div class="sym W art symTop rigd"><i class="rig k_${key}"><i class="rgBody" style="transform-origin:${pc(r.pivot[0], W)} ${pc(r.pivot[1], H)}">${lets}</i></i></div>` : '';
+	return lets ? `<div class="sym W art symTop rigd"><i class="rig k_${key}"><i class="rgBody" style="transform-origin:${pc(r.pivot[0], W)} ${pc(r.pivot[1], H)}">${depthHTML('lets')}${lets}</i></i></div>` : '';
 }
 /** Land hook (reels.ts landMini): one snappy squash-and-settle with follow-through on the details. */
 export function rigLand(cell: HTMLElement | null) {
@@ -112,17 +115,17 @@ function drawNine(g: CanvasRenderingContext2D, page: HTMLImageElement, n: string
 		if (sw > 0 && sh > 0 && dw > 0 && dh > 0) g.drawImage(page, fx + sx[i], fy + sy[j], sw, sh, x + dx[i], y + dy[j], dw, dh);
 	}
 }
-/** A layer lifted off the tile: drop shadow down-right, then a thin top rim light (both from its own alpha). */
-function drawLifted(g: CanvasRenderingContext2D, src: CanvasImageSource, x: number, y: number, w: number, h: number, cell: number, lets = false, halo = 0) {
-	// = chalet.css (.cell>.sym.fr .rgBody / .m_fig / .m_lets): raised edge, top-left rim light, soft drop shadow down-right
-	const pass = (col: string, dx: number, dy: number, b: number) => { g.shadowColor = col; g.shadowOffsetX = dx; g.shadowOffsetY = dy; g.shadowBlur = b; g.drawImage(src, x, y, w, h); };
-	g.save();
-	if (lets) { pass('rgba(20,4,8,.6)', cell * 0.02, cell * 0.03, cell * 0.016); pass('rgba(58,22,10,.9)', cell * 0.004, cell * 0.007, 0); g.restore(); return; }
-	pass('rgba(18,2,8,.56)', cell * 0.038, cell * 0.052, cell * 0.032);
-	if (halo) pass(`rgba(16,2,8,${halo})`, 0, 0, cell * 0.014);
-	pass('rgba(255,242,210,.78)', -cell * 0.006, -cell * 0.008, 0);
-	pass('rgba(58,22,10,.92)', cell * 0.005, cell * 0.008, 0);
-	g.restore();
+/** A layer lifted off the tile: its baked depth frames (drop shadow, then raised edge + rim light; the same sprites the
+ *  live cell places, sheets/symdepth.webp) under it, then the layer. (x, y, w, h) = the symbol's source box. */
+const DEPTH = DEPTH_JSON as unknown as { frames: Record<string, { frame: { x: number; y: number; w: number; h: number } }>; meta: { pad: number; box: Record<string, number> } };
+let depthPage: HTMLImageElement | null = null;
+function drawLifted(g: CanvasRenderingContext2D, src: CanvasImageSource, x: number, y: number, w: number, h: number, dk: string) {
+	const W = DEPTH.meta.box[dk], P = DEPTH.meta.pad;
+	if (depthPage && W) for (const n of [dk + '_d', dk + '_e']) {
+		const f = DEPTH.frames[n]?.frame; if (!f) continue;
+		const kx = w / W, ky = h / W; g.drawImage(depthPage, f.x, f.y, f.w, f.h, x - P * kx, y - P * ky, (W + 2 * P) * kx, (W + 2 * P) * ky);
+	}
+	g.drawImage(src, x, y, w, h);
 }
 /** The symbol alone (its layers at rest == the approved art), source-box sized. */
 function flat(page: HTMLImageElement, key: string, only?: (p: Part) => boolean) {
@@ -139,9 +142,9 @@ function composeCell(page: HTMLImageElement, key: string, size: number, bare = f
 	const t = frameTier(key), bw = size * (NINE.slice / NINE.size);
 	if (t && bare) {   // the lifted symbol alone, as the live cell draws it over its tile (the cell spinner's slots)
 		const sym = flat(page, key); if (!sym) return c;
-		const fi = frIn(key), box = size * (1 - 2 * fi), k = box / Math.max(sym.width, sym.height), cell = size / 0.925;
+		const fi = frIn(key), box = size * (1 - 2 * fi), k = box / Math.max(sym.width, sym.height);
 		g.filter = 'contrast(1.06) saturate(1.1)';
-		drawLifted(g, sym, size * fi + (box - sym.width * k) / 2, size * fi + (box - sym.height * k) / 2, sym.width * k, sym.height * k, cell);
+		drawLifted(g, sym, size * fi + (box - sym.width * k) / 2, size * fi + (box - sym.height * k) / 2, sym.width * k, sym.height * k, key);
 		return c;
 	}
 	if (t) {
@@ -149,7 +152,7 @@ function composeCell(page: HTMLImageElement, key: string, size: number, bare = f
 		drawNine(g, page, '_recess', 0, 0, size, size, bw); if (t === 'sp') drawNine(g, page, '_frost', 0, 0, size, size, bw); drawNine(g, page, t === 'sp' ? '_border_sp' : '_border', 0, 0, size, size, bw);
 		const sym = flat(page, key); if (!sym) return c;
 		const fi = frIn(key), box = size * (1 - 2 * fi), k = box / Math.max(sym.width, sym.height);
-		drawLifted(g, sym, size * fi + (box - sym.width * k) / 2, size * fi + (box - sym.height * k) / 2, sym.width * k, sym.height * k, size);
+		drawLifted(g, sym, size * fi + (box - sym.width * k) / 2, size * fi + (box - sym.height * k) / 2, sym.width * k, sym.height * k, key);
 		return c;
 	}
 	// bust wild: card, recess, border, the lifted bust, the other details, the raised WILD
@@ -157,10 +160,10 @@ function composeCell(page: HTMLImageElement, key: string, size: number, bare = f
 	drawFr(g, page, key, 0, 0, k);
 	drawNine(g, page, '_recess', 0, 0, size, size, bw);
 	const fig = flat(page, key, (p) => p.cls === 'fig'), det = flat(page, key, (p) => p.cls !== 'fig' && p.cls !== 'lets'), lets = flat(page, key, (p) => p.cls === 'lets');
-	if (fig) drawLifted(g, fig, 0, 0, size, size, size, false, FIG_HALO[key] ?? 0.55);
+	if (fig) drawLifted(g, fig, 0, 0, size, size, key);
 	if (det) g.drawImage(det, 0, 0, size, size);
 	drawNine(g, page, '_border', 0, 0, size, size, bw);   // the tiles' border, over the bust (as in the live cell)
-	if (lets) drawLifted(g, lets, 0, 0, size, size, size, true);
+	if (lets) drawLifted(g, lets, 0, 0, size, size, 'lets');
 	return c;
 }
 /** The tile alone (colour + recess + border, or a bust wild's card + recess + border) at `size` px: the tile half of a
@@ -189,6 +192,7 @@ async function bakeAll() {
 	const ART = ART_JSON as Record<string, string | null>;
 	try {
 		const page = new Image(); page.src = SHEET_URL; await page.decode();
+		const dp = new Image(); dp.src = 'sheets/symdepth.webp'; try { await dp.decode(); depthPage = dp; } catch { /* bakes fall back to the bare layers */ }
 		await bakeEdges(page);
 		await Promise.all(Object.keys(RIG).map(async (k) => {
 			const b = FRAMES[k]; if (!b) return;

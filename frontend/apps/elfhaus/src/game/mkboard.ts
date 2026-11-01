@@ -191,8 +191,23 @@ export function mkPlace(cell: number) {
 }
 
 // ---------------------------------------------------------------- chalet frame
-function rr(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
-	g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
+// The board's layers are sprite parts baked once into assets/board/boardfx.webp (scripts/gen-board-sprites.mjs); no
+// shape, gradient or shadow is drawn by code here, the parts are only placed. Back to front, each casting depth on the
+// one behind it (one warm key light, the fire, upper left):
+//   0 frame_shadow9  the frame's drop shadow onto the room
+//   1 board9  the pine board (see-through, PANEL_A)        2 shade9  the frame + trim's soft shadow cast inward on it
+//   3 slot x20  each raised tile's drop shadow + contact AO  4 frame  timber band, chamfered lip (lit right / bottom),
+//   sill, rivets, snow caps                                5 trim9  the raised gold rail with its contact shadow
+// then the DOM tiles (their lit rim is the `rim` part, chalet.css) and the symbols in front. All parts are drawn into ONE
+// canvas (#mkFrame) inside #frame, so board, frame and trim stay locked together; none of them needs to move on its own.
+type Fr = { x: number; y: number; w: number; h: number };
+type BoardFx = { frames: Record<string, { frame: Fr }>; meta: { scale: string; board: { nb: number; slotPad: number; frameTop: number; frameBot: number; slice9: Record<string, number> } } };
+let fxImg: HTMLImageElement | null = null, fxJson: BoardFx | null = null, fxLoading = false;
+function loadBoardFx(redraw: () => void) {
+	if (fxLoading) return; fxLoading = true;
+	const im = new Image(); im.decoding = 'async'; im.src = 'assets/board/boardfx.webp';
+	Promise.all([im.decode(), fetch('assets/board/boardfx.json').then((r) => r.json() as Promise<BoardFx>)])
+		.then(([, j]) => { fxImg = im; fxJson = j; redraw(); }).catch(() => { fxLoading = false; });
 }
 function canvasIn(id: string, before: boolean) {
 	let c = document.getElementById(id) as HTMLCanvasElement | null;
@@ -202,10 +217,7 @@ function canvasIn(id: string, before: boolean) {
 const BET_VK = 0.82;
 let drawn = '';
 function drawFrame(u: number) {
-	// Winter Chalet frame (flat cartoon): ink outline, timber band with one cel highlight and plank seams, gold trim around
-	// the window, a pine-green panel with one flat tile per cell, a cranberry sill with gold rivets, snow caps on the top
-	// edge; a painted garland (#mkGarland, ART.garland) hangs across the top behind the logo. No gradients, no neon.
-	// The inner panel is see-through (PANEL_A) so the room / Roxy read faintly behind the reels; frame and sill are solid.
+	// The board is see-through (PANEL_A) so the room / Roxy read faintly behind the reels; frame and sill are solid.
 	const PANEL_A = document.body.classList.contains('phone') ? 0.78 : 0.82;
 	const dpr = Math.min(2, (window.devicePixelRatio || 1) * ST.s), key = `${u.toFixed(4)}|${dpr.toFixed(3)}|${PANEL_A}`;
 	const fc = canvasIn('mkFrame', true);
@@ -213,51 +225,33 @@ function drawFrame(u: number) {
 	const cw = (FW + 2 * M) * u, ch = (FH + 2 * M) * u;
 	css(fc, { position: 'absolute', left: -M * u, top: -M * u, width: cw, height: ch });
 	garland(u);
+	if (!fxImg || !fxJson) { loadBoardFx(() => { drawn = ''; drawFrame(u); }); return; }
 	if (drawn === key) return; drawn = key;
 	const sc = u * dpr;
 	fc.width = Math.ceil(cw * dpr); fc.height = Math.ceil(ch * dpr);
-	const g = fc.getContext('2d')!; g.setTransform(sc, 0, 0, sc, M * sc, M * sc);
-	const INK = '#26140f', WOOD = '#7a4526', WOOD_HI = '#9c5d33', SEAM = '#56301a', GOLD = '#f2b935', GOLD_HI = '#ffe08a', CRAN = '#a61c34', PINE = '#163a2b', TILE = '#1f4b38', SNOW = '#fbf5ea';
-	// ink silhouette + timber band
-	g.save(); g.shadowColor = 'rgba(20,8,4,0.55)'; g.shadowBlur = 0; g.shadowOffsetY = 10 * sc; rr(g, 0, 0, FW, FH, 30); g.fillStyle = INK; g.fill(); g.restore();
-	rr(g, 5, 5, FW - 10, FH - 10, 26); g.fillStyle = WOOD; g.fill();
-	g.save(); rr(g, 5, 5, FW - 10, FH - 10, 26); g.clip();
-	g.fillStyle = WOOD_HI; g.fillRect(5, 5, FW - 10, 9); g.fillRect(5, 5, 9, FH - 10);   // one flat cel highlight (top + left edge)
-	g.strokeStyle = SEAM; g.lineWidth = 2.5; g.lineCap = 'round';
-	for (const x of [FW * 0.18, FW * 0.47, FW * 0.79]) { g.beginPath(); g.moveTo(x, 8); g.lineTo(x, FT - 8); g.stroke(); }
-	for (const y of [FH * 0.3, FH * 0.66]) { g.beginPath(); g.moveTo(9, y); g.lineTo(FT - 9, y); g.stroke(); g.beginPath(); g.moveTo(FW - FT + 9, y); g.lineTo(FW - 9, y); g.stroke(); }
-	g.restore();
-	// cranberry sill with gold rivets
-	const sy = FT + BH + 14;
-	rr(g, 16, sy, FW - 32, FB - 24, 10); g.fillStyle = INK; g.fill();
-	rr(g, 19, sy + 3, FW - 38, FB - 30, 8); g.fillStyle = CRAN; g.fill();
-	g.fillStyle = '#c7344c'; g.fillRect(25, sy + 5, FW - 50, 4);
-	// window: gold trim (ink both sides), then the pine panel at PANEL_A
-	rr(g, FT - 13, FT - 13, BW + 26, BH + 26, 22); g.fillStyle = INK; g.fill();
-	rr(g, FT - 10, FT - 10, BW + 20, BH + 20, 20); g.fillStyle = GOLD; g.fill();
-	g.fillStyle = GOLD_HI; g.save(); rr(g, FT - 10, FT - 10, BW + 20, BH + 20, 20); g.clip(); g.fillRect(FT - 10, FT - 10, BW + 20, 3.5); g.restore();
-	rr(g, FT - 5, FT - 5, BW + 10, BH + 10, 16); g.fillStyle = INK; g.fill();
-	g.save(); g.globalCompositeOperation = 'destination-out'; rr(g, FT - 3, FT - 3, BW + 6, BH + 6, 14); g.fill(); g.restore();
-	g.save(); g.globalAlpha = PANEL_A; rr(g, FT - 3, FT - 3, BW + 6, BH + 6, 14); g.fillStyle = PINE; g.fill();
-	for (let i = 0; i < 5; i++) for (let r = 0; r < 4; r++) { rr(g, FT + i * CELL + 5, FT + r * CELL + 5, CELL - 10, CELL - 10, 16); g.fillStyle = TILE; g.fill(); }
-	g.restore();
-	const rivet = (x: number, y: number) => { g.beginPath(); g.arc(x, y, 6.5, 0, 7); g.fillStyle = INK; g.fill(); g.beginPath(); g.arc(x, y, 4.2, 0, 7); g.fillStyle = GOLD; g.fill();
-		g.beginPath(); g.arc(x - 1.3, y - 1.4, 1.5, 0, 7); g.fillStyle = GOLD_HI; g.fill(); };
-	const ry = sy + (FB - 24) / 2;
-	[40, FW - 40, FW / 2 - 150, FW / 2 + 150].forEach((x) => rivet(x, ry));
-	[[17, 17], [FW - 17, 17], [17, FH - 17], [FW - 17, FH - 17]].forEach(([x, y]) => rivet(x, y));
-	// snow caps along the top edge (flat cream lumps with an ink outline and one cool shade line)
-	g.save(); g.lineJoin = 'round';
-	const caps: [number, number, number][] = [[26, 70, 15], [118, 120, 17], [262, 64, 13], [FW - 266, 74, 14], [FW - 160, 112, 18], [FW - 40, 60, 14]];
-	for (const [x0, w, h] of caps) {
-		g.beginPath(); g.moveTo(x0, 4); g.bezierCurveTo(x0 + w * 0.08, -h * 0.9, x0 + w * 0.42, -h * 1.15, x0 + w * 0.55, -h * 0.55);
-		g.bezierCurveTo(x0 + w * 0.7, -h * 1.05, x0 + w * 0.98, -h * 0.7, x0 + w, 4);
-		g.bezierCurveTo(x0 + w * 0.9, 12, x0 + w * 0.82, 15, x0 + w * 0.74, 9); g.bezierCurveTo(x0 + w * 0.66, 18, x0 + w * 0.56, 19, x0 + w * 0.5, 10);
-		g.bezierCurveTo(x0 + w * 0.36, 14, x0 + w * 0.16, 13, x0, 4); g.closePath();
-		g.fillStyle = SNOW; g.fill(); g.lineWidth = 3.5; g.strokeStyle = INK; g.stroke();
-		g.beginPath(); g.moveTo(x0 + w * 0.2, 2); g.quadraticCurveTo(x0 + w * 0.5, 7, x0 + w * 0.8, 2); g.lineWidth = 2.2; g.strokeStyle = '#b9cfe0'; g.stroke();
-	}
-	g.restore();
+	const g = fc.getContext('2d')!; g.setTransform(sc, 0, 0, sc, M * sc, M * sc); g.imageSmoothingQuality = 'high';
+	const F = fxJson.frames, B = fxJson.meta.board, S = +fxJson.meta.scale || 2, im = fxImg;
+	const part = (k: string, x: number, y: number, w?: number, h?: number) => { const f = F[k].frame; g.drawImage(im, f.x, f.y, f.w, f.h, x, y, w ?? f.w / S, h ?? f.h / S); };
+	// 9-slice: corners at 1:1 (design px), edges stretched along their length, centre stretched
+	const nine = (k: string, x: number, y: number, w: number, h: number) => {
+		// pieces meet on whole device px (no hairline seams between them)
+		const f = F[k].frame, d = B.slice9[k], s = d * S, mw = f.w - 2 * s, mh = f.h - 2 * s, D = (v: number) => Math.round((v + M) * sc);
+		const xs = [[0, s, x, x + d], [s, mw, x + d, x + w - d], [s + mw, s, x + w - d, x + w]], ys = [[0, s, y, y + d], [s, mh, y + d, y + h - d], [s + mh, s, y + h - d, y + h]];
+		g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+		for (const [sx, sw, a0, a1] of xs) for (const [sy, sh, b0, b1] of ys) g.drawImage(im, f.x + sx, f.y + sy, sw, sh, D(a0), D(b0), D(a1) - D(a0), D(b1) - D(b0));
+		g.restore();
+	};
+	// 0 the frame's drop shadow onto the room (its own part, under everything)
+	nine('frame_shadow9', 0, 10, FW, FH);
+	// 1 the board, under the window (a 9-slice of the window-sized source: same corners, the window is BW x BH at FT)
+	g.save(); g.globalAlpha = PANEL_A; nine('board9', 0, 0, FW, BH + 2 * FT); g.restore();
+	// 2 the frame + trim's shadow on the board   3 the tile slots' drop shadows + AO
+	nine('shade9', 0, 0, FW, BH + 2 * FT);
+	const P = B.slotPad, ti = CELL * 0.0375;
+	for (let i = 0; i < 5; i++) for (let r = 0; r < 4; r++) part('slot', FT + i * CELL + ti - P, FT + r * CELL + ti - P);
+	// 4 the timber frame (its window is punched in the sprite)   5 the gold trim over the seam
+	part('frame', 0, -B.frameTop);
+	nine('trim9', 0, 0, FW, BH + 2 * FT);
 }
 /** Painted garland across the frame top (behind the logo), sized to the frame; never reaches the reels (FT band only). */
 function garland(u: number) {
