@@ -437,9 +437,10 @@ html body .cell.wild:not(.win) .rig[class*="k_W_R"] .rp.m_smile{animation:rgWSmi
 html body .sym.fr{background:none!important;border:0!important;box-shadow:none!important}
 html body .sym.fr::after{display:none}
 html body .sym.fr>.tTile{left:0;top:0;width:100%;height:100%;z-index:0}
-html body .tRec,html body .tBd{position:absolute;inset:0;display:block;pointer-events:none;box-sizing:border-box;z-index:0;
+html body .tRec,html body .tFr,html body .tBd{position:absolute;inset:0;display:block;pointer-events:none;box-sizing:border-box;z-index:0;
   border:calc(var(--cell,150px)*.203) solid transparent;border-image-slice:52 fill;border-image-repeat:stretch;border-image-width:calc(var(--cell,150px)*.203)}
 html body .tRec{border-image-source:var(--tRec,none)}
+html body .tFr{border-image-source:var(--tFrost,none)}
 html body .tBd{border-image-source:var(--tBd,none)}
 html body .tBd.sp{border-image-source:var(--tBdSp,var(--tBd,none))}
 html body .sym.fr>.rig,html body .sym.fr>.symGlow{inset:9.5%}
@@ -451,7 +452,7 @@ html body .cell.win .sym.fr.rigd>.rig{animation:v4WinPunch calc(.32s*var(--gt,1)
 @keyframes tLiftLand{0%{--lift:1;scale:1.035}100%{--lift:0;scale:1}}
 @keyframes tLiftWin{0%{--lift:0}35%{--lift:1}100%{--lift:.6}}
 /* bust wilds: the card's own ring sits under the shared recess + border; the bust and the raised WILD lift off the card */
-html body .rig .rgBody>.tRec,html body .rig .rgBody>.tBd{border-width:calc(var(--cell,150px)*.203);border-image-width:calc(var(--cell,150px)*.203)}
+html body .rig .rgBody>.tRec,html body .rig .rgBody>.tFr,html body .rig .rgBody>.tBd{border-width:calc(var(--cell,150px)*.203);border-image-width:calc(var(--cell,150px)*.203)}
 html body .rig .rp.m_fig{filter:drop-shadow(0 calc(var(--cell,150px)*-.008) 0 rgba(255,240,205,.75)) drop-shadow(0 0 calc(var(--cell,150px)*.014) rgba(16,2,8,var(--figHalo,.55))) drop-shadow(calc(var(--cell,150px)*.02) calc(var(--cell,150px)*.028) calc(var(--cell,150px)*.016) rgba(18,2,8,.5))}
 html body .rig.k_W_R1{--figHalo:.85}
 html body .rig .rp.m_lets{filter:drop-shadow(0 calc(var(--cell,150px)*.012) calc(var(--cell,150px)*.008) rgba(20,4,8,.6))}
@@ -473,7 +474,7 @@ html body #cells .cell{isolation:isolate}
 html body :is(.cell,.cspin)>.tile{position:absolute;inset:0;z-index:0;display:block;pointer-events:none;transform-origin:50% 62%}
 body.mk #app :is(.cell,.cspin)>.tile{inset:3.75%}
 html body :is(.cell,.cspin)>.tile>.tTile,html body :is(.cell,.cspin)>.tile.tW>.rp{left:0;top:0;width:100%;height:100%;z-index:0}
-html body :is(.cell,.cspin)>.tile>.tRec{z-index:1}
+html body :is(.cell,.cspin)>.tile>.tRec,html body :is(.cell,.cspin)>.tile>.tFr{z-index:1}
 html body :is(.cell,.cspin)>.tile:not(.tTop)::after{content:"";position:absolute;inset:6.5%;z-index:2;border-radius:11%;pointer-events:none;
   box-shadow:inset 0 calc(var(--cell)*.012) calc(var(--cell)*.022) rgba(20,4,8,.28)}
 html body :is(.cell,.cspin)>.tile>.tBd{z-index:3}
@@ -565,3 +566,19 @@ body.mk #app #strips .cspin>.cwin{inset:3.75%}
 
 /* Wild Winter Spins (egw) title is two lines: a little more height so each line reads as large as the one-line titles */
 html body #buyCards .bcard[data-m="egw"] .bName img.tTitle{max-height:3.9em}
+
+/* Job E: the Ski Pass scatter is unmistakable. Its own premium tile (icy blue-white panel, frosted rime band with corner
+   crystals, frosted silver-ice border: sheet parts _tile_sp / _frost / _border_sp, symrig.ts), a slightly larger fill,
+   the same forward 3D lift as every symbol, a calm periodic border glint, a land pop + tile flash, a light anticipation
+   glow while the board already shows two. Transform / opacity / mask only; reduced motion = none of it. */
+html body .cell>.sym.S.fr>.rig,html body .cell>.sym.S.fr>.symGlow{inset:3.5%}
+@keyframes sGlint{0%,78%{opacity:0;-webkit-mask-position:100% 0;mask-position:100% 0}82%{opacity:.8}96%{opacity:.8}100%{opacity:0;-webkit-mask-position:0 0;mask-position:0 0}}
+#board:not(.busyB) #cells .cell:not(.spinning):not(.win):not(.dim)>.tile.tS>.tGl{animation:sGlint 4.6s cubic-bezier(.45,0,.55,1) 1.2s infinite}
+@keyframes sPop{0%{scale:.84}42%{scale:1.13}70%{scale:.98}100%{scale:1}}
+@keyframes sFlash{0%{opacity:0}22%{opacity:1}100%{opacity:0}}
+html body #cells .cell.sLand>.sym.S{animation:sPop .34s cubic-bezier(.3,.9,.4,1) both}
+html body #cells .cell.sLand>.tile.tS>.tGw{animation:sFlash .44s ease-out both}
+html body #cells .cell.sLand>.tile.tS>.tGl{animation:tGlint .4s cubic-bezier(.3,.2,.4,1) both}
+@keyframes sAnt{0%{opacity:.18}100%{opacity:.62}}
+body.rgAnt #cells .cell:not(.spinning):not(.win)>.tile.tS>.tGw{animation:sAnt .9s cubic-bezier(.45,0,.55,1) infinite alternate}
+@media (prefers-reduced-motion:reduce){html body #cells .cell>.tile.tS>:is(.tGl,.tGw),html body #cells .cell.sLand>.sym.S{animation:none!important}}

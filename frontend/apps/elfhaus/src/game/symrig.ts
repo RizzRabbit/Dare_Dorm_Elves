@@ -20,7 +20,9 @@ export const hasRig = (key: string) => !!RIG[key];
 export const frameTier = (key: string) => (key[0] === 'H' ? 'hi' : key[0] === 'L' ? 'lo' : key === 'S' ? 'sp' : '');
 /** The symbol inside its tile: the rig box is inset by FR_IN on each side (it comes forward over the inner border, chalet.css .cell>.sym.fr). */
 export const FR_IN = 0.06;
-const frIn = (_key: string) => FR_IN;
+/** The Ski Pass scatter fills a little more of its tile (chalet.css .cell>.sym.S.fr: 3.5% of the cell instead of 6%). */
+const FR_IN_S = 0.033;
+const frIn = (key: string) => (key === 'S' ? FR_IN_S : FR_IN);
 /** 9-slice geometry of _border / _recess: 256 px pieces, 52 px corners (= 0.203 of a cell). */
 export const NINE = { size: 256, slice: 52 };
 /** Dark separation halo behind each bust (chalet.css .m_fig); Roxy's red jacket on her red card needs the most. */
@@ -32,7 +34,7 @@ const lightHTML = (sp = false) => `<i class="tGl${sp ? ' sp' : ''}"></i><i class
 /** Bare tile pieces (no container): colour + recess + border. The cell spinner (reels.ts) reuses them. */
 export function tileParts(key: string) {
 	const t = frameTier(key);
-	if (t) return { under: `<i class="rp f__tile_${t} tTile"></i><i class="tRec"></i>`, over: `<i class="tBd${t === 'sp' ? ' sp' : ''}"></i>`, sp: t === 'sp' };
+	if (t) return { under: `<i class="rp f__tile_${t} tTile"></i><i class="tRec"></i>${t === 'sp' ? '<i class="tFr"></i>' : ''}`, over: `<i class="tBd${t === 'sp' ? ' sp' : ''}"></i>`, sp: t === 'sp' };
 	if (key.startsWith('W_') && RIG[key]) return { under: `<i class="rp f_${key}"></i><i class="tRec"></i>`, over: `<i class="tBd"></i>`, sp: false };
 	return null;
 }
@@ -43,7 +45,7 @@ export function tileParts(key: string) {
 export function tileHTML(key: string) {
 	const p = tileParts(key); if (!p) return '';
 	if (key.startsWith('W_')) return `<div class="tile tW">${p.under}</div>`;
-	return `<div class="tile">${p.under}${p.over}${lightHTML(p.sp)}</div>`;
+	return `<div class="tile${p.sp ? ' tS' : ''}">${p.under}${p.over}${lightHTML(p.sp)}</div>`;
 }
 export const tileTopHTML = (key: string) => (key.startsWith('W_') && RIG[key] ? `<div class="tile tTop"><i class="tBd"></i>${lightHTML()}</div>` : '');
 /** Recess + border (+ the tile light) for a stacked / merged wild overlay (any size; 9-slice). */
@@ -150,7 +152,7 @@ function composeCell(page: HTMLImageElement, key: string, size: number, bare = f
 	}
 	if (t) {
 		const tf = FRAMES['_tile_' + t]; if (tf) g.drawImage(page, tf.frame.x, tf.frame.y, tf.frame.w, tf.frame.h, 0, 0, size, size);
-		drawNine(g, page, '_recess', 0, 0, size, size, bw); drawNine(g, page, t === 'sp' ? '_border_sp' : '_border', 0, 0, size, size, bw);
+		drawNine(g, page, '_recess', 0, 0, size, size, bw); if (t === 'sp') drawNine(g, page, '_frost', 0, 0, size, size, bw); drawNine(g, page, t === 'sp' ? '_border_sp' : '_border', 0, 0, size, size, bw);
 		const sym = flat(page, key); if (!sym) return c;
 		const fi = frIn(key), box = size * (1 - 2 * fi), k = box / Math.max(sym.width, sym.height);
 		drawLifted(g, sym, size * fi + (box - sym.width * k) / 2, size * fi + (box - sym.height * k) / 2, sym.width * k, sym.height * k, size);
@@ -174,7 +176,7 @@ function composeTile(page: HTMLImageElement, key: string, size: number) {
 	const t = frameTier(key), bw = size * (NINE.slice / NINE.size);
 	if (t) { const tf = FRAMES['_tile_' + t]; if (tf) g.drawImage(page, tf.frame.x, tf.frame.y, tf.frame.w, tf.frame.h, 0, 0, size, size); }
 	else { const b = FRAMES[key]; if (!b) return null; drawFr(g, page, key, 0, 0, size / Math.max(b.sourceSize.w, b.sourceSize.h)); }
-	drawNine(g, page, '_recess', 0, 0, size, size, bw); drawNine(g, page, t === 'sp' ? '_border_sp' : '_border', 0, 0, size, size, bw);
+	drawNine(g, page, '_recess', 0, 0, size, size, bw); if (t === 'sp') drawNine(g, page, '_frost', 0, 0, size, size, bw); drawNine(g, page, t === 'sp' ? '_border_sp' : '_border', 0, 0, size, size, bw);
 	return c;
 }
 /** ART key of a symbol's spinner tile (one per tier, one per bust wild card). */
@@ -182,7 +184,7 @@ export const unitTileKey = (key: string) => '_utile_' + (frameTier(key) || key);
 /** The 9-slice pieces as their own images for CSS border-image (any cell, stack or merged size). */
 async function bakeEdges(page: HTMLImageElement) {
 	const root = document.documentElement.style;
-	for (const [n, v] of [['_recess', '--tRec'], ['_border', '--tBd'], ['_border_sp', '--tBdSp']] as const) {
+	for (const [n, v] of [['_recess', '--tRec'], ['_frost', '--tFrost'], ['_border', '--tBd'], ['_border_sp', '--tBdSp']] as const) {
 		const f = FRAMES[n]; if (!f) continue;
 		const c = cv(f.frame.w, f.frame.h), g = c.getContext('2d'); if (!g) continue;
 		g.drawImage(page, f.frame.x, f.frame.y, f.frame.w, f.frame.h, 0, 0, f.frame.w, f.frame.h);

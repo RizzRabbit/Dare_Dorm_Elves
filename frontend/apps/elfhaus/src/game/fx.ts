@@ -36,6 +36,8 @@ export function symWin(cell: HTMLElement) {
 }
 /** Scatter land: the Ski Pass's own land sheet (squash-pop + ring flash + sparkles); the only symbol with one. */
 export function symLand(cell: HTMLElement) {
+	// Job E: its own land pop + a flash of its icy tile (chalet.css .cell.sLand), transform / opacity only
+	if (symName(cell) === 'S') { cell.classList.remove('sLand'); void cell.offsetWidth; cell.classList.add('sLand'); setTimeout(() => cell.classList.remove('sLand'), 520); }
 	const sym = symOf(cell); if (!SYM_STRIPS || !sym || symName(cell) !== 'S' || !hasSheet('sym_S')) return;
 	sym.querySelectorAll('canvas.fxLand').forEach((c) => c.remove());
 	play('sym_S', 'land', sym, { cls: 'fxFill symFx fxLand', rate: 1, onEnd: () => sym.querySelectorAll('canvas.fxLand').forEach((c) => c.remove()) });
