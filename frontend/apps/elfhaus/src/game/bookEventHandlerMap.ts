@@ -1,16 +1,15 @@
 // One handler per design/EVENTS.md event (ported from prototype/app.js H). Handlers only display.
 import { MAX_WIN_X, ROWS, REELS, WIN_LEVELS, TIER_LABEL, SPIN_CAP as MAX_FS, type Tier } from './config';
 import { egwParts } from './egwParts';
-import { money } from './format';
 import type { BookEvent, BookEventOf, BookEventType, Locked, Pos } from './typesBookEvent';
 import { roxy, roxyState, roxySmile } from './roxy';
 import { maxWinCelebration, preloadMaxWin } from './maxwin';
 import { elvesLevel, preloadBigWinElves, LEGEND_ELVES_LEVEL } from './bigwinElves';
 import { showRespin, endRespin, hideRespin } from './respin';
-import { mxBurst, lockFx, clearSymWins, symLand, symWin } from './fx';
+import { lockFx, clearSymWins, symLand, symWin } from './fx';
 import { cardFlip } from './cardflip';
 import { timing, isSpinning, startSpin, markStopped, sinceStart, sleep, spinMini, stopMini, stopReel, stopLead } from './reels';
-import { $, S, k, bet, wait, titleHTML, banner, toast, hideToast, bigWin, setWinMeter, clearLines, renderCell, renderOverlays, cellEl, setGem, ovMx, ovArt } from './ui';
+import { $, S, k, bet, wait, titleHTML, banner, hideToast, bigWin, setWinMeter, clearLines, renderCell, renderOverlays, cellEl, setGem, ovMx, ovArt } from './ui';
 import { playWins } from './winlines';
 import { puffWith } from './puff';
 import { wildLand, wfExpand } from './wildfx';
@@ -21,7 +20,7 @@ import { frameIn } from './wildframe';
 /** stack_form sheets decode ahead for reels with 2+ wilds that are not full yet (stacks.ts loads sheets on demand). */
 const warmStacks = () => stackPrefetch(S.sym.flatMap((c, r) => (!S.full.has(r) && c.filter((x) => x === 'W').length >= 2 ? [r] : [])));
 import { featOpen, featPop, featClose } from './featfx';
-import { countTo, countMs, setAmount, skipCounts, BIG_TIERS, levelOf, maxLevel, WIN_EDGES } from './countup';
+import { countTo, countMs, setAmount, skipCounts, BIG_TIERS, levelOf, WIN_EDGES } from './countup';
 import { grab, combineInto } from './combine';
 import { tempo, hold, gtempo } from './tempo';
 import { sfx, loop, music, duck, duckFor, type Handle } from './audio';

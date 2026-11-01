@@ -40,7 +40,6 @@ export function preloadMaxWin(): Promise<void> {
 export function releaseMaxWin() { ids.forEach((id) => unloadSheet(id)); if (bgImg) bgImg.src = ''; bgImg = null; loading = null; }
 
 const live = new Set<Anim>(); const timers: number[] = []; let rig: ElfRig | null = null;
-const later = (ms: number, f: () => void) => timers.push(window.setTimeout(f, ms));
 function run(id: string, name: string, host: Element, o: Parameters<typeof play>[3] = {}) {
 	const a = play(id, name, host, { cls: 'mwSpr', ...o }); if (a) live.add(a); return a;
 }

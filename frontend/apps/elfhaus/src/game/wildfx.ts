@@ -11,7 +11,7 @@
 //                      frame (so each wild shimmers every few seconds), at most 2 at once, paused while the reels
 //                      spin, during win lines, or when the tab is hidden
 import { sfx } from './audio';
-import { play, hasSheet, loadSheet, unloadSheet, type Atlas } from './sprite';
+import { play, hasSheet } from './sprite';
 import { S, $ } from './ui';
 import { isSpinning } from './reels';
 import { linesActive } from './winlines';
@@ -36,43 +36,6 @@ export function stackForm(reel: number) {
 	if (!ok()) return Promise.resolve();
 	const host = column(reel);
 	return new Promise<void>((res) => { const a = play(ID, 'stackform', host, { cls: 'wfx', onEnd: () => { host.remove(); res(); } }); if (!a) { host.remove(); res(); } else { a.frames = a.frames.slice(COL_FROM); a.last = -1; } });
-}
-// ---- per-reel wild-expand sheets (assets/fx/fx_wfexpand_R<n>.{webp,json}, listed in assets/fx/index.json) ----
-const FX_DIR = 'assets/fx/', FREE_MS = 4000, EXPAND_SHEETS = false;
-type RS = { atlas: Atlas; url: string; dec: Promise<void> | null; used: number };
-const perReel = new Map<number, RS>(); // 0-based reel -> sheet (compressed blob kept; decoded only around use)
-let fxIndex: Promise<void> | null = null, sweeper = 0;
-const rid = (r: number) => `fx_wfexpand_R${r + 1}`;
-/** Fetch the per-reel expand sheets' JSON + compressed bytes (no decode). A missing index means "none". */
-export function initWfExpand() {
-	if (!EXPAND_SHEETS) return (fxIndex ||= Promise.resolve()); // v3.11: not drawn, not fetched
-	return (fxIndex ||= fetch(FX_DIR + 'index.json').then((r) => (r.ok ? r.json() : { sheets: [] })).catch(() => ({ sheets: [] }))
-		.then(async (ix: { sheets?: string[] }) => {
-			await Promise.all((ix.sheets || []).map(async (id) => {
-				const m = /^fx_wfexpand_R([1-5])$/.exec(id); if (!m) return;
-				try {
-					const atlas = (await (await fetch(`${FX_DIR}${id}.json`)).json()) as Atlas & { image?: string };
-					const b = await (await fetch(FX_DIR + (atlas.image || id + '.webp'))).blob();
-					perReel.set(+m[1] - 1, { atlas, url: URL.createObjectURL(b), dec: null, used: 0 });
-				} catch (e) { console.warn('wfexpand sheet', id, e); }
-			}));
-		}));
-}
-/** Start decoding reel r's expand sheet (call a beat before wfExpand, e.g. when the reel starts to fill). */
-export function warmExpand(r: number) {
-	if (!EXPAND_SHEETS) return null; // v3.11: per-reel expand sheets are never drawn (wfExpand), so never decoded
-	const s = perReel.get(r); if (!s) return null;
-	s.used = performance.now();
-	if (!sweeper) sweeper = window.setInterval(sweep, 1000);
-	return (s.dec ||= loadSheet(rid(r), s.url, s.atlas).catch((e) => { s.dec = null; console.warn('wfexpand decode', r, e); }));
-}
-function sweep() {
-	const now = performance.now(); let any = false;
-	perReel.forEach((s, r) => {
-		if (!s.dec) return;
-		if (now - s.used > FREE_MS && !document.querySelector(`canvas.wfxIn[data-fx="${rid(r)}"]`)) { unloadSheet(rid(r)); s.dec = null; } else any = true;
-	});
-	if (!any) { clearInterval(sweeper); sweeper = 0; }
 }
 export function wfExpand(ov: HTMLElement | null) {
 	if (!ov) return;

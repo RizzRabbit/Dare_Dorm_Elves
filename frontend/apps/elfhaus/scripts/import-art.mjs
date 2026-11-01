@@ -36,7 +36,6 @@ if (kind === 'symbols') {
 		const d = join(src, sub); if (!existsSync(d)) continue;
 		for (const f of walk(d)) if (IMG.test(f)) cp(f, join(dest, relative(d, f)));
 	}
-	console.log('symbols: optional, regenerate the reel blur strips from the new art: python3 scripts/sprites/gen_reelblur.py');
 } else if (kind === 'splash') {
 	const dest = join(app, 'src/assets/intro');
 	for (const f of walk(src)) { const b = basename(f); if (/^(panel_|splash_|sting_).*\.(webp|json)$/.test(b)) cp(f, join(dest, b)); }

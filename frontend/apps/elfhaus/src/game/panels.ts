@@ -7,7 +7,7 @@
 //    mouse or finger (6 px threshold; a drag never fires the button under it), momentum, a soft rubber band at both
 //    ends, mouse wheel, arrow keys, PgUp / PgDn, Home / End. touch-action:none on the view keeps the Stake iframe's
 //    page from scrolling under it.
-const OPEN_MS = 520, CLOSE_MS = 460, DRAG_PX = 6;
+const CLOSE_MS = 460, DRAG_PX = 6;
 const reduced = () => matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
 class Scroller {
@@ -193,4 +193,3 @@ addEventListener('click', (e) => {
 	if (sel && bareDown && bare(e.target) && panels.get(sel)!.closable) closePanel(sel);
 	bareDown = false;
 });
-export const PANEL_MS = { open: OPEN_MS, close: CLOSE_MS };

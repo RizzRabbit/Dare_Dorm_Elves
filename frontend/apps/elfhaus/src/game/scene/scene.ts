@@ -18,7 +18,6 @@ const roxyMask = new Graphics();
 let now = 0, bonus = false, nightK = 0, snap = false, roxyOn = true, hold = false, free = false, last: [boolean, DOMRect] | null = null;
 const WAIST = 60;
 export const roxyAt = { x: 0, y: 0, s: 1, portrait: false };
-export const sceneNow = () => now;
 
 // painting geometry (normalized to the image): windows (snow), fire (glow + embers)
 const PAINT = {
@@ -179,8 +178,6 @@ export function placeScene(portrait: boolean, fr: DOMRect) {
 }
 /** Bonus: night grade + heavier snow (the #bg grade is CSS, body.inBonus). instant = no fade (reload into a bonus). */
 export function sceneBonus(on: boolean, instant = false) { if (instant && on !== bonus) snap = true; bonus = on; }
-export const sceneFx = fx;
-export const showRoxy = (on: boolean) => { roxyOn = on; roxyL.visible = on; };
 /** Intro: hold Roxy (the intro positions her; no portrait clip) / hand her back to the layout. */
 export function sceneHold(on: boolean, noClip = on) {
 	if (hold === on && free === noClip) return; hold = on; free = noClip;

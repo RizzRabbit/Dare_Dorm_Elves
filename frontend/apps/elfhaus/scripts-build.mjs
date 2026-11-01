@@ -19,6 +19,18 @@ function pruneUnreferencedCss(dir = 'build') {
 	}
 }
 
+// With bundleStrategy 'inline' the whole app JS is inlined into index.html, yet Vite also writes the same code to
+// build/_app/immutable/bundle.<hash>.js (~0.9 MB). index.html only names it as the base URL for the preload helper
+// (new URL("_app/immutable/bundle.<hash>.js", document.baseURI)), never loads it, so drop the duplicate file.
+function pruneDuplicateBundle(dir = 'build') {
+	const html = readFileSync(join(dir, 'index.html'), 'utf8'), imm = join(dir, '_app/immutable');
+	for (const f of readdirSync(imm).filter((n) => /^bundle\.[\w-]+\.js$/.test(n))) {
+		const loads = new RegExp(`(src=|href=|import\\(|from)\\s*["'][^"']*${f.replace(/\./g, '\\.')}`).test(html);
+		if (!loads && html.includes('<script')) { unlinkSync(join(imm, f)); console.log(`  pruned duplicate inlined ${join(imm, f)}`); }
+	}
+}
+const prune = () => { pruneUnreferencedCss(); pruneDuplicateBundle(); };
+
 const child = spawn(process.execPath, ['node_modules/vite/bin/vite.js', 'build'], { stdio: ['ignore', 'pipe', 'inherit'] });
 let wrote = false;
 child.stdout.on('data', (buf) => {
@@ -26,7 +38,7 @@ child.stdout.on('data', (buf) => {
 	process.stdout.write(text);
 	if (text.includes('Wrote site to')) wrote = true;
 	if (wrote && /\bdone\b/.test(text)) {
-		setTimeout(() => { child.kill('SIGTERM'); pruneUnreferencedCss(); process.exit(0); }, 500);
+		setTimeout(() => { child.kill('SIGTERM'); prune(); process.exit(0); }, 500);
 	}
 });
-child.on('exit', (code) => { if (wrote) pruneUnreferencedCss(); process.exit(wrote ? 0 : code ?? 1); });
+child.on('exit', (code) => { if (wrote) prune(); process.exit(wrote ? 0 : code ?? 1); });

@@ -4,7 +4,6 @@
 // House style: flat cream flakes and cloud puffs with thick ink outlines, no glows. WAAPI transform / opacity only,
 // all timing in real elapsed ms (frame-rate independent). One skippable stage ('puff', winstage.ts); turbo ~0.5x.
 import { S, k } from './ui';
-import { stage } from './winstage';
 import type { BookEvent, Pos } from './typesBookEvent';
 
 const NS = 'http://www.w3.org/2000/svg';
@@ -158,14 +157,4 @@ export function puffWith(wins: { positions: Pos[] }[], next: BookEvent | undefin
 		if (fast) finish();
 	};
 	return { start, finish, holes: refill };
-}
-/** The pop + puff as its own stage (kept for callers that play it after the lines). */
-export async function puffWins(wins: { positions: Pos[] }[], next: BookEvent | undefined) {
-	const p = puffWith(wins, next); if (!p) return;
-	await stage('puff', p.finish, p.start);
-}
-/** Spin start / re-render: drop any leftover puff state. */
-export function clearPuffs() {
-	document.querySelectorAll('.puffFx').forEach((e) => e.remove());
-	document.querySelectorAll<HTMLElement>('.cell.puffed').forEach((c) => { c.classList.remove('puffed'); c.querySelector<HTMLElement>('.sym')?.getAnimations().forEach((a) => a.cancel()); });
 }

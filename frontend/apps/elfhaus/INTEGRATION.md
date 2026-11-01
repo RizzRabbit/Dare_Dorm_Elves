@@ -7,7 +7,6 @@ dev/build (`scripts/sync-art.mjs`); never edit it by hand.
 ## Symbols (and wilds, fx sheets, cut masters)
 ```
 node scripts/import-art.mjs symbols /workspace/elfhaus-frameless/final
-python3 scripts/sprites/gen_reelblur.py      # reel blur strips from the new symbol art
 ```
 * `<dir>/assets/**` goes to the repo `assets/**` (e.g. `assets/final/webp/symbol_H1.webp`, `assets/final/fx/*`, `assets/final/cut/*`),
   and `<dir>/src/**` goes to the app `src/**` (e.g. `src/game/fx/sym_<K>.atlas.json`).

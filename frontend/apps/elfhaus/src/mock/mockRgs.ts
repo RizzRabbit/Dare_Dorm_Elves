@@ -25,25 +25,11 @@ for (const [path, mod] of Object.entries(bookModules)) {
 	}
 }
 
-export const AVAILABLE_BOOKS = Object.keys(books);
-
 // API amounts are micro-units: 1,000,000 = $1.00 (constants-shared/bet).
 const $ = (dollars: number) => Math.round(dollars * API_AMOUNT_MULTIPLIER);
 let mockBalance = $(1000); // $1,000.00
 let mockPending = 0; // v20: the open round's win, credited by end-round
 let mockCurrency = 'USD';
-
-export function setMockBalance(amount: number) {
-	mockBalance = amount;
-}
-
-export function setMockCurrency(currency: string) {
-	mockCurrency = currency;
-}
-
-export function getMockBook(name: string): MockBook | undefined {
-	return books[name];
-}
 
 const MODE_DEFAULTS: Record<string, string[]> = {
 	base: ['base_win', 'base_respin', 'base_zero', 'base_wincap'],

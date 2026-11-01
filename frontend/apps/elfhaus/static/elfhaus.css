@@ -28,8 +28,6 @@ body.inBonus #bg:not(.fs){filter:saturate(1.1) hue-rotate(18deg) brightness(.92)
 #win{display:inline-block;min-width:7.5ch;contain:layout paint} .m.r #win{text-align:right}
 .bwAmt{min-width:8ch;display:inline-block}
 /* shared outline+bevel for serif display text (fill gradient clipped to text; outline via stacked hard drop-shadows) */
-.bevel{-webkit-background-clip:text;background-clip:text;color:transparent;
-  filter:drop-shadow(1.6px 0 0 #1E1A26) drop-shadow(-1.6px 0 0 #1E1A26) drop-shadow(0 1.6px 0 #1E1A26) drop-shadow(0 -1.6px 0 #1E1A26) drop-shadow(0 3px 0 #120F18) drop-shadow(0 6px 6px #0007)}
 
 /* ---------- generic buttons (modals) ---------- */
 button{font:inherit;font-family:"Nunito",sans-serif;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#fff;cursor:pointer;
@@ -88,14 +86,12 @@ button.small{padding:3px 10px;font-size:12px}
 .sym.L1 .nm{color:var(--rose)} .sym.L2 .nm{color:#B5566C} .sym.L3 .nm{color:var(--denim)} .sym.L4 .nm{color:#B23A2E} .sym.L5 .nm{color:#5C7F4C}
 .sym .plate{position:absolute;bottom:5px;left:50%;transform:translateX(-50%);z-index:2;font-family:"Cinzel";font-weight:800;background:var(--grain),linear-gradient(#E8E2F4,var(--plate));
   color:var(--ink);font-size:calc(var(--cell)*.1);padding:0 8px;border:2px solid var(--ink);border-radius:3px;letter-spacing:1px}
-.sym .nameTag{position:absolute;top:4px;left:5px;z-index:2;font-family:"Nunito";font-weight:900;font-size:calc(var(--cell)*.075);background:#2A2433cc;color:var(--cream);padding:0 5px;border-radius:4px}
 /* wild: same painted tile, NO glow. Subtle idle breathe only. */
 .sym.W img{transform-origin:50% 60%}
 .badge{position:absolute;right:3px;bottom:3px;z-index:3;min-width:calc(var(--cell)*.3);max-width:calc(var(--cell)*.42);padding:0 3px;text-align:center;font-family:"Nunito";font-weight:900;font-size:max(10px,calc(var(--cell)*.13));line-height:1.25;white-space:nowrap;
   color:var(--cream);background:var(--grain),linear-gradient(#D45A74,var(--rose) 60%,var(--rose2));border:2px solid var(--ink);border-radius:4px;box-shadow:0 1px 0 #2A243377}
 .cell.locked .plate{display:none}
 .sym.W .plate{bottom:3px;left:4px;transform:none;font-size:max(8px,calc(var(--cell)*.09));padding:0 4px}
-.badge.b10{background:var(--grain),linear-gradient(#9B7CC9,#7E5BB0 60%,#5E4290)} .badge.b100{background:var(--grain),linear-gradient(#E4DDF2,#B9A2E0 60%,#8E7BB5);color:var(--ink)}
 .cell.win{z-index:2} .cell.win .sym{transform:scale(1.08);transition:transform .18s cubic-bezier(.3,1.5,.5,1)}
 .cell.dim{opacity:.62;transition:opacity .15s}
 .cell.out{opacity:0}
@@ -105,7 +101,6 @@ button.small{padding:3px 10px;font-size:12px}
   -webkit-text-stroke:4px var(--cream);paint-order:stroke fill;animation:floatUp .8s ease-out forwards}
 @keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
 @keyframes drop{from{transform:translateY(-110%);opacity:0}to{transform:none;opacity:1}}
-@keyframes winBob{50%{transform:scale(1.05)}}
 @keyframes grow{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
 @keyframes floatUp{from{transform:translateY(0);opacity:1}to{transform:translateY(-40px);opacity:0}}
 @keyframes settle{0%{transform:scaleY(.3);opacity:0}70%{transform:scaleY(1.02);opacity:1}100%{transform:none}}
@@ -113,14 +108,9 @@ button.small{padding:3px 10px;font-size:12px}
 /* ---------- full-reel / merged wild overlays (no glow) ---------- */
 .ov{position:absolute;top:0;height:100%;z-index:2;overflow:hidden;transform-origin:50% 0;animation:settle .5s ease-out;background:var(--paper);
   box-shadow:inset 2px 0 0 #2A243355, inset -2px 0 0 #2A243355}
-.wfph{position:absolute;top:0;height:100%;display:flex;align-items:center;justify-content:center;text-align:center;border-right:1px dashed #2A243340;
-  background:var(--paint),linear-gradient(#EEE6F8,var(--pink) 60%,#B49BD6);color:var(--ink);font-family:"Cinzel";font-weight:800;font-size:calc(var(--cell)*.14)}
-.wfph small{font-family:"Nunito";font-weight:800;font-size:.55em} .wfph:last-of-type{border-right:none}
 .ov .plate{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-family:"Cinzel";font-weight:800;background:var(--grain),linear-gradient(#E8E2F4,var(--plate));color:var(--ink);
   font-size:calc(var(--cell)*.15);padding:1px 16px;border:2px solid var(--ink);border-radius:3px;letter-spacing:1px;white-space:nowrap}
 .ov .badge{left:50%;right:auto;top:auto;bottom:calc(var(--cell)*.3 + 16px);transform:translateX(-50%);font-size:calc(var(--cell)*.18);white-space:nowrap;padding:2px 14px}
-.ov .mlabel{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:2;background:#2A2433cc;color:var(--cream);padding:2px 10px;border-radius:5px;
-  font-size:calc(var(--cell)*.085);white-space:nowrap;font-weight:800}
 .ov .tag{position:absolute;top:8px;left:8px;z-index:2;background:#2A2433cc;color:var(--cream);padding:1px 6px;border-radius:4px;font-size:calc(var(--cell)*.075);font-weight:800}
 
 /* ---------- lines / toast / banner / fs bar: dark glass, thin border, serif ---------- */
@@ -244,7 +234,6 @@ body.portrait #buyCards{grid-template-columns:1fr 1fr} body.portrait .bcard:last
 .sym.art{background:none;box-shadow:none} .sym.art::before,.sym.art::after{display:none}
 .cell.win .sym.art{border-radius:50%;background:none}
 #logo.art{width:260px;height:130px} #logo.art img{max-width:100%;max-height:100%;object-fit:contain}
-#logo .phTag{position:absolute;bottom:-6px;font:800 9px "Nunito";letter-spacing:1px;color:#F1F0F5;background:#2A2433aa;padding:0 4px;border-radius:3px}
 #frame.art{background-size:100% 100%}
 #intro .card.art{background-size:cover;background-position:center;min-width:min(560px,calc(90*var(--vw)))}
 .ico:disabled{opacity:.35}
@@ -293,26 +282,11 @@ body.portrait #logo.art{height:clamp(40px,calc(8*var(--vh)),92px);max-width:calc
 #loader{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(8px,calc(2*var(--vh)),22px);
   background:#1C1922;overflow:hidden;opacity:1;transition:opacity .6s ease;user-select:none;-webkit-user-select:none;padding:calc(3*var(--vh)) calc(4*var(--vw)) calc(6*var(--vh));box-sizing:border-box}
 #loader.out{opacity:0;pointer-events:none}
-#loader .lbg{position:absolute;inset:-60px;background-size:cover;background-position:center;filter:blur(22px) saturate(.55) brightness(.34)}
-#loader .lbg::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,#2A243300,#15121Acc 78%)}
 #lLogo{position:relative;display:block;width:min(calc(64*var(--vw)),820px);max-height:calc(46*var(--vh));object-fit:contain;pointer-events:none}
 #lLogo.txt{font:900 72px "Cinzel";color:#DCD3F0;text-align:center}
-.lSide{position:relative;display:flex;flex-direction:column;align-items:center;gap:clamp(8px,calc(1.6*var(--vh)),16px);width:min(600px,calc(92*var(--vw)))}
 #lCards{position:relative;width:100%;overflow:hidden;border-radius:8px;touch-action:pan-y;cursor:grab}
 #lCards:active{cursor:grabbing}
 #lTrack{display:flex;transition:transform .5s cubic-bezier(.3,.7,.3,1)}
-.lCard{flex:0 0 100%;box-sizing:border-box;display:flex;align-items:center;gap:18px;padding:12px 18px 12px 12px;
-  background:linear-gradient(#2B2634e6,#1E1A25e6);border:1px solid #4A4258;border-radius:8px}
-.lCard h3{margin:0;font-family:"Cinzel";font-weight:800;font-size:clamp(15px,calc(2.2*var(--vh)),21px);line-height:1.25;letter-spacing:.6px;color:#ECE6F6}
-.lArt{position:relative;flex:0 0 auto;width:clamp(84px,calc(14*var(--vh)),128px);height:clamp(84px,calc(14*var(--vh)),128px);border-radius:6px;overflow:hidden;background:#2A2433;border:1px solid #5A5068}
-.lArt img{display:block;width:100%;height:100%;object-fit:cover;pointer-events:none}
-.lArt.wild img{object-fit:contain}
-.lLock{position:absolute;top:5px;left:50%;translate:-50% 0;font:800 9px "Nunito";letter-spacing:1px;color:#ECE6F6;background:#1E1A26d9;border:1px solid #6B6080;border-radius:3px;padding:0 5px}
-.lBadge{position:absolute;bottom:5px;left:50%;translate:-50% 0;font:900 13px "Nunito";color:#1E1A26;background:linear-gradient(#EFE8FA,#B9A9D6);border:1px solid #1E1A26;border-radius:4px;padding:0 7px}
-.lArt.max img{filter:saturate(.75) brightness(.72)}
-.lBig{position:absolute;left:0;right:0;bottom:8%;text-align:center;font-family:"Cinzel";font-weight:900;font-size:clamp(17px,calc(3*var(--vh)),26px);letter-spacing:.5px;
-  color:transparent;background-image:linear-gradient(#FFFFFF,#DCD3F0 42%,#8E7BB5 54%,#CFC3EA 80%,#F2EEFA);-webkit-background-clip:text;background-clip:text;
-  -webkit-text-stroke:1px #1E1A26;paint-order:stroke fill}
 #lDots{display:flex;gap:8px}
 #lDots button{width:9px;height:9px;padding:0;border-radius:50%;border:1px solid #1E1A26;background:#5D5370;cursor:pointer}
 #lDots button.on{background:#CDBDEB}
@@ -324,21 +298,13 @@ body.portrait #logo.art{height:clamp(40px,calc(8*var(--vh)),92px);max-width:calc
 #loader.ready #lBar{display:none}
 #loader.ready #lGo{display:block}
 @keyframes lPulse{50%{transform:scale(1.04)}}
-.lCredit{position:absolute;bottom:max(10px,env(safe-area-inset-bottom));left:0;right:0;text-align:center;font:700 12px "Nunito";letter-spacing:1.5px;color:#9A90AE}
 /* portrait = the stage's portrait (body.portrait, stage.ts), never the window media query: one rule for every layer */
 body.portrait #lLogo{width:calc(94*var(--vw));max-height:calc(34*var(--vh))}
-body.portrait .lCard{gap:12px;padding:10px 12px 10px 10px}
 /* short popout (landscape, under 520px tall): logo left, cards and controls right */
 @media (orientation:landscape) and (max-height:0px){ /* retired: fixed design stage */
   #loader{flex-direction:row;gap:calc(3*var(--vw));padding:12px calc(4*var(--vw)) 28px}
   #lLogo{width:calc(44*var(--vw));max-height:calc(78*var(--vh))}
-  .lSide{width:min(460px,calc(46*var(--vw)));gap:8px}
-  .lArt{width:72px;height:72px}
-  .lCard{padding:8px 12px 8px 8px;gap:12px}
-  .lCard h3{font-size:14px}
-  .lBig{font-size:13px}
   #lGo{padding:8px 22px;font-size:14px}
-  .lCredit{bottom:6px;font-size:10px}
 }
 
 /* ---- Rizzin Games rabbit as the bonus-button icon (white solid, like the other icons) ---- */
@@ -461,7 +427,6 @@ body.short:not(.portrait) #logo.art img{width:100%;height:100%}
 .mx svg{filter:drop-shadow(0 0 calc(var(--cell)*.03) #F06AAE8c)}
 .mx .spr{position:absolute;pointer-events:none}
 .mx .fxGlint{width:auto;height:46%;aspect-ratio:1;translate:-50% -50%;z-index:2}
-.mx .fxBurst{top:50%;height:270%;aspect-ratio:1;translate:-50% -50%;z-index:-1}
 .mx{isolation:isolate}
 .ov .mx{top:3px}
 /* merged-wild total: same lettering, smaller, bottom centre; a faint plum wash keeps it legible over busy art */
@@ -478,7 +443,6 @@ body.short:not(.portrait) #app #fsBar{position:fixed;right:6px;left:auto;top:aut
 /* ---- sprite canvases (sprite.ts / fx.ts) ---- */
 canvas.spr{display:block;pointer-events:none}
 canvas.fxFill{position:absolute;inset:0;width:100%;height:100%}
-.cell canvas.fxRim{position:absolute;inset:-6%;width:112%;height:112%;z-index:4}
 /* LOCKED: deep-plum pill with lavender caps, dark outline, sprite padlock; the locked cell gets a thin lavender/pink
    inner frame with a soft glow. Sits bottom-left (the WILD plate is hidden while locked); multiplier is top-right. */
 .lock{position:absolute;left:4px;bottom:4px;z-index:3;display:none;align-items:center;gap:2px;font-family:"Nunito";font-weight:900;
@@ -490,20 +454,13 @@ canvas.fxFill{position:absolute;inset:0;width:100%;height:100%}
 .cell.locked::after{content:"";position:absolute;inset:1px;z-index:2;pointer-events:none;border:2px solid #D7B8EE;
   box-shadow:inset 0 0 0 1px #F48FC0,inset 0 0 8px #F06AAE66,0 0 0 1px #1A1420}
 
-/* ---- symbol sprites (gen_symbols.py): while a land / win / idle sheet plays it replaces the static art ---- */
-.sym canvas.symFx{position:absolute;inset:0;width:100%;height:100%;z-index:1}
-.sym:has(canvas.symFx) img{visibility:hidden}
-.cell.sprWin .sym{animation:none;outline:none;background:none}
-.sym:has(canvas.fxIdle) img{animation:none}
 
 /* ---- reel spin (reels.ts): per reel a column of 6 recycled slots scrolled with translate3d (GPU layer, no layout
    per frame) plus the seamless blur strip, faded in only near full speed. Spinning cells hide; locked cells stay on top. */
 #strips{position:absolute;inset:0;z-index:0;pointer-events:none}
 #cells{position:absolute;inset:0;z-index:1}
 .strip{position:absolute;top:0;width:var(--cell);height:calc(var(--cell)*4);overflow:hidden;visibility:hidden;contain:strict}
-.strip .tape{position:absolute;inset:0;will-change:opacity}
 .slot{position:absolute;left:0;top:0;width:var(--cell);height:var(--cell);will-change:transform}
-.strip .sblur{position:absolute;left:0;top:0;width:100%;opacity:0;background-repeat:repeat-y;background-size:100% calc(var(--cell)*6);will-change:transform,opacity}
 .cell.spinning{visibility:hidden !important}
 
 /* ---- respins remaining (respin.ts): 3 dots inside each LOCKED strip and at the foot of every stack; only while respinning.
@@ -616,10 +573,9 @@ body.portrait .plGrid{grid-template-columns:repeat(3,1fr);gap:6px} body.portrait
    elastic pop) and the landing ring flare / burst sprites (wfxRing, wfxBurst) and the scatter land sheet do not show */
 body:not(.turbo) #cells .cell.wLand .sym{animation:wSettle .42s cubic-bezier(.3,.6,.4,1)}
 @keyframes wSettle{0%{transform:scale(.97)}100%{transform:none}}
-body:not(.turbo) canvas.wfxRing,body:not(.turbo) canvas.wfxBurst,body:not(.turbo) canvas.fxLand{display:none}
+body:not(.turbo) canvas.wfxRing{display:none}
 canvas.wfx{position:absolute;pointer-events:none;z-index:3}
 canvas.wfxRing{inset:-12%;width:124%;height:124%}
-canvas.wfxBurst{inset:-12%;width:124%;height:124%;z-index:4}
 canvas.wfxIn{inset:0;width:100%;height:100%;z-index:1}
 canvas.wfxTop{z-index:4}
 .wfxCol{position:absolute;top:0;height:100%;z-index:3;pointer-events:none}
@@ -627,14 +583,11 @@ canvas.wfxTop{z-index:4}
 .wfxCol.seam{width:calc(var(--cell)*.6)!important;transform:translateX(-50%)}
 .ov.full.art::before{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;
   box-shadow:inset 0 0 0 2px #FFE6F2,inset 0 0 0 4px #E0409A,inset 0 0 10px 4px #C42A7866}
-.ov.wfxOpen .wart{visibility:hidden}
 
 /* ---- feature moments (fx_feat): burst behind the title, matte confetti, title pop; free-spin outro ---- */
 .ffConf{position:absolute;left:0;top:0;width:100%;height:100%;opacity:.85}
 .ffBurst{position:absolute;left:50%;top:42%;width:min(calc(80*var(--vw)),560px);aspect-ratio:1;transform:translate(-50%,-50%)}
 body.portrait .ffBurst{top:46%}
-canvas.ffFill{position:absolute;inset:0;width:100%;height:100%}
-canvas.ffPop{position:absolute;left:50%;top:50%;width:160%;aspect-ratio:1;transform:translate(-50%,-50%);pointer-events:none;z-index:1}
 #intro,#outro{cursor:pointer}
 #intro .card,#outro .card{position:relative;z-index:1}
 #outro .card{text-align:center;padding:26px 56px;border-radius:10px;max-width:calc(90*var(--vw));animation:settle .45s ease-out}
@@ -647,7 +600,7 @@ body.portrait .otAmt{font-size:34px}
 .uiFx{position:absolute;left:50%;top:50%;pointer-events:none;transform:translate(-50%,-50%)}
 .uiRing,.uiHalo{width:150%;aspect-ratio:1;z-index:-1} .uiRing{z-index:2}
 .uiTap{width:150%;aspect-ratio:1;z-index:2}
-.uiPulse{z-index:0} #lGo{z-index:1}
+ #lGo{z-index:1}
 #lGo{position:relative}
 canvas.uiFill{position:absolute;inset:0;width:100%;height:100%}
 #spinBtn.pressed{animation:btnPress .22s cubic-bezier(.3,1.6,.5,1)}
@@ -669,9 +622,6 @@ body.portrait #maxwin .mwGroup{height:auto;width:calc(132*var(--vw));bottom:0}
 #maxwin.out{transition:opacity .5s cubic-bezier(.45,0,.55,1) .06s}   /* exit: the row starts sliding, then the screen eases out */
 #maxwin .mwTier.spr{transform:scale(.5);opacity:0;transition:none}
 #maxwin.on .mwTier.spr.pop{transform:scale(1);opacity:1;transition:transform .5s cubic-bezier(.34,1.56,.64,1),opacity .2s ease-out}
-#maxwin .mwConfetti{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden;animation:mwConfIn .5s ease both}
-@keyframes mwConfIn{from{opacity:0}to{opacity:1}}
-#maxwin .mwConfTile{position:absolute;left:0;width:100%;aspect-ratio:16/9}
 /* title + count-up sit in the clear centre band above the elves */
 #maxwin .mwText{top:calc(6*var(--vh));bottom:auto;z-index:4}
 #maxwin .mwTier.spr{position:relative;width:min(calc(48*var(--vw)),720px);aspect-ratio:560/160;font-size:0;color:transparent}
@@ -691,7 +641,6 @@ body.portrait #maxwin .mwTier.spr{width:calc(80*var(--vw))}
 #bigwin .bwGroup.in { transform: translate(-50%, 0); opacity: 1; }
 /* v3.19 LEGENDARY WIN: the four younger elves on the max-win cast sheets, re-grouped frame 1321x694 (bigwinElves.ts L_GROUP) */
 #bigwin .bwGroup.bwLegend { aspect-ratio: 1321 / 694; }
-#bigwin .bwSpr { position: absolute; inset: 0; width: 100%; height: 100%; }
 body.portrait #bigwin .bwGroup { height: auto; width: calc(100*var(--vw)); bottom: calc(-7*var(--vh)); }   /* smaller + sunk: covers less of the board */
 /* landscape: smaller + sunk group, and the title block lifted clear of the heads while the group is up */
 body:not(.portrait) #bigwin .bwGroup { height: calc(56*var(--vh)); bottom: calc(-8*var(--vh)); }
@@ -731,7 +680,6 @@ html{background:#2A2533}
 .mini.slow i{animation-duration:.64s}
 .strip.ant{z-index:5}
 @keyframes miniRun{from{transform:translate3d(0,calc(var(--cell)*-6),0)}to{transform:translate3d(0,0,0)}}
-canvas.wfxMerge{position:absolute;left:-30%;top:calc(50% - 80%);width:160%;height:auto;aspect-ratio:1}
 /* impact bursts (fx.ts burst): centred on the host, above the symbol */
 canvas.bfx{position:absolute;left:50%;top:50%;z-index:4;pointer-events:none}
 .wfxCol.burstCol canvas.bfx{top:50%}
@@ -740,7 +688,6 @@ canvas.bfx{position:absolute;left:50%;top:50%;z-index:4;pointer-events:none}
   border-image:url(ui/winplate_9s.webp) 36 fill / calc(var(--cell)*.2) stretch;text-shadow:none;font:900 calc(var(--cell)*.2) "Nunito";color:#FFF4FA;-webkit-text-stroke:2px #2A1830;paint-order:stroke fill}
 body.portrait .wlAmt{font-size:calc(var(--cell)*.2)}
 .wlAmt b{position:relative;z-index:1;font:inherit}
-canvas.wlGlint{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .sym .olWin{position:absolute;inset:0;width:100%;height:100%;opacity:0;transition:opacity .2s;pointer-events:none}
 .cell.win .sym .olWin{opacity:1}
 /* ---- intro (intro.ts): studio sting, then the feature splash on the loader ---- */
@@ -817,8 +764,6 @@ body.tb .modal.bm{width:min(860px,calc(94*var(--vw)/var(--tbm)))}
 .ov canvas.stk_react{z-index:1} .ov:has(>canvas.stk_win)>canvas.stk_react{opacity:0}   /* face reaction: above the held body, under letters / win */
 .ov:has(>canvas.stk_body)>.wart,.ov:has(>canvas.stk_win)>.wart{visibility:hidden}
 /* merge hit: the singles' poses (snapshots) scale up into the merged group pose, clipped to the merged reels (.ov overflow) */
-.ov .mGhost{position:absolute;top:0;height:100%;z-index:3;pointer-events:none;transform-origin:50% 55%;will-change:transform,opacity}
-.ov .mGhost>canvas,.ov .mGhost>.wart{position:absolute;inset:0;width:100%;height:100%}
 .ov>canvas.stk_body,.ov>.wart{transform-origin:50% 55%}
 .ov:has(>canvas.stk_letters) .mLets{display:none}
 .ov .mLets.mStill{inset:0;height:auto} .ov .mLets.mStill img{display:block;width:100%;height:100%;pointer-events:none} .ov .mLets.mStill i.stkLets{position:absolute;display:block;pointer-events:none;background-repeat:no-repeat} /* r8d letters still (ui.ts stillHTML) until letters_ignite decodes */
@@ -1011,7 +956,6 @@ canvas.wfxRing{display:none}
 .bArt img{object-fit:cover;object-position:50% 50%}
 .bcard[data-m="double_dare"] .bArt img,.bcard[data-m="triple_dare"] .bArt img{object-position:50% 6%}
 .bcard[data-m="egw"] .bArt img{object-fit:contain;object-position:50% 30%;transform:scale(1.08)}
-.bArt .bMyst{display:block;width:100%;height:100%}
 #anteRow .lbl{font-size:15px;letter-spacing:1.5px}
 #anteRow .lbl small{font-size:14px;opacity:1;color:#F3C6DE;margin-left:8px;letter-spacing:.5px}
 .bcard[data-m="dare"] .bArt img{object-fit:contain;transform:scale(1.3);transform-origin:50% 40%}
@@ -1163,7 +1107,6 @@ body.portrait .modal .mX{top:2px;right:2px}
 .cfArt[data-m="double_dare"] img,.cfArt[data-m="triple_dare"] img{object-position:50% 6%}
 .cfArt[data-m="egw"] img{object-fit:contain;object-position:50% 30%;transform:scale(1.08)}
 .cfArt[data-m="dare"] img{object-fit:contain;transform:scale(1.3);transform-origin:50% 40%}
-.cfArt .bMyst{width:100%;height:100%;display:block}
 .modal.cf h2{margin:0 0 6px;font-size:26px;letter-spacing:1.5px}
 #cfDesc{font-size:14px;font-weight:600;line-height:1.4;color:#ECE6F2;margin:0 0 10px}
 .cfAmt{margin:4px 0 2px;color:#FFE6F2;font-variant-numeric:tabular-nums}

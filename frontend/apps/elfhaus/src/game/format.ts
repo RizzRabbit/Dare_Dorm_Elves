@@ -14,7 +14,6 @@ let currency = 'USD';
 let locale = 'en';
 export const setCurrency = (c: string) => (currency = (c || 'USD').toUpperCase());
 export const setLocale = (l: string) => (locale = l || 'en');
-export const getCurrency = () => currency;
 export const isSocialCurrency = () => currency in SOCIAL;
 const decCache = new Map<string, number>();
 const decimalsOf = (c: string) => {

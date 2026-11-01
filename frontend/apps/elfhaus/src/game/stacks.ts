@@ -69,7 +69,6 @@ export const sheetId = (a: StackAnim, ov: HTMLElement) => { const pos = `${a}_${
 /** Is that sheet decoded and ready to play right now? */
 export const hasStack = (a: StackAnim, ov: HTMLElement) => ok(sheetId(a, ov));
 /** Is there art for it at all (decoded or not)? Use this to decide between the art and an old placeholder effect. */
-export const stackListed = (a: StackAnim, ov: HTMLElement) => listed.has(sheetId(a, ov));
 const live = new WeakMap<HTMLElement, Partial<Record<'body' | 'letters' | 'win', Anim>>>();
 function run(a: StackAnim, ov: HTMLElement, layer: 'body' | 'letters' | 'win', o: { loop?: boolean; hold?: boolean; still?: boolean; from?: number; onEnd?: () => void } = {}) {
 	if (!hasStack(a, ov)) return null;

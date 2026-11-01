@@ -15,32 +15,14 @@ export function loadAllFx(track: <T>(p: Promise<T>) => Promise<T>) {
 	}));
 }
 
-// ---------- symbols (scripts/sprites/gen_symbols.py: sheet sym_<S> with land / win / idle) ----------
+// ---------- symbols (static art + CSS; the old baked sym_<S> sprite strips are gone) ----------
 const symOf = (cell: Element) => cell.querySelector<HTMLElement>('.sym');
 const symName = (cell: Element) => [...(symOf(cell)?.classList || [])].find((c) => /^(H\d|L\d|W|S)$/.test(c)) || '';
-/** Wild idle loop (random phase so neighbouring wilds don't breathe in sync). */
-export function symIdle(cell: HTMLElement) {
-	const sym = symOf(cell); if (!SYM_STRIPS || !sym || symName(cell) !== 'W' || !hasSheet('sym_W') || sym.querySelector('canvas.fxIdle')) return;
-	play('sym_W', 'idle', sym, { cls: 'fxFill symFx fxIdle', delay: -Math.random() * 1000, prepend: false });
-}
-/** Win highlight: the symbol's own win loop (pulse, shine, edge glow, sparkles; characters lean and sway). */
-// aifix: the baked sym_<S> win / idle strips carry four-point star twinkles (the generic "AI sparkle"), so they are
-// not played any more. Winning symbols keep the static art + lit outline layer and get a slow transform-only bob
-// (.cell.win .sym>img, CSS). Re-enable once the symbols-v3 strips ship without the stars.
-const SYM_STRIPS = false;
-export function symWin(cell: HTMLElement) {
-	const sym = symOf(cell), n = symName(cell); if (!SYM_STRIPS || !sym || !hasSheet('sym_' + n) || sym.querySelector('canvas.fxWin')) return false;
-	play('sym_' + n, 'win', sym, { cls: 'fxFill symFx fxWin' });
-	cell.classList.add('sprWin');
-	return true;
-}
-/** Scatter land: the Ski Pass's own land sheet (squash-pop + ring flash + sparkles); the only symbol with one. */
+/** Win highlight: no sprite strip any more (winning symbols keep the static art + lit outline + CSS bob); false = not handled. */
+export function symWin(_cell: HTMLElement) { return false; }
+/** Scatter land: the Ski Pass's own land pop + a flash of its icy tile (chalet.css .cell.sLand), transform / opacity only. */
 export function symLand(cell: HTMLElement) {
-	// Job E: its own land pop + a flash of its icy tile (chalet.css .cell.sLand), transform / opacity only
 	if (symName(cell) === 'S') { cell.classList.remove('sLand'); void cell.offsetWidth; cell.classList.add('sLand'); setTimeout(() => cell.classList.remove('sLand'), 520); }
-	const sym = symOf(cell); if (!SYM_STRIPS || !sym || symName(cell) !== 'S' || !hasSheet('sym_S')) return;
-	sym.querySelectorAll('canvas.fxLand').forEach((c) => c.remove());
-	play('sym_S', 'land', sym, { cls: 'fxFill symFx fxLand', rate: 1, onEnd: () => sym.querySelectorAll('canvas.fxLand').forEach((c) => c.remove()) });
 }
 /** Landing weight on reel stop: squash and stretch (~120 ms, WAAPI transform only); wilds and scatters hit harder. */
 export function landBump(cell: HTMLElement) {
@@ -121,7 +103,6 @@ void stop;
 export const lockIconCSS = () => frameCSS(FX, 'lock', -1);
 
 /** Respin circles: static frames for empty / filled, the sheet for fill (forward) and reset (reverse). */
-export const rcCSS = (filled: boolean) => frameCSS(FX, 'rcfill', filled ? -1 : 0);
 export function rcFill(dot: HTMLElement, reverse = false) {
 	dot.querySelectorAll('canvas').forEach((c) => c.remove());
 	const a = play(FX, 'rcfill', dot, { cls: 'fxFill', reverse, fps: reverse ? 48 : undefined, });

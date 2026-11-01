@@ -265,7 +265,6 @@ html body .sym.rigd .rgBody{position:absolute;inset:0;display:block}
 html body .sym .symGlow>.rp{transform-origin:50% 55%}
 html body .cell.win .sym .symGlow>.rp{animation:aiGlowPulse calc(.45s*var(--gt,1)) ease-in-out calc(.16s*var(--gt,1)) infinite alternate}
 html body .cell.wild:not(.win) .sym.W .symGlow>.rp{animation:wGlowBreathe calc(.7s*var(--at,1)) ease-in-out infinite alternate}
-html body .sym:has(canvas.symFx)>.rig{visibility:hidden}
 html body .rig.still{position:absolute;inset:0;display:block}
 html body .rig.still .rgBody{position:absolute;inset:0;display:block}
 /* the old flat-art rules, carried over to the rig container */
@@ -329,7 +328,7 @@ html body .cell.win .rig .rp.m_twinkle{animation:rgTwinkle .7s cubic-bezier(.3,1
 html body .cell.win .rig .rp.m_bounce{animation:rgHop .7s cubic-bezier(.3,1.5,.5,1) .1s both}
 html body .cell.win .rig .rp.m_swingL{animation:rgPole .8s ease-out .05s both}
 html body .cell.win .rig .rp.m_swingR{animation:rgPole .8s ease-out .05s both reverse}
-html body .cell.win .rig .rp.m_steam,html body .cell.rgIdle .rig .rp.m_steam{animation:rgSteam 1.1s ease-in-out both}
+html body .cell.win .rig .rp.m_steam{animation:rgSteam 1.1s ease-in-out both}
 html body .cell.win .rig .rp.m_straw{animation:rgStraw .8s ease-out .08s both}
 html body .cell.win .rig .rp.m_bow,html body .cell.win .rig .rp.m_ribbon{animation:rgBow .8s ease-out .08s both}
 html body .cell.win .rig .rp.m_sprig{animation:rgSprig .8s ease-out .12s both}

@@ -67,7 +67,7 @@ export function rigHTML(key: string, still = false) {
 	// bust wild: the bust and details only; the card + recess under it and the SAME gold border as the tiles over it are
 	// the tile (so nothing - the bust's shadow, the sheen - dims or narrows it), the raised WILD is wildLetsHTML.
 	if (key.startsWith('W_')) {
-		const body = r.parts.filter((p) => p.cls !== 'lets').map(pt).join(''), lets = r.parts.filter((p) => p.cls === 'lets').map(pt).join('');
+		const body = r.parts.filter((p) => p.cls !== 'lets').map(pt).join('');
 		// the card, recess and border are the tile (tileHTML / tileTopHTML); here only the bust and its details
 		return `<i class="rig k_${key}">${sh}<i class="rgBody" style="${org}">${body}<i class="rgShine s_${key}"></i></i>${sparks}</i>`;
 	}
@@ -79,12 +79,6 @@ export function wildLetsHTML(key: string) {
 	const r = RIG[key]; if (!r || !key.startsWith('W_')) return '';
 	const [W, H] = r.src, lets = r.parts.filter((p) => p.cls === 'lets').map((p) => `<i class="rp f_${p.f} m_${p.cls}"></i>`).join('');
 	return lets ? `<div class="sym W art symTop rigd"><i class="rig k_${key}"><i class="rgBody" style="transform-origin:${pc(r.pivot[0], W)} ${pc(r.pivot[1], H)}">${lets}</i></i></div>` : '';
-}
-/** Tile land: the tile's own small thud + one border glint (chalet.css .cell.tLand), leading the symbol's settle. */
-export function tileLand(el: HTMLElement | null) {
-	if (!el) return;
-	el.classList.remove('tLand'); void el.offsetWidth; el.classList.add('tLand');
-	window.setTimeout(() => el.classList.remove('tLand'), 620);
 }
 /** Land hook (reels.ts landMini): one snappy squash-and-settle with follow-through on the details. */
 export function rigLand(cell: HTMLElement | null) {

@@ -18,7 +18,7 @@ import { money, moneyWin, mult, setCurrency, setLocale, isSocialCurrency, amount
 import { skipCounts, setAmount } from './countup';
 import { tapLines } from './winlines';
 import { winPresenting, skipStage, noteTap } from './winstage';
-import { startShimmer, initWfExpand } from './wildfx';
+import { startShimmer } from './wildfx';
 import { setArmedGlow, wireTapFx } from './uifx';
 import { featOpen, featClose } from './featfx';
 import { elvesLevel, preloadBigWinElves, bigWinElvesStart, bigWinElvesEnd } from './bigwinElves';
@@ -27,7 +27,7 @@ import { initSettings, popOpen, closePop } from './settings';
 import { initAudio, sfx } from './audio';
 import { initVoiceIdle, voice } from './voice';
 import { setSocial, isSocial, t } from './strings';
-import { $, S, ART, bet, titleHTML, buildCells, renderAll, renderOverlays, setOverlayHook, resetWinMeter, setWinMeter, setRoundMode, banner, wait, waitRaw } from './ui';
+import { $, S, ART, bet, titleHTML, buildCells, renderAll, renderOverlays, setOverlayHook, resetWinMeter, setRoundMode, banner, waitRaw } from './ui';
 import { skipHolds, syncTempo } from './tempo';
 import { playBookEvents, endBonusUi } from './bookEventHandlerMap';
 import { initRoxy, placeRoxy } from './roxy';
@@ -685,7 +685,7 @@ export async function initGame() {
 	document.addEventListener('pointerdown', (e) => { const t = e.target as Element; if (!t?.closest?.('#bigwin,#outro')) { const ui = !!t?.closest?.('#menu,#popMenu,#buyMenu,#bmConfirm,#autoMenu,#msg,#resumeCard'); skipBoard(false, !ui && !t?.closest?.('#menuBtn,#buyBtn,#autoBtn,#turboBtn,#betUp,#betDown') && !anyOpen() && !popOpen()); if (!ui && !winPresenting()) hurry(); } }, { capture: true, passive: true });
 	track(initRoxy(layout));
 	loadAllFx(track).then(() => renderAll());
-	setOverlayHook(stackIdle); initStacks().then(() => renderOverlays(false)); void initWfExpand(); // optional stack / per-reel expand sheets (placeholders until imported)
+	setOverlayHook(stackIdle); initStacks().then(() => renderOverlays(false)); // optional stack / per-reel expand sheets (placeholders until imported)
 	track(document.fonts?.ready ?? Promise.resolve());
 	buildCells(); S.sym = IDLE.map((c) => [...c]); S.vals = new Map([[2 * 4 + 2, 1]]);
 	if (url.replay) document.body.classList.add('replay');   // v21 (review #193): replay styling is in place before the first layout

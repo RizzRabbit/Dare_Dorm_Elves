@@ -3,7 +3,7 @@
 // CSS animates only transform (the press squash). Loops run only while their state is on.
 import { play, stop, hasSheet, type Anim } from './sprite';
 const ID = 'fx_btn';
-let armedAnim: Anim | null = null, pulse: Anim | null = null;
+let armedAnim: Anim | null = null;
 
 function host(btn: HTMLElement, cls: string) {
 	let h = btn.querySelector<HTMLElement>(':scope > .' + cls);
@@ -18,17 +18,6 @@ export function tapRing(btn: HTMLElement) { if (hasSheet(ID)) play(ID, 'tap', ho
 export function setArmedGlow(btn: HTMLElement, on: boolean) {
 	if (on && !armedAnim && hasSheet(ID)) armedAnim = play(ID, 'armed', host(btn, 'uiHalo'), { loop: true, cls: 'uiFill' });
 	else if (!on && armedAnim) { stop(armedAnim); armedAnim = null; }
-}
-export function loadPulse(btn: HTMLElement, on: boolean) {
-	if (on && !pulse && hasSheet(ID) && btn.parentElement) {
-		// behind the button: a sibling host placed over the button's box (the button is its own stacking context)
-		const h = document.createElement('span'); h.className = 'uiFx uiPulse'; h.setAttribute('aria-hidden', 'true');
-		const par = btn.parentElement; if (getComputedStyle(par).position === 'static') par.style.position = 'relative';
-		h.style.left = btn.offsetLeft + btn.offsetWidth / 2 + 'px'; h.style.top = btn.offsetTop + btn.offsetHeight / 2 + 'px';
-		h.style.width = btn.offsetWidth * 1.22 + 'px'; h.style.height = btn.offsetHeight * 1.9 + 'px';
-		btn.before(h); pulse = play(ID, 'lpulse', h, { loop: true, cls: 'uiFill' });
-	}
-	else if (!on && pulse) { pulse.cv.parentElement?.remove(); stop(pulse); pulse = null; }
 }
 /** Press feedback on the HUD buttons (one delegated listener). */
 export function wireTapFx() {

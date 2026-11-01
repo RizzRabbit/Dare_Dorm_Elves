@@ -41,7 +41,6 @@ export function setAmount(el: HTMLElement, v: number) {
 	const r = runs.get(el); if (r) { cancelAnimationFrame(r.raf); runs.delete(el); r.done(); }
 	shown.set(el, v); put(el, money(v));
 }
-export const shownAmount = (el: HTMLElement) => shown.get(el) ?? 0;
 /** Count `el` from what it shows now (or `from`) to `to` over `ms`. Resolves when it lands (or after a skip's settle). */
 export function countTo(el: HTMLElement, to: number, ms: number, from?: number) {
 	const prev = runs.get(el); if (prev) { cancelAnimationFrame(prev.raf); runs.delete(el); prev.done(); }
@@ -63,11 +62,6 @@ export function countTo(el: HTMLElement, to: number, ms: number, from?: number) 
 }
 /** Skip every running count: each eases onto its final value over SETTLE_MS (no hard snap) and then resolves. */
 export function skipCounts() { runs.forEach((r) => r.settle()); }
-/** Land every running count now (used when the screen is torn down). */
-export function finishCounts() {
-	runs.forEach((r, el) => { cancelAnimationFrame(r.raf); shown.set(el, r.to); put(el, money(r.to)); r.done(); });
-	runs.clear();
-}
 export const counting = () => runs.size > 0;
 export const isCounting = (el: HTMLElement) => runs.has(el);
 

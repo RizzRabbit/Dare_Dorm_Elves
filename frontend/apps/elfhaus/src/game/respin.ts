@@ -69,5 +69,4 @@ export function placeRespin() {
 	const h = Math.round(Math.min(36, Math.max(19, rail * 0.8)));
 	el.style.cssText = `top:${Math.round(bot + Math.max(2, (rail - h) / 2))}px;height:${h}px;--rsh:${h}px`;
 }
-export const RESPIN_MAX = MAX;
 export const DOTS: string = '<span class="rd" aria-hidden="true"><i></i><i></i><i></i></span>';

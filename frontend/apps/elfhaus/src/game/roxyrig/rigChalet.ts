@@ -24,7 +24,7 @@ const NECK = { x: 232, y: 292 }, HIPS = 560, CHEST = [310, 450] as const;
 const HAIR = { x1: 140, y1: 360 };                           // ponytail box (screen left of her head)
 // eye openings (cutout px): x, y (lid top), w, h; R = her left (screen right), winks
 const EYES = [{ x: 170, y: 163, w: 54, h: 38 }, { x: 253, y: 170, w: 42, h: 34 }];
-const SKIN = 0xe9874a, INK = 0x26140f, LASH = 0x1a0d0a;
+const SKIN = 0xe9874a, LASH = 0x1a0d0a;
 const VX = 28, VY = 36;                                       // v8: 16 px columns so the arm weights stay off the torso
 // mouth (cutout px): the parts container origin sits on the lip line; the smile scales about the lower-lip bottom
 const MOUTH = { x: 233, y: 229 }, SMILE_PIV = { x: 233, y: 240 }, TALK_DROP = 4;

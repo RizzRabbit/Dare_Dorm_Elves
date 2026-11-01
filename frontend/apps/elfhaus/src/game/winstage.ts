@@ -21,7 +21,6 @@ export function presenting(on: boolean) { depth = Math.max(0, depth + (on ? 1 : 
 export const winPresenting = () => depth > 0 || cur !== null;
 export function beginStage(name: string, skip: () => void) { cur = { name, skip }; log('start', name); }
 export function endStage(name: string) { if (cur?.name === name) cur = null; log('end', name); }
-export const stageName = () => cur?.name ?? null;
 /** A tap that was used for something else (a slam stop): its double-tap partner must not skip the first win stage. */
 export function noteTap(now = performance.now()) { lastSkip = now; }
 /** Skip the current stage. Returns true when the tap was taken by the win presentation (skipped or coalesced). */

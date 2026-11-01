@@ -10,7 +10,6 @@ import { LINES, REELS } from './config';
 import { S, $, bet, cellEl, setWinMeter } from './ui';
 import { symWin, clearSymWins, litOn, burst } from './fx';
 import { ovWin, clearOvWins } from './mergefx';
-import { play } from './sprite';
 import { moneyWin } from './format';
 import type { LineWin } from './typesBookEvent';
 import { TG } from './tempo'; // anim-v4: win lines run at gameplay pace (not ANIM_TEMPO)

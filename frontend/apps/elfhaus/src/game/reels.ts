@@ -30,7 +30,6 @@ void STOP_TEMPO;
 // Stop schedule (bookEventHandlerMap): first reel ~0.80 s after the press, reels 0.32 s apart; within a reel the cells
 // stop top to bottom `casc` ms apart; a reel's last cell impacts ~`at` (+ pad - set) and has settled at at + pad.
 // Normal: last reel's impact ~2.04 s after the press (was 2.08 s + a 0.24 s drop-in). Turbo: the same motion, faster.
-export const CELL_SPIN = true;
 export const timing = () => (S.turbo
 	? { first: 420, gap: 70, ant: 450, antD: 420, resp: 380, land: 60, cell: 35, casc: 20 }
 	: { first: 800, gap: 320, ant: sp(720), antD: sp(760), resp: sp(420), land: 90, cell: sp(70), casc: 60 });
@@ -60,7 +59,6 @@ export const isSpinning = () => spinning;
 export const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, Math.max(0, ms)));
 export const sinceStart = () => performance.now() - t0;
 export const markStopped = () => { spinning = false; bedOff(); };
-export function markStart() { t0 = performance.now(); }
 
 const FILL = ['H1', 'L1', 'H2', 'L2', 'L3', 'H3', 'L4', 'L5', 'H4', 'L2', 'L5', 'L1', 'L4', 'L3'];
 const keyOf = (name: string, r: number) => (name === 'W' ? (hasRig('W_R' + (r + 1)) ? 'W_R' + (r + 1) : 'W') : name);
@@ -222,7 +220,6 @@ export function startSpin(keep: (reel: number, row: number) => boolean = () => f
 	}
 	spinCells(list);
 }
-export const reelSpinning = (r: number) => [...cells.values()].some((C) => C.r === r);
 function stopCell(C: Cell, end: number, onLand: () => void) {
 	return new Promise<void>((res) => {
 		C.res?.(); C.onLand = onLand; C.res = res; C.end = end;

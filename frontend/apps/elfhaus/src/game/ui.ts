@@ -4,12 +4,11 @@ import { sfx, loop, duck } from './audio';
 import { voice, VOICE } from './voice';
 import { frameHTML } from './wildframe';
 import ART_JSON from './art.generated.json';
-import { LINES, MAX_WIN_X, ROWS, REELS, SYMBOL_NAMES, WIN_LEVELS, winEdgesFor, TITLE_ART } from './config';
+import { MAX_WIN_X, ROWS, REELS, SYMBOL_NAMES, WIN_LEVELS, winEdgesFor, TITLE_ART } from './config';
 import { elvesLevel } from './bigwinElves';
-import { money } from './format';
-import type { Group, LineWin } from './typesBookEvent';
+import type { Group } from './typesBookEvent';
 import { DOTS } from './respin';
-import { mxBurst, lockIconCSS, symWin, clearSymWins } from './fx';
+import { mxBurst, lockIconCSS, clearSymWins } from './fx';
 import STACKS from './chalet/stacks.json';
 import LETS_JSON from './chalet/stackletters.json';
 import { hasRig, ovEdgeHTML, rigGlowHTML, rigHTML, tileHTML, tileTopHTML, wildLetsHTML } from './symrig';
@@ -22,7 +21,6 @@ import { hold, tempo, gtempo } from './tempo';
 
 export const ART = ART_JSON as Record<string, string | null>;
 export const $ = <T extends HTMLElement = HTMLElement>(s: string) => document.querySelector(s) as T;
-const LINE_COLORS = ['#C8435F', '#4E6A8C', '#B79BE0', '#7E9C6B', '#9A6FB0', '#8B7FA8', '#5E8F95', '#6E6880'];
 
 export const S = {
 	currency: 'USD', balance: 0, levels: [] as number[], betIdx: 0, ante: false, turbo: false, busy: false, auto: 0, autoBonus: false,   /* v3.18b: autoplay plays bonuses hands-free (AUTO-PLAY BONUS toggle, default off) */
@@ -313,7 +311,7 @@ export async function bigWin(x: number, label?: string, level?: number) {
 	fxHooks.start?.(B, x, lvl); bwpStart(B, x);
 	sfx('bigwin_sting'); duck(true); const cu = loop('bigwin_countup_loop'); setTimeout(() => voice('bigwin'), VOICE.bigWinDelayMs);
 	let close = () => {}; const closed = new Promise<void>((r) => (close = r));
-	let chars = false, stIx = 0;
+	let stIx = 0;
 	// stages (winstage.ts): one per tier checkpoint, then the run to the final amount, then the landed banner
 	const names = [...(label ? [] : idx.map((i) => 'bw:' + BIG_TIERS[i].name)), 'bw:final'];
 	const counted = countTiers(amt, x, bet(), {
@@ -321,7 +319,7 @@ export async function bigWin(x: number, label?: string, level?: number) {
 		onTier: (i) => {
 			endStage(names[stIx]); stIx++; beginStage(names[stIx] ?? 'bw:final', () => counted.next());
 			if (label) return; tierHit(T, amt, BIG_TIERS[i].name, i === idx[0], at); fxHooks.tier?.(B, i); bwpTier(i);
-			if (top && elvesLevel(BIG_TIERS[i].level)) { chars = true; B.classList.add('chars'); fxHooks.chars?.(B, BIG_TIERS[i].level); } // EPIC: 3 elves, LEGENDARY: 4
+			if (top && elvesLevel(BIG_TIERS[i].level)) { B.classList.add('chars'); fxHooks.chars?.(B, BIG_TIERS[i].level); } // EPIC: 3 elves, LEGENDARY: 4
 		},
 	});
 	beginStage(names[0], () => counted.next());

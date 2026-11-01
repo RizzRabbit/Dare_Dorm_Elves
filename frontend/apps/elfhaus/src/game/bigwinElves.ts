@@ -14,7 +14,6 @@ import { TRANS as MW_TRANS, TRANS_RX as MW_TRANS_RX, FX as MW_FX, BLUSH as MW_BL
 const levelNamed = (name: string) => Number(Object.entries(STAGE_OF_LEVEL).find(([, n]) => n === name)?.[0]);
 /** v3.19: the layers follow the math win level (no x threshold): EPIC WIN = 3 elves, LEGENDARY WIN = 4. */
 export const EPIC_ELVES_LEVEL = levelNamed('EPIC WIN'), LEGEND_ELVES_LEVEL = levelNamed('LEGENDARY WIN');
-export const BIGWIN_ELVES_LEVEL = EPIC_ELVES_LEVEL;           // the first level with a character layer
 export type ElvesGroup = 'epic' | 'legendary';
 /** Which layer a stage level shows (null = none). */
 export function elvesFor(level: number): ElvesGroup | null { return level > LEGEND_ELVES_LEVEL ? null : level === LEGEND_ELVES_LEVEL ? 'legendary' : level >= EPIC_ELVES_LEVEL ? 'epic' : null; } // above LEGENDARY = the max-win screen (its own five)
