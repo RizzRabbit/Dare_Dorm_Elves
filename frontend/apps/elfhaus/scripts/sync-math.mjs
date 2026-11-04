@@ -53,7 +53,6 @@ const cfg = {
 	costs: need(params.costs, 'reel_params costs'),
 	startFs: lit('START_FS'),
 	mysteryOdds: lit('MYSTERY_ODDS'),
-	flipOdds: lit('FLIP_ODDS'),   // 5-scatter card flip: Double Black (triple_dare) / Powder Day (hidden) weights
 	guarantee: lit('GUARANTEE'),
 	guarMinVal: guarMin,
 	growStep: { default: 1, ...grow },

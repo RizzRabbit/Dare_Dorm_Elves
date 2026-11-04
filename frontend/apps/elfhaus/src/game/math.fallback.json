@@ -7,7 +7,6 @@
  "costs": {"base": 1, "ante": 3, "dare": 100, "double_dare": 300, "triple_dare": 1000, "mystery": 1000, "egw": 750},
  "startFs": {"dare": 8, "double_dare": 10, "triple_dare": 10, "hidden": 14},
  "mysteryOdds": {"none": 50, "double_dare": 37, "triple_dare": 10, "hidden": 3},
- "flipOdds": {"triple_dare": 75, "hidden": 25},
  "guarantee": {"triple_dare": 1, "hidden": 2},
  "guarMinVal": {"triple_dare": 4, "hidden": 16},
  "growStep": {"default": 1, "hidden": 2},

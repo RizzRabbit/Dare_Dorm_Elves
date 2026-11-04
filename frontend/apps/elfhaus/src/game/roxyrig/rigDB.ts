@@ -1,5 +1,5 @@
 // Roxy as ONE DragonBones rig (room + intro), played by pixi-dragonbones-runtime 8.0.3 (MIT) on Pixi 8.
-// Source: static/assets/rig/roxy_db/roxy_{ske,tex}.json + roxy_tex.webp, built from the approved still (roxy_still_A, 2x)
+// Source: static/assets/rig/roxy_db/roxy_{ske,tex}.json + roxy_tex.webp, built from the approved chalet Roxy (room_roxy_fullbody/roxy_ingame_fullbody_transparent.png)
 // with painted face frames (no code-drawn lids). Body animations play on group 'body' with 0.25 s blends; faces on their
 // own group 'face' (resetToPose = false) so a blink / wink never resets the pose. Intro: intro_door (painted reaching hand
 // on the door_hand bone, read by doorPts for the lever) -> intro_step -> intro_land -> idle.
