@@ -19,8 +19,7 @@ export const SZ = { frame: 1, respins: 5, fsBar: 6, toast: 7, banner: 8 } as con
 /** DOM: #app column. */
 export const AZ = { stage: 2, hud: 6, top: 7 } as const;
 /** DOM: full-screen layers (body / #root level). */
-// distinct ties (fix7, James): big win < max win < modals < resume / msg < loader; the replay bar sits above the modals
-export const TZ = { popMenu: 44, bigwin: 46, maxwin: 48, modal: 50, confirm: 52, replayBar: 56, resume: 64, msg: 66, introCv: 199, loader: 200 } as const;
+export const TZ = { replayBar: 40, popMenu: 45, modal: 50, confirm: 60, resume: 65, maxwin: 70, msg: 70, introCv: 199, loader: 200 } as const;
 
 const rules: [string, number][] = [
 	['#board>#strips', BZ.strips], ['#board>#reelLines', BZ.reelLines], ['#board>#cells', BZ.cells], ['#cells>.cell.win', BZ.cellWin],
@@ -29,7 +28,7 @@ const rules: [string, number][] = [
 	['#stage>#frame', SZ.frame], ['#stage>#rsCtr', SZ.respins], ['#stage>#fsBar', SZ.fsBar], ['#stage>#stepToast', SZ.toast], ['#stage>#banner', SZ.banner],
 	['#app>#stage', AZ.stage], ['#app>#hud', AZ.hud], ['#app>#top', AZ.top],
 	['#replayBar', TZ.replayBar], ['#popMenu', TZ.popMenu], ['#buyMenu', TZ.modal], ['#autoMenu', TZ.modal], ['#settings', TZ.modal], ['#menu', TZ.modal],
-	['#intro', TZ.modal], ['#outro', TZ.modal], ['#fsMore', TZ.modal], ['#bigwin', TZ.bigwin], ['#cardFlip', TZ.modal], ['#bmConfirm', TZ.confirm],
+	['#intro', TZ.modal], ['#outro', TZ.modal], ['#fsMore', TZ.modal], ['#bigwin', TZ.modal], ['#cardFlip', TZ.modal], ['#bmConfirm', TZ.confirm],
 	['#resumeCard', TZ.resume], ['#maxwin', TZ.maxwin], ['#msg', TZ.msg], ['#introCv', TZ.introCv], ['#loader', TZ.loader],
 ];
 /** Inject the map once (the first call wins; safe to call again). */
