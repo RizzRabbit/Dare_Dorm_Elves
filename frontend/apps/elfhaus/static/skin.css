@@ -88,3 +88,7 @@ html body .ov.win .wart.chaletStk .stkGrp>.stkElf{filter:drop-shadow(0 0 calc(1.
    so unscaled px radii grew 2.77x in portrait and the stacked halos merged into a board-wide blue wash. */
 html body .ov.win canvas.stk_body{filter:drop-shadow(0 0 calc(1.5px / var(--s,1)) #fff) drop-shadow(0 0 calc(2px / var(--s,1)) #fff) drop-shadow(0 0 calc(6px / var(--s,1)) #5ff3ff) drop-shadow(0 0 calc(14px / var(--s,1)) #19b8ff)}
 html body .ov.win img.stk_glow{opacity:0!important}
+/* fix5 #5: Settings row plates sit inside the panel's inner border: the panel has no right padding (fix4, title vs X), so the
+   rows take the same inset on the right as on the left */
+html body #settings .modal.stg .stRow{margin-right:33px!important}
+html body:not(.portrait) #settings .modal.stg .stRow{margin-right:26px!important}
