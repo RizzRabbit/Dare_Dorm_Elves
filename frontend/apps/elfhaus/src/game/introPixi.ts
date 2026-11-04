@@ -167,23 +167,20 @@ function paintTx(txt, font, px, wrapW, al) {   // painted bitmap-font text as a 
   return sp;
 }
 function cardText(c, size, wrapW, maxH) {   // title + detail in the painted fonts (cran title, ink detail), shrinking the detail until it fits maxH
-  const ti = paintTx(c.title.toUpperCase(), 'font_gold', size.t * 0.8, 1e5, size.al)
-    || new Text({ text: c.title.toUpperCase(), style: { fontFamily: FONT, fontWeight: '400', fontSize: size.t, fill: GOLD, letterSpacing: 0.5, align: size.al } });
+  const ti = paintTx(c.title.toUpperCase(), 'font_cran', size.t * 0.8, 1e5, size.al)
+    || new Text({ text: c.title.toUpperCase(), style: { fontFamily: FONT, fontWeight: '400', fontSize: size.t, fill: CRAN, letterSpacing: 0.5, align: size.al } });
   let fl = size.l, ln;
-  for (;;) { ln?.destroy({ texture: true, textureSource: true }); ln = paintTx(c.line, 'font_cream', fl * 0.78, wrapW, size.al)
-      || new Text({ text: c.line, style: { fontFamily: "Nunito, 'Segoe UI', sans-serif", fontWeight: '800', fontSize: fl, fill: CREAM, align: size.al, wordWrap: true, wordWrapWidth: wrapW, lineHeight: Math.round(fl * 1.3) } });
+  for (;;) { ln?.destroy({ texture: true, textureSource: true }); ln = paintTx(c.line, 'font_ink', fl * 0.78, wrapW, size.al)
+      || new Text({ text: c.line, style: { fontFamily: "Nunito, 'Segoe UI', sans-serif", fontWeight: '800', fontSize: fl, fill: PAL.ink, align: size.al, wordWrap: true, wordWrapWidth: wrapW, lineHeight: Math.round(fl * 1.3) } });
     if (ti.height + 6 + ln.height <= maxH || fl <= (ST.compact ? 7 : 11)) break; fl -= 0.5; }
-  if (ti?.scale && ti.width > wrapW) ti.scale.set(ti.scale.x * wrapW / ti.width);
+  if (ti?.scale && ti.width > wrapW * 0.96) ti.scale.set(ti.scale.x * wrapW * 0.96 / ti.width);   // uifix: title always fits inside the card padding
   return { ti, ln };
 }
 function buildCards() {
   cardsC = new Container(); cardsC.sortableChildren = true; root.addChild(cardsC); cardEls = [];
   const { cw: w, ch: h, row } = G.pc;
   CARDS.forEach((c, i) => { const C = new Container(); C.scale.set(1 / G.ks); cardsC.addChild(C);
-    // approved look (James 2026-10-30): black-and-gold card. Painted sprites only: the cream plate tinted gold is the rim,
-    // the flat plate tinted near-black is the face (no Graphics fills/strokes)
-    const g = nine('ui', 'plate_cream', w, h + 8, 2); g.tint = GOLD; g.position.set(-w / 2, -h / 2); C.addChild(g);
-    const face = nine('ui', 'plate_cream_flat', w - 12, h - 12, 2); face.tint = 0x14100c; face.alpha = 0.94; face.position.set(-w / 2 + 6, -h / 2 + 6); C.addChild(face);
+    const g = nine('ui', 'plate_cream', w, h + 8, 2); g.position.set(-w / 2, -h / 2); C.addChild(g);   // painted cream plate (chalet reskin; rim + shadow baked)
     const art = new Sprite(tex['card_' + c.key]); art.anchor.set(0.5); const tw = art.texture.width, th = art.texture.height;
     if (row) {   // landscape: art left, title + detail right
       const ah = h - 24, aw = w * 0.36, fit = Math.min(aw / tw, ah / th);
@@ -388,7 +385,7 @@ export async function initIntro(progress: () => number): Promise<boolean> {
     await symArtReady;   // S / W_R2 are rebuilt from the symbols sheet (symrig.ts)
     const [title, ...cardT] = await Promise.all([loadTex(TITLE), ...CARDS.map((c) => loadTex(c.art.includes('/') ? c.art : (ARTG as Record<string, string | null>)[c.art] || ''))]);
     tex.title = title;
-    await Promise.all([...['intro', 'fx', 'ui', 'titles'].map(loadAtlas), loadFont('font_gold'), loadFont('font_cream')]);
+    await Promise.all([...['intro', 'fx', 'ui', 'titles'].map(loadAtlas), loadFont('font_cran'), loadFont('font_ink')]);
     CARDS.forEach((c, i) => { tex['card_' + c.key] = cardT[i]; try { cardT[i].source.autoGenerateMipmaps = true; cardT[i].source.updateMipmaps(); } catch {} });
     try { title.source.autoGenerateMipmaps = true; title.source.updateMipmaps(); } catch {}
     if (killed || !$id('loader')) throw new Error('loader gone (error / skip) before the intro was up');

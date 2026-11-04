@@ -273,10 +273,13 @@ export function paintTextCanvas(txt: string, font: string, px: number, wrapW: nu
 	let cur = '';
 	for (const w of txt.split(/\s+/).filter(Boolean)) { const t = cur ? cur + ' ' + w : w; if (cur && wAdv(t) > wrapW) { lines.push(cur); cur = w; } else cur = t; }
 	if (cur) lines.push(cur);
-	const lh = m.lh * sc * lineK, W = Math.max(1, Math.ceil(Math.max(...lines.map(wAdv), 1))), H = Math.max(1, Math.ceil(lh * (lines.length - 1) + m.lh * sc));
+	// uifix: the canvas is as wide as the painted ink, not just the advances (the last glyph's art can overhang its advance;
+	// it was clipping the final letter / full stop of a line, e.g. "4 BONUS MODES" and "FREE SPINS.")
+	const wInk = (ln: string) => { const l = glyph(ln[ln.length - 1]); return wAdv(ln) + (l ? Math.max(0, l.sw - (l.adv ?? l.sw)) * sc : 0); };
+	const lh = m.lh * sc * lineK, W = Math.max(1, Math.ceil(Math.max(...lines.map(wInk), 1)) + 2), H = Math.max(1, Math.ceil(lh * (lines.length - 1) + m.lh * sc));
 	const cv = document.createElement('canvas'); cv.width = W * res; cv.height = H * res;
 	const g = cv.getContext('2d')!; g.imageSmoothingQuality = 'high'; const s = sc * res;
-	lines.forEach((ln, i) => { let x = (align === 'center' ? (W - wAdv(ln)) / 2 : 0) * res; const y = i * lh * res;
+	lines.forEach((ln, i) => { let x = (align === 'center' ? (W - wInk(ln)) / 2 : 0) * res; const y = i * lh * res;
 		for (const ch of ln) { if (ch === ' ') { x += sp * res; continue; } const f = glyph(ch); if (!f) { x += sp * res; continue; } blit(g, P, f, x, y, f.sw * s, f.sh * s, false, 1); x += (f.adv ?? f.sw) * s; } });
 	return { cv, w: W, h: H, res };
 }
