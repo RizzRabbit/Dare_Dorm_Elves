@@ -62,7 +62,7 @@ function geo(W, H) {   // W, H: stage px (ST.w / ST.h); the card + skip-strip bu
     const logo = { y: top - 64 - 122, w: 560 }, btn = { y: FL + 64, w: 470 * lbh / 100, h: lbh };
     const ar = tex.title ? tex.title.height / tex.title.width : 0.56;
     const yA = (logo.y + logo.w * ar * 0.42) * ks + m, yB = (btn.y - btn.h / 2) * ks - m - DOTS;   // between logo and button (screen px)
-    const ch = ST.compact ? Math.max(0, Math.min(340, yB - yA)) : Math.max(150, Math.min(340, yB - yA)), cw = Math.min(W * 0.52, 560, ch * 2.1);
+    const ch = ST.compact ? Math.max(0, Math.min(340, yB - yA)) : Math.max(150, Math.min(400, yB - yA)), cw = Math.min(W * 0.6, 760, ch * 2.1);   // uifix: larger, readable on desktop
     return { port, k, ks, Ws: W, Hs: H, DW, DH, cx, FL, dw, dh, top, lint: 64, logo, bar: { y: FL + 64, w: 560, h: 40 }, btn, sc: { dx: 400, y: top + 150, s: 0.6 }, F: 1500,
       pc: { cw, ch, cy: (yA + yB) / 2, row: true, off: ST.compact && (H < 260 || ch < 60) } }; }   // v21: no carousel in a window under 260 px tall
   // portrait: the scene keeps its full width scale and sits centred above the skip strip; the carousel overlays the doors
@@ -167,11 +167,11 @@ function paintTx(txt, font, px, wrapW, al) {   // painted bitmap-font text as a 
   return sp;
 }
 function cardText(c, size, wrapW, maxH) {   // title + detail in the painted fonts (cran title, ink detail), shrinking the detail until it fits maxH
-  const ti = paintTx(c.title.toUpperCase(), 'font_cran', size.t * 0.8, 1e5, size.al)
-    || new Text({ text: c.title.toUpperCase(), style: { fontFamily: FONT, fontWeight: '400', fontSize: size.t, fill: CRAN, letterSpacing: 0.5, align: size.al } });
+  const ti = paintTx(c.title.toUpperCase(), 'font_gold', size.t * 0.8, 1e5, size.al)
+    || new Text({ text: c.title.toUpperCase(), style: { fontFamily: FONT, fontWeight: '400', fontSize: size.t, fill: GOLD, letterSpacing: 0.5, align: size.al } });
   let fl = size.l, ln;
-  for (;;) { ln?.destroy({ texture: true, textureSource: true }); ln = paintTx(c.line, 'font_ink', fl * 0.78, wrapW, size.al)
-      || new Text({ text: c.line, style: { fontFamily: "Nunito, 'Segoe UI', sans-serif", fontWeight: '800', fontSize: fl, fill: PAL.ink, align: size.al, wordWrap: true, wordWrapWidth: wrapW, lineHeight: Math.round(fl * 1.3) } });
+  for (;;) { ln?.destroy({ texture: true, textureSource: true }); ln = paintTx(c.line, 'font_cream', fl * 0.78, wrapW, size.al)
+      || new Text({ text: c.line, style: { fontFamily: "Nunito, 'Segoe UI', sans-serif", fontWeight: '800', fontSize: fl, fill: CREAM, align: size.al, wordWrap: true, wordWrapWidth: wrapW, lineHeight: Math.round(fl * 1.3) } });
     if (ti.height + 6 + ln.height <= maxH || fl <= (ST.compact ? 7 : 11)) break; fl -= 0.5; }
   if (ti?.scale && ti.width > wrapW) ti.scale.set(ti.scale.x * wrapW / ti.width);
   return { ti, ln };
@@ -180,13 +180,16 @@ function buildCards() {
   cardsC = new Container(); cardsC.sortableChildren = true; root.addChild(cardsC); cardEls = [];
   const { cw: w, ch: h, row } = G.pc;
   CARDS.forEach((c, i) => { const C = new Container(); C.scale.set(1 / G.ks); cardsC.addChild(C);
-    const g = nine('ui', 'plate_cream', w, h + 8, 2); g.position.set(-w / 2, -h / 2); C.addChild(g);   // painted plate (rim + shadow baked)
+    // approved look (James 2026-10-30): black-and-gold card. Painted sprites only: the cream plate tinted gold is the rim,
+    // the flat plate tinted near-black is the face (no Graphics fills/strokes)
+    const g = nine('ui', 'plate_cream', w, h + 8, 2); g.tint = GOLD; g.position.set(-w / 2, -h / 2); C.addChild(g);
+    const face = nine('ui', 'plate_cream_flat', w - 12, h - 12, 2); face.tint = 0x14100c; face.alpha = 0.94; face.position.set(-w / 2 + 6, -h / 2 + 6); C.addChild(face);
     const art = new Sprite(tex['card_' + c.key]); art.anchor.set(0.5); const tw = art.texture.width, th = art.texture.height;
     if (row) {   // landscape: art left, title + detail right
       const ah = h - 24, aw = w * 0.36, fit = Math.min(aw / tw, ah / th);
       art.scale.set(fit); const artW = tw * fit; art.position.set(-w / 2 + 14 + aw / 2, 0); C.addChild(art);
       const tx = -w / 2 + 14 + aw + 14, wrapW = w / 2 - 16 - tx;
-      const { ti, ln } = cardText(c, { t: ST.compact ? Math.min(26, h * 0.1) : Math.max(16, Math.min(26, h * 0.1)), l: ST.compact ? Math.min(18, h * 0.065) : Math.max(12.5, Math.min(18, h * 0.065)), al: 'left' }, wrapW, h - 28);
+      const { ti, ln } = cardText(c, { t: ST.compact ? Math.min(26, h * 0.1) : Math.max(16, Math.min(36, h * 0.11)), l: ST.compact ? Math.min(18, h * 0.065) : Math.max(12.5, Math.min(25, h * 0.075)), al: 'left' }, wrapW, h - 28);
       const bh = ti.height + 6 + ln.height, y = -bh / 2;
       ti.position.set(tx, y); ln.position.set(tx, y + ti.height + 6); C.addChild(ti, ln);
     } else {     // portrait: art on top, title + detail under it
@@ -385,7 +388,7 @@ export async function initIntro(progress: () => number): Promise<boolean> {
     await symArtReady;   // S / W_R2 are rebuilt from the symbols sheet (symrig.ts)
     const [title, ...cardT] = await Promise.all([loadTex(TITLE), ...CARDS.map((c) => loadTex(c.art.includes('/') ? c.art : (ARTG as Record<string, string | null>)[c.art] || ''))]);
     tex.title = title;
-    await Promise.all([...['intro', 'fx', 'ui', 'titles'].map(loadAtlas), loadFont('font_cran'), loadFont('font_ink')]);
+    await Promise.all([...['intro', 'fx', 'ui', 'titles'].map(loadAtlas), loadFont('font_gold'), loadFont('font_cream')]);
     CARDS.forEach((c, i) => { tex['card_' + c.key] = cardT[i]; try { cardT[i].source.autoGenerateMipmaps = true; cardT[i].source.updateMipmaps(); } catch {} });
     try { title.source.autoGenerateMipmaps = true; title.source.updateMipmaps(); } catch {}
     if (killed || !$id('loader')) throw new Error('loader gone (error / skip) before the intro was up');
