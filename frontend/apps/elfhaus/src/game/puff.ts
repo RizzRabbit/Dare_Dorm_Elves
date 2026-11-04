@@ -123,15 +123,18 @@ function reform(cell: HTMLElement, delay: number, kT: number) {
  *  merged wilds stay on the board). With a respin next, only the cells that respin replaces. */
 export function puffTargets(wins: { positions: Pos[] }[], next: BookEvent | undefined) {
 	const seen = new Set<number>(), out: Pos[] = [];
-	const repl = next && next.type === 'respinStart' ? new Set((next as { replace: Pos[] }).replace.map((p) => k(p.reel, p.row))) : null;
+	// James 2026-11-04: pop + puff ONLY on a win that leads into a respin (the respin refills the burst cells). A plain
+	// line win (no respin next) keeps its symbols on the board with just the line / win highlight: no puff, no re-form.
+	if (!next || next.type !== 'respinStart') return { cells: out, refill: false };
+	const repl = new Set((next as { replace: Pos[] }).replace.map((p) => k(p.reel, p.row)));
 	for (const w of wins) for (const p of w.positions) {
 		const key = k(p.reel, p.row);
 		if (seen.has(key)) continue; seen.add(key);
 		if (S.full.has(p.reel) || S.sym[p.reel]?.[p.row] === 'W') continue;
-		if (repl && !repl.has(key)) continue;
+		if (!repl.has(key)) continue;
 		out.push(p);
 	}
-	return { cells: out, refill: !!repl };
+	return { cells: out, refill: true };
 }
 /** Chalet item 6: the pop + puff runs WITH the line hit (winlines.ts playWins starts it as the lines draw on), not after
  *  it. Returns null when nothing puffs. `start` resolves when the puff (and, with no respin next, the re-form) is done;
