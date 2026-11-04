@@ -126,11 +126,11 @@ html body .rules h3{font-family:var(--ui)!important;font-weight:400!important;co
   padding:.18em .7em;border:3px solid var(--c-ink);border-radius:10px;letter-spacing:.04em;box-shadow:0 3px 0 var(--c-ink)}
 html body .rules p,html body .rules td,html body .rules th{color:var(--c-ink)!important}
 html body .rules b{color:var(--c-cran2)!important}
-html body .rules table{background:var(--c-paper)!important;border:3px solid var(--c-ink)!important;border-radius:10px;overflow:hidden;border-collapse:separate!important;border-spacing:0}
-html body .rules th{background:var(--c-pine)!important;color:var(--c-cream)!important;font-family:var(--ui)!important;font-weight:400!important}
-html body .rules td{border-top:2px solid rgba(38,20,15,.25)!important}
-html body .rules img.ri{background:var(--c-pine2);border:2px solid var(--c-ink);border-radius:8px}
-html body .rules .plGrid figure{background:var(--c-paper)!important;border:2px solid var(--c-ink)!important;border-radius:8px}
+html body .rules table{background:none!important;border:0!important;border-collapse:collapse!important;border-spacing:0}  /* uifix: no CSS frame on the paytable */
+html body .rules th{background:none!important;color:var(--c-pine)!important;font-family:var(--ui)!important;font-weight:400!important}
+html body .rules td{border:0!important}
+html body .rules img.ri{background:none;border:0}
+html body .rules .plGrid figure{background:none!important;border:0!important}
 html body .rules .plGrid rect{fill:#d8c7a6!important;stroke:none!important}
 html body .rules .plGrid rect.on{fill:var(--c-gold)!important}
 html body .rules .plGrid polyline{stroke:var(--c-cran)!important}

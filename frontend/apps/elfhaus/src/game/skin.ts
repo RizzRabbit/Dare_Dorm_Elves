@@ -109,6 +109,8 @@ export function bmText(el: HTMLElement | null, font: string | ((el: HTMLElement)
 		let adv = adv0;
 		// fix6: data-fit="box" fits the element's own width; data-fit="parent" fits the room left in its parent (HUD meters)
 		let room = cs.maxWidth !== 'none' || el.dataset.fit === 'box' ? el.clientWidth : 0;
+		// uifix: data-fit="pad" fits the box minus its padding and centres the line in it (rules headings on their pills)
+		if (el.dataset.fit === 'pad') room = el.clientWidth - (parseFloat(cs.paddingLeft) || 0) - (parseFloat(cs.paddingRight) || 0);
 		if (el.dataset.fit === 'parent' && el.parentElement) { const pe = el.parentElement, pc = getComputedStyle(pe); room = pe.clientWidth - (parseFloat(pc.paddingLeft) || 0) - (parseFloat(pc.paddingRight) || 0) - Math.max(0, el.offsetLeft - pe.clientLeft - (parseFloat(pc.paddingLeft) || 0)) - 1; }
 		if (room > 0 && ink > room) { const f = room / ink; sc *= f; adv *= f; ink = room; }
 		const w = Math.max(el.clientWidth, adv, Math.ceil(ink)), h = Math.max(el.clientHeight, m.lh * sc);
@@ -116,7 +118,7 @@ export function bmText(el: HTMLElement | null, font: string | ((el: HTMLElement)
 		cv.style.cssText = `position:absolute;left:0;top:0;width:${w}px;height:${h}px;pointer-events:none;z-index:2`;
 		if (cv.width !== W) cv.width = W; if (cv.height !== H) cv.height = H;
 		const g = cv.getContext('2d')!; g.clearRect(0, 0, W, H); g.imageSmoothingQuality = 'high';
-		const al = cs.textAlign, x0 = al === 'left' || al === 'start' ? 0 : al === 'right' || al === 'end' ? w - adv : (w - adv) / 2;
+		const al = el.dataset.fit === 'pad' ? 'center' : cs.textAlign, x0 = al === 'left' || al === 'start' ? 0 : al === 'right' || al === 'end' ? w - adv : (w - adv) / 2;
 		let x = x0 * k; const y = ((h - m.lh * sc) / 2) * k, s = sc * k;
 		for (const f of gl) { if (!f) { x += m.space * s; continue; } blit(g, P, f, x, y, f.sw * s, f.sh * s, false, 1); x += (f.adv ?? f.sw) * s; }
 	};
@@ -178,15 +180,42 @@ function apply() {
 	$$('.sw').forEach((e) => { skin(e, (el) => ({ pkg: 'ui', frame: on(el) ? 'sw_on' : 'sw_off', nine: false, fit: 'fill' })); icon(e, () => ({ pkg: 'ui', frame: 'sw_knob', fit: 'contain' }), 'skK'); }); // track drawn whole: a 9-slice squashed the 160x90 pill's caps onto 64x36
 	$$('.row input').forEach((e) => skin(e.parentElement?.querySelector('input') ? (e as HTMLElement) : null, () => ({ pkg: 'ui', frame: 'field', fit: 'fill' })));
 	skin(document.getElementById('popMenu'), () => ({ pkg: 'ui', frame: 'plate_cream', k: 2 }));                           // 57
-	const PM: Record<string, string> = { pmInfo: 'ico_info_ink', pmMusic: 'ico_music_ink', pmSound: 'ico_sound_ink', pmMute: 'ico_mute_ink', pmSettings: 'ico_chev_ink' };
-	$$('#popMenu .pmRow').forEach((e) => icon(e, (el) => ({ pkg: 'ui', frame: (PM[el.id] || 'ico_info_ink').replace('ico_sound', on(el) ? 'ico_sound' : 'ico_mute'), size: 0.8 })));
+	// uifix: each pop-menu row is a painted row plate with a small painted icon in its own slot (before: the row icon was an
+	// inset:0 overlay of the WHOLE menu, so Info / Mute / Settings drew menu-sized icons across the panel)
+	const pmIco = (row: HTMLElement) => {
+		const open = row.getAttribute('aria-expanded') === 'true', p = (window as any).__elfAudio?.() as { muted: boolean; mus: number; sfx: number } | undefined;
+		switch (row.id) {
+			case 'pmInfo': return 'ico_info_ink';
+			case 'pmMusic': return open ? 'ico_x_ink' : p && (p.muted || !p.mus) ? 'ico_mute_ink' : 'ico_music_ink';
+			case 'pmSound': return open ? 'ico_x_ink' : p && (p.muted || !p.sfx) ? 'ico_mute_ink' : 'ico_sound_ink';
+			case 'pmMute': return on(row) ? 'ico_sound_ink' : 'ico_mute_ink';
+			default: return 'ico_chev_ink';
+		}
+	};
+	$$('#popMenu .pmRow').forEach((row) => {
+		skin(row, (el) => ({ pkg: 'ui', frame: 'row_plate', k: 2.4 }));
+		let slot = row.querySelector<HTMLElement>(':scope > .pmIco');
+		if (!slot) { slot = document.createElement('b'); slot.className = 'pmIco'; slot.setAttribute('aria-hidden', 'true'); row.prepend(slot); }
+		icon(slot, () => ({ pkg: 'ui', frame: pmIco(row), fit: 'contain' }));
+		const re = () => { const i = slot!.querySelector<HTMLElement>(':scope > .skI'); if (i) looks.get(i)?.(); };
+		new MutationObserver(re).observe(row, { attributes: true, attributeFilter: ['class', 'aria-checked', 'aria-expanded'] });
+		addEventListener('elfhaus:audio', re);
+	});
+	// uifix: the volume sliders in the pop-out are painted (track / fill / thumb); the native range sits on top, invisible, for input + a11y
+	$$('#popMenu .pmSlide').forEach((sl) => {
+		skin(sl, () => ({ pkg: 'ui', frame: 'plate_cream', k: 2.4 }));
+		const tr = sl.querySelector<HTMLElement>('.pmTr'); if (!tr) return;
+		skin(tr, () => ({ pkg: 'ui', frame: 'slider_track', k: 2 }));
+		skin(tr.querySelector<HTMLElement>('.slF'), () => ({ pkg: 'ui', frame: 'slider_fill', k: 2 }));
+		skin(tr.querySelector<HTMLElement>('.slT'), () => ({ pkg: 'ui', frame: 'slider_thumb', fit: 'contain' }));
+	});
 	// fix2 Settings panel: painted labels, switches (above), painted slider track / fill / thumb
 	$$('#settings .stRow .lbl').forEach((e) => bmText(e, 'font_ink'));
 	$$('#settings .stSl').forEach((e) => { skin(e, () => ({ pkg: 'ui', frame: 'slider_track', k: 2 }));
 		skin(e.querySelector<HTMLElement>('.slF'), () => ({ pkg: 'ui', frame: 'slider_fill', k: 2 })); skin(e.querySelector<HTMLElement>('.slT'), () => ({ pkg: 'ui', frame: 'slider_thumb', fit: 'contain' })); });
 	bmText(document.querySelector<HTMLElement>('#pmSettings span'), 'font_ink');
 	// fix4 G: every pop-menu row, the ANTE / TURBO / autoplay labels, ADVANCED and the max-win hint in the bitmap fonts
-	$$('#popMenu .pmRow span').forEach((e) => bmText(e, 'font_ink'));
+	$$('#popMenu .pmRow > span').forEach((e) => bmText(e, 'font_ink'));
 	$$('#anteRow .lbl, #turboRow .lbl, #abRow .lbl').forEach((e) => bmText(e, 'font_ink'));
 	bmText(document.getElementById('advBtn'), 'font_ink');
 	bmText(document.querySelector<HTMLElement>('#maxwin .mwHint'), 'font_cream');
@@ -206,7 +235,7 @@ function apply() {
 /** pieces built later (buy cards, rules headers, lock chips, respin pill, mystery badge, card faces, line-win ticket) */
 function late(n: HTMLElement) {
 	n.querySelectorAll<HTMLElement>('.bcard').forEach((e) => skin(e, (el) => ({ pkg: 'ui', frame: dis(el) ? 'card_ticket_off' : (el.classList.contains('armed') || el.classList.contains('on')) ? 'card_ticket_armed' : 'card_ticket', k: 2 })));   // 35
-	n.querySelectorAll<HTMLElement>('#rulesBody h3').forEach((e) => { skin(e, () => ({ pkg: 'ui', frame: 'pill_cran', k: 2 })); bmText(e, 'font_cream'); });   // 78
+	n.querySelectorAll<HTMLElement>('#rulesBody h3').forEach((e) => { e.dataset.fit = 'pad'; skin(e, () => ({ pkg: 'ui', frame: 'pill_cran', k: 2 })); bmText(e, 'font_cream'); });   // uifix: the painted heading fits inside its pill (padding kept)   // 78
 	n.querySelectorAll<HTMLElement>('#buyCards .bPrice, #buyCards .bX').forEach((e) => bmText(e, 'font_ink'));   // fix4 G: no HTML Lilita on the cards
 	n.querySelectorAll<HTMLElement>('.lock').forEach((e) => skin(e, () => ({ pkg: 'ui', frame: 'chip_cream', k: 2 })));   // 65 (51, the RESPINS pill, is drawn in Pixi: board/banners.ts)
 	n.querySelectorAll<HTMLElement>('.rd > i').forEach((e) => skin(e, (el) => ({ pkg: 'ui', frame: on(el) || el.classList.contains('full') ? 'dot_full' : 'dot_empty', fit: 'contain' })));
