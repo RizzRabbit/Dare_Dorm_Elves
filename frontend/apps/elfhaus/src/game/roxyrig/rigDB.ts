@@ -11,7 +11,7 @@ import type { RoxyAdapter, RoxyFace, RoxyGrade } from './types';
 
 const DIR = 'assets/rig/roxy_db/';
 // rig canvas (2x px) -> adapter px: the figure keeps the height the room layouts were tuned for (1149 px feet to head)
-const CW = 852, CH = 1728, FEET = { x: 373.2, y: 1698 }, TOP = 41, K = 1149 / (FEET.y - TOP);
+const CW = 649, CH = 1715, FEET = { x: 323.9, y: 1697.4 }, TOP = 8, K = 1149 / (FEET.y - TOP);
 const GROUND_SRC = 'assets/rig/roxy_ground.webp', GROUND_BOX = { x: -330, y: -110 };
 const SHADOW_SRC = 'assets/rig/roxy_ground_shadow.webp', SHADOW_BOX = { x: -280, y: -120 };
 const FADE = 0.25;
@@ -63,7 +63,7 @@ export async function createRoxy(): Promise<RoxyAdapter> {
 	const tip = (b: any, len: number) => { const m = b.globalTransformMatrix; return new Point(m.a * len + m.tx, m.b * len + m.ty); };
 	const R: RoxyAdapter = {
 		view, srcW: CW * K, srcH: CH * K, height: 1149, offsetX: 0,
-		rows: { headTop: 6, hopTop: 6 - 46, hips: Math.round((860 - TOP) * K) },
+		rows: { headTop: 6, hopTop: 6 - 46, hips: Math.round((828 - TOP) * K) },
 		update,
 		idle() { if (!door) bodyPlay('idle', 0); },
 		win(kind = 'win') {
