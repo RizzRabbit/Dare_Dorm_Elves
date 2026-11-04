@@ -17,7 +17,6 @@
 // recycled units moved by translate3d only (unit = ART[unitTileKey(key)] tile + ART[key + '_spin'] symbol, symrig.ts).
 import { rigAnt, rigLand, hasRig, frameTier, unitTileKey } from './symrig';
 import { S, ART } from './ui';
-import { lingerOut } from './puff';
 import { ROWS, REELS } from './config';
 import { SPIN_TEMPO, STOP_TEMPO } from './tempo';
 import { sfx, loop, type Handle } from './audio';
@@ -208,7 +207,7 @@ export function spinCells(list: { reel: number; row: number }[]) {
 		const C = makeCell(reel, row, now, host);
 		if (wasPuffed && prev) { C.init = prev; C.empty = true; }
 		c.classList.remove('win', 'dim', 'sprWin', 'replace', 'out', 'locked', 'mLand', 'puffed', 'tLand', 'tGlint', 'rgLand');
-		c.querySelectorAll<HTMLElement>('.puffFx').forEach((x) => lingerOut(x, c)); c.querySelectorAll('canvas').forEach((x) => x.remove());
+		c.querySelectorAll('canvas').forEach((x) => x.remove());
 		c.classList.add('spinning'); cells.set(id, C);
 	});
 	if (list.length) spinSound();

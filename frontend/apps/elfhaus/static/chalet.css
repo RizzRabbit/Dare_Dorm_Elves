@@ -180,14 +180,7 @@ html body #replayBar{background:var(--c-cream)!important;color:var(--c-ink)!impo
 html body.mk #app #top{z-index:7}
 #mkGarland{display:block;user-select:none}
 
-/* win pop + snowflake puff (puff.ts): flakes / cloud blobs over the cell; a popped cell stays empty until the respin */
-.cell .puffFx{position:absolute;inset:0;z-index:6;pointer-events:none;overflow:visible}
-/* a bursting cell paints over its neighbours (winning cells share z 2), so the flakes are never hidden under the next tile */
-html body #cells .cell:has(>.puffFx){z-index:8}
-.cell .puffFx>i{position:absolute;left:50%;top:50%;display:block;will-change:transform,opacity}
-.cell .puffFx>i svg{display:block;width:100%;height:100%;overflow:visible}
-.cell .puffFx .pfCloud{width:34%;aspect-ratio:1}
-.cell .puffFx .pfFlake{width:26%;aspect-ratio:1}
+/* win pop + snow puff: drawn in Pixi (puff.ts #fxStage); a popped cell hides its DOM symbol until the respin */
 html body .cell.puffed .sym,html body .cell.puffed .symGlow,html body .cell.puffed .symSh{opacity:0!important}
 
 /* room: the painted chalet; free spins = night grade (the Pixi layer thickens the snow) */
@@ -424,9 +417,6 @@ html body .cell.wild:not(.win) .rig[class*="k_W_R"] .rp.m_smile{animation:rgWSmi
 @keyframes rgWBlinkIdle{0%,94%{scale:1 0;animation-timing-function:cubic-bezier(.5,0,.9,.6)}95.8%,96.6%{scale:1 1;animation-timing-function:cubic-bezier(.1,.4,.4,1)}99%,100%{scale:1 0}}
 @keyframes rgWSmileIdle{0%,76%{scale:1 1;translate:0 0;animation-timing-function:cubic-bezier(.45,0,.55,1)}84%,92%{scale:1.06 .975;translate:0 -1.3%;animation-timing-function:cubic-bezier(.45,0,.55,1)}100%{scale:1 1;translate:0 0}}
 @media (prefers-reduced-motion:reduce){html body .rig[class*="k_W_R"] .rgBody,html body .rig[class*="k_W_R"] .rp{animation:none!important}}
-/* chalet item 7: snow puff extras (puff.ts partEl, sheet assets/fx/puff_parts.webp) */
-.cell .puffFx>i.pfP{position:absolute;left:50%;top:50%;display:block;opacity:0}
-.cell .puffFx>i.pf_flash,.cell .puffFx>i.pf_ring{z-index:-1}
 
 /* ---- tiles: every cell assembled from shared sheet parts (symrig.ts tileHTML / rigHTML, built by tileparts.py) ----
    tile colour (.tTile, sheet frame) -> recess (.tRec) -> bevelled gold border (.tBd) -> symbol, lifted: its own alpha casts
@@ -642,12 +632,3 @@ html body.portrait #outro .otHint{font-size:30px!important}
    packing bleed, sheets/symbols.webp, no padding); cut that corner out of the letters frame only */
 html body .rp.f__wild{clip-path:polygon(0 0,100% 0,100% 100%,19% 100%,19% 78%,0 78%)}
 html body.mk #app #strip .m #bet{overflow:visible!important}
-/* fix4 puff linger: a respin hands the still-drifting snow / powder / glitter to this overlay (puff.ts lingerOut). It never
-   takes input (pointer-events none) and clears itself; the next puff fades it out (fadeLinger). */
-#puffLinger{position:absolute;inset:0;pointer-events:none;z-index:9;overflow:visible}
-#puffLinger>.pfHost{position:absolute;pointer-events:none;overflow:visible}
-#puffLinger .puffFx{position:absolute;inset:0;pointer-events:none;overflow:visible}
-#puffLinger .puffFx>i{position:absolute;left:50%;top:50%;display:block;will-change:transform,opacity}
-#puffLinger .puffFx .pfCloud{width:34%;aspect-ratio:1}
-#puffLinger .puffFx .pfFlake{width:26%;aspect-ratio:1}
-#puffLinger .puffFx>i.pfP{opacity:0}
