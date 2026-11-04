@@ -192,7 +192,7 @@ function cardText(c, size, wrapW, maxH) {   // title + detail in the painted fon
   for (;;) { ln?.destroy({ texture: true, textureSource: true }); ln = paintTx(c.line, 'font_ink', fl * 0.78, wrapW, size.al)
       || new Text({ text: c.line, style: { fontFamily: "Nunito, 'Segoe UI', sans-serif", fontWeight: '800', fontSize: fl, fill: PAL.ink, align: size.al, wordWrap: true, wordWrapWidth: wrapW, lineHeight: Math.round(fl * 1.3) } });
     if (ti.height + 6 + ln.height <= maxH || fl <= (ST.compact ? 7 : 11)) break; fl -= 0.5; }
-  if (ti.width > wrapW) ti.scale.set(ti.scale.x * wrapW / ti.width);
+  if (ti?.scale && ti.width > wrapW) ti.scale.set(ti.scale.x * wrapW / ti.width);
   return { ti, ln };
 }
 function buildCards() {
@@ -329,7 +329,7 @@ function setGame(tt) {   // all game objects driven from the intro clock (transf
     v.position.set(p.x - rig.offsetX * s + 60 * s * seg(tt, ...T.roxyOut, ease.inCubic), p.y); v.scale.set(s); v.alpha = 1 - seg(tt, ...T.roxyOut);
     if (tt < T.roxyOut[0] && state === 'trans') { const q = RXA.doorPts(), hg = handleL();   // her door hand follows the lever as the leaf swings
       if (q) { const d = Math.atan2(hg.y - q.sh.y, hg.x - q.sh.x) - Math.atan2(q.hand.y - q.sh.y, q.hand.x - q.sh.x);
-        rig.doorReach(true, Math.max(-28, Math.min(28, q.r + Math.atan2(Math.sin(d), Math.cos(d)) * 180 / Math.PI))); } }
+        rig.doorReach(true, Math.max(-45, Math.min(45, q.r + Math.atan2(Math.sin(d), Math.cos(d)) * 180 / Math.PI))); } }
   } else if (tt < T.face[1]) {   // dropped in with the board on her rest pose, wide-eyed; the face eases back at T.face
     if (!faceOff) { faceOff = true; rig.doorReach(false); rig.face('wink', 0); sceneHold(true, false); }
     rig.face('surprised', tt < T.face[0] ? 1 : 0);

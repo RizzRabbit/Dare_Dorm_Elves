@@ -38,7 +38,7 @@ export async function createRoxy(): Promise<RoxyAdapter> {
 	const showGround = () => { shadowG.visible = shOn && !door; ground.visible = shOn && !door; };
 	const bodyPlay = (name: string, times = -1) => { const s = A.fadeIn(name, FADE, times, 0, 'body'); return s; };
 	const facePlay = (name: string) => { const s = A.fadeIn(name, 0, 1, 1, 'face'); if (s) s.resetToPose = false; return s; };
-	const pelvis = arm.getBone('pelvis'), hand = arm.getBone('door_hand'), chest = arm.getBone('chest');
+	const pelvis = arm.getBone('pelvis'), hand = arm.getBone('door_hand'), chest = arm.getBone('chest'), uarm = arm.getBone('uarm');
 	bodyPlay('idle', 0);
 	// one-shots fall back to idle by themselves (intro_door holds its last frame until the intro moves on)
 	d.addDBEventListener('complete', (e: any) => {
@@ -56,7 +56,8 @@ export async function createRoxy(): Promise<RoxyAdapter> {
 		// contact shadow follows the hop (pelvis lift)
 		const hop = pelvis ? Math.max(0, -pelvis.animationPose.y) * K : 0;
 		shadowG.scale.set(1 - Math.min(0.35, hop / 120)); shadowG.alpha = 1 - Math.min(0.5, hop / 90);
-		if (hand) { hand.offset.rotation = aim * Math.PI / 180; hand.invalidUpdate(); }
+		// fix4: the reach swings the whole arm from the shoulder (uarm) so the painted hand lands on the lever
+		if (uarm) { uarm.offset.rotation = aim * Math.PI / 180; uarm.invalidUpdate(); }
 	}
 	const tint = () => { const k = party; view.tint = (Math.round(255 - 40 * k) << 16) | (Math.round(255 - 30 * k) << 8) | 255; };
 	try { matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', () => { still = reduced(); }); } catch { /* old engines */ }
@@ -77,15 +78,16 @@ export async function createRoxy(): Promise<RoxyAdapter> {
 		anticipate(on) { if (on) facePlay('eager'); },
 		disappointed() { facePlay('disappointed'); },
 		doorReach(on, aimDeg = 0) {
-			aim = on ? Math.max(-28, Math.min(28, aimDeg)) * 0.5 : 0;
+			aim = on ? Math.max(-45, Math.min(45, aimDeg)) : 0;
 			if (on && !door) { door = true; bodyPlay('intro_door', 1); }
 			else if (!on && door) { door = false; bodyPlay('intro_step', 1); }
 			showGround();
 		},
 		doorPts() {
-			if (!hand || !chest) return null;
-			const h = d.toGlobal(tip(hand, hand.boneData.length)), s = d.toGlobal(new Point(chest.globalTransformMatrix.tx, chest.globalTransformMatrix.ty));
-			return { sh: s, hand: h, r: hand.global.rotation * 180 / Math.PI };
+			if (!hand || !uarm) return null;
+			// shoulder = the uarm pivot; hand = the painted fingertips (door_hand tip); r = the reach offset already applied
+			const h = d.toGlobal(tip(hand, hand.boneData.length * 0.6)), s = d.toGlobal(new Point(uarm.globalTransformMatrix.tx, uarm.globalTransformMatrix.ty));
+			return { sh: s, hand: h, r: aim };
 		},
 		face(name: RoxyFace, k: number) {
 			const was = faceK[name] ?? 0; faceK[name] = k;
