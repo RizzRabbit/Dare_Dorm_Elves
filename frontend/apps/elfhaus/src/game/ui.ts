@@ -107,7 +107,7 @@ function mxGlyphs(t: string, w: number, anchor: Anchor) {
 	let x = anchor === 'end' ? w - 5 - adv : anchor === 'start' ? 5 : (w - adv) / 2; const y = MX_BASE - F.base * k;
 	let out = '';
 	for (const f of gl) { if (!f) { x += 18 * k; continue; }
-		out += `<svg x="${(x + f.ox * k).toFixed(2)}" y="${(y + f.oy * k).toFixed(2)}" width="${(f.w * k).toFixed(2)}" height="${(f.h * k).toFixed(2)}" viewBox="${f.x} ${f.y} ${f.w} ${f.h}"><image href="${F.img}" width="${F.W}" height="${F.H}"/></svg>`;
+		out += `<svg x="${(x + f.ox * k).toFixed(2)}" y="${(y + f.oy * k).toFixed(2)}" width="${(f.w * k).toFixed(2)}" height="${(f.h * k).toFixed(2)}" viewBox="${f.x} ${f.y} ${f.w} ${f.h}" overflow="hidden" preserveAspectRatio="none"><image href="${F.img}" width="${F.W}" height="${F.H}"/></svg>`;
 		x += f.adv * k; }
 	return `<svg viewBox="0 0 ${w} ${MX_H}" overflow="visible" aria-hidden="true">${out}</svg>`;
 }

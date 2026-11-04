@@ -57,7 +57,8 @@ html body .cell.dim{opacity:1!important;filter:brightness(.55) saturate(.8)!impo
 html body .sym.W.art{background:none!important;border:0!important;box-shadow:none!important}
 
 /* multiplier: flat gold lettering, thick ink outline, hard offset shadow (no gem gradients, no pink) */
-html body .mx svg{filter:drop-shadow(0 calc(var(--cell)*.018) 0 var(--c-ink))!important}
+html body .mx svg{filter:none!important}  /* font_gold glyphs carry their own painted ink + offset shadow */
+html body .mx svg svg{overflow:hidden}
 html body .mx text{font-family:var(--ui)!important;font-weight:400!important;letter-spacing:0!important}
 html body .mx svg .o{fill:var(--c-ink)!important;stroke:var(--c-ink)!important;stroke-width:11!important}
 html body .mx svg .i{fill:var(--c-gold)!important;stroke:var(--c-gold)!important;stroke-width:1.5!important}

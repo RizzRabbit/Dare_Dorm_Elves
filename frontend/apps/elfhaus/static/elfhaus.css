@@ -417,7 +417,8 @@ body.short:not(.portrait) #logo.art img{width:100%;height:100%}
 /* ---- multiplier lettering (ui.ts mxSVG): text only, faceted pink gem fill, light inner + dark plum outer outline.
    Cap height = 18% of the cell (min 11px). Soft pink glow; glints + growth burst are sprite sheets. ---- */
 .mx{position:absolute;top:2px;right:2px;z-index:3;height:max(19.5px,calc(var(--cell)*.318));aspect-ratio:150/60;pointer-events:none;transform-origin:85% 45%}
-.mx svg{display:block;width:100%;height:100%;overflow:visible}
+.mx>svg{display:block;width:100%;height:100%;overflow:visible}
+.mx svg svg{overflow:hidden}  /* per-glyph atlas windows (ui.ts mxGlyphs) must clip to their frame */
 .mx text{font-family:"Nunito",sans-serif;font-weight:900;letter-spacing:-1px;stroke-linejoin:round;paint-order:stroke fill}
 .mx .o{fill:#3A0F2C;stroke:#3A0F2C;stroke-width:9}
 .mx .i{fill:#FFE6F2;stroke:#FFE6F2;stroke-width:4.2}
