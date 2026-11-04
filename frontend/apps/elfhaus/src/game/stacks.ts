@@ -27,7 +27,7 @@
 // Letters are a separate layer above the body: idle / join keep the hips rigid after the letters light up; merge_win
 // bakes the letters into its frames, so the letters layer is hidden while it plays. letters_ignite restarts with
 // stack_form (its leading blank frames wait for the build-up to finish).
-import { dbKnown, dbPlay, dbStop, initDbStacks } from './dbstacks';
+import { dbKnown, dbPlay, dbStop, initDbStacks, rigName } from './dbstacks';
 import { loadSheet, unloadSheet, play, hasSheet, stop, type Atlas, type Anim } from './sprite';
 import { voice } from './voice';
 
@@ -153,7 +153,13 @@ function sweep() {
 }
 /** Idle loop on an overlay (called for every overlay after each render). Decodes its sheets first if needed. */
 export function stackIdle(ov: HTMLElement) {
-	if (dbKnown(ov)) { void dbPlay(ov, 'idle'); if (listed.size && !live.get(ov)?.letters) stackLetters(ov, true); return; }   // DragonBones rig (dbstacks.ts)
+	if (dbKnown(ov)) {   // DragonBones rig (dbstacks.ts)
+		void dbPlay(ov, 'idle');
+		// ART-9: ONE WILD. The group rigs (WM*) carry their own approved label slot (bold, sized per width, over the boots),
+		// so the legacy letters sheet is only drawn for the single-reel rigs (WF_R*), which have no label part.
+		if (!rigName(ov).startsWith('WM') && listed.size && !live.get(ov)?.letters) stackLetters(ov, true);
+		return;
+	}   // DragonBones rig (dbstacks.ts)
 	if (!listed.size) return;
 	const idle = sheetId('merge_idle', ov), lets = sheetId('letters_ignite', ov);
 	prefetchJoins();
@@ -180,6 +186,7 @@ export function stackOnce(a: 'stack_form' | 'merge_join', ov: HTMLElement) {
 }
 /** Letters overlay: ignite (or, after a re-render, show the held last frame at once). */
 export function stackLetters(ov: HTMLElement, settled = false) {
+	if (dbKnown(ov) && rigName(ov).startsWith('WM')) return true;   // ART-9: the group rig's own label is the one WILD
 	const an = run('letters_ignite', ov, 'letters', { hold: true });
 	if (an && settled) an.t0 -= 1e5; // jump to the held last frame
 	return !!an;
