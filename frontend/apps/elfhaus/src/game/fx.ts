@@ -6,6 +6,8 @@ import ART_JSON from './art.generated.json';
 const ART = ART_JSON as Record<string, string | null>;
 
 export const FX = 'fx_ui';
+/** How many sheets loadAllFx will track (the loading bar reserves them up front so it never runs ahead). */
+export const FX_SHEET_COUNT = Object.keys(ATLASES).filter((p) => ART[p.split('/').pop()!.replace('.atlas.json', '')]).length;
 /** Load every sprite sheet (called once from the loading screen; each counts toward the progress bar). */
 export function loadAllFx(track: <T>(p: Promise<T>) => Promise<T>) {
 	return Promise.all(Object.entries(ATLASES).map(([path, atlas]) => {

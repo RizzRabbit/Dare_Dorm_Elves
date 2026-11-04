@@ -80,17 +80,22 @@ let mesh: MeshPlane | null = null, meshBase: Float32Array | null = null, meshKey
 let partyMesh: MeshPlane | null = null;
 type Item = { o: Container; x: number; y: number; d: number };
 let wallItems: Item[] = [];
+const owned: Container[] = [];   // sprites buildRoom created (the only ones it may destroy on a rebuild)
 const tinted: Container[] = [];
 let shadows: { board: NineSliceSprite; hud: NineSliceSprite; buy: NineSliceSprite } | null = null;
 export const roomOn = () => !!mesh;
 
 /** (Re)build the planes for this fit. Returns false when the planes aren't loaded (caller keeps the #bg fallback). */
 export function buildRoom(k: Key, fit: { c: number; ox: number; oy: number }, W: number, H: number) {
+	// rotate fix: clear the previous fit FIRST (even when this orientation's planes aren't loaded yet), and destroy only
+	// what buildRoom made itself. The old code returned early with stale wallItems (scene.build() then destroyed them ->
+	// tickRoom threw every frame and the room / Roxy froze until reload) and destroyed scene-owned layers (twC / twT).
+	for (const o of owned.splice(0)) { o.parent?.removeChild(o); o.destroy(); }
+	if (mesh) mesh.parent?.removeChild(mesh); if (partyMesh) partyMesh.parent?.removeChild(partyMesh);
+	P.wall.removeChildren(); wallItems = []; tinted.length = 0; lastNight = -1;
 	const T = tex.room[k], F = tex.fx; if (!T || !F) return false;
 	const R = ROOMS[k], [iw, ih] = R.size;
-	for (const c of [P.out, P.chim, P.tree, P.grade, P.near]) c.removeChildren().forEach((o) => o.destroy());
-	P.wall.removeChildren(); wallItems = []; tinted.length = 0; lastNight = -1;
-	const at = (n: string) => { const s = new Sprite(T.parts[n]); const [x, y] = R.at[n]; s.position.set(fit.ox + x * fit.c, fit.oy + y * fit.c); s.scale.set(fit.c); return s; };
+	const at = (n: string) => { const s = new Sprite(T.parts[n]); owned.push(s); const [x, y] = R.at[n]; s.position.set(fit.ox + x * fit.c, fit.oy + y * fit.c); s.scale.set(fit.c); return s; };
 	for (const n of Object.keys(R.at)) if (n.startsWith('out')) { const s = at(n); P.out.addChild(s); tinted.push(s); }
 	if (!mesh || meshKey !== k) {
 		mesh?.destroy(); mesh = new MeshPlane({ texture: T.wall, verticesX: 2, verticesY: 15 }); meshKey = k;
@@ -102,7 +107,7 @@ export function buildRoom(k: Key, fit: { c: number; ox: number; oy: number }, W:
 	if (partyMesh) { partyMesh.position.set(fit.ox, fit.oy); partyMesh.scale.set(fit.c); partyMesh.alpha = 0; P.wall.addChild(partyMesh); }
 	// moonlight: a cool glow over each window (wall depth)
 	for (const [u0, v0, u1, v1] of (k === 'land' ? [[0.235, 0.205, 0.33, 0.56], [0.722, 0.18, 0.852, 0.56]] : [[0.31, 0.105, 0.9, 0.645]])) {
-		const g = new NineSliceSprite({ texture: F.glow9, leftWidth: 40, rightWidth: 40, topHeight: 40, bottomHeight: 40 });
+		const g = new NineSliceSprite({ texture: F.glow9, leftWidth: 40, rightWidth: 40, topHeight: 40, bottomHeight: 40 }); owned.push(g);
 		const m = 40 * fit.c, x = fit.ox + u0 * iw * fit.c - m, y = fit.oy + v0 * ih * fit.c - m;
 		g.width = (u1 - u0) * iw * fit.c + 2 * m; g.height = (v1 - v0) * ih * fit.c + 2 * m; g.tint = 0x9ec2ff; g.blendMode = 'add'; g.alpha = 0.13;
 		P.wall.addChild(g); wallItems.push({ o: g, x, y, d: dAt(k, (v0 + v1) / 2) }); g.position.set(x, y);
@@ -110,7 +115,7 @@ export function buildRoom(k: Key, fit: { c: number; ox: number; oy: number }, W:
 	const ch = at('chim'); P.chim.addChild(ch); tinted.push(ch);
 	const tr = at('tree'); P.tree.addChild(tr); tinted.push(tr);
 	// key light falloff: white on the fire side, darker / cooler away from it (multiply, screen space)
-	const gr = new Sprite(F.ramp); gr.blendMode = 'multiply'; gr.width = W; gr.height = H; P.grade.addChild(gr);
+	const gr = new Sprite(F.ramp); owned.push(gr); gr.blendMode = 'multiply'; gr.width = W; gr.height = H; P.grade.addChild(gr);
 	for (const n of Object.keys(R.at)) if (n.startsWith('near')) { const s = at(n); P.near.addChild(s); tinted.push(s); }
 	if (!shadows) {
 		const mk = () => { const s = new NineSliceSprite({ texture: F.shadow9, leftWidth: 56, rightWidth: 56, topHeight: 56, bottomHeight: 56 }); s.tint = 0x0a0302; P.shadow.addChild(s); return s; };
@@ -142,7 +147,7 @@ export function tickRoom(k: Key, fit: { c: number }, night: number) {
 	P.chim.position.set(cx * D.chim, cy * D.chim); P.chimFx.position.copyFrom(P.chim.position);
 	P.tree.position.set(cx * D.tree, cy * D.tree); P.shadow.position.set(cx * D.room, cy * D.room);
 	P.near.position.set(cx * D.near, cy * D.near);
-	for (const it of wallItems) it.o.position.set(it.x + cx * it.d, it.y + cy * it.d);
+	for (const it of wallItems) if (!it.o.destroyed) it.o.position.set(it.x + cx * it.d, it.y + cy * it.d);
 	if (mesh && meshBase) {
 		const pos = mesh.geometry.positions as Float32Array, ih = ROOMS[k].size[1], ix = cx / fit.c, iy = cy / fit.c;
 		for (let i = 0; i < pos.length; i += 2) { const d = dAt(k, meshBase[i + 1] / ih); pos[i] = meshBase[i] + ix * d; pos[i + 1] = meshBase[i + 1] + iy * d; }

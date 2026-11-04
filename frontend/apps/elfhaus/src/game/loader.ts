@@ -2,6 +2,7 @@
 // the user gesture later sound needs). Progress counts every tracked promise: art images, Roxy sheets, RGS/mock auth.
 import { $, ART } from './ui';
 import { initSplash, stingDone, noIntro, preOut } from './intro';
+import { FX_SHEET_COUNT } from './fx';
 import { initIntro, introLoaded, introEnter, introSkip, introEatClick } from './introPixi';
 
 // Card titles (checked by the social-mode word scan in scripts/test-books.mjs).
@@ -12,11 +13,21 @@ export const LOADER_CARDS = [
 	'Wild Winter Spins: whole reels go wild. Side by side, their multipliers multiply.',
 ] as const;
 
-let total = 0, done = 0;
+let total = 0, done = 0, floor = 0, shown = 0;
 const pending: Promise<unknown>[] = [];
+// Loading-bar fix: the fraction is done / max(total, floor). `floor` reserves the work initGame tracks later (Roxy, fx
+// sheets, fonts, auth start only after the symbol art is ready), so the bar no longer leaps to ~95% on the first cached
+// images and then slides back as new work is tracked. It never moves backwards and only reads 1 once everything is done.
+export function frac() {
+	const f = total ? done / Math.max(total, floor) : 0;
+	shown = Math.max(shown, Math.min(f, done >= total && total >= floor ? 1 : 0.99));
+	return shown;
+}
 function progress() {
+	const p = frac();
 	const bar = document.querySelector('#lBar i') as HTMLElement | null;
-	if (bar) bar.style.transform = `scaleX(${total ? (done / total).toFixed(3) : 0})`;
+	if (bar) bar.style.transform = `scaleX(${p.toFixed(3)})`;
+	document.getElementById('preL')?.style.setProperty('--p', p.toFixed(3));   // the inline first-paint bar (app.html)
 }
 /** Count a promise toward the progress bar (failures still count as done; callers handle their own errors). */
 export function track<T>(p: Promise<T>): Promise<T> {
@@ -30,7 +41,10 @@ const keep: HTMLImageElement[] = [];
 const loadImg = (src: string) => new Promise<void>((res, rej) => { const i = new Image(); i.onload = () => { keep.push(i); i.decode().catch(() => {}).then(() => res()); }; i.onerror = rej; i.src = src; });
 /** Preload every art file from the manifest. */
 export function preloadArt() {
-	for (const src of new Set((Object.entries(ART).filter(([k, u]) => u && !/^(sym_|fx_)/.test(k)).map(([, u]) => u) as string[]).filter((u) => !/\.(webm|mp4)$/i.test(u)))) track(loadImg(src)).catch(() => console.warn('art missing', src));
+	const srcs = new Set((Object.entries(ART).filter(([k, u]) => u && !/^(sym_|fx_)/.test(k)).map(([, u]) => u) as string[]).filter((u) => !/\.(webm|mp4)$/i.test(u)));
+	// art + fx sheets + the 4 later singles in initGame (symbol art, Roxy, fonts, RGS auth / replay)
+	floor = srcs.size + FX_SHEET_COUNT + 4;
+	for (const src of srcs) track(loadImg(src)).catch(() => console.warn('art missing', src));
 }
 
 let px: Promise<boolean> = Promise.resolve(false);
@@ -40,7 +54,7 @@ export function initLoader() {
 	// resub: the approved Pixi vestibule intro replaces the DOM splash art (the loader stays as the tap / key / checkbox
 	// layer, dark until the studio sting is done, then see-through). No WebGL -> the DOM splash shows as before.
 	L.classList.add('px');
-	px = initIntro(() => (total ? done / total : 0)).then((ok) => { if (!ok) L.classList.remove('px', 'pxOn'); return ok; });
+	px = initIntro(frac).then((ok) => { if (!ok) L.classList.remove('px', 'pxOn'); return ok; });
 }
 /** Waits for everything tracked, then shows the continue button and resolves on the player's press. */
 export async function loaderReady() {
@@ -48,7 +62,7 @@ export async function loaderReady() {
 	if (!L) return;
 	// Wait for promises tracked so far, including any added while waiting.
 	for (let n = -1; n !== pending.length; ) { n = pending.length; await Promise.all(pending); }
-	done = total; progress();
+	done = total; floor = 0; progress();
 	await stingDone();
 	const pix = await px; if (!pix) preOut();   // DOM splash (no WebGL): the inline loader steps aside
 	if (pix && !noIntro()) await introLoaded();   // bar full, game primed behind the doors, TAP TO START up

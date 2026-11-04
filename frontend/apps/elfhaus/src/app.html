@@ -15,11 +15,11 @@
 			#preL img{width:min(62vw,460px);height:auto}
 			/* SPRITE_MAP 69: the track and fill are the ui atlas frames bar_track / bar_fill (painted), shown at sprite size */
 			#preL .pb{width:200px;height:60px;overflow:hidden;background:url(%sveltekit.assets%/assets/sprites/ui/ui.webp) -10px -1422px/2048px 2048px no-repeat;position:relative}
-			#preL .pb i{display:block;position:absolute;left:40px;top:10px;width:120px;height:40px;background:url(%sveltekit.assets%/assets/sprites/ui/ui.webp) -1166px -1422px/2048px 2048px no-repeat;animation:preBar 1.1s ease-in-out infinite}
+			#preL .pb i{display:block;position:absolute;left:40px;top:10px;width:120px;height:40px;background:url(%sveltekit.assets%/assets/sprites/ui/ui.webp) -1166px -1422px/2048px 2048px no-repeat;transform-origin:0 50%;transform:scaleX(max(.06,var(--p,0)));transition:transform .2s ease-out} /* determinate: loader.ts sets --p (0..1) from real load progress */
 			#preL.out{animation:preOut .2s ease-in forwards}
 			#preL.hold{animation:none;opacity:0} body:has(#loader.pxOn) #preL,body:has(#loader.ready) #preL,body:has(#loader.out) #preL{display:none}
-			@keyframes preIn{to{opacity:1}} @keyframes preOut{from{opacity:1}to{opacity:0}} @keyframes preBar{from{transform:translateX(-60px)}to{transform:translateX(60px)}}
-			@media (prefers-reduced-motion:reduce){#preL .pb i{animation:none;width:100%;opacity:.6}}
+			@keyframes preIn{to{opacity:1}} @keyframes preOut{from{opacity:1}to{opacity:0}}
+			@media (prefers-reduced-motion:reduce){#preL .pb i{transition:none}}
 		</style>
 		<link rel="icon" type="image/png" href="%sveltekit.assets%/favicon.png" />
 		<link rel="stylesheet" href="%sveltekit.assets%/elfhaus.css" />
