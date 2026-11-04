@@ -161,7 +161,7 @@ function apply() {
 	// fix6: portrait BUY BONUS on the same pine plate as the other HUD buttons; disabled keeps its plate and is dimmed (skin.css), never a grey box
 	skin(document.getElementById('buyBtn'), (el) => (el.classList.contains('mkP') ? { pkg: 'ui', frame: 'btn_pine', k: 2 } : { pkg: 'ui', frame: 'buy_plate', k: 2 }));   // fix2: the wide portrait plate keeps slim corners (k = sprite px per canvas px)   // 9
 	{ const bl = document.getElementById('buyLbl'); if (bl) bl.dataset.fit = 'box'; word(bl); }   // fix6: always fits its plate                                                                                  // 44
-	$$('#strip label').forEach((e) => word(e, 'font_cream', true)); $$('#strip span').forEach((e) => bmText(e, 'font_cream'));   // 36
+	$$('#strip label').forEach((e) => word(e, 'font_cream', true)); $$('#strip span').forEach((e) => { e.dataset.fit = 'parent'; bmText(e, 'font_cream'); });   // fix6: values up to $99,999.99 shrink to fit, never clip   // 36
 	skin(document.getElementById('fsBar'), () => ({ pkg: 'ui', frame: 'pill_cran', k: 2 })); bmText(document.getElementById('fsTier'), 'font_gold'); bmText(document.getElementById('fsCount'), 'font_cream');   // 33
 	for (const id of ['banner', 'stepToast']) { const el = document.getElementById(id); skin(el, () => ({ pkg: 'ui', frame: 'toast', k: 2 })); bmText(el, 'font_ink'); }   // 50
 	const arm = document.getElementById('armTag'); skin(arm, () => ({ pkg: 'ui', frame: 'pill_gold', k: 2 })); bmText(arm?.querySelector('.t') as HTMLElement, 'font_ink');   // 49

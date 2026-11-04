@@ -98,3 +98,9 @@ html body.skin.mk #app #hud #buyBtn.plate{overflow:visible!important}
 html body.skin.mk #app #hud #buyBtn.plate:not(#_n) .lbl{left:7%!important;right:7%!important;width:auto!important;translate:0 -50%!important;text-align:center!important;letter-spacing:0!important}
 html body.skin.mk #app #hud #buyBtn.plate.mkP:not(#_n) .lbl{left:calc(196px*var(--ps))!important;right:calc(22px*var(--ps))!important}
 html body.skin.mk #app #hud #buyBtn.plate:disabled{opacity:.5!important}
+/* fix6 meters: BALANCE / WIN / BET never clip; the painted digits scale to the room (skin.ts data-fit=parent) */
+html body.skin.mk #app #strip .m :is(#balance,#win,#bet){overflow:visible!important;text-overflow:clip!important;contain:none!important;max-width:100%}
+html body.skin.mk #app #strip .m{overflow:visible!important}
+/* fix6 portrait bet: BET label and value centred together between - and + */
+html body.skin.portrait.mk #app #strip .m:has(#bet){align-items:center!important}
+html body.skin.portrait.mk #app #strip .m:has(#bet) :is(label,#bet){text-align:center!important}
