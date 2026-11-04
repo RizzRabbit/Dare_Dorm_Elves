@@ -208,7 +208,7 @@ function late(n: HTMLElement) {
 	n.querySelectorAll<HTMLElement>('.bcard').forEach((e) => skin(e, (el) => ({ pkg: 'ui', frame: dis(el) ? 'card_ticket_off' : (el.classList.contains('armed') || el.classList.contains('on')) ? 'card_ticket_armed' : 'card_ticket', k: 2 })));   // 35
 	n.querySelectorAll<HTMLElement>('#rulesBody h3').forEach((e) => { skin(e, () => ({ pkg: 'ui', frame: 'pill_cran', k: 2 })); bmText(e, 'font_cream'); });   // 78
 	n.querySelectorAll<HTMLElement>('#buyCards .bPrice, #buyCards .bX').forEach((e) => bmText(e, 'font_ink'));   // fix4 G: no HTML Lilita on the cards
-	n.querySelectorAll<HTMLElement>('#rsCtr, .lock').forEach((e) => skin(e, () => ({ pkg: 'ui', frame: 'chip_cream', k: 2 })));   // 51, 65
+	n.querySelectorAll<HTMLElement>('.lock').forEach((e) => skin(e, () => ({ pkg: 'ui', frame: 'chip_cream', k: 2 })));   // 65 (51, the RESPINS pill, is drawn in Pixi: board/banners.ts)
 	n.querySelectorAll<HTMLElement>('.rd > i').forEach((e) => skin(e, (el) => ({ pkg: 'ui', frame: on(el) || el.classList.contains('full') ? 'dot_full' : 'dot_empty', fit: 'contain' })));
 	n.querySelectorAll<HTMLElement>('.bMystQ').forEach((e) => skin(e, () => ({ pkg: 'ui', frame: 'badge_q', fit: 'contain' })));   // 66
 	n.querySelectorAll<HTMLElement>('.cpFront, .cpBack').forEach((e) => skin(e, (el) => ({ pkg: 'ui', frame: el.classList.contains('cpBack') ? 'pass_back' : 'pass_front', k: 2 })));   // 53
