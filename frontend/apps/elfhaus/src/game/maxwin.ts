@@ -88,7 +88,7 @@ export async function maxWinCelebration(capX: number = MAX_WIN_X) {
 	xEl.textContent = '0x'; amtEl.textContent = moneyWin(0, dp);
 	hint.textContent = 'TAP TO CONTINUE';   // fix4 G: one wording everywhere (outro card, max win)
 	M.classList.remove('hidden', 'held', 'out'); void M.offsetWidth; M.classList.add('on');
-	sfx('bigwin_sting'); duck(true); const cu = loop('bigwin_countup_loop'); setTimeout(() => voice('maxwin'), VOICE.bigWinDelayMs);
+	sfx('maxwin_sting'); duck(true); const cu = loop('bigwin_countup_loop'); setTimeout(() => voice('maxwin'), VOICE.bigWinDelayMs);
 	const landAt = COUNT_AT + COUNT_MS;
 	const g = document.createElement('div'); g.className = 'mwGroup'; crowd.appendChild(g);
 	rig = groupShow(g, landAt).start();                                // one rAF clock for the elves + title cue

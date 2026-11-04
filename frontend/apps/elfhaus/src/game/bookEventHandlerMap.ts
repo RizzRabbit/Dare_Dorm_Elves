@@ -216,7 +216,7 @@ export const bookEventHandlerMap: Handlers = {
 	},
 	// Respin: the cells being replaced go straight back to spinning (no marker text) and stop reel by reel.
 	async respinStart(ev) {
-		hideToast();
+		hideToast(); sfx('respin_transition', { throttle: 250 });
 		document.querySelectorAll('.cell').forEach((c) => c.classList.remove('win', 'dim')); clearSymWins(); clearOvWins();
 		clearLines();
 		ev.locked.singles.forEach((s) => {
