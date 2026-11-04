@@ -56,7 +56,7 @@ function build() {
 		const area = (b.x - a.x) * (b.y - a.y), n = Math.round(Math.min(70, area / 2600)), nn = room ? Math.round(Math.min(9, area / 26000)) : 0;
 		for (let i = 0; i < n * 2 + nn * 2; i++) {
 			const near = i >= n * 2, heavy = near ? i >= n * 2 + nn : i >= n;
-			const g = new Sprite(near && tex.fx ? tex.fx.flake : tex.fx!.dot); g.anchor.set(0.5); g.tint = near ? 0xe8f0ff : 0xffffff; (near ? glassL : snowL).addChild(g);
+			const g = new Sprite(near && tex.fx ? tex.fx.flake : tex.fx!.flake_far || tex.fx!.dot); g.anchor.set(0.5); g.tint = near ? 0xe8f0ff : 0xffffff; (near ? glassL : snowL).addChild(g);
 			flakes.push({ g, x: a.x + Math.random() * (b.x - a.x), y: a.y + Math.random() * (b.y - a.y), vy: near ? 46 + Math.random() * 26 : 14 + Math.random() * 22, ph: Math.random() * 6.3,
 				s: near ? (0.3 + Math.random() * 0.18) : (heavy ? 0.1 : 0.08) + Math.random() * 0.12, win: wi, heavy, near });
 		}
@@ -77,11 +77,11 @@ function build() {
 	// fire: a warm glow pool that flickers + embers rising from the logs + the firelight spilling onto the room
 	fireL.removeChildren().forEach((o) => o.destroy()); embers = []; motes = [];
 	const [fu, fv, fr] = P.fire, fp = toS(fu, fv), R = fr * P.iw * fit.c;
-	fireSpill = room ? new Sprite(tex.fx!.blob) : null;
+	fireSpill = room ? new Sprite(tex.fx!.fire_spill || tex.fx!.blob) : null;
 	if (fireSpill) { fireSpill.anchor.set(0.5); fireSpill.blendMode = 'add'; fireSpill.tint = 0xff7a26; fireSpill.position.set(fp.x + R * 0.6, fp.y - R * 0.2); fireSpill.scale.set((R * 11) / 128); fireL.addChild(fireSpill); }
-	fireGlow = new Sprite(tex.fx!.blob); fireGlow.anchor.set(0.5); fireGlow.blendMode = 'add'; fireGlow.tint = 0xff8a2a; fireGlow.position.set(fp.x, fp.y - R * 0.2);
+	fireGlow = new Sprite(tex.fx!.fire_glow || tex.fx!.blob); fireGlow.anchor.set(0.5); fireGlow.blendMode = 'add'; fireGlow.tint = 0xff8a2a; fireGlow.position.set(fp.x, fp.y - R * 0.2);
 	fireGlow.scale.set((R * 3.2) / 128); fireL.addChild(fireGlow);
-	fireCore = new Sprite(tex.fx!.blob); fireCore.anchor.set(0.5); fireCore.blendMode = 'add'; fireCore.tint = 0xffd060; fireCore.position.set(fp.x, fp.y - R * 0.1);
+	fireCore = new Sprite(tex.fx!.fire_core || tex.fx!.blob); fireCore.anchor.set(0.5); fireCore.blendMode = 'add'; fireCore.tint = 0xffd060; fireCore.position.set(fp.x, fp.y - R * 0.1);
 	fireCore.scale.set((R * 1.5) / 128); fireL.addChild(fireCore);
 }
 function tick(dt: number) {
@@ -113,7 +113,7 @@ function tick(dt: number) {
 		emberAt -= dt;
 		if (emberAt <= 0 && embers.length < EMBERS) {
 			emberAt = flare > 0.5 ? 0.05 : 0.18 + Math.random() * 0.3;
-			const g = new Sprite(tex.fx!.dot);
+			const g = new Sprite(tex.fx!.bulb_glow || tex.fx!.dot);
 			g.anchor.set(0.5); g.blendMode = 'add'; g.tint = 0xffb347; fireL.addChild(g);
 			embers.push({ g, t: 0, life: 1 + Math.random() * 0.8, x: fp.x + (Math.random() - 0.5) * R * 0.9, y: fp.y, vx: (Math.random() - 0.5) * 18, vy: -(40 + Math.random() * 40) });
 		}
@@ -127,7 +127,7 @@ function tick(dt: number) {
 			moteAt -= dt;
 			if (moteAt <= 0 && motes.length < MOTES) {
 				moteAt = 0.35 + Math.random() * 0.5;
-				const g = new Sprite(tex.fx.mote); g.anchor.set(0.5); g.blendMode = 'add'; g.tint = 0xffc890; fireL.addChild(g);
+				const g = new Sprite(tex.fx.ember || tex.fx.mote); g.anchor.set(0.5); g.blendMode = 'add'; g.tint = 0xffc890; fireL.addChild(g);
 				motes.push({ g, t: 0, life: 6 + Math.random() * 5, x: fp.x + (Math.random() * 3.2 - 0.6) * R, y: fp.y + (Math.random() * 1.6 - 1.3) * R, vx: (Math.random() - 0.3) * 7, vy: -(4 + Math.random() * 7), s: 0.18 + Math.random() * 0.16 });
 			}
 			motes = motes.filter((m) => {

@@ -18,3 +18,6 @@ html body.skin .bwFx.sk>.skC{animation:skSpin 24s linear infinite;transform-orig
 html body.skin #reelLines,html body.skin #mkBuyGlow,html body.skin .wFrame{display:none!important}
 html body.skin #frame,html body.skin #board{box-shadow:none!important;border-color:transparent!important}
 html body.skin #spinBtn.spinning .skI{animation:skSpin 0.9s linear infinite}
+/* 52 / 54 / 48: bloom, anticipation glow, win-pop shadow are fx atlas frames (no CSS gradients / ellipses) */
+html body.skin .mfRays.sk,html body.skin .mfCore.sk,html body.skin .mRing.sk,html body.skin .antGlow.sk,html body.skin .symSh.sk{background:none!important;border:0!important;border-radius:0!important;box-shadow:none!important}
+html body.skin .ov .ovGlow{display:none!important}

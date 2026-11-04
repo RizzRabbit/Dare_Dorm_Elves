@@ -1,3 +1,4 @@
+import { drawFrame } from './skin';
 // Win pop + snowflake puff (James 2026-10-31): every win plays  land -> line hit (winlines.ts) -> the winning symbols
 // pop and puff into a cartoon snowflake burst -> the next respin fills the empty cells. When no respin follows (the
 // round's last step) the symbols re-form out of the puff so the board is never left with holes.
@@ -6,19 +7,13 @@
 import { S, k } from './ui';
 import type { BookEvent, Pos } from './typesBookEvent';
 
-const NS = 'http://www.w3.org/2000/svg';
-const INK = '#26140f', CREAM = '#fbf5ea', ICE = '#b9cfe0';
-// one six-arm flake: ink under-stroke, cream top stroke (= outlined cartoon line), ice centre dot
-const FLAKE = (() => {
-	let d = '';
-	for (let i = 0; i < 6; i++) {
-		const a = (i * Math.PI) / 3, c = Math.cos(a), s = Math.sin(a), p = (r: number, o = 0) => `${(c * r - s * o).toFixed(1)} ${(s * r + c * o).toFixed(1)}`;
-		d += `M0 0L${p(20)}M${p(11)}L${p(16, 6)}M${p(11)}L${p(16, -6)}`;
-	}
-	return `<svg viewBox="-26 -26 52 52" xmlns="${NS}"><path d="${d}" fill="none" stroke="${INK}" stroke-width="9" stroke-linecap="round"/>` +
-		`<path d="${d}" fill="none" stroke="${CREAM}" stroke-width="4.2" stroke-linecap="round"/><circle r="4.5" fill="${ICE}" stroke="${INK}" stroke-width="2.5"/></svg>`;
-})();
-const PUFF = `<svg viewBox="-30 -30 60 60" xmlns="${NS}"><circle r="26" fill="${CREAM}" stroke="${INK}" stroke-width="5"/><circle cx="-8" cy="-9" r="7" fill="#fff"/></svg>`;
+// the flake and the cloud bits are painted frames of the fx atlas (puff_flake / puff_cloud), drawn on a canvas each
+// (atlas canvas; no inline SVG shapes). paintPart() sizes the canvas to its box once it is in the DOM.
+function paintPart(el: HTMLElement, name: string) {
+	const cv = document.createElement('canvas'); cv.width = cv.height = 96; cv.style.cssText = 'width:100%;height:100%;display:block';
+	el.appendChild(cv); const g = cv.getContext('2d')!;
+	const go = () => { if (!drawFrame(g, 'fx', name, 48, 48, 96, 96)) requestAnimationFrame(go); }; go();
+}
 
 // chalet item 7 (pizzazz): the extra parts are frames on one trimmed sheet (assets/fx/puff_parts.webp, built by
 // elfhaus-chalet/build_puff.py): a small flake, a rounded glint, a soft flash, an ice-blue ring. Short and snappy: they
@@ -51,7 +46,7 @@ function puffCell(cell: HTMLElement, delay: number, kT: number) {
 	const parts: Animation[] = [pop];
 	// cloud puffs: a ring of 5 flat cream blobs that swell and fade
 	for (let i = 0; i < 5; i++) {
-		const a = (i / 5) * Math.PI * 2 + 0.4, b = document.createElement('i'); b.className = 'pfCloud'; b.innerHTML = PUFF; fx.appendChild(b);
+		const a = (i / 5) * Math.PI * 2 + 0.4, b = document.createElement('i'); b.className = 'pfCloud'; paintPart(b, 'puff_cloud'); fx.appendChild(b);
 		const dx = Math.cos(a) * 22, dy = Math.sin(a) * 22;
 		parts.push(anim(b, [
 			{ transform: 'translate(-50%,-50%) translate(0,0) scale(.2)', opacity: 1 },
@@ -62,7 +57,7 @@ function puffCell(cell: HTMLElement, delay: number, kT: number) {
 	// flakes: 7 tumble out and drift down a touch
 	for (let i = 0; i < 7; i++) {
 		const a = (i / 7) * Math.PI * 2 + Math.random() * 0.5, r = 70 + Math.random() * 40, f = document.createElement('i');
-		f.className = 'pfFlake'; f.innerHTML = FLAKE; fx.appendChild(f);
+		f.className = 'pfFlake'; paintPart(f, 'puff_flake'); fx.appendChild(f);
 		const sc = 0.75 + Math.random() * 0.5, rot = (Math.random() < 0.5 ? -1 : 1) * (120 + Math.random() * 120);
 		const dx = Math.cos(a) * r, dy = Math.sin(a) * r;
 		parts.push(anim(f, [

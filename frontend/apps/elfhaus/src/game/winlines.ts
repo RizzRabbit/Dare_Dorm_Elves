@@ -4,8 +4,9 @@
 // highlights every winning symbol with no line over the board. v3.17: staged (winstage.ts): a = the glow + draw-on and
 // hold, b = the lines one by one, c = the WIN meter count to the step total; a tap / double tap ends only the current
 // stage (eased settle) and the next one plays normally. Turbo plays a fast version (no b). Normal pace = studio pace (anim-v4, tempo.ts TG; was x ANIM_TEMPO).
-// Cost: one canvas, three strokes per frame (wide faint glow, mid glow, bright core) plus a pre-rendered head stamp;
+// Cost: one canvas, one painted line_seg per segment + joints + the line_head stamp (fx atlas);
 // nothing animates filter/shadow, and the canvas is cleared and idle between lines.
+import { atlasFrame, drawFrame } from './skin';
 import { LINES, REELS } from './config';
 import { S, $, bet, cellEl, setWinMeter } from './ui';
 import { symWin, clearSymWins, litOn, burst } from './fx';
@@ -19,7 +20,6 @@ import { skipCounts, levelOf, WIN_EDGES, BIG_TIERS, maxLevel } from './countup';
 import { presenting, stage } from './winstage';
 
 let cv: HTMLCanvasElement | null = null, ctx: CanvasRenderingContext2D | null = null, dpr = 1;
-let head: HTMLCanvasElement | null = null;
 let skipLine = false, skipAll = false, active = false;
 
 function ensure() {
@@ -27,12 +27,7 @@ function ensure() {
 	if (!cv) { cv = $('#lines') as unknown as HTMLCanvasElement; ctx = cv.getContext('2d'); }
 	const w = board.clientWidth, h = board.clientHeight; dpr = Math.min(2, window.devicePixelRatio || 1);
 	if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
-	if (!head) { // baked soft head glow (drawn once)
-		head = document.createElement('canvas'); head.width = head.height = 64; const g = head.getContext('2d')!;
-		const rg = g.createRadialGradient(32, 32, 0, 32, 32, 32);
-		rg.addColorStop(0, '#FFFFFFFF'); rg.addColorStop(.18, '#FFF1C8F0'); rg.addColorStop(.45, '#FFC83D70'); rg.addColorStop(1, '#FFC83D00');
-		g.fillStyle = rg; g.fillRect(0, 0, 64, 64);
-	}
+	atlasFrame('fx', 'line_seg');   // start decoding the painted line parts
 }
 /** Points of the line through cell centres, from just outside reel 1 to just outside the last reel. */
 function path(li: number) {
@@ -52,16 +47,16 @@ function draw(P: ReturnType<typeof path>, p: number, alpha: number) {
 	stroke(g, pts, p, alpha);
 	g.globalAlpha = 1;
 }
-/** M1: thicker line with a gold glow (black-gold kit), drawn on progressively; the head stamp leads it. */
+/** The win line as painted fx-atlas parts laid along the path: line_seg stretched along each segment, line_joint on every
+ *  bend, line_head leading while it draws on (no code-drawn strokes or gradients). */
 function stroke(g: CanvasRenderingContext2D, pts: number[][], p: number, alpha: number) {
-	const k = S.cell / 78; // 4 px core on a ~78 px phone cell, proportional on desktop
-	g.lineCap = 'round'; g.lineJoin = 'round'; g.globalAlpha = alpha;
-	for (const [w, col] of [[16 * k, '#FFC83D1c'], [9 * k, '#FFC83D55'], [5 * k, '#FFD86Acc'], [2.2 * k, '#FFF8E6']] as const) {
-		g.lineWidth = w; g.strokeStyle = col; g.beginPath(); g.moveTo(pts[0][0], pts[0][1]);
-		for (let i = 1; i < pts.length; i++) g.lineTo(pts[i][0], pts[i][1]);
-		g.stroke();
+	const k = S.cell / 78, th = 18 * k; g.globalAlpha = alpha;
+	for (let i = 1; i < pts.length; i++) {
+		const a = pts[i - 1], b = pts[i], dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy); if (L < 0.5) continue;
+		drawFrame(g, 'fx', 'line_seg', (a[0] + b[0]) / 2, (a[1] + b[1]) / 2, L + th * 0.5, th, Math.atan2(dy, dx));
 	}
-	if (p < 1) { const h = pts[pts.length - 1], s = 30 * k; g.drawImage(head!, h[0] - s / 2, h[1] - s / 2, s, s); }
+	for (let i = 1; i < pts.length - 1; i++) drawFrame(g, 'fx', 'line_joint', pts[i][0], pts[i][1], th * 1.3, th * 1.3);
+	if (p < 1) { const h = pts[pts.length - 1], s = 30 * k; drawFrame(g, 'fx', 'line_head', h[0], h[1], s, s); }
 }
 function cut(P: ReturnType<typeof path>, p: number) {
 	let left = P.len * p; const pts = [P.pts[0]];

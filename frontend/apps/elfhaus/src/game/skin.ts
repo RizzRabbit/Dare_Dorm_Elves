@@ -36,6 +36,14 @@ function blit(g: CanvasRenderingContext2D, P: Pkg, f: Fr, dx: number, dy: number
 	const ex = [dx, dx + dl, dx + dw - dr], ew = [dl, dw - dl - dr, dr], ey = [dy, dy + dt, dy + dh - db], eh = [dt, dh - dt - db, db];
 	for (let j = 0; j < 3; j++) for (let i = 0; i < 3; i++) if (ew[i] > 0 && eh[j] > 0 && sw[i] > 0 && sh[j] > 0) g.drawImage(im, f.x + sx[i], f.y + sy[j], sw[i], sh[j], ex[i], ey[j], ew[i], eh[j]);
 }
+/** a frame for canvas-2D drawing code (winlines, particles): null until its package is decoded (loading starts) */
+export function atlasFrame(pkg: string, name: string) { const P = ready.get(pkg); if (!P) { void load(pkg); return null; } const f = P.fr[name]; return f ? { img: P.img[f.page], f } : null; }
+/** draw a frame centred at (x, y), size w x h, rotated by a */
+export function drawFrame(g: CanvasRenderingContext2D, pkg: string, name: string, x: number, y: number, w: number, h: number, a = 0) {
+	const F = atlasFrame(pkg, name); if (!F) return false; const { img, f } = F;
+	g.save(); g.translate(x, y); if (a) g.rotate(a); const sx = w / f.sw, sy = h / f.sh;
+	g.drawImage(img, f.x, f.y, f.w, f.h, -w / 2 + f.ox * sx, -h / 2 + f.oy * sy, f.w * sx, f.h * sy); g.restore(); return true;
+}
 const looks = new WeakMap<HTMLElement, () => void>();
 /** Put a painted frame behind (or over) `el`; `look` is re-read on every redraw (state, class, disabled, pressed). */
 export function skin(el: HTMLElement | null, look: (el: HTMLElement) => Look) {
@@ -165,6 +173,11 @@ function late(n: HTMLElement) {
 	n.querySelectorAll<HTMLElement>('.bMystQ').forEach((e) => skin(e, () => ({ pkg: 'ui', frame: 'badge_q', fit: 'contain' })));   // 66
 	n.querySelectorAll<HTMLElement>('.cpFront, .cpBack').forEach((e) => skin(e, (el) => ({ pkg: 'ui', frame: el.classList.contains('cpBack') ? 'pass_back' : 'pass_front', k: 2 })));   // 53
 	n.querySelectorAll<HTMLElement>('.wlAmt').forEach((e) => { skin(e, () => ({ pkg: 'ui', frame: 'winplate', k: 2 })); bmText(e, 'font_cream'); });   // 31
+	n.querySelectorAll<HTMLElement>('.strip .antGlow').forEach((e) => skin(e, () => ({ pkg: 'fx', frame: 'ant_column', k: 2 })));   // 54
+	n.querySelectorAll<HTMLElement>('.symSh').forEach((e) => skin(e, () => ({ pkg: 'fx', frame: 'oval_shadow', fit: 'fill' })));   // 48
+	n.querySelectorAll<HTMLElement>('.mfRays').forEach((e) => skin(e, () => ({ pkg: 'fx', frame: 'bloom_rays', fit: 'contain' })));   // 52
+	n.querySelectorAll<HTMLElement>('.mfCore').forEach((e) => skin(e, () => ({ pkg: 'fx', frame: 'bloom_core', fit: 'contain' })));
+	n.querySelectorAll<HTMLElement>('.mRing').forEach((e) => skin(e, () => ({ pkg: 'fx', frame: 'rim_glow', fit: 'contain' })));
 	n.querySelectorAll<HTMLElement>('#autoCounts > button').forEach((e) => { skin(e, btn('btn_pine')); bmText(e, 'font_cream'); });
 }
 let started = false;

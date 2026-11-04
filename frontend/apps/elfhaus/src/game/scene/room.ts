@@ -8,6 +8,7 @@
 // the floor. Lighting: one warm key from the fire (left in both orientations): a falloff ramp darkens / cools the room
 // away from it, the fire's flicker spills onto the room and the frame, cast shadows fall to the right.
 // prefers-reduced-motion: the camera holds still (planes stay registered), no dust, no frame glint.
+import { loadAtlas } from './atlas';
 import { Container, MeshPlane, NineSliceSprite, Sprite, type Texture } from 'pixi.js';
 import { loadSheet, loadTex } from './load';
 import ROOM from '../chalet/room.json';
@@ -24,6 +25,8 @@ export function loadRoom(k: Key) {
 }
 export async function loadFx() {
 	if (!tex.fx) tex.fx = await loadSheet('assets/room/', 'roomfx').then((r) => r.sheet.textures as Record<string, Texture>).catch(() => null);
+	// + the painted run-1 fx frames (fire_glow / fire_core / fire_spill / bulb_glow / ember / flake_far ...), same names as the fx atlas
+	if (tex.fx && !tex.fx.fire_glow) { const A = await loadAtlas('fx').catch(() => null); if (A) for (const [k, f] of Object.entries(A)) tex.fx[k] = f.tex; }
 	return tex.fx;
 }
 

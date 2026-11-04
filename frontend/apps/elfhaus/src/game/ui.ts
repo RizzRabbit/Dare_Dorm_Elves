@@ -92,7 +92,27 @@ function ensureMxDefs() {
 }
 type Anchor = 'start' | 'end' | 'middle';
 const ax = (anchor: Anchor, w: number) => (anchor === 'end' ? w - 5 : anchor === 'start' ? 5 : w / 2);
+// SPRITE_MAP 20 / 59: the multiplier is set in the painted gold bitmap font (font_gold atlas: cream-gold fill, ink line,
+// offset shadow baked); each glyph is a nested <svg> window onto the atlas page. Until the font is decoded the old
+// lettering shows for that frame only.
+let FG: { img: string; W: number; H: number; px: number; base: number; fr: Record<string, { x: number; y: number; w: number; h: number; ox: number; oy: number; sw: number; sh: number; adv: number }> } | null = null;
+fetch('assets/sprites/font_gold/font_gold.json').then((r) => r.json()).then((J) => {
+	const fr: NonNullable<typeof FG>['fr'] = {};
+	for (const [k, f] of Object.entries<any>(J.frames)) fr[k] = { x: f.frame.x, y: f.frame.y, w: f.frame.w, h: f.frame.h, ox: f.spriteSourceSize?.x || 0, oy: f.spriteSourceSize?.y || 0, sw: f.sourceSize.w, sh: f.sourceSize.h, adv: f.adv ?? f.sourceSize.w };
+	FG = { img: 'assets/sprites/font_gold/' + J.meta.pages[0].image, W: J.meta.pages[0].size.w, H: J.meta.pages[0].size.h, px: J.meta.px, base: J.meta.asc, fr };
+}).catch(() => {});
+function mxGlyphs(t: string, w: number, anchor: Anchor) {
+	const F = FG!, k = (MX_FS * 1.1) / F.px, gl = [...t].map((c) => F.fr['u' + c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0')]);
+	const adv = gl.reduce((s, f) => s + (f ? f.adv : 18), 0) * k;
+	let x = anchor === 'end' ? w - 5 - adv : anchor === 'start' ? 5 : (w - adv) / 2; const y = MX_BASE - F.base * k;
+	let out = '';
+	for (const f of gl) { if (!f) { x += 18 * k; continue; }
+		out += `<svg x="${(x + f.ox * k).toFixed(2)}" y="${(y + f.oy * k).toFixed(2)}" width="${(f.w * k).toFixed(2)}" height="${(f.h * k).toFixed(2)}" viewBox="${f.x} ${f.y} ${f.w} ${f.h}"><image href="${F.img}" width="${F.W}" height="${F.H}"/></svg>`;
+		x += f.adv * k; }
+	return `<svg viewBox="0 0 ${w} ${MX_H}" overflow="visible" aria-hidden="true">${out}</svg>`;
+}
 function mxSVG(t: string, w: number, anchor: Anchor) {
+	if (FG) return mxGlyphs(t, w, anchor);
 	const x = ax(anchor, w);
 	const txt = (cls: string) => `<text class="${cls}" x="${x}" y="${MX_BASE}" text-anchor="${anchor}" font-size="${MX_FS}">${t}</text>`;
 	return `<svg viewBox="0 0 ${w} ${MX_H}" aria-hidden="true">${txt('o')}${txt('i')}${txt('f')}${txt('h')}</svg>`;
