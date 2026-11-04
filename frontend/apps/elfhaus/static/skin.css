@@ -75,6 +75,9 @@ html body.skin #popMenu .pmRow:hover{background:none!important}
 html body #maxwin .mwAmt{background:none!important;border:0!important;box-shadow:none!important}
 html body #maxwin .mwHint{font-size:34px}
 html body:not(.portrait) #autoMenu .modal{background:var(--c-cream,#F6EBD3)!important}
+/* fix5 #2: every modal (buy, confirm, autoplay, settings, info, message, resume) is opaque in every orientation; id-weight :is
+   so the .sk background:none reset above can't clear it */
+html body.skin .overlay>:is(.modal,#_skA#_skB#_skC#_skD#_skE#_skF#_skG),html body .overlay>:is(.modal,#_skA#_skB#_skC#_skD#_skE#_skF#_skG){background-color:var(--c-cream,#F6EBD3)!important}
 /* fix4 C/D: merged / full-reel wilds: no tile glints, tile glow, win ring or frame. The win glow is an outline traced from
    the stack's own painted alpha (drop-shadow of the elf cut-outs): white core, fluorescent teal-blue halo. */
 html body .ov>.tGl,html body .ov>.tGw,html body .ov .ovWinO,html body .ov .wFrame{display:none!important}
