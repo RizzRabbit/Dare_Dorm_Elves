@@ -33,6 +33,7 @@ import { playBookEvents, endBonusUi } from './bookEventHandlerMap';
 import { initRoxy, placeRoxy } from './roxy';
 import { initStacks, stackIdle } from './stacks';
 import { initSkin } from './skin';
+import { initTimelines } from './tl';
 import { setBg, warmBg } from './bg';
 import { placeAlcove } from './alcove';
 import { mkCell, mkPlace, fitArmTag } from './mkboard';
@@ -444,6 +445,13 @@ function betStep(d: number) {
 }
 
 // ---------- rules (C14/C32/C33/C34) ----------
+// SPRITE_MAP 72: the payline diagrams are painted frames of the modals atlas (payline_01..20, same order as LINES)
+const PL_RECT: number[][] = [[10, 10, 180, 144], [202, 10, 180, 144], [394, 10, 180, 144], [586, 10, 180, 144], [778, 10, 180, 144], [970, 10, 180, 144], [1162, 10, 180, 144], [1354, 10, 180, 144], [1546, 10, 180, 144], [1738, 10, 180, 144], [10, 166, 180, 144], [202, 166, 180, 144], [394, 166, 180, 144], [586, 166, 180, 144], [778, 166, 180, 144], [970, 166, 180, 144], [1162, 166, 180, 144], [1354, 166, 180, 144], [1546, 166, 180, 144], [1738, 166, 180, 144]];
+function plArt(i: number, cells: string, path: string, W5: number, H4: number) {
+	const r = PL_RECT[i]; if (!r) return `<svg viewBox="-1 -1 ${W5 + 2} ${H4 + 2}" aria-hidden="true">${cells}<polyline points="${path}"/></svg>`;
+	const [x, y, w, h] = r, AW = 2048, AH = 512;
+	return `<i class="plA" aria-hidden="true" style="display:block;aspect-ratio:${w}/${h};background:url(assets/sprites/modals/modals.webp) no-repeat;background-size:${(AW / w) * 100}% ${(AH / h) * 100}%;background-position:${(x / (AW - w)) * 100}% ${(y / (AH - h)) * 100}%"></i>`;
+}
 function buildRules() {
 	const xb = isSocial() ? 'x play' : 'x bet';
 	const pct = (r: number | null) => (r == null ? 'pending final math' : (r * (r <= 1 ? 100 : 1)).toFixed(2) + '%');
@@ -458,7 +466,7 @@ function buildRules() {
 			return `<rect x="${r * (C + G)}" y="${row * (C + G)}" width="${C}" height="${C}" rx="2.5" class="${on ? 'on' : ''}"/>`; }).join('');
 		const path = ln.map((row, r) => `${ctr(r)},${ctr(row)}`).join(' ');
 		return `<figure class="pl" aria-label="Line ${i + 1}: rows ${ln.map((r) => r + 1).join('-')}"><figcaption>${i + 1}</figcaption>` +
-			`<svg viewBox="-1 -1 ${W5 + 2} ${H4 + 2}" aria-hidden="true">${cells}<polyline points="${path}"/></svg></figure>`;
+			plArt(i, cells, path, W5, H4) + `</figure>`;
 	}).join('');
 	const win = isSocial() ? 'wins' : 'pays', cc = copyCtx();
 	$('#rulesTitle').textContent = 'GAME INFO';
@@ -687,6 +695,7 @@ export async function initGame() {
 	track(initRoxy(layout));
 	loadAllFx(track).then(() => renderAll());
 	initSkin();   // painted sprite skin for the DOM pieces (skin.ts)
+	initTimelines();   // GSAP sign entrances (tl.ts)
 	setOverlayHook(stackIdle); initStacks().then(() => renderOverlays(false)); // optional stack / per-reel expand sheets (placeholders until imported)
 	track(document.fonts?.ready ?? Promise.resolve());
 	buildCells(); S.sym = IDLE.map((c) => [...c]); S.vals = new Map([[2 * 4 + 2, 1]]);
