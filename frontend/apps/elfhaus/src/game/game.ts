@@ -321,7 +321,7 @@ function askResume(amount: string | null): Promise<'resume' | 'skip'> {
 	$('#rcResume').textContent = c.resume; $('#rcSkip').textContent = c.skip;
 	openPanel('#resumeCard');
 	return new Promise((res) => {
-		const done = (v: 'resume' | 'skip') => { $('#rcResume').onclick = $('#rcSkip').onclick = null; sfx('ui_click'); closePanel('#resumeCard', true); res(v); };
+		const done = (v: 'resume' | 'skip') => { $('#rcResume').onclick = $('#rcSkip').onclick = null; sfx('ui_click_new'); closePanel('#resumeCard', true); res(v); };
 		$('#rcResume').onclick = () => done('resume'); $('#rcSkip').onclick = () => done('skip');
 	});
 }
@@ -377,7 +377,7 @@ function buildBuy() {
 	$('#buyCards').querySelectorAll<HTMLElement>('.bcard').forEach((b) => (b.onclick = () => {
 		const m = b.dataset.m as ModeKey;
 		if (b.classList.contains('off')) return;
-		if (armed === m) { pickArm(null); sfx('ui_click'); return; } // tap the active card again to turn it off (back to base: no confirm)
+		if (armed === m) { pickArm(null); sfx('ui_click_new'); return; } // tap the active card again to turn it off (back to base: no confirm)
 		// v3.13 (James + Stake approval: a mode above CONFIRM_ABOVE_X the base bet is confirmed before it activates): the
 		// confirm card (feature, art, short description, amount per spin, CONFIRM; tap outside / Esc = back to the menu).
 		// Nothing is charged on CONFIRM either: the mode is armed and the spin button is the one tap that spends.
@@ -411,7 +411,7 @@ function openConfirm(m: ModeKey) {
 	$('#cfName').textContent = c.title; $('#cfDesc').textContent = c.desc;
 	$('#cfAmount').textContent = c.amount; $('#cfPer').textContent = c.per; $('#cfX').textContent = c.x;
 	$('#cfNote').textContent = c.note; $('#cfYes').textContent = c.button; $('#cfHint').textContent = c.hint;
-	sfx('ui_click'); openPanel('#bmConfirm');
+	sfx('ui_click_new'); openPanel('#bmConfirm');
 }
 /** Live state: prices at the current bet, affordability, armed card, Ante switch. */
 function paintBuy() {
@@ -586,8 +586,8 @@ function wire() {
 	$('#bmUp').onclick = () => betStep(1);
 	$('#bmDown').onclick = () => betStep(-1);
 	// Ante off = back to base, no confirm; Ante on goes through the confirm card when it costs more than CONFIRM_ABOVE_X
-	$('#anteSw').onclick = () => { if (S.ante) { pickArm(null, false); paintBuy(); sfx('ui_click'); } else if (ANTE_COST > CONFIRM_ABOVE_X) openConfirm('ante'); else activate('ante'); };
-	$('#armTag').onclick = () => { if (!S.busy) { pickArm(null); sfx('ui_click'); } };
+	$('#anteSw').onclick = () => { if (S.ante) { pickArm(null, false); paintBuy(); sfx('ui_click_new'); } else if (ANTE_COST > CONFIRM_ABOVE_X) openConfirm('ante'); else activate('ante'); };
+	$('#armTag').onclick = () => { if (!S.busy) { pickArm(null); sfx('ui_click_new'); } };
 	// v3.13: one turbo state, two switches (HUD lightning button + the bonus menu Turbo row)
 	$('#turboBtn').onclick = () => setTurbo(!S.turbo);
 	$('#turboSw').onclick = () => setTurbo(!S.turbo);
@@ -646,7 +646,7 @@ function wire() {
 	// plain button clicks (the buy menu, bet steps, mode arming and errors play their own sounds above)
 	document.addEventListener('click', (e) => {
 		const b = (e.target as Element)?.closest?.('#menuBtn,.mX,#turboBtn,#turboSw,#autoBtn,#autoStart,#advBtn,#msgOk,#replayPlay,.chip,#popMenu .pmRow,#stFeat,#stBonus') as HTMLButtonElement | null;
-		if (b && !b.disabled) sfx('ui_click');
+		if (b && !b.disabled) sfx('ui_click_new');
 	});
 	addEventListener('resize', layout);
 	initStripFit(); // v3.16f (#194): HUD values shrink to fit on landscape phones

@@ -1,3 +1,3 @@
-// The ONE swap point for Roxy: the Winter Chalet cut-out rig (rigChalet.ts). Nothing else imports a rig file directly.
-export { createRoxy } from './rigChalet';
+// The ONE swap point for Roxy: the DragonBones rig (rigDB.ts). Nothing else imports a rig file directly.
+export { createRoxy } from './rigDB';
 export type { RoxyAdapter, RoxyFace, RoxyGrade } from './types';

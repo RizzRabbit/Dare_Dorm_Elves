@@ -16,6 +16,7 @@ import ARTG from './art.generated.json';
 import { symArtReady } from './symrig';
 const TITLE = ARTG.logo || 'art/logo.webp';
 import { EGW_STACK_X } from './config';
+import { sfx } from './audio';
 
 const FONT = "'Lilita One', Nunito, 'Segoe UI', Roboto, Arial, sans-serif";
 // Winter Chalet palette: timber, cranberry, cream, gold, pine, ink (flat fills, thick ink lines)
@@ -55,7 +56,7 @@ function holdL() {   // the left leaf stops where Roxy's door hand holds it: the
   let lo = am, hi = 1; for (let i = 0; i < 22; i++) { const m = (lo + hi) / 2; if (dist(m) > reach) hi = m; else lo = m; }
   return lo;
 }
-const HANDLE_Y = 0.455;   // lever height (fraction of the leaf): Roxy's door hand meets it with the leaf open
+const HANDLE_Y = 0.54;    // QC_LOG: painted lever sits at 0.54 of the leaf; lever height (fraction of the leaf): Roxy's door hand meets it with the leaf open
 const hex = (c) => '#' + c.toString(16).padStart(6, '0');
 
 // door leaf (outside face): flat cranberry paint, two inset panels (ink line + gold inner line), a wreath, gold lever
@@ -367,7 +368,11 @@ function prime() {   // the game in its "behind the doors" state
   sceneHold(true); if (rig) { rig.doorReach(true, 0); rig.face('surprised', 0); }
   primed = true; setGame(0);
 }
+let sndLever = false, sndDoors = false;   // intro one-shots (AUDIO_WIRING_RUN3), re-armed when the clock rewinds
 function setGame(tt) {   // all game objects driven from the intro clock (transform + opacity only)
+  if (tt < T.doorL[0]) sndLever = sndDoors = false;
+  if (!sndLever && tt >= T.doorL[0]) { sndLever = true; sfx('intro_door_lever'); }
+  if (!sndDoors && tt >= T.doorR[0]) { sndDoors = true; sfx('intro_doors_open'); }
   applyCam(lerp(CAM0, 1, seg(tt, ...T.cam, ease.inOutCubic)));
   const H = ST.h, dropH = H * 0.62;
   // board + Roxy drop in together: fall from above, land past the mark and spring back (outBack)

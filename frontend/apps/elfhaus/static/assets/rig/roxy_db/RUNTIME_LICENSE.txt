@@ -1,0 +1,3 @@
+Playback runtime: pixi-dragonbones-runtime 8.0.3 (npm), author h1ve2, https://github.com/h1ve2/pixi-dragonbones-runtime
+License: MIT (declared in package.json; the npm tarball ships no separate LICENSE file). Peer: pixi.js ^8.
+Port of the official DragonBones runtime (MIT, DragonBones team). No editor licence needed. The data format is DragonBones 5.5 JSON.

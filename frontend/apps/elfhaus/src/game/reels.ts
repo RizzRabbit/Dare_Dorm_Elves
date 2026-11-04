@@ -169,10 +169,13 @@ function frame(now: number) {
 	}
 	if (cells.size) raf = requestAnimationFrame(frame);
 }
+let scSpin = -1, scN = 0;   // scatters landed this spin (scatter_land_1..3)
 function impact(C: Cell) {
 	C.impacted = true;
 	C.el.classList.add('tLand');
-	if (!S.turbo) sfx('reel_stop_3', { throttle: 60 }); else if ([...cells.values()].every((x) => x === C || x.impacted)) sfx('reel_stop_3', { gain: 0.7 });
+	const rate = [0.96, 0.98, 1, 1.02, 1.04][C.r] ?? 1;   // one stop sound, pitched per reel (AUDIO_WIRING_RUN3)
+	if (!S.turbo) sfx('reel_stop_new', { throttle: 60, rate }); else if ([...cells.values()].every((x) => x === C || x.impacted)) sfx('reel_stop_new', { gain: 0.7 });
+	if (C.fin === 'S') { if (scSpin !== t0) { scSpin = t0; scN = 0; } scN = Math.min(3, scN + 1); sfx(`scatter_land_${scN}` as 'scatter_land_1', { throttle: 60 }); }
 }
 function finish(C: Cell) {
 	cells.delete(`${C.r}${C.row}`);

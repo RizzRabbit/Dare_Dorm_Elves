@@ -27,6 +27,7 @@
 // Letters are a separate layer above the body: idle / join keep the hips rigid after the letters light up; merge_win
 // bakes the letters into its frames, so the letters layer is hidden while it plays. letters_ignite restarts with
 // stack_form (its leading blank frames wait for the build-up to finish).
+import { dbKnown, dbPlay, dbStop, initDbStacks } from './dbstacks';
 import { loadSheet, unloadSheet, play, hasSheet, stop, type Atlas, type Anim } from './sprite';
 import { voice } from './voice';
 
@@ -38,6 +39,7 @@ let ready: Promise<void> | null = null;
 
 /** Read index.json (nothing is decoded yet; a missing index just means "placeholders"). */
 export function initStacks() {
+	void initDbStacks();
 	return (ready ||= fetch(DIR + 'index.json').then((r) => (r.ok ? r.json() : { sheets: [] })).catch(() => ({ sheets: [] }))
 		.then((ix: { sheets?: string[] }) => {
 			(ix.sheets || []).forEach((id) => listed.add(id));
@@ -94,6 +96,7 @@ function drop(ids: string[], skip: HTMLElement[] = []) {
 const joinPins = new Set<string>();
 /** A merge's lean took snapshots of these overlays: close every sheet of theirs that nothing shown still needs. */
 export function stackRelease(ovs: HTMLElement[]) {
+	ovs.forEach(dbStop);
 	drop([...new Set(ovs.flatMap((ov) => ANIMS.map((a) => sheetId(a, ov))))], ovs);
 }
 /** Wilds are on these reels (0-based) and they are not full yet: decode their stack_form sheets ahead of stackComplete. */
@@ -150,6 +153,7 @@ function sweep() {
 }
 /** Idle loop on an overlay (called for every overlay after each render). Decodes its sheets first if needed. */
 export function stackIdle(ov: HTMLElement) {
+	if (dbKnown(ov)) { void dbPlay(ov, 'idle'); if (listed.size && !live.get(ov)?.letters) stackLetters(ov, true); return; }   // DragonBones rig (dbstacks.ts)
 	if (!listed.size) return;
 	const idle = sheetId('merge_idle', ov), lets = sheetId('letters_ignite', ov);
 	prefetchJoins();
@@ -169,7 +173,8 @@ export const CLEAN_FROM: Record<'stack_form' | 'merge_join', number> = { stack_f
 export function stackOnce(a: 'stack_form' | 'merge_join', ov: HTMLElement) {
 	return new Promise<void>((res) => {
 		const id = sheetId(a, ov);
-		if (!run(a, ov, 'body', { from: CLEAN_FROM[a], onEnd: () => { run('merge_idle', ov, 'body', { loop: true }); drop([id]); res(); } })) return res();
+		if (dbKnown(ov)) dbStop(ov);   // the one-shot sheet plays first, the rig takes over at its end
+		if (!run(a, ov, 'body', { from: CLEAN_FROM[a], onEnd: () => { if (dbKnown(ov)) void dbPlay(ov, 'idle'); else run('merge_idle', ov, 'body', { loop: true }); drop([id]); res(); } })) { if (dbKnown(ov)) void dbPlay(ov, 'idle'); return res(); }
 		if (a === 'stack_form') stackLetters(ov); // re-ignite: its blank lead-in waits for the build-up
 	});
 }
@@ -182,6 +187,7 @@ export function stackLetters(ov: HTMLElement, settled = false) {
 /** Win bounce (its frames carry the letters, so the letters layer hides meanwhile). Decodes on first use. */
 export function stackWin(ov: HTMLElement) {
 	const rx = reacts.get(ov); if (rx) { void rx.p.then(() => stackWin(ov)); return; } // the win bounce starts after the face reaction (the CSS win outline shows meanwhile)
+	if (dbKnown(ov)) { void dbPlay(ov, 'win'); return; }
 	const go = () => {
 		if (!ov.isConnected || !ov.classList.contains('win')) return;
 		if (run('merge_win', ov, 'win', { loop: true })) { const l = live.get(ov)?.letters; if (l) l.cv.style.opacity = '0'; }
@@ -191,6 +197,7 @@ export function stackWin(ov: HTMLElement) {
 	if (hasSheet(id)) go(); else if (listed.has(id)) void ensure(id).then(go);
 }
 export function stackWinOff(ov: HTMLElement) {
+	if (dbKnown(ov)) void dbPlay(ov, 'idle');
 	const s = live.get(ov), w = s?.win; if (w && !w.done) stop(w);
 	if (s?.letters) s.letters.cv.style.opacity = '';
 	drop([sheetId('merge_win', ov)], [ov]); // released right away (another winning overlay that shares it keeps it)

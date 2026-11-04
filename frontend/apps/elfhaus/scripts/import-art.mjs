@@ -18,12 +18,15 @@
 //                                              b2_{crown,crown_fs,recess,recess_fs,twinkle0..2}_{landscape,portrait}.webp and
 //                                              b2_ledge_9slice.webp -> their art-manifest.json sources (alcove_* keys,
 //                                              assets/final/webp/frame/). WebP only: a .png without a .webp twin is reported.
+//   node scripts/import-art.mjs sprites <dir> [<dir2>...]  painted sprite packages -> static/assets/sprites/<pkg>/ (WebP pages + json)
+//   node scripts/import-art.mjs rigs    <dir>   DragonBones <name>_{ske,tex}.json + _tex.webp -> static/assets/rig/db/ (roxy -> rig/roxy_db/)
+//   node scripts/import-art.mjs audio   <dir>   *.mp3 -> static/assets/audio/
 // Add --dry to list what would be copied. Then: pnpm test && pnpm build.
 import { readdirSync, statSync, mkdirSync, copyFileSync, existsSync, rmSync, writeFileSync, readFileSync } from 'node:fs';
 import { join, resolve, relative, dirname, basename } from 'node:path';
 const app = resolve(import.meta.dirname, '..'), repo = resolve(app, '../../..');
 const [kind, src, ...flags] = process.argv.slice(2), dry = flags.includes('--dry');
-if (!kind || !src || !existsSync(src)) { console.error('usage: import-art.mjs symbols|splash|stacks|fx|wilds|roxy|frame <dir> [--dry] [--force]'); process.exit(1); }
+if (!kind || !src || !existsSync(src)) { console.error('usage: import-art.mjs symbols|splash|stacks|fx|wilds|roxy|frame|sprites|rigs|audio <dir> [--dry] [--force]'); process.exit(1); }
 const walk = (d) => readdirSync(d).flatMap((f) => { const p = join(d, f); return statSync(p).isDirectory() ? walk(p) : [p]; });
 let n = 0;
 const cp = (from, to) => { n++; console.log(`${dry ? '[dry] ' : ''}${relative(src, from)} -> ${relative(repo, to)}`); if (!dry) { mkdirSync(dirname(to), { recursive: true }); copyFileSync(from, to); } };
@@ -99,5 +102,40 @@ if (kind === 'symbols') {
 		if (f.endsWith('.json') && tag !== 'full') { n++; console.log(`${dry ? '[dry] ' : ''}${relative(src, f)} -> ${relative(repo, to)} (renamed)`); if (!dry) writeFileSync(to, ren(readFileSync(f, 'utf8'))); }
 		else if (resolve(f) !== to) cp(f, to);
 	}
+} else if (kind === 'sprites') {
+	// Painted sprite packages (run1/run3 layout): <dir>/<pkg>/<pkg>.json + <pkg>[-N].webp pages (named frames, normalized
+	// anchor = pivot, slice9 = [l, t, r, b] insets). WebP pages only (masters/ and .png stay in the art workdir) ->
+	// static/assets/sprites/<pkg>/; meta.pages rewritten to the WebP names; writes static/assets/sprites/index.json.
+	// Several <dir>s may be given (later ones win per package), e.g. run1/out then run3/out.
+	const dest = join(app, 'static/assets/sprites'), dirs = [src, ...flags.filter((f) => !f.startsWith('--') && existsSync(f))], pk = {};
+	for (const d of dirs) for (const name of readdirSync(d)) {
+		const pd = join(d, name), j = join(pd, name + '.json'); if (!statSync(pd).isDirectory() || !existsSync(j)) continue;
+		const J = JSON.parse(readFileSync(j, 'utf8')); const pages = (J.meta.pages || [{ image: J.meta.image }]).map((p) => p.image.replace(/\.png$/, '.webp'));
+		J.meta.pages = pages.map((im, i) => ({ image: im, size: (J.meta.pages || [])[i]?.size || J.meta.size })); J.meta.image = pages[0];
+		for (const im of pages) cp(join(pd, im), join(dest, name, im));
+		n++; console.log(`${dry ? '[dry] ' : ''}${name}.json (${Object.keys(J.frames).length} frames, ${pages.length} page(s))`);
+		if (!dry) { mkdirSync(join(dest, name), { recursive: true }); writeFileSync(join(dest, name, name + '.json'), JSON.stringify(J)); }
+		pk[name] = { pages: pages.length, frames: Object.keys(J.frames).length };
+	}
+	if (!dry) { const prev = existsSync(join(dest, 'index.json')) ? JSON.parse(readFileSync(join(dest, 'index.json'), 'utf8')).packages || {} : {};
+		writeFileSync(join(dest, 'index.json'), JSON.stringify({ packages: { ...prev, ...pk } }, null, 1) + '\n'); }
+} else if (kind === 'rigs') {
+	// DragonBones 5.5 rigs: <name>_ske.json + <name>_tex.json + <name>_tex.webp -> static/assets/rig/db/ (roxy -> rig/roxy_db/);
+	// the tex json's imagePath is pointed at the WebP page. Writes static/assets/rig/db/index.json (armature names).
+	const dest = join(app, 'static/assets/rig/db'), names = [];
+	for (const f of walk(src)) {
+		const m = basename(f).match(/^(.+)_ske\.json$/); if (!m) continue;
+		const nm = m[1], dir = dirname(f), to = nm === 'roxy' ? join(app, 'static/assets/rig/roxy_db') : dest;
+		if (!existsSync(join(dir, nm + '_tex.webp'))) { console.log(`skip ${nm}: no ${nm}_tex.webp`); continue; }
+		cp(f, join(to, nm + '_ske.json')); cp(join(dir, nm + '_tex.webp'), join(to, nm + '_tex.webp'));
+		const T = JSON.parse(readFileSync(join(dir, nm + '_tex.json'), 'utf8')); T.imagePath = nm + '_tex.webp';
+		n++; if (!dry) { mkdirSync(to, { recursive: true }); writeFileSync(join(to, nm + '_tex.json'), JSON.stringify(T)); }
+		if (nm !== 'roxy') names.push(nm);
+	}
+	if (!dry && names.length) { const prev = existsSync(join(dest, 'index.json')) ? JSON.parse(readFileSync(join(dest, 'index.json'), 'utf8')).rigs || [] : [];
+		writeFileSync(join(dest, 'index.json'), JSON.stringify({ rigs: [...new Set([...prev, ...names])].sort() }, null, 1) + '\n'); }
+} else if (kind === 'audio') {
+	// sound cues (mp3) -> static/assets/audio/ (names kept; audio.ts maps cue -> file)
+	for (const f of readdirSync(src)) if (/\.(mp3|ogg|m4a)$/.test(f)) cp(join(src, f), join(app, 'static/assets/audio', f));
 } else { console.error('unknown kind ' + kind); process.exit(1); }
 console.log(`${n} file(s) ${dry ? 'would be ' : ''}copied`);

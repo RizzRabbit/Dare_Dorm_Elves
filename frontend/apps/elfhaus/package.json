@@ -13,17 +13,19 @@
 		"preview": "vite preview"
 	},
 	"devDependencies": {
-		"config-ts": "workspace:*",
-		"config-svelte": "workspace:*",
 		"@sveltejs/adapter-static": "3.0.8",
-		"@sveltejs/vite-plugin-svelte": "5.0.3"
+		"@sveltejs/vite-plugin-svelte": "5.0.3",
+		"config-svelte": "workspace:*",
+		"config-ts": "workspace:*"
 	},
 	"dependencies": {
-		"svelte": "5.20.5",
-		"vite": "6.2.0",
 		"@sveltejs/kit": "2.17.3",
-		"rgs-requests": "workspace:*",
 		"constants-shared": "workspace:*",
-		"pixi.js": "8.21.0"
+		"gsap": "^3.15.1",
+		"pixi-dragonbones-runtime": "8.0.3",
+		"pixi.js": "8.21.0",
+		"rgs-requests": "workspace:*",
+		"svelte": "5.20.5",
+		"vite": "6.2.0"
 	}
 }

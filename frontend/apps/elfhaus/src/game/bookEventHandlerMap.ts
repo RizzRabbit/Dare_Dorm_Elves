@@ -23,10 +23,12 @@ import { featOpen, featPop, featClose } from './featfx';
 import { countTo, countMs, setAmount, skipCounts, BIG_TIERS, levelOf, WIN_EDGES } from './countup';
 import { grab, combineInto } from './combine';
 import { tempo, hold, gtempo } from './tempo';
-import { sfx, loop, music, duck, duckFor, type Handle } from './audio';
+import { sfx, loop, music, duck, duckFor, playVoice, type Handle } from './audio';
 import { voice, voiceSpin, teaseOk } from './voice';
 import { payoutFlow } from './payoutFlow';
 import { bannerLevel } from './bannerLevel';
+import { titleType, titleTypeMirror } from './titletype';
+import { ninePanel, CARD, BTN, WINDOW } from './ninepanel';
 // Pauses here use ui.wait: the old pace x ANIM_TEMPO, skippable by tap / Space (tempo.ts); turbo keeps its short values.
 
 const scattersOnBoard = (): Pos[] => S.sym.flatMap((col, reel) => col.map((n, row) => ({ reel, row, n }))).filter((c) => c.n === 'S').map(({ reel, row }) => ({ reel, row }));
@@ -46,7 +48,8 @@ async function showScatters(ps: Pos[], ms: number) {
  * hold(800) = 1.6 s at board tempo 2 (turbo 0.8 s); a tap anywhere ends it early (game.ts pointerdown -> skipHolds). */
 async function fsMoreCard(added: number) {
 	const O = $('#fsMore'), card = O.querySelector<HTMLElement>('.card')!, big = O.querySelector<HTMLElement>('.fmBig')!;
-	big.textContent = added > 0 ? `+${added}` : `MAX ${MAX_FS}`; O.dataset.max = added > 0 ? '' : '1';
+	titleType(big, added > 0 ? `+${added}` : `MAX ${MAX_FS}`); O.dataset.max = added > 0 ? '' : '1';
+	titleType(O.querySelector<HTMLElement>('.fmSub'), 'FREE SPINS'); ninePanel(card, CARD);   // the card's words in the title lettering (sprite glyphs)
 	const calm = !matchMedia('(prefers-reduced-motion: reduce)').matches, f = S.turbo ? 0.5 : 1;
 	const from = { opacity: 0, transform: calm ? 'scale(.92)' : 'none' }, to = { opacity: 1, transform: 'none' };
 	O.classList.remove('hidden');
@@ -258,19 +261,31 @@ export const bookEventHandlerMap: Handlers = {
 		await cardFlip(ev.result);
 	},
 	async freeSpinTrigger(ev) {
-		hideToast(); roxy('excited'); sfx('bonus_trigger'); duckFor(4000); voice('bonus');
+		hideToast(); roxy('excited'); sfx('scatter_trigger_bell'); sfx('bonus_trigger', { gain: 0.7 }); duckFor(4000); voice('bonus');
 		// the trigger scatters light up on the board, the wilds that stay lock in place (Dare carries nothing);
 		// the board itself is never cleared or re-rendered, so a Mystery bonus continues on the Mystery board
 		await showScatters(ev.scatters, 1100);
 		lockCarried(ev.carried);
 		const I = $('#intro');
 		(I.querySelector('.tierName') as HTMLElement).innerHTML = titleHTML(ev.tier, TL(ev.tier) + '!');
-		(I.querySelector('.spins') as HTMLElement).textContent = `${ev.totalFs} FREE SPINS`;
-		// chalet: the tier's elves (upper bodies from the stack stills) on the card, so it reads as a scene, not a dialog
-		{ const src: Record<string, string> = { dare: 'assets/stacks/still/WF_R1.webp', double_dare: 'assets/stacks/still/WM2_R1-2.webp', triple_dare: 'assets/stacks/still/WM3_R2-4.webp', hidden: 'assets/stacks/still/WM5_R1-5.webp' };
-		  let a = I.querySelector<HTMLImageElement>('.card img.tArt'); const u = src[ev.tier] || src.double_dare;
-		  if (!a) { a = document.createElement('img'); a.className = 'tArt'; a.alt = ''; a.draggable = false; I.querySelector('.card .spins')!.before(a); }
-		  if (a.getAttribute('src') !== u) a.src = u; }
+		// the spin count is the card's hero line, in the title lettering (sprite glyphs; the text stays for screen readers)
+		titleType(I.querySelector<HTMLElement>('.spins'), `${ev.totalFs} FREE SPINS`); titleType(I.querySelector<HTMLElement>('.cont'), 'START');
+		ninePanel(I.querySelector<HTMLElement>('.card'), CARD); ninePanel(I.querySelector<HTMLElement>('.cont'), BTN);
+		// chalet: the tier's elves on the card, so it reads as a scene, not a dialog: the tier's approved square card art
+		// (assets/cards, the same paintings as the buy menu) shown whole, so nobody is cut at the face or chest. c = the
+		// crop as fractions of the image [x0, y0, x1, y1] (the whole image) and the window takes its aspect.
+		{ const art: Record<string, { u: string; c: [number, number, number, number]; px: [number, number] }> = {
+				dare: { u: 'assets/cards/card_dare.webp', c: [0, 0, 1, 1], px: [640, 640] },
+				double_dare: { u: 'assets/cards/card_double_dare.webp', c: [0, 0, 1, 1], px: [640, 640] },
+				triple_dare: { u: 'assets/cards/card_triple_dare.webp', c: [0, 0, 1, 1], px: [640, 640] },
+				hidden: { u: 'assets/cards/card_egw.webp', c: [0, 0, 1, 1], px: [640, 640] } };
+		  const t = art[ev.tier] || art.double_dare, [x0, y0, x1, y1] = t.c, cw = x1 - x0, ch = y1 - y0;
+		  let wv = I.querySelector<HTMLElement>('.card .tArtWin'), a = wv?.querySelector<HTMLImageElement>('img.tArt');
+		  if (!wv || !a) { wv = document.createElement('div'); wv.className = 'tArtWin'; a = document.createElement('img'); a.className = 'tArt'; a.alt = ''; a.draggable = false;
+		    const fr = document.createElement('i'); fr.className = 'tArtFr'; wv.append(a, fr); I.querySelector('.card .spins')!.before(wv); ninePanel(fr, WINDOW); }
+		  wv.style.setProperty('--ar', ((cw * t.px[0]) / (ch * t.px[1])).toFixed(4));
+		  Object.assign(a.style, { width: `${100 / cw}%`, height: `${100 / ch}%`, left: `${(-x0 / cw) * 100}%`, top: `${(-y0 / ch) * 100}%` });
+		  if (a.getAttribute('src') !== t.u) a.src = t.u; }
 		I.dataset.tier = ev.tier; I.classList.remove('hidden');
 		sfx('fs_intro'); music('bonus');
 		const fx = I.querySelector<HTMLElement>('.bwFx'); featOpen(fx); featPop(I.querySelector('.tierName'));
@@ -322,6 +337,7 @@ export const bookEventHandlerMap: Handlers = {
 		// outro: TOTAL WIN counts up over a burst + confetti; tap = jump to the amount, tap again = close
 		const O = $('#outro'), fx = O.querySelector<HTMLElement>('.bwFx'), amt = O.querySelector<HTMLElement>('.otAmt')!;
 		const total = Math.min(ev.amount / 100, MAX_WIN_X) * bet();
+		titleTypeMirror(amt); titleType(O.querySelector<HTMLElement>('.tierName'), 'TOTAL WIN'); titleType(O.querySelector<HTMLElement>('.otHint'), 'TAP TO CONTINUE'); ninePanel(O.querySelector<HTMLElement>('.card'), CARD);
 		setAmount(amt, 0); O.classList.remove('hidden'); featOpen(fx); sfx('fs_outro'); duck(true); const cu = loop('bigwin_countup_loop');   // no star glints on the total-win screen (round 6)
 		// v3.18b (James): the screen waits for a tap once landed, turbo on or off and in autoplay too (autoplay keeps its count and
 		// resumes right after the tap). Only autoplay with AUTO-PLAY BONUS on closes it by itself after the short hold.
@@ -393,5 +409,5 @@ export async function playBookEvents(events: BookEvent[]) {
 		await h(ev);
 	}
 	// a tease that never turned into a bonus
-	if (roxyState() === 'anticipation') { roxy('disappointed'); if (teaseOk(events, S.roundBase)) voice('tease'); }
+	if (roxyState() === 'anticipation') { roxy('disappointed'); if (teaseOk(events, S.roundBase)) { if (!playVoice(Math.random() < 0.5 ? 'vo_roxy_miss_1' : 'vo_roxy_miss_2')) voice('tease'); } }
 }
