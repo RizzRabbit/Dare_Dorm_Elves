@@ -42,11 +42,11 @@ function puffCell(cell: HTMLElement, delay: number, kT: number) {
 		{ transform: 'scale(.82,.9)', opacity: 1, offset: 0.6 },                                          // squash
 		{ transform: 'scale(0)', opacity: 0 },
 	], { duration: 300 * kT, delay, easing: 'ease-in', fill: 'forwards' });
-	const at = delay + 190 * kT;   // the burst fires as the symbol collapses
+	const at = delay + 170 * kT;   // the burst fires as the symbol collapses
 	const parts: Animation[] = [pop];
 	// cloud puffs: a ring of 5 flat cream blobs that swell and fade
-	for (let i = 0; i < 5; i++) {
-		const a = (i / 5) * Math.PI * 2 + 0.4, b = document.createElement('i'); b.className = 'pfCloud'; paintPart(b, 'puff_cloud'); fx.appendChild(b);
+	for (let i = 0; i < 6; i++) {
+		const a = (i / 6) * Math.PI * 2 + 0.4, b = document.createElement('i'); b.className = 'pfCloud'; paintPart(b, 'puff_cloud'); fx.appendChild(b);
 		const dx = Math.cos(a) * 22, dy = Math.sin(a) * 22;
 		parts.push(anim(b, [
 			{ transform: 'translate(-50%,-50%) translate(0,0) scale(.2)', opacity: 1 },
@@ -54,17 +54,17 @@ function puffCell(cell: HTMLElement, delay: number, kT: number) {
 			{ transform: `translate(-50%,-50%) translate(${dx}%,${dy}%) scale(.6)`, opacity: 0 },
 		], { duration: 380 * kT, delay: at, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'both' }));
 	}
-	// flakes: 7 tumble out and drift down a touch
-	for (let i = 0; i < 7; i++) {
-		const a = (i / 7) * Math.PI * 2 + Math.random() * 0.5, r = 70 + Math.random() * 40, f = document.createElement('i');
+	// flakes: 12 tumble out (James 2026-11-04 "More snow": was 7) and drift down a touch
+	for (let i = 0; i < 12; i++) {
+		const a = (i / 12) * Math.PI * 2 + Math.random() * 0.5, r = 85 + Math.random() * 45, f = document.createElement('i');
 		f.className = 'pfFlake'; paintPart(f, 'puff_flake'); fx.appendChild(f);
 		const sc = 0.75 + Math.random() * 0.5, rot = (Math.random() < 0.5 ? -1 : 1) * (120 + Math.random() * 120);
 		const dx = Math.cos(a) * r, dy = Math.sin(a) * r;
 		parts.push(anim(f, [
 			{ transform: `translate(-50%,-50%) translate(0,0) rotate(0deg) scale(${sc * 0.3})`, opacity: 1 },
-			{ transform: `translate(-50%,-50%) translate(${dx * 0.75}%,${dy * 0.75}%) rotate(${rot * 0.6}deg) scale(${sc})`, opacity: 1, offset: 0.55 },
-			{ transform: `translate(-50%,-50%) translate(${dx}%,${dy + 30}%) rotate(${rot}deg) scale(${sc * 0.7})`, opacity: 0 },
-		], { duration: 520 * kT, delay: at + i * 8, easing: 'cubic-bezier(.15,.75,.35,1)', fill: 'both' }));
+			{ transform: `translate(-50%,-50%) translate(${dx * 0.75}%,${dy * 0.75}%) rotate(${rot * 0.6}deg) scale(${sc})`, opacity: 1, offset: 0.6 },
+			{ transform: `translate(-50%,-50%) translate(${dx}%,${dy + 45}%) rotate(${rot}deg) scale(${sc * 0.7})`, opacity: 0 },
+		], { duration: 480 * kT, delay: at + i * 5 * kT, easing: 'cubic-bezier(.15,.75,.35,1)', fill: 'both' }));
 	}
 	// short flash + an ice-blue ring that rings out as the symbol bursts
 	const fl = partEl(fx, 'flash', 120);
@@ -80,16 +80,38 @@ function puffCell(cell: HTMLElement, delay: number, kT: number) {
 		{ transform: 'translate(-50%,-50%) scale(1.45)', opacity: 0 },
 	], { duration: 380 * kT, delay: at, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'both' }));
 	// small flakes: thrown further, then drift down with a sway and a twinkle
-	for (let i = 0; i < 6; i++) {
-		const a = (i / 6) * Math.PI * 2 + 0.25 + Math.random() * 0.4, r = 230 + Math.random() * 90, f = partEl(fx, 'flake', 13 + Math.random() * 5);
+	for (let i = 0; i < 14; i++) {
+		const a = (i / 14) * Math.PI * 2 + 0.25 + Math.random() * 0.4, r = 260 + Math.random() * 110, f = partEl(fx, 'flake', 13 + Math.random() * 5);
 		const dx = Math.cos(a) * r, dy = Math.sin(a) * r - 40, sw = (Math.random() < 0.5 ? -1 : 1) * (30 + Math.random() * 25), rot = (Math.random() < 0.5 ? -1 : 1) * (160 + Math.random() * 160);
 		parts.push(anim(f, [
 			{ transform: 'translate(-50%,-50%) translate(0,0) rotate(0deg) scale(.3)', opacity: 0 },
 			{ transform: `translate(-50%,-50%) translate(${dx * 0.7}%,${dy * 0.7}%) rotate(${rot * 0.45}deg) scale(1)`, opacity: 1, offset: 0.3, easing: 'cubic-bezier(.45,0,.55,1)' },
 			{ transform: `translate(-50%,-50%) translate(${dx * 0.86 + sw}%,${dy * 0.86 + 70}%) rotate(${rot * 0.75}deg) scale(.9)`, opacity: .55, offset: 0.62, easing: 'cubic-bezier(.45,0,.55,1)' },
 			{ transform: `translate(-50%,-50%) translate(${dx * 0.92 + sw * 0.4}%,${dy * 0.92 + 110}%) rotate(${rot * 0.88}deg) scale(.85)`, opacity: 1, offset: 0.8, easing: 'cubic-bezier(.45,0,.55,1)' },
-			{ transform: `translate(-50%,-50%) translate(${dx + sw}%,${dy + 160}%) rotate(${rot}deg) scale(.6)`, opacity: 0 },
-		], { duration: 600 * kT, delay: at + 20 * kT + i * 10 * kT, easing: 'cubic-bezier(.15,.75,.35,1)', fill: 'both' }));
+			{ transform: `translate(-50%,-50%) translate(${dx + sw}%,${dy + 190}%) rotate(${rot}deg) scale(.6)`, opacity: 0 },
+		], { duration: 480 * kT, delay: at + 20 * kT + i * 5 * kT, easing: 'cubic-bezier(.15,.75,.35,1)', fill: 'both' }));
+	}
+	// powder dust (James 2026-11-04): a fine misty bloom of snow dust behind the flakes (the painted cloud frame, large and
+	// faint), blooms out and fades inside the burst
+	for (let i = 0; i < 3; i++) {
+		const a = (i / 3) * Math.PI * 2 + Math.random() * 0.6, b = document.createElement('i'); b.className = 'pfCloud pfDust'; paintPart(b, 'puff_cloud'); fx.prepend(b);
+		b.style.width = (70 + Math.random() * 20) + '%';
+		const dx = Math.cos(a) * 12, dy = Math.sin(a) * 12;
+		parts.push(anim(b, [
+			{ transform: 'translate(-50%,-50%) scale(.4)', opacity: 0 },
+			{ transform: `translate(-50%,-50%) translate(${dx * 0.6}%,${dy * 0.6}%) scale(1)`, opacity: .42, offset: 0.35 },
+			{ transform: `translate(-50%,-50%) translate(${dx}%,${dy + 10}%) scale(1.35)`, opacity: 0 },
+		], { duration: 480 * kT, delay: at - 10 * kT + i * 20 * kT, easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'both' }));
+	}
+	// glitter: a few tiny sparkles (the painted glint frame, small) twinkle once around the burst
+	for (let i = 0; i < 5; i++) {
+		const a = Math.random() * Math.PI * 2, r = 90 + Math.random() * 160, g = partEl(fx, 'glint', 8 + Math.random() * 4);
+		const dx = Math.cos(a) * r, dy = Math.sin(a) * r, t0 = at + (60 + Math.random() * 220) * kT;
+		parts.push(anim(g, [
+			{ transform: `translate(-50%,-50%) translate(${dx}%,${dy}%) scale(0) rotate(0deg)`, opacity: 0 },
+			{ transform: `translate(-50%,-50%) translate(${dx}%,${dy}%) scale(1) rotate(30deg)`, opacity: 1, offset: 0.4 },
+			{ transform: `translate(-50%,-50%) translate(${dx}%,${dy + 8}%) scale(0) rotate(60deg)`, opacity: 0 },
+		], { duration: 220 * kT, delay: t0, easing: 'ease-out', fill: 'both' }));
 	}
 	// glints: pop in round the burst and wink out
 	for (let i = 0; i < 4; i++) {
