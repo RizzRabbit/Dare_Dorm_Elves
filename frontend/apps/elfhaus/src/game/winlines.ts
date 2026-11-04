@@ -54,13 +54,13 @@ function draw(P: ReturnType<typeof path>, p: number, alpha: number) {
 /** The win line as painted fx-atlas parts laid along the path: line_seg stretched along each segment, line_joint on every
  *  bend, line_head leading while it draws on (no code-drawn strokes or gradients). */
 function stroke(pts: number[][], p: number, alpha: number, c: number) {
-	const k = c / 78, th = 18 * k;
+	const k = c / 78, th = 9 * k; // v-winline (James): half the old 18 px stroke
 	for (let i = 1; i < pts.length; i++) {
 		const a = pts[i - 1], b = pts[i], dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy); if (L < 0.5) continue;
 		put('line_seg', (a[0] + b[0]) / 2, (a[1] + b[1]) / 2, L + th * 0.5, th, Math.atan2(dy, dx), alpha);
 	}
 	for (let i = 1; i < pts.length - 1; i++) put('line_joint', pts[i][0], pts[i][1], th * 1.3, th * 1.3, 0, alpha);
-	if (p < 1) { const h = pts[pts.length - 1], s = 30 * k; put('line_head', h[0], h[1], s, s, 0, alpha); }
+	if (p < 1) { const h = pts[pts.length - 1], s = 16 * k; put('line_head', h[0], h[1], s, s, 0, alpha); }
 }
 function cut(P: ReturnType<typeof path>, p: number) {
 	let left = P.len * p; const pts = [P.pts[0]];
@@ -144,7 +144,7 @@ export async function playWins(wins: LineWin[], base: number, stepTotal?: number
 		await run(drawOn, (t) => drawAll(Ps, easeIO(t), 1));
 		// the amount shows on every win: one line -> its amount; a respin step (no cycle) -> the step total on line 1
 		if (n === 1 || (n > 1 && (turbo || fx?.holes))) amtA = label(wins[0].positions, moneyWin((n === 1 ? wins[0].win : Math.round((tot - base) * 100)) / 100 * bet()));
-		await hold(turbo ? 120 : TG(Math.min(small ? 500 : 900, 380 + 120 * n)));
+		await hold(turbo ? 120 : TG(Math.min(small ? 380 : 900, 380 + 120 * n)));
 		if (puff) await puff;
 	});
 	skipLine = false; amtA?.remove(); amtA = null;
