@@ -176,11 +176,22 @@ export function stackIdle(ov: HTMLElement) {
  *  white wipe bar; merge_join frame 0 is the group as a white silhouette and 1-2 a washed-out fade. The overlay's own fade / scale is the entrance. */
 export const CLEAN_FROM: Record<'stack_form' | 'merge_join', number> = { stack_form: 5, merge_join: 3 };
 /** A one-shot (stack_form / merge_join) and then the idle loop. Resolves when the one-shot ends (or at once if absent). */
+/** fix4 demo2: the join sheet's last pose differs from the idle pose; hold a snapshot of the last frame over the idle
+ *  and ease it out (200 ms sine in-out) so the hand-off is a crossfade, not a snap. */
+function endBlend(ov: HTMLElement) {
+	const src = [...ov.querySelectorAll<HTMLCanvasElement>(':scope>canvas.stk_body:not(.stk_db)')].pop(); if (!src || !src.width) return;
+	const c = document.createElement('canvas'); c.width = src.width; c.height = src.height;
+	try { c.getContext('2d')!.drawImage(src, 0, 0); } catch { return; }
+	c.className = 'stk stkBlend'; c.setAttribute('aria-hidden', 'true'); c.style.cssText = src.style.cssText + ';position:absolute;pointer-events:none;z-index:3';
+	if (!c.style.inset && !c.style.left) c.style.inset = '0';
+	ov.appendChild(c);
+	c.animate([{ opacity: 1 }, { opacity: 1, offset: 0.15 }, { opacity: 0 }], { duration: 220, easing: 'cubic-bezier(.37,0,.63,1)', fill: 'forwards' }).finished.catch(() => {}).finally(() => c.remove());
+}
 export function stackOnce(a: 'stack_form' | 'merge_join', ov: HTMLElement) {
 	return new Promise<void>((res) => {
 		const id = sheetId(a, ov);
 		if (dbKnown(ov)) dbStop(ov);   // the one-shot sheet plays first, the rig takes over at its end
-		if (!run(a, ov, 'body', { from: CLEAN_FROM[a], onEnd: () => { if (dbKnown(ov)) void dbPlay(ov, 'idle'); else run('merge_idle', ov, 'body', { loop: true }); drop([id]); res(); } })) { if (dbKnown(ov)) void dbPlay(ov, 'idle'); return res(); }
+		if (!run(a, ov, 'body', { from: CLEAN_FROM[a], onEnd: () => { if (a === 'merge_join') endBlend(ov); if (dbKnown(ov)) void dbPlay(ov, 'idle'); else run('merge_idle', ov, 'body', { loop: true }); drop([id]); res(); } })) { if (dbKnown(ov)) void dbPlay(ov, 'idle'); return res(); }
 		if (a === 'stack_form') stackLetters(ov); // re-ignite: its blank lead-in waits for the build-up
 	});
 }
