@@ -641,3 +641,4 @@ html body.portrait #outro .otHint{font-size:30px!important}
 /* fix4 reel-3 WILD notch: the shared _wild frame picks up a gold sliver of its atlas neighbour at its lower-left (texture
    packing bleed, sheets/symbols.webp, no padding); cut that corner out of the letters frame only */
 html body .rp.f__wild{clip-path:polygon(0 0,100% 0,100% 100%,19% 100%,19% 78%,0 78%)}
+html body.mk #app #strip .m #bet{overflow:visible!important}
