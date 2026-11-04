@@ -27,15 +27,16 @@ const FILES = {
 	scatter_land_1: 'assets/audio/scatter_land_1.mp3', scatter_land_2: 'assets/audio/scatter_land_2.mp3', scatter_land_3: 'assets/audio/scatter_land_3.mp3',
 	intro_door_lever: 'assets/audio/intro_door_lever.mp3', intro_doors_open: 'assets/audio/intro_doors_open.mp3',
 	bonus_trigger: 'assets/audio/bonus_trigger.mp3', fs_intro: 'assets/audio/fs_intro.mp3', fs_outro: 'assets/audio/fs_outro.mp3',
+	maxwin_sting: 'assets/audio/maxwin_sting.mp3', respin_transition: 'assets/audio/respin_transition.mp3',
 } as const;
 export type Snd = keyof typeof FILES;
 const ORDER: Snd[][] = [
 	['ui_click', 'ui_bet_up', 'ui_bet_down', 'ui_buy_open', 'ui_buy_close', 'ui_mode_arm', 'ui_error', 'reel_spin_start', 'reel_spin_loop', 'reel_stop_1', 'reel_stop_2', 'reel_stop_3', 'reel_stop_4', 'reel_stop_5', 'reel_stop_new', 'ui_click_new', 'scatter_land_1', 'scatter_land_2', 'scatter_land_3', 'scatter_trigger_bell', 'intro_door_lever', 'intro_doors_open'],
 	['music_base_loop'],
-	['wild_land', 'winline_highlight', 'win_small', 'win_medium', 'win_big', 'anticipation_riser', 'wild_sticky_lock', 'wild_stack_merge', 'bigwin_sting', 'bigwin_countup_loop', 'bonus_trigger', 'fs_intro', 'fs_outro', 'music_bonus_loop'],
+	['wild_land', 'winline_highlight', 'win_small', 'win_medium', 'win_big', 'anticipation_riser', 'wild_sticky_lock', 'wild_stack_merge', 'bigwin_sting', 'bigwin_countup_loop', 'bonus_trigger', 'fs_intro', 'fs_outro', 'maxwin_sting', 'respin_transition', 'music_bonus_loop'],
 ];
 // true loop lengths in samples at 44.1 kHz (the encoder adds ~1105 samples of delay + end padding; see loopPoints)
-const LOOP_LEN: Partial<Record<Snd, number>> = { music_base_loop: 2454261, music_bonus_loop: 1366214, reel_spin_loop: 44099, bigwin_countup_loop: 88199 };
+const LOOP_LEN: Partial<Record<Snd, number>> = { music_base_loop: 2822144, music_bonus_loop: 1653760, reel_spin_loop: 66150, bigwin_countup_loop: 99225 };
 const SR = 44100, LAME_DELAY = 1105;
 const MUSIC: Record<'base' | 'bonus', Snd> = { base: 'music_base_loop', bonus: 'music_bonus_loop' };
 const XFADE = 0.8, DUCK = 0.5; // 800 ms music crossfade; ~-6 dB duck
