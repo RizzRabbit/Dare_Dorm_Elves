@@ -24,6 +24,8 @@ export default defineConfig(({ command, mode }) => {
 	const keepMock = command === 'serve' || env.VITE_ELFHAUS_DEMO === '1';
 	return {
 	plugins: [offlineRgs(keepMock), sveltekit()],
+	// a literal at every use site, so the minifier drops each mock branch outright (a module const was kept as a variable)
+	define: { __ELFHAUS_MOCK__: JSON.stringify(keepMock) },
 	build: { sourcemap: false },
 	experimental: {
 		renderBuiltUrl(filename, { hostType }) {
