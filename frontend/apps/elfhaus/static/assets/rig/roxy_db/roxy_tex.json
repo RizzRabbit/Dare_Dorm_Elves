@@ -54,18 +54,11 @@
    "height": 194
   },
   {
-   "name": "arm_u",
+   "name": "arm",
    "x": 800,
    "y": 210,
-   "width": 145,
-   "height": 228
-  },
-  {
-   "name": "arm_f",
-   "x": 949,
-   "y": 210,
-   "width": 216,
-   "height": 306
+   "width": 161,
+   "height": 541
   }
  ]
 }
