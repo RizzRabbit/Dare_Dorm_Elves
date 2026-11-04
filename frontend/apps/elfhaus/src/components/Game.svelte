@@ -29,7 +29,6 @@
 				<div id="reelLines" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
 				<div id="cells"></div>
 				<div id="overlays"></div>
-				<canvas id="lines"></canvas>
 			</div>
 		</div>
 		<div id="stepToast" class="hidden" aria-live="polite"></div>
