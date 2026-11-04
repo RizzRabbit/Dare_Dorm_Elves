@@ -73,6 +73,17 @@ const panelSrc = (reels: number[]) => `assets/stacks/still/${reels.length === 1 
 // sitting in one flat picture. A merged stack shows each reel's elf over ONE panel and carries one multiplier.
 const STK = STACKS as unknown as Record<string, { W: number; H: number; elves: { elf: string; x: number; y: number; w: number; h: number }[] }>;
 const ELF_PHASE: Record<string, number> = { roxy: 0, jade: 1.3, vi: 2.1, coco: 0.7, delilah: 2.8 };
+// fix4 B: every stack panel + elf cut-out is fetched and decoded once at load (kept referenced), so a merge / stack never
+// waits on a lazy <img> load (no pop-in or blank frame when the merged overlay replaces the singles).
+const stackKeep: HTMLImageElement[] = [];
+let stacksWarm: Promise<void> | null = null;
+export function preloadStacks() {
+	if (stacksWarm) return stacksWarm;
+	const urls = ['assets/stacks/still/WM2_panel.webp', 'assets/stacks/still/WM3_panel.webp', 'assets/stacks/still/WM4_panel.webp', 'assets/stacks/still/WM5_panel.webp',
+		...[1, 2, 3, 4, 5].map((r) => `assets/stacks/still/WF_R${r}_panel.webp`), ...Object.keys(ELF_PHASE).map((e) => `assets/rig/elf_${e}.webp`)];
+	stacksWarm = Promise.all(urls.map((u) => { const im = new Image(); im.decoding = 'async'; im.src = u; stackKeep.push(im); return im.decode().catch(() => {}); })).then(() => {});
+	return stacksWarm;
+}
 function stillHTML(reels: number[]) {
 	const L = STK[stillPos(reels)];
 	if (!L) return `<div class="wart"><img src="${stillSrc(reels)}" alt="" draggable="false"></div>` + letsHTML(reels);

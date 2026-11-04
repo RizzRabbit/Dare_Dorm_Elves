@@ -17,6 +17,7 @@
 // sw() (turbo = 1); the stacks sheets slow with it (sprite.ts), so the sheet beats and these beats stay in step.
 // Art swap (stacks.ts): when the stacks_v1 sheets (MERGE_ANIM.md) are imported, stack_form / merge_join /
 // letters_ignite / merge_win play at these same beats and merge_idle loops; any sheet not there keeps its placeholder.
+import { preloadStacks } from './ui';
 import { S, $, setGem, gemHTML, ovMx, cellEl, pos, ovArt } from './ui';
 import { burst } from './fx';
 import { mergeFx, wfExpand } from './wildfx';
@@ -118,6 +119,8 @@ async function stackFromSingles(reel: number, render: (frameDelay?: number) => v
 		});
 		if (ov) {
 			ov.style.animation = 'none';
+			// fix4 B: continuous crossfade (sine in-out) from the bloom into the merged stack, same overall timing
+			A(ov, [{ opacity: 0 }, { opacity: 1 }], { duration: 210, easing: 'cubic-bezier(.37,0,.63,1)' });
 			A(ov, [{ transform: 'scale(1.03)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 300, easing: 'cubic-bezier(.3,.1,.3,1)' });
 			// 4) letters fade up softly after the body (the held last frame of letters_ignite, or the CSS letters)
 			lets.forEach((l) => A(l, [{ opacity: 0 }, { opacity: 1 }], { duration: 250, delay: 240, easing: 'ease-out', fill: 'backwards' }));
@@ -155,7 +158,7 @@ export async function mergeIn(reels: number[], values: number[], product: number
 		const mid = lo + (n - 1) / 2;
 		stage = leanStage(olds);
 		stackRelease(olds); // the stage holds snapshots: the singles' sheets close before the group's decode (memory peak)
-		const warm = stackPrepare(reels); // the group's join (usually prefetched already) / idle / letters decode during the lean
+		const warm = Promise.all([stackPrepare(reels), preloadStacks()]); // fix4 B: + the chalet panel / elf cut-outs; the group's join (usually prefetched already) / idle / letters decode during the lean
 		const parts = stage.parts.map((pt) => {
 			const d = (mid - pt.rc) * step, L = d * (n >= 4 ? 0.2 : 0.26), dir = Math.sign(d);
 			pt.lets.forEach((l) => A(l, [{ opacity: 1 }, { opacity: 0 }], { duration: 110, fill: 'forwards' }));
@@ -183,7 +186,7 @@ export async function mergeIn(reels: number[], values: number[], product: number
 			if (hasStack('merge_join', ov)) void stackOnce('merge_join', ov);
 			else growFromSingles(ov, n);
 		}
-		A(bloom, [{ opacity: 1 }, { opacity: 1, offset: 0.1 }, { opacity: 0 }], { duration: 210, easing: 'ease-out', fill: 'forwards' }).finished.catch(() => {}).finally(() => bloom.remove());
+		A(bloom, [{ opacity: 1 }, { opacity: 0 }], { duration: 210, easing: 'cubic-bezier(.37,0,.63,1)', fill: 'forwards' }).finished.catch(() => {}).finally(() => bloom.remove());
 		made.push(bloom);
 		mergeFx(reels, false); // no seam beams: the merged wild reads as one piece
 		for (let i = 1; i < n; i++) ring(x0 + i * step - (step - S.cell) / 2, big);

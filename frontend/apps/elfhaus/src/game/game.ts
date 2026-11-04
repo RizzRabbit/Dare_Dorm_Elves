@@ -27,7 +27,7 @@ import { initSettings, initSettingsPanel, popOpen, closePop } from './settings';
 import { initAudio, sfx } from './audio';
 import { initVoiceIdle, voice } from './voice';
 import { setSocial, isSocial, t } from './strings';
-import { $, S, ART, bet, titleHTML, buildCells, renderAll, renderOverlays, setOverlayHook, resetWinMeter, setRoundMode, banner, waitRaw } from './ui';
+import { $, S, ART, bet, titleHTML, buildCells, renderAll, renderOverlays, setOverlayHook, resetWinMeter, setRoundMode, banner, waitRaw, preloadStacks } from './ui';
 import { skipHolds, syncTempo } from './tempo';
 import { playBookEvents, endBonusUi } from './bookEventHandlerMap';
 import { initRoxy, placeRoxy } from './roxy';
@@ -695,6 +695,7 @@ export async function initGame() {
 	document.addEventListener('pointerdown', (e) => { const t = e.target as Element; if (!t?.closest?.('#bigwin,#outro')) { const ui = !!t?.closest?.('#menu,#popMenu,#buyMenu,#bmConfirm,#autoMenu,#msg,#resumeCard'); skipBoard(false, !ui && !t?.closest?.('#menuBtn,#buyBtn,#autoBtn,#turboBtn,#betUp,#betDown') && !anyOpen() && !popOpen()); if (!ui && !winPresenting()) hurry(); } }, { capture: true, passive: true });
 	track(initRoxy(layout));
 	loadAllFx(track).then(() => renderAll());
+	void preloadStacks();   // fix4 B: stack art decoded up front
 	initSkin();   // painted sprite skin for the DOM pieces (skin.ts)
 	initTimelines();   // GSAP sign entrances (tl.ts)
 	setOverlayHook(stackIdle); initStacks().then(() => renderOverlays(false)); // optional stack / per-reel expand sheets (placeholders until imported)
