@@ -18,7 +18,7 @@ const pool: Application[] = [];
 async function takeApp() {
 	const a = pool.pop(); if (a) return a;
 	const app = new Application();
-	await app.init({ backgroundAlpha: 0, antialias: true, autoStart: false, resolution: Math.min(2, window.devicePixelRatio || 1), width: 8, height: 8 });
+	await app.init({ backgroundAlpha: 0, antialias: true, preserveDrawingBuffer: true /* fix4 proof B: mergeIn's lean snapshots this canvas (drawImage of a cleared WebGL buffer was blank) */, autoStart: false, resolution: Math.min(2, window.devicePixelRatio || 1), width: 8, height: 8 });
 	return app;
 }
 const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;

@@ -109,8 +109,14 @@ async function stackFromSingles(reel: number, render: (frameDelay?: number) => v
 		await sw(280);
 		await Promise.race([warm, sw(300, true)]); // (rarely waits: they just rest together a moment longer)
 		// 3) contact: the overlay (merge_idle) fades up over the singles, which fade out under it
+		// fix4 B (proof): render() swaps the cells' content, so fading the cells faded nothing (2 blank frames). Snapshot the
+		// singles as ghosts in place first and crossfade those out under the rising stack.
+		const ghosts = cells.map((el) => { const g = el.cloneNode(true) as HTMLElement; g.removeAttribute('id'); g.querySelectorAll('.mx,.lock').forEach((x) => x.remove());
+			g.classList.add('mGhost'); g.style.cssText += `;position:absolute;left:${el.offsetLeft}px;top:${el.offsetTop}px;width:${el.offsetWidth}px;height:${el.offsetHeight}px;margin:0;pointer-events:none;visibility:visible;transform:${getComputedStyle(el).transform}`;
+			el.parentElement?.insertBefore(g, el.nextSibling); return g; });
 		render(300); // frame draws in after the crossfade
 		const ov = ovOf(reel);
+		ghosts.forEach((g) => A(g, [{ opacity: 1 }, { opacity: 1, offset: 0.3 }, { opacity: 0 }], { duration: 330, easing: 'cubic-bezier(.37,0,.63,1)', fill: 'forwards' }).finished.catch(() => {}).finally(() => g.remove()));
 		const lets = ov ? [...ov.querySelectorAll<HTMLElement>('canvas.stk_letters, .mLets')] : [];
 		cells.forEach((el, row) => {
 			el.style.visibility = ''; // render() hid them: keep them for the crossfade, hidden again in finally
@@ -120,14 +126,14 @@ async function stackFromSingles(reel: number, render: (frameDelay?: number) => v
 		if (ov) {
 			ov.style.animation = 'none';
 			// fix4 B: continuous crossfade (sine in-out) from the bloom into the merged stack, same overall timing
-			A(ov, [{ opacity: 0 }, { opacity: 1 }], { duration: 210, easing: 'cubic-bezier(.37,0,.63,1)' });
-			A(ov, [{ transform: 'scale(1.03)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 300, easing: 'cubic-bezier(.3,.1,.3,1)' });
+			A(ov, [{ transform: 'scale(1.03)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 300, easing: 'cubic-bezier(.37,0,.63,1)' });
 			// 4) letters fade up softly after the body (the held last frame of letters_ignite, or the CSS letters)
 			lets.forEach((l) => A(l, [{ opacity: 0 }, { opacity: 1 }], { duration: 250, delay: 240, easing: 'ease-out', fill: 'backwards' }));
 		}
 		await sw(300);
 	} finally {
 		cells.forEach((el) => { el.getAnimations({ subtree: true }).forEach((a) => a.cancel()); if (S.full.has(reel)) el.style.visibility = 'hidden'; });
+		document.querySelectorAll('.mGhost').forEach((g) => g.remove());
 		tapped = skipping; end();
 	}
 	// 5) the settled elf reacts (per-elf face, ~2.6-2.75 s at 12 fps, real speed); letters + frame keep drawing in alongside.
@@ -177,8 +183,9 @@ export async function mergeIn(reels: number[], values: number[], product: number
 		await Promise.race([warm, sw(400, true)]); // (rarely waits: the bloom just holds a moment longer)
 		// 3) HARD cut under the opaque bloom: the merged overlay replaces the stage in the same frame, the group scales up
 		//    from about the singles' size (merge_join sheet, or a transform on the placeholder art); shockwave + burst per seam
-		stage.el.remove(); stage = null;
-		apply();
+		// fix4 proof B: the merged overlay's first frame is empty (its sheet / canvas paints a frame later): hold the lean
+		// stage over it for two frames instead of cutting to a blank panel
+		{ const st = stage.el, host = st.parentElement; stage = null; apply(); if (!st.isConnected) ((host?.id && document.getElementById(host.id)) || host)?.appendChild(st); requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(() => st.remove()))); made.push(st); }
 		const ov = ovOf(lo);
 		if (ov) {
 			ov.style.animation = 'none';
@@ -234,7 +241,11 @@ function leanStage(olds: HTMLElement[]) {
 	});
 	parts.slice().sort((a, b) => Math.abs(b.rc - (parts[0].rc + parts[parts.length - 1].rc) / 2) - Math.abs(a.rc - (parts[0].rc + parts[parts.length - 1].rc) / 2)).forEach((pt) => el.appendChild(pt.el)); // centre on top
 	host.appendChild(el);
-	olds.forEach((o) => (o.style.visibility = 'hidden'));
+	// fix4 proof B: cloned <img> cut-outs decode asynchronously (several blank frames); keep the singles showing under the
+	// stage until the clones have decoded, then hide them
+	const imgs = [...el.querySelectorAll('img')];
+	const hide = () => { if (el.isConnected) olds.forEach((o) => (o.style.visibility = 'hidden')); };
+	void Promise.all(imgs.map((i) => i.decode().catch(() => {}))).then(hide);
 	return { el, parts, olds };
 }
 /** White-pink bloom over `over`'s box, opaque edge to edge at full opacity (so the cut under it is never seen). */
