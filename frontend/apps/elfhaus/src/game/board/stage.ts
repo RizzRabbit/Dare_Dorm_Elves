@@ -61,6 +61,8 @@ export function centreOf(el: HTMLElement) {
 	for (let e: HTMLElement | null = el; e && e !== fr; e = e.offsetParent as HTMLElement | null) { x += e.offsetLeft; y += e.offsetTop; }
 	return { x, y, w: el.offsetWidth, h: el.offsetHeight };
 }
+/** The stage's render resolution (device px per layout px). */
+export const resolution = () => app?.renderer.resolution ?? Math.min(3, window.devicePixelRatio || 1);
 export const isDirty = () => dirty;
 let lip: Sprite | null = null;
 /** mkboard.ts hands over the painted frame-front lip (a canvas in frame-local px). */

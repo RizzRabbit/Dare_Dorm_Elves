@@ -6,9 +6,9 @@
 // stage (eased settle) and the next one plays normally. Turbo plays a fast version (no b). Normal pace = studio pace (anim-v4, tempo.ts TG; was x ANIM_TEMPO).
 // Cost: one canvas, one painted line_seg per segment + joints + the line_head stamp (fx atlas);
 // nothing animates filter/shadow, and the canvas is cleared and idle between lines.
-import { Container, Sprite } from 'pixi.js';
+import { Container, Graphics, Sprite, Text } from 'pixi.js';
 import { loadAtlas, atlasTex } from './scene/atlas';
-import { boardStage, layer, kick, centreOf } from './board/stage';
+import { boardStage, layer, kick, centreOf, animate, resolution } from './board/stage';
 import { LINES, REELS } from './config';
 import { S, $, bet, cellEl, setWinMeter } from './ui';
 import { symWin, clearSymWins, litOn, burst } from './fx';
@@ -82,17 +82,29 @@ async function hold(ms: number) { const t0 = performance.now(); while (performan
 export function tapLines() {}
 export const linesActive = () => active;
 
-/** Small floating amount over the middle of the line's winning cells (rises and fades in; transform/opacity only). */
+/** The line's amount: a cream pill (ink rim, gold inner line, Lilita One) over the middle of its winning cells, in the
+ *  board stage's winAmt layer, its text rasterised once at the stage's device resolution. Rises 6 px and fades in. */
+const amts = new Set<Container>();
 function label(pos: { reel: number; row: number }[], txt: string) {
-	const el = document.createElement('div'); el.className = 'wlAmt'; el.innerHTML = `<b></b>`; el.firstElementChild!.textContent = txt;
-	// aifix (audit 1): no win-plate glint (its sheet carries a four-point star)
-	const m = pos[Math.floor((pos.length - 1) / 2)], W = REELS * S.cell;
-	el.style.left = Math.max(S.cell * .6, Math.min(W - S.cell * .6, m.reel * S.cell + S.cell / 2)) + 'px'; el.style.top = (m.row * S.cell + S.cell * .5) + 'px';
-	$('#board').appendChild(el); return el;
+	const box = new Container(); box.label = 'wlAmt';
+	const m = pos[Math.floor((pos.length - 1) / 2)], C = centreOf(cellEl(m.reel, m.row)), c = C.w || S.cell;
+	const t = new Text({ text: txt, resolution: resolution(), style: { fontFamily: 'Lilita One', fontSize: Math.round(c * 0.22), fill: 0x26140f } });
+	t.anchor.set(0.5);
+	const h = Math.round(c * 0.42), w = Math.max(Math.round(c * 0.95), Math.ceil(t.width + c * 0.3)), r = h / 2;
+	const g = new Graphics().roundRect(-w / 2, 3 - h / 2, w, h, r).fill(0x26140f)
+		.roundRect(-w / 2, -h / 2, w, h, r).fill(0xfbf3e4).stroke({ width: 3, color: 0x26140f, alignment: 1 })
+		.roundRect(-w / 2 + 2, -h / 2 + 2, w - 4, h - 4, r - 2).stroke({ width: 2, color: 0xf2b935, alignment: 1 });
+	box.addChild(g, t);
+	// kept inside the board window, at the cell's real centre (frame-local px)
+	const bd = centreOf($('#board')), x = Math.max(bd.x - bd.w / 2 + w / 2 + 4, Math.min(bd.x + bd.w / 2 - w / 2 - 4, C.x));
+	box.position.set(x, C.y + 6); box.alpha = 0; layer.winAmt?.addChild(box); amts.add(box);
+	const t0 = performance.now();
+	animate(() => { if (box.destroyed) return false; const u = Math.min(1, (performance.now() - t0) / 180); box.alpha = u; box.y = C.y + 6 * (1 - u); return u < 1; });
+	return { remove: () => { amts.delete(box); if (!box.destroyed) box.destroy({ children: true }); kick(); } };
 }
+export function clearAmts() { for (const b of [...amts]) { amts.delete(b); if (!b.destroyed) b.destroy({ children: true }); } kick(); }
 export function clearRace() {
-	begin(); end();
-	document.querySelectorAll('.wlAmt').forEach((e) => e.remove());
+	begin(); end(); clearAmts();
 }
 
 /** Re-audit M1/M2: every line of the step draws on at once (thick gold glow), every winning symbol pops while the
@@ -146,7 +158,7 @@ export async function playWins(wins: LineWin[], base: number, stepTotal?: number
 			}
 		});
 		document.querySelectorAll('.cell.soft').forEach((c) => c.classList.remove('soft'));
-		document.querySelectorAll('.wlAmt').forEach((e) => e.remove());
+		clearAmts();
 	}
 	skipLine = false; skipAll = false;
 	clearRace();

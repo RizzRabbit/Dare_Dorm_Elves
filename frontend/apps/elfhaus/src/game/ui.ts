@@ -18,6 +18,7 @@ setWinLevels(WIN_LEVELS.standard); // v3.19: banner stages from the math's stand
 export function setRoundMode(mode?: string) { setWinLevels(winEdgesFor(mode)); }
 import { presenting, beginStage, endStage, skipStage } from './winstage';
 import { hold, tempo, gtempo } from './tempo';
+import { clearRace } from './winlines';
 
 export const ART = ART_JSON as Record<string, string | null>;
 export const $ = <T extends HTMLElement = HTMLElement>(s: string) => document.querySelector(s) as T;
@@ -235,8 +236,7 @@ export function renderAll() {
 	renderOverlays(false);
 }
 export function clearLines() {
-	const c = $('#lines') as unknown as HTMLCanvasElement; c.getContext('2d')?.clearRect(0, 0, c.width, c.height);
-	document.querySelectorAll('.wlAmt').forEach((e) => e.remove());
+	clearRace();
 	document.querySelectorAll('.cell').forEach((c) => c.classList.remove('win', 'dim', 'replace', 'out'));
 	document.querySelectorAll('.ov.win').forEach((o) => o.classList.remove('win'));
 	clearSymWins();
