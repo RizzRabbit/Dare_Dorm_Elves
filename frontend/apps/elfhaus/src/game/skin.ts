@@ -31,7 +31,9 @@ function blit(g: CanvasRenderingContext2D, P: Pkg, f: Fr, dx: number, dy: number
 	const im = P.img[f.page]; if (!im?.naturalWidth) return;
 	if (!nine || !f.s9) { const sx = dw / f.sw, sy = dh / f.sh; g.drawImage(im, f.x, f.y, f.w, f.h, dx + f.ox * sx, dy + f.oy * sy, f.w * sx, f.h * sy); return; }
 	const [l, t, r, b] = f.s9, d = 1 / k, W = f.w, H = f.h;
-	const dl = Math.round(l * d), dt = Math.round(t * d), dr = Math.round(r * d), db = Math.round(b * d);
+	// fix6: a plate narrower than its two painted corners (portrait -/+ at 38px) drew overlapping, cut-off sides: shrink the corners to fit
+	const q = Math.min(1, dw / ((l + r) * d || 1), dh / ((t + b) * d || 1));
+	const dl = Math.round(l * d * q), dt = Math.round(t * d * q), dr = Math.round(r * d * q), db = Math.round(b * d * q);
 	const sx = [0, l, W - r], sw = [l, W - l - r, r], sy = [0, t, H - b], sh = [t, H - t - b, b];
 	const ex = [dx, dx + dl, dx + dw - dr], ew = [dl, dw - dl - dr, dr], ey = [dy, dy + dt, dy + dh - db], eh = [dt, dh - dt - db, db];
 	for (let j = 0; j < 3; j++) for (let i = 0; i < 3; i++) if (ew[i] > 0 && eh[j] > 0 && sw[i] > 0 && sh[j] > 0) g.drawImage(im, f.x + sx[i], f.y + sy[j], sw[i], sh[j], ex[i], ey[j], ew[i], eh[j]);
@@ -63,7 +65,8 @@ export function skin(el: HTMLElement | null, look: (el: HTMLElement) => Look) {
 		const P = ready.get(L.pkg); if (!P) { void load(L.pkg); return; }
 		const f = P.fr[pressed && P.fr[L.frame + '_down'] ? L.frame + '_down' : L.frame]; if (!f) return;
 		const o = L.out ?? 0, w = el.offsetWidth + 2 * o, h = el.offsetHeight + 2 * o; if (!w || !h) return;
-		cv.style.cssText = `position:absolute;left:${-o}px;top:${-o}px;width:${w}px;height:${h}px;pointer-events:none;z-index:${L.over ? 1 : -1}`;
+		const bl = el.clientLeft, bt = el.clientTop; // fix6: the canvas is placed in the padding box; cover the (transparent) border too
+		cv.style.cssText = `position:absolute;left:${-o - bl}px;top:${-o - bt}px;width:${w}px;height:${h}px;pointer-events:none;z-index:${L.over ? 1 : -1}`;
 		const k = dpr(), W = Math.round(w * k), H = Math.round(h * k);
 		if (cv.width !== W) cv.width = W; if (cv.height !== H) cv.height = H;
 		const g = cv.getContext('2d')!; g.clearRect(0, 0, W, H); g.imageSmoothingQuality = 'high';
