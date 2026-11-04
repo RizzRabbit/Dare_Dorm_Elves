@@ -9,7 +9,7 @@ import { requestAuthenticate, requestBet, requestEndRound, requestReplay } from 
 // it), so every mock branch and its dynamic import are dropped from the bundle.
 import { API_AMOUNT_MULTIPLIER } from 'constants-shared/bet';
 import {
-	ANTE_COST, CONFIRM_ABOVE_X, fmtX, BUY_MODES, GAME_ID, LINES, MAX_WIN_X, MODES, MODE_LABEL, MYSTERY_ODDS, PAYTABLE,
+	ANTE_COST, CONFIRM_ABOVE_X, fmtX, BUY_MODES, GAME_ID, LINES, MAX_WIN_X, MODES, MODE_LABEL, MYSTERY_ODDS, FLIP_ODDS, PAYTABLE,
 	SPIN_CAP, START_FS, EPIC_STACK_X, EPIC_GROW_STEP, GROW_STEP, GUARANTEE, MAX_RESPINS, RETRIGGER, EGW_STACK_X, SYMBOL_NAMES, VERSION, isProvisional, oneIn, type ModeKey,
 } from './config';
 import { controlsSound, confirmCopy, resumeCopy, controlsAuto, controlsBonus, controlsTurbo, controlsUi, costHeader, errorText, errorTitle, modeDesc, type CopyCtx, type CopyMode } from './copy';
@@ -477,7 +477,7 @@ function buildRules() {
 <p>Wilds substitute for every symbol. Each wild carries its own multiplier, starting at x1. A winning line through a wild triggers a respin: wilds lock, the other symbols of the winning lines respin, and everything else stays. Every locked wild that connects again gains +${GROW_STEP} (+${EPIC_GROW_STEP} in Powder Day). Up to ${MAX_RESPINS} respins per spin; every step ${win} as it lands. Dots on locked wilds show the respins left.</p>
 <p>Four wilds on one reel become a full-reel wild worth the sum of their multipliers. A stack completed by wilds that all landed on the same spin is an instant stack. Adjacent full-reel wilds merge into one wide wild worth the product of their values; non-adjacent ones add. A line's multiplier is the product of merged groups plus the sum of the other wilds it uses.</p>
 <h3>Ski Passes and free spins</h3>
-<p>The Ski Pass is the scatter: at most one per reel, it never awards a win and can land on any spin or respin. 3 Ski Passes on the final board start Bunny Slope (${START_FS.dare} free spins), 4 start Black Diamond (${START_FS.double_dare}). 5 flip the Ski Pass: Double Black (${START_FS.triple_dare}) or Powder Day (${START_FS.hidden}).</p>
+<p>The Ski Pass is the scatter: at most one per reel, it never awards a win and can land on any spin or respin. 3 Ski Passes on the final board start Bunny Slope (${START_FS.dare} free spins), 4 start Black Diamond (${START_FS.double_dare}). 5 flip the Ski Pass: Double Black (${START_FS.triple_dare}, ${FLIP_ODDS.triple_dare}%) or Powder Day (${START_FS.hidden}, ${FLIP_ODDS.hidden}%).</p>
 <p>In Bunny Slope, wilds clear after each spin. From Black Diamond up, the trigger spin's wilds stay in place for the bonus and all wilds stay locked. Double Black starts with at least ${GUARANTEE.triple_dare} full-reel wild${GUARANTEE.triple_dare === 1 ? '' : 's'}, Powder Day with at least ${GUARANTEE.hidden} (guaranteed stacks are added if missing; Powder Day's start at x${EPIC_STACK_X} or more). During free spins, 2 Ski Passes add +${RETRIGGER.two} spins and 3 or more add +${RETRIGGER.threePlus}, up to ${SPIN_CAP} spins in total.</p>
 <h3>Modes</h3>
 <p>${(['ante', ...BUY_MODES] as ModeKey[]).map((m) => `<b>${MODE_LABEL[m]}</b> (${mult(modeCost(m))}): ${modeDesc(m as CopyMode, cc)}`).join('<br>')}</p>

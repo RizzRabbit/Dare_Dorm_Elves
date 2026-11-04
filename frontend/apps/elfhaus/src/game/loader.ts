@@ -8,7 +8,7 @@ import { initIntro, introLoaded, introEnter, introSkip, introEatClick } from './
 // Feature-panel alt text, keyed by the panel art (splash_layout.json decides which panels show and where).
 export const LOADER_CARDS = [
 	'4 Bonus Modes: Bunny Slope, Black Diamond, Double Black and a hidden Powder Day.',
-	'Sticky Wilds: x1, x2, x3. Once she lands she stays, and her multiplier grows every respin.',
+	'Sticky Wilds: x1, x2, x3. Once she lands she stays, and her multiplier grows +1 each time she connects again (+2 in Powder Day).',
 	'Wild Winter Spins: whole reels go wild. Side by side, their multipliers multiply.',
 ] as const;
 

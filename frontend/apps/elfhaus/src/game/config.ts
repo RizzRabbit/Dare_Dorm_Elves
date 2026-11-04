@@ -39,6 +39,7 @@ export const WIN_LEVELS: { standard: number[]; endFeature: number[]; byMode?: Re
 /** math WIN_LEVEL_EDGES_BY_MODE (James 2026-10-30 19:28 CDT): the bonus buys DD / TD / Mystery / EGW size every banner tier x10. */
 export const winEdgesFor = (mode?: string): number[] => (mode && WIN_LEVELS.byMode?.[mode]) || WIN_LEVELS.standard;
 export const MYSTERY_ODDS: { none: number; double_dare: number; triple_dare: number; hidden: number } = G.mysteryOdds;
+export const FLIP_ODDS: { triple_dare: number; hidden: number } = G.flipOdds ?? { triple_dare: 75, hidden: 25 }; // math FLIP_ODDS (5-scatter card flip)
 export type Tier = 'dare' | 'double_dare' | 'triple_dare' | 'hidden';
 export const TIER_LABEL: Record<Tier, string> = { dare: 'Bunny Slope', double_dare: 'Black Diamond', triple_dare: 'Double Black', hidden: 'Powder Day' }; // math tier ids unchanged; Winter Chalet UI names (math 'hidden' = Powder Day)
 

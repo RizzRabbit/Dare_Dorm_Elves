@@ -204,7 +204,7 @@ export const bookEventHandlerMap: Handlers = {
 			const el = cellEl(c.reel, c.row);
 			setGem(el.querySelector('.mx'), c.to);
 		});
-		// a lone full reel ticks +1 on its own corner gem (pop); a merged group splits into per-reel gems, ticks, recombines
+		// a lone full reel ticks up by its grow step (+1, +2 in Powder Day) on its own corner gem (pop); a merged group splits into per-reel gems, ticks, recombines
 		const grouped = new Set<number>(); S.groups.forEach((g) => g.reels.forEach((r) => grouped.add(r)));
 		ev.changes.forEach((c) => { if (c.kind === 'full' && !grouped.has(c.reel)) setGem(ovMx(c.reel), c.to); });
 		const grows = S.groups.map((g) => {
@@ -361,7 +361,7 @@ export const bookEventHandlerMap: Handlers = {
 	async egwStart(ev) { egwPending = new Map(ev.reels.map((r) => [r, ev.value])); },
 	async buyTriggerStart() { await wait(200); },
 	async wincap(ev) { const capX = Number.isFinite(ev.amount) ? ev.amount / 100 : MAX_WIN_X; capHit = true; hideRespin(); setWinMeter(capX); await maxWinCelebration(capX); },
-	async finalWin(ev) { setWinMeter(Math.min(ev.amount / 100, MAX_WIN_X), true); },   // the paid amount (payoutMultiplier), may sit 0.05x under the running total
+	async finalWin(ev) { setWinMeter(Math.min(ev.amount / 100, MAX_WIN_X), true); },   // the paid amount (payoutMultiplier); equals the running total on 0.1x-step math (payoutFlow guards older books)
 };
 
 /** v3.17: EGW runs the base / ante flow. The math sends egwStart (reels + value) and then a reveal that already holds

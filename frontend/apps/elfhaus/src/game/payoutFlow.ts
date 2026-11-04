@@ -1,10 +1,10 @@
-/** Math 6de1363 (James 17:06 CDT): the round's payout is rounded DOWN to 0.1x at finalWin (finalWin = payoutMultiplier),
- *  while the running events (winInfo / updateStepWin / setWin / setTotalWin / freeSpinEnd) keep the exact 0.05x amounts.
- *  The rounding comes off the free-spin wins first, else the base wins (same rule as the math's finish()).
- *  Rewrite only the round's closing amounts so the last things the player sees land on the paid amount:
+/** Math 4ae1869 (pay01): every pay is on clean 0.1x steps, so finalWin (payoutMultiplier) normally equals the round's
+ *  running total and this module passes rounds through unchanged. It stays as a guard for books where finalWin sits
+ *  under the last setTotalWin (older 0.05x math rounded the payout DOWN to 0.1x, free-spin wins first, else base wins).
+ *  In that case only the round's closing amounts are rewritten so the last things the player sees land on the paid amount:
  *   - the trailing setTotalWin events that carry the exact round total -> finalWin (flagged `payout` so the meter may step down),
- *   - the bonus TOTAL WIN (last freeSpinEnd) -> its amount minus the rounding, when the free wins cover it,
- *   - otherwise the base spin's setWin (the big-win banner count-up target) -> its amount minus the rounding.
+ *   - the bonus TOTAL WIN (last freeSpinEnd) -> its amount minus the difference, when the free wins cover it,
+ *   - otherwise the base spin's setWin (the big-win banner count-up target) -> its amount minus the difference.
  *  Running amounts inside the round are left as the book has them. Capped rounds are exact and pass through. Pure data. */
 type Ev = { type: string; amount?: number; [k: string]: unknown };
 export function payoutFlow<T extends Ev>(events: T[]): T[] {

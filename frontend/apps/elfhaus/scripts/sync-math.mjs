@@ -53,6 +53,7 @@ const cfg = {
 	costs: need(params.costs, 'reel_params costs'),
 	startFs: lit('START_FS'),
 	mysteryOdds: lit('MYSTERY_ODDS'),
+	flipOdds: lit('FLIP_ODDS'),   // 5-scatter card flip: Double Black (triple_dare) / Powder Day (hidden) weights
 	guarantee: lit('GUARANTEE'),
 	guarMinVal: guarMin,
 	growStep: { default: 1, ...grow },
@@ -72,7 +73,7 @@ if (existsSync(join(pub, 'index.json'))) {
 } else console.warn('math-snapshot: no index.json at', pub, '(kept the old one)');
 writeFileSync(join(snap, 'README.md'), `Snapshot of the Elfhaus math (${cfg.source}). Written by scripts/sync-math.mjs; do not edit by hand.
 - game_config.json: paytable, lines, max win, spin cap, respins, free-spin counts, guarantees, Epic stack start / step,
-  wild grow steps, Mystery odds, retrigger spins, EGW stack value, win-level edges (standard / endFeature), mode costs.
+  wild grow steps, Mystery odds, 5-scatter flip odds, retrigger spins, EGW stack value, win-level edges (standard / endFeature), mode costs.
 - index.json, stats_summary.json: the publish files' index and the run's stats (RTP, max win, bonus odds).
 Re-sync: node scripts/sync-math.mjs <math games/elfhaus dir> [publish_files dir] && node scripts/sync-config.mjs
 `);

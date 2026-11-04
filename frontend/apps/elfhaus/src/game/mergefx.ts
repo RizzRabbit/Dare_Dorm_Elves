@@ -294,7 +294,7 @@ async function recombine(gems: HTMLElement[], target: HTMLElement | null, values
 	gems.forEach((g) => g.remove()); target.style.opacity = '';
 }
 
-/** A merged group grows: split the total into per-reel corner gems, tick the changed reels +1, recombine. */
+/** A merged group grows: split the total into per-reel corner gems, tick the changed reels by their grow step (+1, +2 in Powder Day), recombine. */
 export async function growIn(ov: HTMLElement, from: number[], to: number[], fromProd: number, toProd: number) {
 	begin();
 	const mx = ov.querySelector<HTMLElement>('.mx'), n = to.length, gems: HTMLElement[] = [];
@@ -308,7 +308,7 @@ export async function growIn(ov: HTMLElement, from: number[], to: number[], from
 		}
 		if (mx) A(mx, [{ opacity: 1 }, { opacity: 0 }], { duration: 120, fill: 'forwards' });
 		await sw(200 + n * 30);
-		// 2) each changed reel ticks +1 with a pop (burst sprite + scale)
+		// 2) each changed reel ticks up by its grow step with a pop (burst sprite + scale)
 		let k = 0;
 		for (let i = 0; i < n; i++) if (to[i] !== from[i]) { const g = gems[i], v = to[i]; setTimeout(() => setGem(g, v), skipping ? 0 : T(k++ * 90)); }
 		if (skipping) gems.forEach((g, i) => setGem(g, to[i], false));
