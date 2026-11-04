@@ -31,7 +31,9 @@ function blit(g: CanvasRenderingContext2D, P: Pkg, f: Fr, dx: number, dy: number
 	const im = P.img[f.page]; if (!im?.naturalWidth) return;
 	if (!nine || !f.s9) { const sx = dw / f.sw, sy = dh / f.sh; g.drawImage(im, f.x, f.y, f.w, f.h, dx + f.ox * sx, dy + f.oy * sy, f.w * sx, f.h * sy); return; }
 	const [l, t, r, b] = f.s9, d = 1 / k, W = f.w, H = f.h;
-	const dl = Math.round(l * d), dt = Math.round(t * d), dr = Math.round(r * d), db = Math.round(b * d);
+	// fix6: a plate narrower than its two painted corners (portrait -/+ at 38px) drew overlapping, cut-off sides: shrink the corners to fit
+	const q = Math.min(1, dw / ((l + r) * d || 1), dh / ((t + b) * d || 1));
+	const dl = Math.round(l * d * q), dt = Math.round(t * d * q), dr = Math.round(r * d * q), db = Math.round(b * d * q);
 	const sx = [0, l, W - r], sw = [l, W - l - r, r], sy = [0, t, H - b], sh = [t, H - t - b, b];
 	const ex = [dx, dx + dl, dx + dw - dr], ew = [dl, dw - dl - dr, dr], ey = [dy, dy + dt, dy + dh - db], eh = [dt, dh - dt - db, db];
 	for (let j = 0; j < 3; j++) for (let i = 0; i < 3; i++) if (ew[i] > 0 && eh[j] > 0 && sw[i] > 0 && sh[j] > 0) g.drawImage(im, f.x + sx[i], f.y + sy[j], sw[i], sh[j], ex[i], ey[j], ew[i], eh[j]);
@@ -63,7 +65,8 @@ export function skin(el: HTMLElement | null, look: (el: HTMLElement) => Look) {
 		const P = ready.get(L.pkg); if (!P) { void load(L.pkg); return; }
 		const f = P.fr[pressed && P.fr[L.frame + '_down'] ? L.frame + '_down' : L.frame]; if (!f) return;
 		const o = L.out ?? 0, w = el.offsetWidth + 2 * o, h = el.offsetHeight + 2 * o; if (!w || !h) return;
-		cv.style.cssText = `position:absolute;left:${-o}px;top:${-o}px;width:${w}px;height:${h}px;pointer-events:none;z-index:${L.over ? 1 : -1}`;
+		const bl = el.clientLeft, bt = el.clientTop; // fix6: the canvas is placed in the padding box; cover the (transparent) border too
+		cv.style.cssText = `position:absolute;left:${-o - bl}px;top:${-o - bt}px;width:${w}px;height:${h}px;pointer-events:none;z-index:${L.over ? 1 : -1}`;
 		const k = dpr(), W = Math.round(w * k), H = Math.round(h * k);
 		if (cv.width !== W) cv.width = W; if (cv.height !== H) cv.height = H;
 		const g = cv.getContext('2d')!; g.clearRect(0, 0, W, H); g.imageSmoothingQuality = 'high';
@@ -97,14 +100,17 @@ export function bmText(el: HTMLElement | null, font: string | ((el: HTMLElement)
 		const fn = typeof font === 'string' ? font : font(el), P = ready.get(fn); if (!P) { void load(fn); return; }
 		if (cv.parentNode !== el) el.append(cv);
 		const txt = (el.textContent || '').trim(), cs = getComputedStyle(el), fs = parseFloat(cs.fontSize) || 16;
-		const m = P.meta, k = dpr(); let sc = (fs * 1.05) / m.px;
+		const m = P.meta, br = el.getBoundingClientRect(), k = Math.max(0.25, (el.offsetWidth ? br.width / el.offsetWidth : ST.s) * (window.devicePixelRatio || 1)); let sc = (fs * 1.05) / m.px; // fix6 D7: drawn at the real on-screen scale (no upscaled blur)
 		const gl = [...txt].map((ch) => (ch === ' ' ? null : P.fr['u' + ch.toUpperCase().codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0')] || P.fr['u' + ch.codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0')]));
 		const adv0 = gl.reduce((s, f) => s + (f ? f.adv ?? f.sw : m.space), 0) * sc;
 		// fix4: the last glyph's art can run past its advance (the '0' in '$1.00'); size the canvas to the inked edge
 		let ink = 0, ax = 0; for (const f of gl) { if (!f) { ax += m.space * sc; continue; } ink = Math.max(ink, ax + f.sw * sc); ax += (f.adv ?? f.sw) * sc; }
 		// fix5 #1: an element capped by max-width (outro TAP TO CONTINUE) scales its bitmap line down to fit its box
 		let adv = adv0;
-		if (cs.maxWidth !== 'none' && el.clientWidth > 0 && ink > el.clientWidth) { const f = el.clientWidth / ink; sc *= f; adv *= f; ink = el.clientWidth; }
+		// fix6: data-fit="box" fits the element's own width; data-fit="parent" fits the room left in its parent (HUD meters)
+		let room = cs.maxWidth !== 'none' || el.dataset.fit === 'box' ? el.clientWidth : 0;
+		if (el.dataset.fit === 'parent' && el.parentElement) { const pe = el.parentElement, pc = getComputedStyle(pe); room = pe.clientWidth - (parseFloat(pc.paddingLeft) || 0) - (parseFloat(pc.paddingRight) || 0) - Math.max(0, el.offsetLeft - pe.clientLeft - (parseFloat(pc.paddingLeft) || 0)) - 1; }
+		if (room > 0 && ink > room) { const f = room / ink; sc *= f; adv *= f; ink = room; }
 		const w = Math.max(el.clientWidth, adv, Math.ceil(ink)), h = Math.max(el.clientHeight, m.lh * sc);
 		const W = Math.max(1, Math.round(w * k)), H = Math.max(1, Math.round(h * k));
 		cv.style.cssText = `position:absolute;left:0;top:0;width:${w}px;height:${h}px;pointer-events:none;z-index:2`;
@@ -142,7 +148,9 @@ function word(el: HTMLElement | null, font = 'font_cream', gold = false) {
 const ICON: Record<string, (el: HTMLElement) => string> = {
 	menuBtn: () => 'ico_menu', betDown: () => 'ico_minus', betUp: () => 'ico_plus', bmDown: () => 'ico_minus', bmUp: () => 'ico_plus',
 	turboBtn: () => 'ico_turbo', autoBtn: (el) => (on(el) || el.classList.contains('running') ? 'ico_stop' : 'ico_auto'),
-	spinBtn: (el) => (el.classList.contains('stop') || el.classList.contains('busy') ? 'ico_stop' : 'ico_spin'),
+	// fix6: the stop square only while reels are actually moving (a tap slams them) or autoplay runs (a tap stops it); the spin
+	// icon whenever the reels stand still: idle, win presentation, between respins
+	spinBtn: (el) => (el.classList.contains('auto') || el.classList.contains('stop') || (el.classList.contains('busy') && !!document.querySelector('#cells .cell.spinning, #strips .cspin')) ? 'ico_stop' : 'ico_spin'),
 };
 function apply() {
 	skin(document.getElementById('bar'), () => ({ pkg: 'ui', frame: 'hud_bar', k: 2.4, out: 6 }));                       // 3
@@ -152,9 +160,12 @@ function apply() {
 	const sp = document.getElementById('spinBtn');                                                                            // 5
 	skin(sp, (el) => ({ pkg: 'ui', frame: dis(el) ? 'spin_plate_busy' : 'spin_plate', fit: 'contain', size: 1.06 }));
 	icon(sp, (e) => ({ pkg: 'ui', frame: ICON.spinBtn(e), size: 0.5 }));
-	skin(document.getElementById('buyBtn'), (el) => ({ pkg: 'ui', frame: dis(el) ? 'card_ticket_off' : 'buy_plate', k: el.classList.contains('mkP') ? 4 : 2 }));   // fix2: the wide portrait plate keeps slim corners (k = sprite px per canvas px)   // 9
-	word(document.getElementById('buyLbl'));                                                                                  // 44
-	$$('#strip label').forEach((e) => word(e, 'font_cream', true)); $$('#strip span').forEach((e) => bmText(e, 'font_cream'));   // 36
+	{ const cells = document.getElementById('cells')?.parentElement || document.getElementById('board'); let q = 0;   // fix6: redraw the icon when reels start / stop
+		if (cells && sp) new MutationObserver(() => { if (!q) q = requestAnimationFrame(() => { q = 0; const i = sp.querySelector<HTMLElement>(':scope > .skI'); if (i) looks.get(i)?.(); }); }).observe(cells, { subtree: true, childList: true, attributes: true, attributeFilter: ['class'] }); }
+	// fix6: portrait BUY BONUS on the same pine plate as the other HUD buttons; disabled keeps its plate and is dimmed (skin.css), never a grey box
+	skin(document.getElementById('buyBtn'), (el) => (el.classList.contains('mkP') ? { pkg: 'ui', frame: 'btn_pine', k: 2 } : { pkg: 'ui', frame: 'buy_plate', k: 2 }));   // fix2: the wide portrait plate keeps slim corners (k = sprite px per canvas px)   // 9
+	{ const bl = document.getElementById('buyLbl'); if (bl) bl.dataset.fit = 'box'; word(bl); }   // fix6: always fits its plate                                                                                  // 44
+	$$('#strip label').forEach((e) => word(e, 'font_cream', true)); $$('#strip span').forEach((e) => { e.dataset.fit = 'parent'; bmText(e, 'font_cream'); });   // fix6: values up to $99,999.99 shrink to fit, never clip   // 36
 	skin(document.getElementById('fsBar'), () => ({ pkg: 'ui', frame: 'pill_cran', k: 2 })); bmText(document.getElementById('fsTier'), 'font_gold'); bmText(document.getElementById('fsCount'), 'font_cream');   // 33
 	for (const id of ['banner', 'stepToast']) { const el = document.getElementById(id); skin(el, () => ({ pkg: 'ui', frame: 'toast', k: 2 })); bmText(el, 'font_ink'); }   // 50
 	const arm = document.getElementById('armTag'); skin(arm, () => ({ pkg: 'ui', frame: 'pill_gold', k: 2 })); bmText(arm?.querySelector('.t') as HTMLElement, 'font_ink');   // 49

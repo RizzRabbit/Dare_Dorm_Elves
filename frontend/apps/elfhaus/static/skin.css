@@ -92,3 +92,23 @@ html body .ov.win img.stk_glow{opacity:0!important}
    rows take the same inset on the right as on the left */
 html body #settings .modal.stg .stRow{margin-right:12px!important}
 html body:not(.portrait) #settings .modal.stg .stRow{margin-right:26px!important}
+/* fix6 BUY BONUS: the label is never clipped (no overflow:hidden on the plate) and sits in an inset box the bitmap line
+   fits (skin.ts data-fit=box); disabled = the same painted plate dimmed, not a grey box */
+html body.skin.mk #app #hud #buyBtn.plate{overflow:visible!important}
+html body.skin.mk #app #hud #buyBtn.plate:not(#_n) .lbl{left:7%!important;right:7%!important;width:auto!important;translate:0 -50%!important;text-align:center!important;letter-spacing:0!important}
+html body.skin.mk #app #hud #buyBtn.plate.mkP:not(#_n) .lbl{left:calc(196px*var(--ps))!important;right:calc(22px*var(--ps))!important}
+html body.skin.mk #app #hud #buyBtn.plate:disabled{opacity:.5!important}
+/* fix6 meters: BALANCE / WIN / BET never clip; the painted digits scale to the room (skin.ts data-fit=parent) */
+html body.skin.mk #app #strip .m :is(#balance,#win,#bet){overflow:visible!important;text-overflow:clip!important;contain:none!important;max-width:100%}
+html body.skin.mk #app #strip .m{overflow:visible!important}
+/* fix6 portrait bet: BET label and value centred together between - and + */
+html body.skin.portrait.mk #app #strip .m:has(#bet){align-items:center!important}
+html body.skin.portrait.mk #app #strip .m:has(#bet) :is(label,#bet){text-align:center!important}
+/* fix6 DOM overlay order (distinct values, above the game canvas): celebrations (big win, intro, outro, more spins, card
+   flip) 60 < max win 70 < modals 80 < replay bar 85 < message / resume 90 < loader 200 */
+html body :is(#bigwin,#intro,#outro,#fsMore,#cardFlip,#_zA#_zB#_zC){z-index:60!important}
+html body :is(#maxwin,#_zA#_zB#_zC){z-index:70!important}
+html body :is(#buyMenu,#bmConfirm,#autoMenu,#settings,#menu,#_zA#_zB#_zC){z-index:80!important}
+html body :is(#replayBar,#_zA#_zB#_zC){z-index:85!important}
+html body :is(#msg,#resumeCard,#_zA#_zB#_zC){z-index:90!important}
+html body :is(#loader,#_zA#_zB#_zC){z-index:200!important}
