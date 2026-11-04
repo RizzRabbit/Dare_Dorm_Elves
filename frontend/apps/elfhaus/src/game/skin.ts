@@ -159,7 +159,7 @@ function apply() {
 	const PM: Record<string, string> = { pmInfo: 'ico_info_ink', pmMusic: 'ico_music_ink', pmSound: 'ico_sound_ink', pmMute: 'ico_mute_ink', pmSettings: 'ico_chev_ink' };
 	$$('#popMenu .pmRow').forEach((e) => icon(e, (el) => ({ pkg: 'ui', frame: (PM[el.id] || 'ico_info_ink').replace('ico_sound', on(el) ? 'ico_sound' : 'ico_mute'), size: 0.8 })));
 	// fix2 Settings panel: painted labels, switches (above), painted slider track / fill / thumb
-	$$('#settings .stRow .lbl').forEach((e) => word(e, 'font_ink'));
+	$$('#settings .stRow .lbl').forEach((e) => bmText(e, 'font_ink'));
 	$$('#settings .stSl').forEach((e) => { skin(e, () => ({ pkg: 'ui', frame: 'slider_track', k: 2 }));
 		skin(e.querySelector<HTMLElement>('.slF'), () => ({ pkg: 'ui', frame: 'slider_fill', k: 2 })); skin(e.querySelector<HTMLElement>('.slT'), () => ({ pkg: 'ui', frame: 'slider_thumb', fit: 'contain' })); });
 	bmText(document.querySelector<HTMLElement>('#pmSettings span'), 'font_ink');

@@ -42,8 +42,21 @@ html body #menu .rules .pl>.plA{flex:1 1 auto!important;min-width:60px;max-width
 /* fix2 Settings panel: rows like the bonus menu's, painted sliders (track / fill / thumb canvases from skin.ts) */
 html body #settings .modal.stg{width:min(560px,92vw)}
 html body #settings .stRow{display:flex!important;align-items:center!important;justify-content:space-between;gap:18px;min-height:64px!important;padding:0 20px!important;margin:10px 0;box-sizing:border-box}
-html body #settings .stRow .lbl{position:relative;font-size:22px;min-width:120px;height:28px}
-html body #settings .stSl{position:relative;width:230px;height:30px;flex:none;cursor:pointer;touch-action:none;--v:1}
+html body #settings .stRow .lbl{position:relative;font-size:26px;min-width:120px;height:32px;flex:none;width:auto;text-align:left}
+html body #settings .stSl{position:relative;width:auto;max-width:260px;min-width:120px;height:30px;flex:1 1 0;margin-right:20px;cursor:pointer;touch-action:none;--v:1}
 html body #settings .stSl>.slF{position:absolute;left:0;top:0;bottom:0;width:calc(var(--v)*100%);min-width:0;display:block;pointer-events:none}
 html body #settings .stSl>.slT{position:absolute;top:50%;left:calc(var(--v)*100%);width:38px;height:38px;margin:-19px 0 0 -19px;display:block;pointer-events:none;z-index:2}
 html body #settings .stSl:focus-visible{outline:2px solid #E7B54A;outline-offset:4px}
+
+/* fix4: Settings title clear of the close X (centred, padded both sides like the Rules head) */
+html body #settings .modal.stg{padding-right:0!important;padding-top:10px!important}
+html body #settings .stg .mHead{padding:calc(var(--t48,48px) + 4px) calc(var(--t48,48px) + 14px) 4px!important;text-align:center!important;display:flex;justify-content:center}
+html body #settings .stg .mHead h2{margin:0 auto!important;text-align:center!important}
+/* fix4 #7: portrait free-spins intro card: the title art and the spin count fit inside the card */
+html body.portrait #intro .tierName img.tTitle{width:100%!important;max-width:100%!important;margin-top:-1.1em!important}
+html body.portrait #intro .spins{font-size:40px!important;white-space:nowrap;max-width:100%}
+/* fix4 #6: outro TAP TO CONTINUE stays inside the card */
+html body #outro .otHint{font-size:34px!important;white-space:nowrap;max-width:100%}
+html body.portrait #outro .otHint{font-size:22px!important}
+/* fix4 #8: portrait buy menu: both card rows fit (shorter card art) */
+html body.portrait #buyCards .bcard .bArt{aspect-ratio:1.4!important}
