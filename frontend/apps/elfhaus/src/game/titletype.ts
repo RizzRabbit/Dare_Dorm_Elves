@@ -18,7 +18,9 @@ export function titleType(el: HTMLElement | null, text: string) {
 	while (i < text.length) {
 		const w = WORDS.find((k) => text.startsWith(k, i));
 		if (w) { h += glyph(w); i += w.length; continue; }
-		const c = text[i++];
+		let c = text[i++];
+		if (c === '\u00a0' || c === '\u202f') c = ' ';      // the money formatter joins amount and code with a no-break space
+		if (!J.frames[c] && J.frames[c.toUpperCase()]) c = c.toUpperCase();   // 'kr' / 'zł' in the capitals
 		h += c === ' ' ? '<i class="tgS"></i>' : J.frames[c] ? glyph(c) : `<b class="tgF">${esc(c)}</b>`;   // a character without a glyph (another currency) stays type
 	}
 	el.innerHTML = `<span class="tgRow" aria-hidden="true">${h}</span><span class="tgA">${esc(text)}</span>`;
