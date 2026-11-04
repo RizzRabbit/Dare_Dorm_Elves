@@ -153,11 +153,16 @@ function apply() {
 	$$('button.go, #msgOk, #replayPlay').forEach((e) => { skin(e, go); word(e); });                                          // 58
 	$$('.row').forEach((e) => skin(e, () => ({ pkg: 'ui', frame: 'row_plate', k: 2 })));                                    // 56
 	// the switch: painted track (sw_on / sw_off) + its own painted knob part (sw_knob), slid by transform (skin.css .skK)
-	$$('.sw').forEach((e) => { skin(e, (el) => ({ pkg: 'ui', frame: on(el) ? 'sw_on' : 'sw_off', k: 2 })); icon(e, () => ({ pkg: 'ui', frame: 'sw_knob', fit: 'contain' }), 'skK'); });
+	$$('.sw').forEach((e) => { skin(e, (el) => ({ pkg: 'ui', frame: on(el) ? 'sw_on' : 'sw_off', nine: false, fit: 'fill' })); icon(e, () => ({ pkg: 'ui', frame: 'sw_knob', fit: 'contain' }), 'skK'); }); // track drawn whole: a 9-slice squashed the 160x90 pill's caps onto 64x36
 	$$('.row input').forEach((e) => skin(e.parentElement?.querySelector('input') ? (e as HTMLElement) : null, () => ({ pkg: 'ui', frame: 'field', fit: 'fill' })));
 	skin(document.getElementById('popMenu'), () => ({ pkg: 'ui', frame: 'plate_cream', k: 2 }));                           // 57
-	const PM: Record<string, string> = { pmInfo: 'ico_info_ink', pmMusic: 'ico_music_ink', pmSound: 'ico_sound_ink', pmMute: 'ico_mute_ink' };
+	const PM: Record<string, string> = { pmInfo: 'ico_info_ink', pmMusic: 'ico_music_ink', pmSound: 'ico_sound_ink', pmMute: 'ico_mute_ink', pmSettings: 'ico_chev_ink' };
 	$$('#popMenu .pmRow').forEach((e) => icon(e, (el) => ({ pkg: 'ui', frame: (PM[el.id] || 'ico_info_ink').replace('ico_sound', on(el) ? 'ico_sound' : 'ico_mute'), size: 0.8 })));
+	// fix2 Settings panel: painted labels, switches (above), painted slider track / fill / thumb
+	$$('#settings .stRow .lbl').forEach((e) => word(e, 'font_ink'));
+	$$('#settings .stSl').forEach((e) => { skin(e, () => ({ pkg: 'ui', frame: 'slider_track', k: 2 }));
+		skin(e.querySelector<HTMLElement>('.slF'), () => ({ pkg: 'ui', frame: 'slider_fill', k: 2 })); skin(e.querySelector<HTMLElement>('.slT'), () => ({ pkg: 'ui', frame: 'slider_thumb', fit: 'contain' })); });
+	bmText(document.querySelector<HTMLElement>('#pmSettings span'), 'font_ink');
 	skin(document.getElementById('replayBar'), () => ({ pkg: 'ui', frame: 'toast', k: 2 }));                                 // 73
 	$$('#intro .card, #outro .card, #fsMore .card').forEach((e) => skin(e, () => ({ pkg: 'ui', frame: 'sign_plate', k: 2 })));   // 24, 25
 	$$('#intro .cont').forEach((e) => { skin(e, go); word(e); });

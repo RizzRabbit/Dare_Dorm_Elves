@@ -8,6 +8,7 @@
 import { $ } from './ui';
 import { audioVol, setAudioVol, audioPrefs, setAudioPref } from './audio';
 import { toStage, ST } from './stage';
+import { openPanel, registerPanel } from './panels';
 
 type K = 'mus' | 'sfx';
 const pop = () => $('#popMenu'), btn = () => $('#menuBtn');
@@ -65,4 +66,31 @@ export function initSettings(openInfo: () => void) {
 			e.preventDefault(); rows[(i + (e.key === 'ArrowDown' ? 1 : rows.length - 1)) % rows.length].focus();
 		}
 	}, true);
+}
+
+// ---- fix2 Settings panel (#settings): Sound on/off, Music / Effects volume (painted sliders), Turbo ----
+function paintSettings(turbo: () => boolean) {
+	const snd = !muted(), sw = $('#stSnd'); sw.classList.toggle('on', snd); sw.setAttribute('aria-checked', String(snd));
+	const t = turbo(), ts = $('#stTurbo'); ts.classList.toggle('on', t); ts.setAttribute('aria-checked', String(t));
+	document.querySelectorAll<HTMLElement>('#settings .stSl').forEach((el) => {
+		const v = Math.round(audioVol(el.dataset.k as K) * 100); el.style.setProperty('--v', String(v / 100));
+		el.setAttribute('aria-valuenow', String(v)); el.setAttribute('aria-valuetext', v ? v + '%' : 'off');
+	});
+}
+/** turbo: read / toggle hooks from game.ts (the HUD lightning + bonus-menu switch stay in sync through them) */
+export function initSettingsPanel(turbo: () => boolean, toggleTurbo: () => void) {
+	registerPanel('#settings');
+	const P = () => paintSettings(turbo);
+	$('#pmSettings').onclick = () => { closePop(); P(); openPanel('#settings'); };
+	$('#stSnd').onclick = () => { setAudioPref('snd', muted()); P(); };
+	$('#stTurbo').onclick = () => { toggleTurbo(); P(); };
+	document.querySelectorAll<HTMLElement>('#settings .stSl').forEach((el) => {
+		const k = el.dataset.k as K;
+		const set = (v: number) => { setAudioVol(k, Math.round(Math.min(1, Math.max(0, v)) * 20) / 20); P(); };
+		const at = (e: PointerEvent) => { const r = el.getBoundingClientRect(); set((e.clientX - r.left) / r.width); };
+		el.addEventListener('pointerdown', (e) => { el.setPointerCapture(e.pointerId); at(e); });
+		el.addEventListener('pointermove', (e) => { if (el.hasPointerCapture(e.pointerId)) at(e); });
+		el.addEventListener('keydown', (e) => { const d = e.key === 'ArrowRight' || e.key === 'ArrowUp' ? 0.05 : e.key === 'ArrowLeft' || e.key === 'ArrowDown' ? -0.05 : 0; if (d) { e.preventDefault(); set(audioVol(k) + d); } });
+	});
+	P();
 }

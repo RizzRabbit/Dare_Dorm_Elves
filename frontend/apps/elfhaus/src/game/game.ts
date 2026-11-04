@@ -23,7 +23,7 @@ import { setArmedGlow, wireTapFx } from './uifx';
 import { featOpen, featClose } from './featfx';
 import { elvesLevel, preloadBigWinElves, bigWinElvesStart, bigWinElvesEnd } from './bigwinElves';
 import { setBigWinFx } from './ui';
-import { initSettings, popOpen, closePop } from './settings';
+import { initSettings, initSettingsPanel, popOpen, closePop } from './settings';
 import { initAudio, sfx } from './audio';
 import { initVoiceIdle, voice } from './voice';
 import { setSocial, isSocial, t } from './strings';
@@ -636,6 +636,7 @@ function wire() {
 	registerPanel('#msg', { closable: false }); registerPanel('#resumeCard', { closable: false }); // v3.16c
 	$('#buyBtn').onclick = () => { sfx('ui_buy_open'); buildBuy(); openPanel('#buyMenu'); };
 	initSettings(() => { buildRules(); openPanel('#menu'); });
+	initSettingsPanel(() => !!S.turbo, () => setTurbo(!S.turbo));
 	$('#replayPlay').onclick = () => playReplay();
 	addEventListener('keydown', (e) => {
 		// v3.18b: Space / Enter = START on the bonus card and continue on the TOTAL WIN screen (their own click handlers apply
