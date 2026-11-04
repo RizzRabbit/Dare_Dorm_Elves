@@ -43,7 +43,7 @@ const loadImg = (src: string) => new Promise<void>((res, rej) => { const i = new
 export function preloadArt() {
 	const srcs = new Set((Object.entries(ART).filter(([k, u]) => u && !/^(sym_|fx_)/.test(k)).map(([, u]) => u) as string[]).filter((u) => !/\.(webm|mp4)$/i.test(u)));
 	// art + fx sheets + the 4 later singles in initGame (symbol art, Roxy, fonts, RGS auth / replay)
-	floor = srcs.size + FX_SHEET_COUNT + 4;
+	floor = srcs.size + FX_SHEET_COUNT + 5;   // +1: puff textures (puff.ts preloadPuff)
 	for (const src of srcs) track(loadImg(src)).catch(() => console.warn('art missing', src));
 }
 

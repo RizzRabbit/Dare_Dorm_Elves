@@ -36,6 +36,12 @@ function blit(g: CanvasRenderingContext2D, P: Pkg, f: Fr, dx: number, dy: number
 	const ex = [dx, dx + dl, dx + dw - dr], ew = [dl, dw - dl - dr, dr], ey = [dy, dy + dt, dy + dh - db], eh = [dt, dh - dt - db, db];
 	for (let j = 0; j < 3; j++) for (let i = 0; i < 3; i++) if (ew[i] > 0 && eh[j] > 0 && sw[i] > 0 && sh[j] > 0) g.drawImage(im, f.x + sx[i], f.y + sy[j], sw[i], sh[j], ex[i], ey[j], ew[i], eh[j]);
 }
+/** fix4 puff_cold: load + decode a package's pages and draw each once (warm GPU upload) during the loader. */
+export async function preloadPkg(name: string) {
+	const P = await load(name); if (!P) return;
+	await Promise.all(P.img.map((im) => im.decode().catch(() => {})));
+	const c = document.createElement('canvas'); c.width = c.height = 8; const g = c.getContext('2d'); P.img.forEach((im) => { try { g?.drawImage(im, 0, 0, 8, 8); } catch { /* */ } });
+}
 /** a frame for canvas-2D drawing code (winlines, particles): null until its package is decoded (loading starts) */
 export function atlasFrame(pkg: string, name: string) { const P = ready.get(pkg); if (!P) { void load(pkg); return null; } const f = P.fr[name]; return f ? { img: P.img[f.page], f } : null; }
 /** draw a frame centred at (x, y), size w x h, rotated by a */

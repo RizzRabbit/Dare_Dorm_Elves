@@ -642,3 +642,12 @@ html body.portrait #outro .otHint{font-size:30px!important}
    packing bleed, sheets/symbols.webp, no padding); cut that corner out of the letters frame only */
 html body .rp.f__wild{clip-path:polygon(0 0,100% 0,100% 100%,19% 100%,19% 78%,0 78%)}
 html body.mk #app #strip .m #bet{overflow:visible!important}
+/* fix4 puff linger: a respin hands the still-drifting snow / powder / glitter to this overlay (puff.ts lingerOut). It never
+   takes input (pointer-events none) and clears itself; the next puff fades it out (fadeLinger). */
+#puffLinger{position:absolute;inset:0;pointer-events:none;z-index:9;overflow:visible}
+#puffLinger>.pfHost{position:absolute;pointer-events:none;overflow:visible}
+#puffLinger .puffFx{position:absolute;inset:0;pointer-events:none;overflow:visible}
+#puffLinger .puffFx>i{position:absolute;left:50%;top:50%;display:block;will-change:transform,opacity}
+#puffLinger .puffFx .pfCloud{width:34%;aspect-ratio:1}
+#puffLinger .puffFx .pfFlake{width:26%;aspect-ratio:1}
+#puffLinger .puffFx>i.pfP{opacity:0}

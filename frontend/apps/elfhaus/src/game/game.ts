@@ -38,6 +38,7 @@ import { setBg, warmBg } from './bg';
 import { placeAlcove } from './alcove';
 import { mkCell, mkPlace, fitArmTag } from './mkboard';
 import { initLoader, preloadArt, track, loaderReady, hideLoader } from './loader';
+import { preloadPuff } from './puff';
 import { symArtReady } from './symrig';
 import { introLayout } from './introPixi';
 import { fitStage, toStage, ST } from './stage';
@@ -695,6 +696,7 @@ export async function initGame() {
 	document.addEventListener('pointerdown', (e) => { const t = e.target as Element; if (!t?.closest?.('#bigwin,#outro')) { const ui = !!t?.closest?.('#menu,#popMenu,#buyMenu,#bmConfirm,#autoMenu,#msg,#resumeCard'); skipBoard(false, !ui && !t?.closest?.('#menuBtn,#buyBtn,#autoBtn,#turboBtn,#betUp,#betDown') && !anyOpen() && !popOpen()); if (!ui && !winPresenting()) hurry(); } }, { capture: true, passive: true });
 	track(initRoxy(layout));
 	loadAllFx(track).then(() => renderAll());
+	track(preloadPuff());   // fix4 puff_cold: puff textures decoded + drawn before the first spin
 	void preloadStacks();   // fix4 B: stack art decoded up front
 	initSkin();   // painted sprite skin for the DOM pieces (skin.ts)
 	initTimelines();   // GSAP sign entrances (tl.ts)
