@@ -44,6 +44,7 @@ import { introLayout } from './introPixi';
 import { fitStage, toStage, ST } from './stage';
 import { fitStrip, initStripFit } from './stripfit';
 import { placeRespin } from './respin';
+import { applyLayers } from './layers';
 import { loadAllFx } from './fx';
 import { startSpin, abortSpin, hurry } from './reels';
 import { hideRespin } from './respin';
@@ -677,6 +678,7 @@ function applyJurisdiction() {
 const IDLE = [['H1', 'L2', 'L4', 'H3'], ['L1', 'H2', 'L5', 'L3'], ['H4', 'L3', 'W', 'L1'], ['L5', 'H1', 'L2', 'H2'], ['L4', 'L1', 'H3', 'L5']];
 
 export async function initGame() {
+	applyLayers();   // fix6 #25: the one layer map (layers.ts)
 	setLocale(url.lang);
 	initAudio(); initVoiceIdle(); // reads the sound switches; audio itself starts on the first tap
 	initLoader(); preloadArt();

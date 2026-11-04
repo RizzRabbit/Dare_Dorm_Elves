@@ -55,18 +55,19 @@ export function hideRespin() {
 function counter() {
 	let el = document.getElementById('rsCtr');
 	if (!el) {
-		const fr = document.getElementById('frame'); if (!fr) return null;
+		const st = document.getElementById('stage'); if (!st) return null;
 		el = document.createElement('div'); el.id = 'rsCtr'; el.setAttribute('aria-hidden', 'true');
 		el.innerHTML = `<b>RESPINS</b>${DOTS}`;
-		fr.appendChild(el);
+		st.appendChild(el);   // fix6 #11: in #stage over the frame (layers.ts SZ.respins), never under the frame's bottom rail
 	}
 	return el;
 }
 export function placeRespin() {
 	const el = counter(), fr = document.getElementById('frame'), bd = document.getElementById('board');
 	if (!el || !fr || !bd) return;
-	const bot = bd.offsetTop + bd.offsetHeight, rail = Math.max(8, fr.clientHeight - bot);
-	const h = Math.round(Math.min(36, Math.max(19, rail * 0.8)));
-	el.style.cssText = `top:${Math.round(bot + Math.max(2, (rail - h) / 2))}px;height:${h}px;--rsh:${h}px`;
+	// fix6 #11: centred on the frame, straddling its bottom edge, fully drawn above it (it was inside #frame, clipped by the rail)
+	const bot = fr.offsetTop + fr.offsetHeight, rail = Math.max(8, fr.clientHeight - (bd.offsetTop + bd.offsetHeight));
+	const h = Math.round(Math.min(40, Math.max(26, rail * 1.1)));
+	el.style.cssText = `top:${Math.round(bot - h * 0.35)}px;left:${Math.round(fr.offsetLeft + fr.offsetWidth / 2)}px;height:${h}px;--rsh:${h}px`;
 }
 export const DOTS: string = '<span class="rd" aria-hidden="true"><i></i><i></i><i></i></span>';

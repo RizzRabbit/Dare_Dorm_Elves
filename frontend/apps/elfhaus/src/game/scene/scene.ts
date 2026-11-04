@@ -10,6 +10,7 @@
 // fireplace, the bulbs with the wall / fireplace / tree they hang on. Cast shadows of the board, HUD bar and BUY plate.
 import { Application, Container, Graphics, Sprite } from 'pixi.js';
 import { ST } from '../stage';
+import { PZ } from '../layers';
 import { G as MKG, FW, FT, BW, BH } from '../mkboard';
 import { createRoxy, type RoxyAdapter } from '../roxyrig';
 import LIGHTS from '../chalet/bglights.json';
@@ -159,6 +160,8 @@ export async function initScene(): Promise<boolean> {
 		PL.chimFx.addChild(fireL);
 		amb.addChild(PL.out, snowL, snowMask, PL.glass, PL.wall, twL, PL.chim, PL.tree, PL.grade, PL.chimFx, PL.shadow);
 		PL.glass.addChild(glassL);
+		// fix6 #25: explicit z from the layer map (layers.ts PZ), not addChild order
+		a.stage.sortableChildren = true; amb.zIndex = PZ.room; roxyL.zIndex = PZ.roxy; PL.near.zIndex = PZ.roomNear; fx.zIndex = PZ.roomFx;
 		a.stage.addChild(amb, roxyL, PL.near, fx);
 		listenCam();
 		a.ticker.add((t) => {
