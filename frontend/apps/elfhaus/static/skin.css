@@ -92,3 +92,9 @@ html body .ov.win img.stk_glow{opacity:0!important}
    rows take the same inset on the right as on the left */
 html body #settings .modal.stg .stRow{margin-right:12px!important}
 html body:not(.portrait) #settings .modal.stg .stRow{margin-right:26px!important}
+/* fix6 BUY BONUS: the label is never clipped (no overflow:hidden on the plate) and sits in an inset box the bitmap line
+   fits (skin.ts data-fit=box); disabled = the same painted plate dimmed, not a grey box */
+html body.skin.mk #app #hud #buyBtn.plate{overflow:visible!important}
+html body.skin.mk #app #hud #buyBtn.plate:not(#_n) .lbl{left:7%!important;right:7%!important;width:auto!important;translate:0 -50%!important;text-align:center!important;letter-spacing:0!important}
+html body.skin.mk #app #hud #buyBtn.plate.mkP:not(#_n) .lbl{left:calc(196px*var(--ps))!important;right:calc(22px*var(--ps))!important}
+html body.skin.mk #app #hud #buyBtn.plate:disabled{opacity:.5!important}

@@ -107,7 +107,10 @@ export function bmText(el: HTMLElement | null, font: string | ((el: HTMLElement)
 		let ink = 0, ax = 0; for (const f of gl) { if (!f) { ax += m.space * sc; continue; } ink = Math.max(ink, ax + f.sw * sc); ax += (f.adv ?? f.sw) * sc; }
 		// fix5 #1: an element capped by max-width (outro TAP TO CONTINUE) scales its bitmap line down to fit its box
 		let adv = adv0;
-		if (cs.maxWidth !== 'none' && el.clientWidth > 0 && ink > el.clientWidth) { const f = el.clientWidth / ink; sc *= f; adv *= f; ink = el.clientWidth; }
+		// fix6: data-fit="box" fits the element's own width; data-fit="parent" fits the room left in its parent (HUD meters)
+		let room = cs.maxWidth !== 'none' || el.dataset.fit === 'box' ? el.clientWidth : 0;
+		if (el.dataset.fit === 'parent' && el.parentElement) { const pe = el.parentElement, pc = getComputedStyle(pe); room = pe.clientWidth - (parseFloat(pc.paddingLeft) || 0) - (parseFloat(pc.paddingRight) || 0) - Math.max(0, el.offsetLeft - pe.clientLeft - (parseFloat(pc.paddingLeft) || 0)) - 1; }
+		if (room > 0 && ink > room) { const f = room / ink; sc *= f; adv *= f; ink = room; }
 		const w = Math.max(el.clientWidth, adv, Math.ceil(ink)), h = Math.max(el.clientHeight, m.lh * sc);
 		const W = Math.max(1, Math.round(w * k)), H = Math.max(1, Math.round(h * k));
 		cv.style.cssText = `position:absolute;left:0;top:0;width:${w}px;height:${h}px;pointer-events:none;z-index:2`;
@@ -155,8 +158,9 @@ function apply() {
 	const sp = document.getElementById('spinBtn');                                                                            // 5
 	skin(sp, (el) => ({ pkg: 'ui', frame: dis(el) ? 'spin_plate_busy' : 'spin_plate', fit: 'contain', size: 1.06 }));
 	icon(sp, (e) => ({ pkg: 'ui', frame: ICON.spinBtn(e), size: 0.5 }));
-	skin(document.getElementById('buyBtn'), (el) => ({ pkg: 'ui', frame: dis(el) ? 'card_ticket_off' : 'buy_plate', k: el.classList.contains('mkP') ? 4 : 2 }));   // fix2: the wide portrait plate keeps slim corners (k = sprite px per canvas px)   // 9
-	word(document.getElementById('buyLbl'));                                                                                  // 44
+	// fix6: portrait BUY BONUS on the same pine plate as the other HUD buttons; disabled keeps its plate and is dimmed (skin.css), never a grey box
+	skin(document.getElementById('buyBtn'), (el) => (el.classList.contains('mkP') ? { pkg: 'ui', frame: 'btn_pine', k: 2 } : { pkg: 'ui', frame: 'buy_plate', k: 2 }));   // fix2: the wide portrait plate keeps slim corners (k = sprite px per canvas px)   // 9
+	{ const bl = document.getElementById('buyLbl'); if (bl) bl.dataset.fit = 'box'; word(bl); }   // fix6: always fits its plate                                                                                  // 44
 	$$('#strip label').forEach((e) => word(e, 'font_cream', true)); $$('#strip span').forEach((e) => bmText(e, 'font_cream'));   // 36
 	skin(document.getElementById('fsBar'), () => ({ pkg: 'ui', frame: 'pill_cran', k: 2 })); bmText(document.getElementById('fsTier'), 'font_gold'); bmText(document.getElementById('fsCount'), 'font_cream');   // 33
 	for (const id of ['banner', 'stepToast']) { const el = document.getElementById(id); skin(el, () => ({ pkg: 'ui', frame: 'toast', k: 2 })); bmText(el, 'font_ink'); }   // 50
