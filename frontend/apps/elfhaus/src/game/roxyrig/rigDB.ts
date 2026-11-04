@@ -1,6 +1,8 @@
 // Roxy as ONE DragonBones rig (room + intro), played by pixi-dragonbones-runtime 8.0.3 (MIT) on Pixi 8.
 // Source: static/assets/rig/roxy_db/roxy_{ske,tex}.json + roxy_tex.webp, built from the approved chalet Roxy (room_roxy_fullbody/roxy_ingame_fullbody_transparent.png)
-// with painted face frames (no code-drawn lids). Body animations play on group 'body' with 0.25 s blends; faces on their
+// with painted face frames (no code-drawn lids). Free arm (sleeve v7, approved by James): two bone-following image slots behind the body,
+// arm_u on uarm (reference-art sleeve, gold patch, folds) and arm_f on farm (forearm, fur cuff, in-game hand; feathered 16 px elbow overlap
+// drawn over arm_u so the joint never opens a seam). They replace the old weighted 'arm' mesh; bones / animations are unchanged. Body animations play on group 'body' with 0.25 s blends; faces on their
 // own group 'face' (resetToPose = false) so a blink / wink never resets the pose. Intro: intro_door (painted reaching hand
 // on the door_hand bone, read by doorPts for the lever) -> intro_step -> intro_land -> idle.
 import { Container, Point, Sprite, type Texture } from 'pixi.js';

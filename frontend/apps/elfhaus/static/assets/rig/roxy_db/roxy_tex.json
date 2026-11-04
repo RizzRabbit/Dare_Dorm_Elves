@@ -5,13 +5,6 @@
  "height": 2048,
  "SubTexture": [
   {
-   "name": "arm",
-   "x": 644,
-   "y": 0,
-   "width": 149,
-   "height": 531
-  },
-  {
    "name": "roxy_body",
    "x": 0,
    "y": 0,
@@ -59,6 +52,20 @@
    "y": 0,
    "width": 202,
    "height": 194
+  },
+  {
+   "name": "arm_u",
+   "x": 800,
+   "y": 210,
+   "width": 145,
+   "height": 228
+  },
+  {
+   "name": "arm_f",
+   "x": 949,
+   "y": 210,
+   "width": 216,
+   "height": 306
   }
  ]
 }
