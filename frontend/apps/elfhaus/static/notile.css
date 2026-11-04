@@ -1,0 +1,13 @@
+/* ===== ART-7 / ART-3 (James 2026-11-03): no per-symbol tiles. The symbols sit straight on the burgundy snowflake board
+   (mkboard.ts board_burgundy + board_snow) and stand out on their own: ink outline, their own baked contact / drop shadow
+   (symdepth `sd` sprites) and painted shading. Every tile piece is hidden: the cell tile (colour, recess, border, shade
+   ring, glint / glow copies), the bust-wild card, the stack / merge overlay edge, and the spinner unit's tile (.slT).
+   Loaded last so it wins over chalet.css / board.css. ===== */
+html body :is(.cell,.cspin,.ov)>.tile,
+html body .ov>.tRec,html body .ov>.tBd,html body .ov>.tFr,
+html body .tGl,html body .tGw,
+html body .cspin .slT{display:none!important}
+/* the overlay was clipped to the tile edge with rounded corners; with no tiles a stack / merge shows its full art */
+html body #board .ov.art{clip-path:inset(-25% 0 -25% 0)!important}   /* sides trimmed to the reels (ART-11/13), heads + boots whole */
+/* ART-9: a merged group rig (dbstacks.ts, WM*) draws its own bold WILD label; the legacy letters / still never sit on it */
+html body .ov:is(.merge,[data-reels*=","]):has(>canvas.stk_db) :is(.mLets,canvas.stk_letters){display:none!important}

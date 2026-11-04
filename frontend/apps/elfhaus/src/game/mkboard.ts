@@ -203,11 +203,14 @@ export function mkPlace(cell: number) {
 type Fr = { x: number; y: number; w: number; h: number };
 type BoardFx = { frames: Record<string, { frame: Fr }>; meta: { scale: string; board: { nb: number; slotPad: number; frameTop: number; frameBot: number; slice9: Record<string, number> } } };
 let fxImg: HTMLImageElement | null = null, fxJson: BoardFx | null = null, fxLoading = false;
+// ART-3 / ART-7: the approved no-tile board, deep burgundy with subtle snowflakes (art_v3 board_base + board_snow, cropped 5:4)
+let bgImg: HTMLImageElement | null = null, snowImg: HTMLImageElement | null = null;
 function loadBoardFx(redraw: () => void) {
 	if (fxLoading) return; fxLoading = true;
 	const im = new Image(); im.decoding = 'async'; im.src = 'assets/board/boardfx.webp';
-	Promise.all([im.decode(), fetch('assets/board/boardfx.json').then((r) => r.json() as Promise<BoardFx>)])
-		.then(([, j]) => { fxImg = im; fxJson = j; redraw(); }).catch(() => { fxLoading = false; });
+	const bi = new Image(), si = new Image(); bi.src = 'assets/board/board_burgundy.webp'; si.src = 'assets/board/board_snow.webp';
+	Promise.all([im.decode(), fetch('assets/board/boardfx.json').then((r) => r.json() as Promise<BoardFx>), bi.decode(), si.decode()])
+		.then(([, j]) => { fxImg = im; fxJson = j; bgImg = bi; snowImg = si; redraw(); }).catch(() => { fxLoading = false; });
 }
 function canvasIn(id: string, before: boolean) {
 	let c = document.getElementById(id) as HTMLCanvasElement | null;
@@ -218,7 +221,7 @@ const BET_VK = 0.82;
 let drawn = '';
 function drawFrame(u: number) {
 	// The board is see-through (PANEL_A) so the room / Roxy read faintly behind the reels; frame and sill are solid.
-	const PANEL_A = document.body.classList.contains('phone') ? 0.78 : 0.82;
+	const PANEL_A = document.body.classList.contains('phone') ? 0.78 : 0.77;   // 75-80%: Roxy / the room read faintly through
 	const dpr = Math.min(2, (window.devicePixelRatio || 1) * ST.s), key = `${u.toFixed(4)}|${dpr.toFixed(3)}|${PANEL_A}`;
 	const fc = canvasIn('mkFrame', true);
 	document.getElementById('mkNeon')?.remove();
@@ -244,11 +247,14 @@ function drawFrame(u: number) {
 	// 0 the frame's drop shadow onto the room (its own part, under everything)
 	nine('frame_shadow9', 0, 10, FW, FH);
 	// 1 the board, under the window (a 9-slice of the window-sized source: same corners, the window is BW x BH at FT)
-	g.save(); g.globalAlpha = PANEL_A; nine('board9', 0, 0, FW, BH + 2 * FT); g.restore();
+	g.save(); g.globalAlpha = PANEL_A;
+	if (!bgImg) nine('board9', 0, 0, FW, BH + 2 * FT);
+	if (bgImg) g.drawImage(bgImg, FT - 6, FT - 6, BW + 12, BH + 12);
+	if (snowImg) g.drawImage(snowImg, FT - 6, FT - 6, BW + 12, BH + 12);
+	g.restore();
 	// 2 the frame + trim's shadow on the board   3 the tile slots' drop shadows + AO
 	nine('shade9', 0, 0, FW, BH + 2 * FT);
-	const P = B.slotPad, ti = CELL * 0.0375;
-	for (let i = 0; i < 5; i++) for (let r = 0; r < 4; r++) part('slot', FT + i * CELL + ti - P, FT + r * CELL + ti - P);
+	// ART-7: no tiles, so no tile-slot shadows; symbols carry their own contact shadows (symdepth sprites)
 	// 4 the timber frame (its window is punched in the sprite)   5 the gold trim over the seam
 	part('frame', 0, -B.frameTop);
 	nine('trim9', 0, 0, FW, BH + 2 * FT);
