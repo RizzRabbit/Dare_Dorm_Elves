@@ -3,8 +3,9 @@
 // the baked loop sheets. Each shown overlay gets one canvas (class stk stk_body, so the CSS placeholder hides as for a
 // sheet) with its own small Pixi renderer, made on demand and destroyed with the overlay. Split rigs (_A/_B, per
 // <name>_parts.json) are built and played together. Rigs: static/assets/rig/db/ (scripts/import-art.mjs rigs).
-import { Application, Container } from 'pixi.js';
-import { ST } from './stage';
+import { Container, Rectangle, type Filter } from 'pixi.js';
+import { animate, kick, stageApp } from './board/stage';
+import { glowFilter, setGlow } from './board/glowFilter';
 import { PixiFactory, type PixiArmatureDisplay } from 'pixi-dragonbones-runtime';
 const DIR = 'assets/rig/db/';
 let index: Promise<Set<string>> | null = null;
@@ -13,17 +14,35 @@ const split = new Set<string>();   // rigs exported as _A/_B armatures (only the
 /** sync: is there a rig for this overlay (after initDbStacks resolved)? */
 export const dbKnown = (ov: HTMLElement) => known.has(rigName(ov));
 const parsed = new Map<string, Promise<string[] | null>>();
-type Live = { app: Application; arms: PixiArmatureDisplay[]; anim: string; raf: number; t: number; blinkAt: number; ro: ResizeObserver };
+type Live = { arms: PixiArmatureDisplay[]; root: Container; anim: string; t: number; blinkAt: number; cv: HTMLCanvasElement; W: number; H: number; gf: Filter | null; ga: number };
 const lives = new Map<HTMLElement, Live>();
-const pool: Application[] = [];
-async function takeApp() {
-	const a = pool.pop(); if (a) return a;
-	const app = new Application();
-	await app.init({ backgroundAlpha: 0, antialias: true, preserveDrawingBuffer: true /* fix4 proof B: mergeIn's lean snapshots this canvas (drawImage of a cleared WebGL buffer was blank) */, autoStart: false, resolution: Math.min(2, window.devicePixelRatio || 1), width: 8, height: 8 });
-	return app;
-}
+const byCv = new WeakMap<HTMLCanvasElement, Live>();
 const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-
+// fix8: the rigs live IN the board stage (board/mirror.ts places each rig's root on its overlay's placeholder canvas,
+// canvas.stk_db, a 1x1 state element kept so the CSS :has(canvas.stk_body) rules and the merge choreography still
+// see it). No per-overlay renderer / canvas any more; one shared ticker advances every rig.
+let last = 0, ticking = false;
+function step() {
+	const now = performance.now(), dt = Math.min(0.1, (now - (last || now)) / 1000); last = now;
+	for (const [ov, L] of lives) {
+		if (!ov.isConnected) { dbStop(ov); continue; }
+		L.t += dt;
+		if (L.t > L.blinkAt) { L.blinkAt = L.t + 2.4 + Math.random() * 2.6; face(L, 'blink'); }
+		for (const d of L.arms) d.armature.advanceTime(reduced() ? 0 : dt);
+		// win glow (silhouette filter) eases in / out with the overlay's .win
+		const want = ov.classList.contains('win') ? 1 : 0;
+		L.ga += (want - L.ga) * Math.min(1, dt * 10);
+		if (L.ga > 0.01) { if (!L.gf) { L.gf = glowFilter(); L.root.filters = [L.gf]; } setGlow(L.gf, L.ga * (0.85 + 0.15 * Math.sin(L.t * 7))); }
+		else if (L.gf) { L.root.filters = []; L.gf.destroy(); L.gf = null; }
+	}
+	if (!lives.size) { ticking = false; last = 0; }
+	return lives.size > 0;
+}
+/** board/mirror.ts: the stage display for a rig placeholder canvas. */
+export function dbDisplay(cv: HTMLCanvasElement) {
+	const L = byCv.get(cv); if (!L) return null;
+	return { root: L.root, W: L.W, H: L.H, glow: () => {} };
+}
 export function initDbStacks() {
 	return (index ||= fetch(DIR + 'index.json').then((r) => (r.ok ? r.json() : { rigs: [] })).catch(() => ({ rigs: [] }))
 		.then((j: { rigs?: string[] }) => { (j.rigs || []).forEach((n) => { const b = n.replace(/_[AB]$/, ''); known.add(b); if (b !== n) split.add(b); }); return known; }));
@@ -57,36 +76,34 @@ export async function dbPlay(ov: HTMLElement, anim: 'idle' | 'win'): Promise<boo
 	if (cur) { if (cur.anim !== anim) { cur.anim = anim; fade(cur, anim); } return true; }
 	const parts = await load(name); if (!parts || !ov.isConnected) return !!parts;
 	if (lives.has(ov)) return dbPlay(ov, anim);
-	const app = await takeApp();
-	if (lives.has(ov) || !ov.isConnected) { pool.push(app); return lives.has(ov) ? dbPlay(ov, anim) : true; }
-	const cv = app.canvas as HTMLCanvasElement; cv.className = 'stk stk_body stk_db'; cv.setAttribute('aria-hidden', 'true');
+	const cv = document.createElement('canvas'); cv.width = 1; cv.height = 1; cv.className = 'stk stk_body stk_db'; cv.setAttribute('aria-hidden', 'true');
 	cv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none';
-	app.stage.removeChildren().forEach((o) => o.destroy({ children: true }));
-	const root = new Container(); app.stage.addChild(root);
+	const root = new Container(); root.label = 'db:' + name;
 	const arms = parts.map((p) => { const d = PixiFactory.factory.buildArmatureDisplay(p, p, '', p) as PixiArmatureDisplay; root.addChild(d); return d; });
-	const W = arms[0].armature.armatureData.aabb.width, H = arms[0].armature.armatureData.aabb.height;
-	// fix4 glow_portrait: the board is CSS-scaled by the stage (ST.s); render at screen resolution so the silhouette edge
-	// (which the win glow traces) is not a 2.77x-upscaled blur in portrait
-	const fit = () => { const w = ov.clientWidth || 1, h = ov.clientHeight || 1; app.renderer.resize(w, h, Math.min(3, (window.devicePixelRatio || 1) * Math.max(1, ST.s))); const k = h / H; root.scale.set(k); root.position.set((w - W * k) / 2, 0); };
+	const ab = arms[0].armature.armatureData.aabb;
+	// placed by the mirror exactly as the old per-overlay canvas fit it: scale = overlay height / aabb height, centred in x
 	ov.prepend(cv);
-	// review #18: single-reel wilds get their calm breathing neon outline (WF_Rn_glow, same frame as the rig aabb),
-	// with one gentle brighten as they land, then the breathe loop (CSS .stk_glow in notile.css)
 	if (name.startsWith('WF_') && !ov.querySelector(':scope > img.stk_glow')) {
 		const gl = document.createElement('img'); gl.className = 'stk stk_glow land'; gl.alt = ''; gl.setAttribute('aria-hidden', 'true');
 		gl.src = DIR + name + '_glow.webp'; ov.prepend(gl); setTimeout(() => gl.classList.remove('land'), 260);
 	}
-	const L: Live = { app, arms, anim, raf: 0, t: 0, blinkAt: 1 + Math.random() * 3, ro: new ResizeObserver(fit) };
-	L.ro.observe(ov); fit(); lives.set(ov, L); fade(L, anim, 0);
-	let last = performance.now();
-	const tick = (now: number) => {
-		if (!ov.isConnected) { dbStop(ov); return; }
-		const dt = Math.min(0.1, (now - last) / 1000); last = now; L.t += dt;
-		if (L.t > L.blinkAt) { L.blinkAt = L.t + 2.4 + Math.random() * 2.6; face(L, 'blink'); }
-		for (const d of L.arms) d.armature.advanceTime(reduced() ? 0 : dt);
-		app.render(); L.raf = requestAnimationFrame(tick);
-	};
-	L.raf = requestAnimationFrame(tick);
+	const L: Live = { arms, root, anim, t: 0, blinkAt: 1 + Math.random() * 3, cv, W: ab.width, H: ab.height, gf: null, ga: 0 };
+	lives.set(ov, L); byCv.set(cv, L); fade(L, anim, 0);
+	for (const d of L.arms) d.armature.advanceTime(0);
+	if (!ticking) { ticking = true; animate(step); }
 	return true;
+}
+/** A still of the rig as it shows now (the merge lean's snapshot), or null. */
+export function dbSnapshot(ov: HTMLElement): HTMLCanvasElement | null {
+	const L = lives.get(ov); const a = stageApp(); if (!L || !a) return null;
+	const keep = { p: L.root.parent, f: L.root.filters, x: L.root.x, y: L.root.y, sx: L.root.scale.x, sy: L.root.scale.y, r: L.root.rotation, v: L.root.visible };
+	L.root.filters = []; L.root.position.set(0, 0); L.root.scale.set(1); L.root.rotation = 0; L.root.visible = true;
+	const k = Math.min(1, 512 / Math.max(1, L.H));
+	let c: HTMLCanvasElement | null = null;
+	try { c = a.renderer.extract.canvas({ target: L.root, frame: new Rectangle(0, 0, L.W, L.H), resolution: k * 2 }) as HTMLCanvasElement; } catch { c = null; }
+	L.root.filters = keep.f; L.root.position.set(keep.x, keep.y); L.root.scale.set(keep.sx, keep.sy); L.root.rotation = keep.r; L.root.visible = keep.v;
+	if (keep.p && L.root.parent !== keep.p) keep.p.addChild(L.root);
+	return c;
 }
 function fade(L: Live, anim: string, t = 0.25) {
 	for (const d of L.arms) if (d.animation.hasAnimation(anim)) d.animation.fadeIn(anim, t, anim === 'win' ? 0 : 0, 0, 'body');
@@ -101,8 +118,7 @@ function face(L: Live, kind: 'blink' | 'laugh') {
 export function dbHas(ov: HTMLElement) { return lives.has(ov); }
 export function dbStop(ov: HTMLElement) {
 	const L = lives.get(ov); if (!L) return; lives.delete(ov);
-	cancelAnimationFrame(L.raf); L.ro.disconnect(); L.app.canvas.remove(); ov.querySelector(':scope > img.stk_glow')?.remove();
-	// Pixi 8 keeps one global batch pool shared by every renderer: destroying a renderer leaves destroyed batches in it
-	// and the next render of any other app (the room, Roxy) throws "reading 'clear'". So renderers are pooled, never destroyed.
-	L.app.stage.removeChildren().forEach((o) => o.destroy({ children: true })); pool.push(L.app);
+	L.cv.remove(); ov.querySelector(':scope > img.stk_glow')?.remove();
+	L.root.removeFromParent(); L.gf?.destroy(); L.root.destroy({ children: true }); kick();
 }
+

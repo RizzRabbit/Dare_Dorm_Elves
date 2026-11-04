@@ -113,6 +113,8 @@ fetch('assets/sprites/font_gold/font_gold.json').then((r) => r.json()).then((J) 
 	for (const [k, f] of Object.entries<any>(J.frames)) fr[k] = { x: f.frame.x, y: f.frame.y, w: f.frame.w, h: f.frame.h, ox: f.spriteSourceSize?.x || 0, oy: f.spriteSourceSize?.y || 0, sw: f.sourceSize.w, sh: f.sourceSize.h, adv: f.adv ?? f.sourceSize.w };
 	FG = { img: 'assets/sprites/font_gold/' + J.meta.pages[0].image, W: J.meta.pages[0].size.w, H: J.meta.pages[0].size.h, px: J.meta.px, base: J.meta.asc, fr };
 }).catch(() => {});
+/** fix8: the gold bitmap font (board/mirror.ts draws the badges with it in the board stage), null until loaded. */
+export const mxFont = () => FG;
 function mxGlyphs(t: string, w: number, anchor: Anchor) {
 	const F = FG!, k = (MX_FS * 1.1) / F.px, gl = [...t].map((c) => F.fr['u' + c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0')]);
 	const adv = gl.reduce((s, f) => s + (f ? f.adv : 18), 0) * k;

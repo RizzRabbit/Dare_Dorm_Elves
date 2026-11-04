@@ -45,6 +45,7 @@ import { fitStage, toStage, ST } from './stage';
 import { fitStrip, initStripFit } from './stripfit';
 import { placeRespin } from './respin';
 import { applyLayers } from './layers';
+import { startMirror } from './board/mirror';
 import { loadAllFx } from './fx';
 import { startSpin, abortSpin, hurry } from './reels';
 import { hideRespin } from './respin';
@@ -710,6 +711,7 @@ export async function initGame() {
 	setOverlayHook(stackIdle); initStacks().then(() => renderOverlays(false)); // optional stack / per-reel expand sheets (placeholders until imported)
 	track(document.fonts?.ready ?? Promise.resolve());
 	buildCells(); S.sym = IDLE.map((c) => [...c]); S.vals = new Map([[2 * 4 + 2, 1]]);
+	track(startMirror());   // fix8: the board's symbols are drawn by the board stage (board/mirror.ts)
 	if (url.replay) document.body.classList.add('replay');   // v21 (review #193): replay styling is in place before the first layout
 	wire(); layout(); setBusy(true);
 	try {

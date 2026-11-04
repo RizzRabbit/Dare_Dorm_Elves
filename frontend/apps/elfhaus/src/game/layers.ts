@@ -16,7 +16,9 @@ export const BZ = { strips: 0, reelLines: 1, cells: 2, cellWin: 3, overlays: 4, 
 // fix7: the board stage (fx) sits ABOVE the fire light / glint (frameLit): its front lip and RESPINS pill cover the
 // sweep on the bottom rail, so the glint never crosses the pill (it still runs over the top and side timber); the
 // garland stays above everything
-export const FRZ = { frameBack: -1, board: 1, frameLit: 2, fx: 3, garland: 4 } as const;
+// fix8: the symbols are drawn by the board stage (fx); the DOM #board above it is only the invisible state model plus
+// the merge's DOM flashes (bloom, rings, burst columns), which belong over the symbols
+export const FRZ = { frameBack: -1, frameLit: 2, fx: 3, board: 4, garland: 5 } as const;
 /** DOM: inside #stage (over the frame). */
 export const SZ = { frame: 1, respins: 5, fsBar: 6, toast: 7, banner: 8 } as const;
 /** DOM: #app column. */
@@ -42,6 +44,9 @@ export function applyLayers() {
 		+ `\nhtml body #board .mx{z-index:${BZ.badges}!important}`
 		// at rest a symbol's art (a wild's bust, a pop swell) is never cropped by its cell; the board clips only while spinning
 		+ `\nhtml body #cells .cell>.sym{overflow:visible!important}`
-		+ `\nhtml body #frame>#board:not(:has(.cell.spinning)){overflow:visible!important}`;
+		// fix8: nothing in the DOM board clips any more (the spinner windows are Pixi masks, only while a cell spins)
+		+ `\nhtml body #frame>#board{overflow:visible!important}`
+		// fix8: #strips / #cells / #overlays are the state + motion model only; the board stage draws them
+		+ `\nhtml body.pixiBoard #board>:is(#strips,#cells,#overlays){opacity:0!important}`;
 	const st = document.createElement('style'); st.id = 'layerMap'; st.textContent = css; document.head.appendChild(st);
 }

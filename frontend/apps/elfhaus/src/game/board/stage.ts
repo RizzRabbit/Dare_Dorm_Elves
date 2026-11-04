@@ -2,7 +2,7 @@
 // holding the board and its FX in a fixed scene graph (zIndex + sortableChildren, never addChild order):
 //   frameBack   frame back + reel backing                     (phase 2: still the #mkFrame DOM canvas under the cells)
 //   reels       symbols; mask on the reel-strip container ONLY while spinning   (phase 2: still DOM #cells)
-//   winGlow     silhouette win glow                           (phase 2)
+//   winGlow     silhouette win glow, under the symbols (only its halo shows)
 //   symFx       merge trails / puffLayer() / xN badges, no mask   (puff live now; trails + badges phase 2)
 //   lines       win lines (painted fx-atlas parts)            (live)
 //   winAmt      win amount labels                             (phase 2: DOM .wlAmt)
@@ -13,7 +13,7 @@
 import { Application, Container, Sprite, Texture } from 'pixi.js';
 import { FRZ } from '../layers';
 
-export const BL = { frameBack: 0, reels: 10, winGlow: 20, symFx: 30, lines: 40, winAmt: 50, lip: 60, banners: 70 } as const;
+export const BL = { frameBack: 0, winGlow: 5, reels: 10, symFx: 30, lines: 40, winAmt: 50, lip: 60, banners: 70 } as const;
 export type BLayer = keyof typeof BL;
 let app: Application | null = null, appP: Promise<Application | null> | null = null, fr: HTMLElement | null = null;
 export let pad = 0;
@@ -52,6 +52,8 @@ export function boardStage() {
 		return a;
 	})());
 }
+/** The board stage app once made (null before boardStage() resolved). */
+export const stageApp = () => app;
 /** Drive `t` every frame until it returns false (then the stage idles: no frames while nothing moves). */
 export function animate(t: () => boolean) { tickers.add(t); kick(); }
 /** Something changed: render one frame. */
