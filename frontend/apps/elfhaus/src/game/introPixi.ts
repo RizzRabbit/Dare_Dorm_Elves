@@ -18,6 +18,7 @@ import { symArtReady } from './symrig';
 const TITLE = ARTG.logo || 'art/logo.webp';
 import { EGW_STACK_X } from './config';
 import { sfx } from './audio';
+import { loadFont, paintTextCanvas } from './skin';
 
 const FONT = "'Lilita One', Nunito, 'Segoe UI', Roboto, Arial, sans-serif";
 // Winter Chalet palette: timber, cranberry, cream, gold, pine, ink (flat fills, thick ink lines)
@@ -177,12 +178,21 @@ function build() {
 const CAR = { pos: 0, from: 0, to: 0, t0: -1, dur: 0.24, drag: null as any, eatUntil: 0 };
 let dotsG = null;
 function cardSpacing() { const { cw } = G.pc; return Math.max(G.Ws / 2 + 0.235 * cw, 0.925 * cw + 14); }   // screen px between card centres
-function cardText(c, size, wrapW, maxH) {   // title + detail, shrinking the detail until it fits maxH (screen px)
-  const ti = new Text({ text: c.title.toUpperCase(), style: { fontFamily: FONT, fontWeight: '400', fontSize: size.t, fill: CRAN, letterSpacing: 0.5, align: size.al } });
+function paintTx(txt, font, px, wrapW, al) {   // painted bitmap-font text as a Sprite (falls back to Pixi Text until decoded)
+  const r = paintTextCanvas(txt, font, px, wrapW, al === 'center' ? 'center' : 'left');
+  if (!r) return null;
+  const sp = new Sprite(Texture.from(r.cv)); sp.scale.set(1 / r.res);
+  if (al === 'center') { sp.anchor.set(0.5, 0); }
+  return sp;
+}
+function cardText(c, size, wrapW, maxH) {   // title + detail in the painted fonts (cran title, ink detail), shrinking the detail until it fits maxH
+  const ti = paintTx(c.title.toUpperCase(), 'font_cran', size.t * 0.8, 1e5, size.al)
+    || new Text({ text: c.title.toUpperCase(), style: { fontFamily: FONT, fontWeight: '400', fontSize: size.t, fill: CRAN, letterSpacing: 0.5, align: size.al } });
   let fl = size.l, ln;
-  for (;;) { ln?.destroy(); ln = new Text({ text: c.line, style: { fontFamily: "Nunito, 'Segoe UI', sans-serif", fontWeight: '800', fontSize: fl, fill: PAL.ink, align: size.al, wordWrap: true, wordWrapWidth: wrapW, lineHeight: Math.round(fl * 1.3) } });
+  for (;;) { ln?.destroy({ texture: true, textureSource: true }); ln = paintTx(c.line, 'font_ink', fl * 0.78, wrapW, size.al)
+      || new Text({ text: c.line, style: { fontFamily: "Nunito, 'Segoe UI', sans-serif", fontWeight: '800', fontSize: fl, fill: PAL.ink, align: size.al, wordWrap: true, wordWrapWidth: wrapW, lineHeight: Math.round(fl * 1.3) } });
     if (ti.height + 6 + ln.height <= maxH || fl <= (ST.compact ? 7 : 11)) break; fl -= 0.5; }
-  if (ti.width > wrapW) ti.scale.set(wrapW / ti.width);
+  if (ti.width > wrapW) ti.scale.set(ti.scale.x * wrapW / ti.width);
   return { ti, ln };
 }
 function buildCards() {
@@ -332,7 +342,7 @@ function finish() {   // end state (also the skip)
   if (state === 'done') return; state = 'done';
   applyCam(1); for (const id of [...BOARD, 'top', 'hud']) setEl(id, 0, 1);
   release(); for (const e of camEls()) e.style.transformOrigin = '';
-  if (app) { app.ticker.stop(); const c = app.canvas; app.destroy({ removeView: true }, { children: true }); c?.remove?.(); app = null; }
+  if (app) { app.ticker.stop(); const c = app.canvas; app.stage.removeChildren().forEach((o) => o.destroy({ children: true })); c?.remove?.(); app = null; /* never destroy a Pixi 8 renderer while others live (shared batch pool) */ }
   document.body.classList.remove('introOn'); (window as any).ELFHAUS_INTRO_DONE = true; doneRes();
 }
 // L2: a user skip is no longer a hard cut: the game snaps to its end state underneath and the frozen vestibule frame
@@ -403,7 +413,7 @@ export async function initIntro(progress: () => number): Promise<boolean> {
     await symArtReady;   // S / W_R2 are rebuilt from the symbols sheet (symrig.ts)
     const [title, ...cardT] = await Promise.all([loadTex(TITLE), ...CARDS.map((c) => loadTex(c.art.includes('/') ? c.art : (ARTG as Record<string, string | null>)[c.art] || ''))]);
     tex.title = title;
-    await Promise.all(['intro', 'fx', 'ui', 'titles'].map(loadAtlas));
+    await Promise.all([...['intro', 'fx', 'ui', 'titles'].map(loadAtlas), loadFont('font_cran'), loadFont('font_ink')]);
     CARDS.forEach((c, i) => { tex['card_' + c.key] = cardT[i]; try { cardT[i].source.autoGenerateMipmaps = true; cardT[i].source.updateMipmaps(); } catch {} });
     try { title.source.autoGenerateMipmaps = true; title.source.updateMipmaps(); } catch {}
     if (killed || !$id('loader')) throw new Error('loader gone (error / skip) before the intro was up');
