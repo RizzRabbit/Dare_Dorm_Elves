@@ -1,5 +1,5 @@
 // Loading screen: full ELFHAUS logo, feature-card carousel, progress bar, then CLICK/TAP TO CONTINUE (the press is
-// the user gesture later sound needs). Progress counts every tracked promise: art images, Roxy sheets, RGS/mock auth.
+// the user gesture later sound needs). Progress counts every tracked promise: art images, Roxy sheets, RGS auth.
 import { $, ART } from './ui';
 import { initSplash, stingDone, noIntro, preOut } from './intro';
 import { FX_SHEET_COUNT } from './fx';

@@ -4,9 +4,6 @@
 import { creditedBalance } from './balance';
 import { skipMerge } from './mergefx';
 import { requestAuthenticate, requestBet, requestEndRound, requestReplay } from 'rgs-requests';
-// The offline mock RGS (fixture books) exists only in dev (vite dev). In the
-// production build import.meta.env.DEV is the literal false (written inline at each use so the bundler can fold
-// it), so every mock branch and its dynamic import are dropped from the bundle.
 import { API_AMOUNT_MULTIPLIER } from 'constants-shared/bet';
 import {
 	ANTE_COST, CONFIRM_ABOVE_X, fmtX, BUY_MODES, GAME_ID, LINES, MAX_WIN_X, MODES, MODE_LABEL, MYSTERY_ODDS, PAYTABLE,
@@ -49,11 +46,6 @@ import { startMirror } from './board/mirror';
 import { loadAllFx } from './fx';
 import { startSpin, abortSpin, hurry } from './reels';
 import { hideRespin } from './respin';
-// fix7: the mock RGS (src/mock) is a compile-time flag. DEV, or a demo build (VITE_ELFHAUS_DEMO=1 in the environment).
-// .env.production pins VITE_ELFHAUS_DEMO=0 so a release build sees a literal ('0' === '1' -> false) and Rollup drops
-// every import('../mock/mockRgs') with its books; an unset VITE_ var stays a runtime lookup and kept the module inlined.
-declare const __ELFHAUS_MOCK__: boolean;   // vite.config.js define: dev or VITE_ELFHAUS_DEMO=1
-// (fix7 build 2: a module const MOCK_RGS stayed a variable `Sq=!1` and kept the dead branches in the bundle)
 import type { BookEvent } from './typesBookEvent';
 
 const DISCLAIMER =
@@ -67,7 +59,6 @@ const url = {
 	event: q.get('event') || '', amount: Number(q.get('amount')) || 0,
 	// dev-only (vite dev, offline fixture books): in the release build this spread is {} so not even the field names
 	// reach the bundle, and a missing rgs_url can only end in the ERR_RGS_URL error screen
-	...((__ELFHAUS_MOCK__ ? { mock: q.get('mock') === 'true' || (!q.get('rgs_url') && !q.get('replay')), book: q.get('book') || '' } : {}) as { mock?: boolean; book?: string }),
 };
 let sessionReady = false;
 let replayState: BookEvent[] = [];
@@ -221,7 +212,7 @@ function roundPayout(round: any) {
 }
 async function finishRound(round: any) {
 	if (round?.active) { // v3.16e (#221): end-round only for an open round (the RGS returns wins active, 0x rounds already closed)
-		const end: any = __ELFHAUS_MOCK__ && url.mock ? await (await import('../mock/mockRgs')).mockEndRound({}) : await requestEndRound({ sessionID: url.sessionID, rgsUrl: url.rgsUrl });
+		const end: any = await requestEndRound({ sessionID: url.sessionID, rgsUrl: url.rgsUrl });
 		if (end?.error) throw end;
 		// v20 (James on Stake: a $5.368 win only reached the balance at the next press, $974.57 -> $979.94 -> $972.44):
 		// the win is credited here, at the end of the round after its presentation. The end-round balance is the server
@@ -246,9 +237,7 @@ async function round(mode: ModeKey) {
 	document.querySelectorAll<HTMLElement>('#cells .cell').forEach((c) => { c.classList.remove('locked'); c.style.visibility = ''; });
 	startSpin();
 	try {
-		const data: any = __ELFHAUS_MOCK__ && url.mock
-			? await (await import('../mock/mockRgs')).mockBet({ currency: S.currency, amount: bet(), mode, forcedBook: url.book || undefined })
-			: await requestBet({ sessionID: url.sessionID, rgsUrl: url.rgsUrl, currency: S.currency, amount: bet(), mode });
+		const data: any = await requestBet({ sessionID: url.sessionID, rgsUrl: url.rgsUrl, currency: S.currency, amount: bet(), mode });
 		if (data?.error) throw data;
 		if (data?.balance) S.balance = data.balance.amount / API_AMOUNT_MULTIPLIER;
 		setStrip();
@@ -270,17 +259,6 @@ async function round(mode: ModeKey) {
 
 // ---------- startup ----------
 async function authenticate() {
-	if (__ELFHAUS_MOCK__ && url.mock) {
-		const a = await (await import('../mock/mockRgs')).mockAuthenticate({ language: url.lang, currency: url.currency || undefined });
-		if (a.balance) { S.currency = a.balance.currency; setCurrency(S.currency); S.balance = a.balance.amount / API_AMOUNT_MULTIPLIER; }
-		const c = a.config || {};
-		S.jur = { ...(c.jurisdiction || {}) };
-		const minBet = c.minBet ?? 0, maxBet = c.maxBet ?? Number.MAX_SAFE_INTEGER;
-		S.levels = (c.betLevels || []).filter((l: number) => l >= minBet && l <= maxBet).sort((x: number, y: number) => x - y).map((l: number) => l / API_AMOUNT_MULTIPLIER);
-		const pref = (c.defaultBetLevel ?? 0) / API_AMOUNT_MULTIPLIER;
-		S.betIdx = S.levels.reduce((bi, l, i) => (Math.abs(l - pref) < Math.abs(S.levels[bi] - pref) ? i : bi), 0);
-		return a.round;
-	}
 	if (!url.rgsUrl) throw { error: 'ERR_RGS_URL', message: 'Missing rgs_url: the game cannot connect to the game server.' };
 	const a: any = await requestAuthenticate({ sessionID: url.sessionID, rgsUrl: url.rgsUrl, language: url.lang });
 	if (a?.error) throw a;
@@ -340,13 +318,6 @@ async function loadReplay() {
 	S.currency = url.currency || 'USD'; setCurrency(S.currency);
 	// v3.16 (#172): a missing or bad amount never shows $0.00; amounts are then shown for a 1.00 bet
 	S.replayBet = url.amount > 0 ? url.amount / API_AMOUNT_MULTIPLIER : 1; replayNoAmt = !(url.amount > 0);
-	if (__ELFHAUS_MOCK__ && (url.mock || !url.rgsUrl)) {
-		const d: any = await (await import('../mock/mockRgs')).mockReplay({ mode: url.mode, event: url.event || url.book || '' });
-		replayState = d.state; replayCost = Number(d.costMultiplier) || modeCost(url.mode as ModeKey) || 1; setRoundMode(url.mode);
-		$('#replayMode').textContent = replayLabel();
-		show('#replayBar', true); setStrip(); placeReplayBar(document.body.classList.contains('portrait'));
-		return;
-	}
 	if (!url.rgsUrl) throw { error: 'ERR_RGS_URL', message: 'Missing rgs_url: the replay cannot be loaded.' };
 	const d: any = await requestReplay({ rgsUrl: url.rgsUrl, game: url.game, version: url.version, mode: url.mode, event: url.event });
 	if (d?.error) throw d;
