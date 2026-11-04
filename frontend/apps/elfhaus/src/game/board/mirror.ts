@@ -36,7 +36,7 @@ function source(url: string): Texture | null {
 		s = { tex: null }; srcs.set(url, s);
 		const im = new Image(); im.decoding = 'async'; im.src = url; s.img = im;
 		const S = s;
-		s.p = im.decode().then(() => { S.tex = Texture.from(im); kick(); }).catch(() => {});
+		s.p = im.decode().then(() => { S.tex = Texture.from(im); changed = true; kick(); }).catch(() => {});
 	}
 	return s.tex;
 }
@@ -59,11 +59,13 @@ const glows = new Map<string, Texture>();
 function tealGlow(key: string, tex: Texture): Texture | null {
 	let g = glows.get(key); if (g) return g;
 	const res = tex.source.resource as CanvasImageSource | undefined; if (!res) return null;
-	const f = tex.frame, P = Math.ceil(Math.max(f.width, f.height) * 0.08);
-	const c = document.createElement('canvas'); c.width = Math.ceil(f.width) + 2 * P; c.height = Math.ceil(f.height) + 2 * P;
+	// baked at most 160 px on its long side (a soft halo needs no detail): a stack's big glow image costs ~1 ms, not 150
+	const f = tex.frame, ks = Math.min(1, 160 / Math.max(f.width, f.height)), fw = Math.ceil(f.width * ks), fh = Math.ceil(f.height * ks);
+	const P = Math.ceil(Math.max(fw, fh) * 0.08);
+	const c = document.createElement('canvas'); c.width = fw + 2 * P; c.height = fh + 2 * P;
 	const x = c.getContext('2d', { willReadFrequently: true }); if (!x) return null;
 	x.filter = `blur(${Math.max(1, P * 0.35).toFixed(1)}px)`;
-	x.drawImage(res, f.x, f.y, f.width, f.height, P, P, f.width, f.height);
+	x.drawImage(res, f.x, f.y, f.width, f.height, P, P, fw, fh);
 	x.filter = 'none';
 	const d = x.getImageData(0, 0, c.width, c.height), a = d.data;
 	for (let i = 0; i < a.length; i += 4) {
@@ -72,12 +74,13 @@ function tealGlow(key: string, tex: Texture): Texture | null {
 		a[i + 3] = Math.round(255 * Math.min(1, al * 1.25));
 	}
 	x.putImageData(d, 0, 0);
-	g = Texture.from(c); (g as any)._pad = P; glows.set(key, g);
+	g = Texture.from(c); (g as any)._pad = P / ks; (g as any)._ks = ks; glows.set(key, g); glowMade++;
 	return g;
 }
 
+let glowMade = 0;
 // ---------- computed style cache ----------
-type St = { pd: number; o: string; tr: string; ro: string; sc: string; tf: string; w: number; h: number; m: DOMMatrix; op: number; vis: boolean; z: number; br: number; blend: string; clip: null | { inset: number[]; r: number[] }; ov: boolean; bg: string; bs: string; bp: string; bw: number; fit: string; disp: boolean };
+type St = { f: number; pd: number; o: string; tr: string; ro: string; sc: string; tf: string; w: number; h: number; m: DOMMatrix; op: number; vis: boolean; z: number; br: number; blend: string; clip: null | { inset: number[]; r: number[] }; ov: boolean; bg: string; bs: string; bp: string; bw: number; fit: string; disp: boolean };
 const cache = new WeakMap<Element, St>();
 const num = (s: string) => parseFloat(s) || 0;
 function lenOf(v: string, ref: number) { return v.endsWith('%') ? (num(v) / 100) * ref : num(v); }
@@ -123,12 +126,18 @@ function clipOf(cs: CSSStyleDeclaration, w: number, h: number) {
 	}
 	return null;
 }
+const F_SKIP = 1, F_GLOW = 2, F_MX = 4, F_NINE = 8, F_DB = 16;
+function flags(el: HTMLElement) {
+	const cl = typeof el.className === 'string' ? el.className : '';
+	return (cl && SKIP.test(cl) ? F_SKIP : 0) | (/\bsymGlow\b/.test(cl) || (el.tagName === 'IMG' && /\bstk_glow\b/.test(cl)) ? F_GLOW : 0)
+		| (/\bmx\b/.test(cl) ? F_MX : 0) | (/\bt(Rec|Bd|Fr)\b/.test(cl) ? F_NINE : 0) | (/\bstk_db\b/.test(cl) ? F_DB : 0);
+}
 function style(el: HTMLElement, force: boolean): St {
 	let s = cache.get(el);
 	if (s && !force) return s;
 	const cs = getComputedStyle(el), g = geo.get(el), w = g ? g.w : el.offsetWidth, h = g ? g.h : el.offsetHeight;
 	s = {
-		pd: num(cs.paddingTop), o: cs.transformOrigin, tr: cs.translate, ro: cs.rotate, sc: cs.scale, tf: cs.transform, w, h,
+		f: flags(el), pd: num(cs.paddingTop), o: cs.transformOrigin, tr: cs.translate, ro: cs.rotate, sc: cs.scale, tf: cs.transform, w, h,
 		m: localMatrix(cs, w, h), op: num(cs.opacity), vis: cs.visibility !== 'hidden', disp: cs.display !== 'none', z: cs.zIndex === 'auto' ? 0 : parseInt(cs.zIndex) || 0,
 		br: brightness(cs.filter), blend: cs.mixBlendMode, clip: clipOf(cs, w, h), ov: cs.overflow === 'hidden' || cs.overflow === 'clip',
 		bg: cs.backgroundImage, bs: cs.backgroundSize, bp: cs.backgroundPosition, bw: num(cs.borderImageWidth) > 4 ? num(cs.borderImageWidth) : num(cs.borderTopWidth), fit: cs.objectFit,
@@ -148,10 +157,16 @@ function out(el: Element, kind: string, make: () => Container): Out {
 }
 const SKIP = /\b(tGl|tGw|rgShine|wFrame|ovWinO|ovGlow|lock|nm|plate|mfRays|mfCore)\b/;
 const BLEND: Record<string, BLEND_MODES> = { screen: 'screen', 'plus-lighter': 'add', multiply: 'multiply', normal: 'normal' };
+// 2D affine [a, b, c, d, e, f] (no DOMMatrix allocations in the per-frame walk)
+type Af = [number, number, number, number, number, number];
 const pm = new Matrix();
-function place(d: Container, M: DOMMatrix, x: number, y: number, sx: number, sy: number) {
-	const m = M.translate(x, y).scale(sx, sy);
-	pm.set(m.a, m.b, m.c, m.d, m.e, m.f); d.setFromMatrix(pm);
+function place(d: Container, M: Af, x: number, y: number, sx: number, sy: number) {
+	pm.set(M[0] * sx, M[1] * sx, M[2] * sy, M[3] * sy, M[0] * x + M[2] * y + M[4], M[1] * x + M[3] * y + M[5]); d.setFromMatrix(pm);
+}
+/** P * translate(tx, ty) * m */
+function compose(P: Af, tx: number, ty: number, m: DOMMatrix): Af {
+	const e = P[0] * tx + P[2] * ty + P[4], f = P[1] * tx + P[3] * ty + P[5];
+	return [P[0] * m.a + P[2] * m.b, P[1] * m.a + P[3] * m.b, P[0] * m.c + P[2] * m.d, P[1] * m.c + P[3] * m.d, P[0] * m.e + P[2] * m.f + e, P[1] * m.e + P[3] * m.f + f];
 }
 const tint = (br: number) => { const v = Math.round(Math.max(0, Math.min(1, br)) * 255); return (v << 16) | (v << 8) | v; };
 
@@ -167,8 +182,13 @@ function clipFor(el: Element): Clip {
 
 // ---------- the walk ----------
 let order = 0;
-type Ctx = { M: DOMMatrix; op: number; br: number; host: Container; glow: boolean };
+type Ctx = { M: Af; op: number; br: number; host: Container; glow: boolean };
+type BgHit = { t: Texture; x: number; y: number; w: number; h: number; bw: number; bh: number };
+const bgHit = new WeakMap<St, BgHit>();
 function bgLeaf(el: HTMLElement, s: St, w: number, h: number, c: Ctx) {
+	// the region only changes with the style (restyle makes a new St) or the box
+	const hit = bgHit.get(s);
+	if (hit && hit.bw === w && hit.bh === h) { sprite(el, hit.t, c, hit.x, hit.y, hit.w, hit.h, s); return; }
 	const mm = /url\("?([^")]+)"?\)/.exec(s.bg); if (!mm) return;
 	const url = mm[1]; const base = source(url); if (!base) return;
 	const iw = base.width, ih = base.height;
@@ -184,16 +204,17 @@ function bgLeaf(el: HTMLElement, s: St, w: number, h: number, c: Ctx) {
 	if (x1 <= x0 || y1 <= y0) return;
 	const kx = iw / dw, ky = ih / dh;
 	const t = sub(url, (x0 - px) * kx, (y0 - py) * ky, (x1 - x0) * kx, (y1 - y0) * ky); if (!t) return;
+	bgHit.set(s, { t, x: x0, y: y0, w: x1 - x0, h: y1 - y0, bw: w, bh: h });
 	sprite(el, t, c, x0, y0, x1 - x0, y1 - y0, s);
 }
 function sprite(el: Element, t: Texture, c: Ctx, x: number, y: number, w: number, h: number, s: St, kind = 'spr') {
 	let tex = t, host = c.host, pad = 0;
-	if (c.glow) { const g = tealGlow(texKey(t), t); if (!g) return; tex = g; pad = (g as any)._pad || 0; host = layer.winGlow; }
+	if (c.glow) { const g = (t as any)._teal ?? ((t as any)._teal = tealGlow(texKey(t), t)); if (!g) return; tex = g; pad = (g as any)._pad || 0; host = layer.winGlow; }
 	const o = out(el, kind + (c.glow ? 'G' : ''), () => new Sprite());
 	const sp = o.d as Sprite; if (sp.texture !== tex) sp.texture = tex;
 	if (sp.parent !== host) host.addChild(sp);
-	const fw = t.frame.width, fh = t.frame.height, kx = w / fw, ky = h / fh;
-	place(sp, c.M, x - pad * kx, y - pad * ky, kx, ky);
+	const fw = t.frame.width, fh = t.frame.height, kx = w / fw, ky = h / fh, gk = c.glow ? (tex as any)._ks || 1 : 1;
+	place(sp, c.M, x - pad * kx, y - pad * ky, kx / gk, ky / gk);
 	sp.alpha = c.op; sp.tint = c.glow ? 0xffffff : tint(c.br); sp.blendMode = c.glow ? 'add' : BLEND[s.blend] ?? 'normal';
 	sp.zIndex = order++; sp.visible = true;
 }
@@ -253,7 +274,19 @@ function restyle(el: HTMLElement) {
 	// children in paint order: z-index, then DOM order (negative z under the element's own art)
 	g.kids = ([...el.children] as HTMLElement[]).map((k, i) => [cache.get(k)?.z ?? 0, i, k] as const).sort((p, q) => p[0] - q[0] || p[1] - q[1]).map((v) => v[2]);
 }
+/** Re-measure one subtree in place (its own offset from its parent, then every descendant) and restyle it. */
+function remeasure(el: HTMLElement) {
+	const p = el.parentElement, pg = p && geo.get(p);
+	if (!p || !pg || !el.isConnected) { geoDirty = true; return; }
+	const op = el.offsetParent as HTMLElement | null;
+	const x = op === p ? el.offsetLeft + p.clientLeft : el.offsetLeft - (p.offsetParent === op ? p.offsetLeft : 0);
+	const y = op === p ? el.offsetTop + p.clientTop : el.offsetTop - (p.offsetParent === op ? p.offsetTop : 0);
+	measure(el, roots.includes(el) || extras.includes(el) ? el.offsetLeft : x, roots.includes(el) || extras.includes(el) ? el.offsetTop : y);
+	restyle(el);
+	pg.kids = ([...p.children] as HTMLElement[]).map((k, i) => [cache.get(k)?.z ?? 0, i, k] as const).sort((a, b) => a[0] - b[0] || a[1] - b[1]).map((v) => v[2]);
+}
 function rebuild() {
+	const P = (globalThis as any).__mp; if (P) { P.full = (P.full || 0) + 1; P.why ??= []; if (P.why.length < 40) P.why.push(lastWhy); }
 	geoDirty = false;
 	let x = 0, y = 0; for (let e: HTMLElement | null = board; e && e !== frame; e = e.offsetParent as HTMLElement | null) { x += e.offsetLeft; y += e.offsetTop; }
 	origin = { x, y };
@@ -263,12 +296,12 @@ function rebuild() {
 	geo.set(board!, { x: 0, y: 0, w: board!.offsetWidth, h: board!.offsetHeight, kids: [] });
 	style(board!, true);
 	for (const r of roots) restyle(r);
-	inlineQ.clear(); styleQ.clear();
+	inlineQ.clear(); styleQ.clear(); geoQ.clear();
 }
 
 // ---------- motion without layout reads: inline transforms parsed from el.style, CSS / WAAPI motion from the
 // animation's own keyframes at its current progress (getComputedTiming: no style or layout flush) ----------
-const inlineQ = new Set<HTMLElement>(), styleQ = new Set<HTMLElement>();
+const inlineQ = new Set<HTMLElement>(), styleQ = new Set<HTMLElement>(), geoQ = new Set<HTMLElement>();
 function inlineUpdate(el: HTMLElement) {
 	const s = cache.get(el); if (!s) { styleQ.add(el); return; }
 	const st = el.style;
@@ -327,22 +360,21 @@ function animStyle(el: HTMLElement, base: St, anims: Animation[]): St {
 
 // ---------- the walk (cached geometry + styles only: no layout or computed-style reads) ----------
 const running = new Map<Element, Animation[]>();
-function walk(el: HTMLElement, parent: DOMMatrix, pc: Ctx, isRoot: boolean) {
+function walk(el: HTMLElement, parent: Af, pc: Ctx, isRoot: boolean) {
 	const g = geo.get(el); if (!g) { geoDirty = true; return; }
-	const cl = el.className && typeof el.className === 'string' ? el.className : '';
-	if (cl && SKIP.test(cl)) return;
 	const base = cache.get(el); if (!base) { geoDirty = true; return; }
+	if (base.f & F_SKIP) return;
 	const an = running.get(el), s = an ? animStyle(el, base, an) : base;
 	if (!s.disp) return;
 	const w = g.w, h = g.h;
-	const M = parent.translate(g.x, g.y).multiply(s.m);
-	const c: Ctx = { M, op: pc.op * (isRoot ? 1 : s.op), br: pc.br * s.br, host: pc.host, glow: pc.glow || /\bsymGlow\b/.test(cl) || (el.tagName === 'IMG' && /\bstk_glow\b/.test(cl)) };
+	const M = compose(parent, g.x, g.y, s.m);
+	const c: Ctx = { M, op: pc.op * (isRoot ? 1 : s.op), br: pc.br * s.br, host: pc.host, glow: pc.glow || !!(base.f & F_GLOW) };
 	if (c.op <= 0.003) return;
 	if (s.ov || s.clip) {
 		const k = clipFor(el); if (k.c.parent !== pc.host) pc.host.addChild(k.c);
 		k.c.zIndex = order++; k.g.clear();
 		const [t, r, b, l] = s.clip?.inset ?? [0, 0, 0, 0], rad = s.clip?.r[0] ?? 0;
-		k.g.setFromMatrix(new Matrix(M.a, M.b, M.c, M.d, M.e, M.f));
+		pm.set(M[0], M[1], M[2], M[3], M[4], M[5]); k.g.setFromMatrix(pm);
 		if (rad) k.g.roundRect(l, t, w - l - r, h - t - b, rad); else k.g.rect(l, t, w - l - r, h - t - b);
 		k.g.fill(0xffffff);
 		// #frameGlint: its CSS mask keeps only the padding ring (the timber band + trim), never the window
@@ -351,10 +383,10 @@ function walk(el: HTMLElement, parent: DOMMatrix, pc: Ctx, isRoot: boolean) {
 	}
 	const tag = el.tagName;
 	if (s.vis) {
-		if (/\bmx\b/.test(cl)) { badge(el, c, w, h); return; }
+		if (base.f & F_MX) { badge(el, c, w, h); return; }
 		if (tag === 'CANVAS') {
 			const cv = el as unknown as HTMLCanvasElement;
-			if (/\bstk_db\b/.test(cl)) { const d = dbDisplay(cv); if (d) { const o = out(el, 'db', () => d.root); if (o.d !== d.root) o.d = d.root; if (d.root.destroyed) return; if (d.root.parent !== c.host) c.host.addChild(d.root); { const k = h / d.H; place(d.root, M, (w - d.W * k) / 2, 0, k, k); } d.root.alpha = c.op; d.root.zIndex = order++; d.root.visible = true; } return; }
+			if (base.f & F_DB) { const d = dbDisplay(cv); if (d) { const o = out(el, 'db', () => d.root); if (o.d !== d.root) o.d = d.root; if (d.root.destroyed) return; if (d.root.parent !== c.host) c.host.addChild(d.root); { const k = h / d.H; place(d.root, M, (w - d.W * k) / 2, 0, k, k); } d.root.alpha = c.op; d.root.zIndex = order++; d.root.visible = true; } return; }
 			if (!cv.width) return;
 			let t = cvTex.get(cv); if (!t) { t = Texture.from(cv); cvTex.set(cv, t); }
 			sprite(el, t, c, 0, 0, w, h, s); return;
@@ -365,12 +397,15 @@ function walk(el: HTMLElement, parent: DOMMatrix, pc: Ctx, isRoot: boolean) {
 			if (s.fit === 'contain') { const k = Math.min(w / t.width, h / t.height); dw = t.width * k; dh = t.height * k; x = (w - dw) / 2; y = (h - dh) / 2; }
 			sprite(el, t, c, x, y, dw, dh, s); return;
 		}
-		if (/\bt(Rec|Bd|Fr)\b/.test(cl)) { nine(el, s, w, h, c); }
+		if (base.f & F_NINE) { nine(el, s, w, h, c); }
 		else if (s.bg && s.bg !== 'none' && !s.bg.includes('gradient')) bgLeaf(el, s, w, h, c);
 	}
 	for (const k of g.kids) walk(k, M, c, false);
 }
 
+let changed = true;
+const extraMoving = () => extras.some((e) => e.getAnimations({ subtree: true }).length > 0);
+export const mirrorChanged = () => { changed = true; };
 let extras: HTMLElement[] = [], mo: MutationObserver | null = null;
 const watched = new WeakSet<Element>();
 let roots: HTMLElement[] = [], board: HTMLElement | null = null, frame: HTMLElement | null = null, started = false;
@@ -380,7 +415,17 @@ function tick() {
 	if (!board || !board.isConnected) return true;
 	const t0 = performance.now();
 	frameNo++; order = 0;
-	if (geoDirty) rebuild();
+	const P = ((globalThis as any).__mp ??= { rebuild: 0, restyle: 0, anims: 0, walk: 0, n: 0, slow: [] }); let tq = performance.now(); P.n++; const P0 = { ...P, slow: 0 };
+	if (geoDirty) { rebuild(); changed = true; }
+	else if (geoQ.size) {
+		// outermost changed subtrees only (a parent's re-measure covers its children)
+		const list = [...geoQ].filter((e) => { for (let a = e.parentElement; a; a = a.parentElement) if (geoQ.has(a)) return false; return true; });
+		geoQ.clear(); changed = true; P.part = (P.part || 0) + list.length;
+		for (const e of list) if (geo.has(e) || (e.parentElement && geo.has(e.parentElement))) remeasure(e); else geoDirty = true;
+		if (geoDirty) rebuild();
+	}
+	P.rebuild += performance.now() - tq; tq = performance.now();
+	if (styleQ.size || inlineQ.size) changed = true;
 	// a class change restyles the element's subtree (descendant selectors) and re-sorts its siblings (z-index)
 	for (const el of styleQ) { if (!el.isConnected) continue; restyle(el); const p = el.parentElement, pg = p && geo.get(p);
 		if (p && pg) pg.kids = ([...p.children] as HTMLElement[]).map((k, i) => [cache.get(k)?.z ?? 0, i, k] as const).sort((x, y) => x[0] - y[0] || x[1] - y[1]).map((v) => v[2]); }
@@ -389,6 +434,7 @@ function tick() {
 	inlineQ.clear();
 	for (const el of styleQ) style(el, true);
 	styleQ.clear();
+	P.restyle += performance.now() - tq; tq = performance.now();
 	// an element whose animation just ended: its base style was read mid-animation, so read it again (once)
 	const was = [...running.keys()]; running.clear();
 	for (const a of board.getAnimations({ subtree: true })) {
@@ -396,35 +442,48 @@ function tick() {
 		const l = running.get(t); if (l) l.push(a); else running.set(t, [a]);
 	}
 	for (const el of was) if (!running.has(el) && (el as HTMLElement).isConnected) style(el as HTMLElement, true);
+	P.anims += performance.now() - tq; tq = performance.now();
+	// nothing moved, nothing changed: the stage keeps last frame's displays (idle costs one getAnimations call)
+	if (!changed && !running.size && !extraMoving()) { msLog.push(performance.now() - t0); if (msLog.length > 600) msLog.shift(); return true; }
+	changed = false;
 	const bs = cache.get(board)!, ba = running.get(board), b = ba ? animStyle(board, bs, ba) : bs;
-	const M = new DOMMatrix().translate(origin.x, origin.y).multiply(b.m);
+	const M = compose([1, 0, 0, 1, 0, 0], origin.x, origin.y, b.m);
 	const base: Ctx = { M, op: 1, br: 1, host: layer.reels, glow: false };
 	for (const r of roots) walk(r, M, base, true);
 	// the frame's fire light and glint, over the frame back (they were DOM over #mkFrame)
-	const fb: Ctx = { M: new DOMMatrix(), op: 1, br: 1, host: layer.frameBack, glow: false };
+	const fb: Ctx = { M: [1, 0, 0, 1, 0, 0], op: 1, br: 1, host: layer.frameBack, glow: false };
 	for (const e of extras) { if (!e.isConnected) { geoDirty = true; continue; } for (const a of e.getAnimations({ subtree: true })) { const t = (a.effect as KeyframeEffect | null)?.target as Element | null; if (t) { const l = running.get(t); if (l) l.push(a); else running.set(t, [a]); } } walk(e, fb.M, fb, false); }
 	for (const x of live) if (x.d.destroyed) live.delete(x); else if (x.used !== frameNo) { if (x.d.visible) x.d.visible = false; if (!x.d.parent || x.used < frameNo - 120) { x.d.removeFromParent(); if (x.kind !== 'db') x.d.destroy({ children: true }); live.delete(x); } }
 	for (const k of liveClips) if (k.used !== frameNo) { k.c.visible = false; if (k.used < frameNo - 120) { k.c.removeFromParent(); liveClips.delete(k); } } else k.c.visible = true;
+	P.walk += performance.now() - tq;
+	if (performance.now() - t0 > 40 && P.slow.length < 30) P.slow.push(['rebuild', 'restyle', 'anims', 'walk'].map((k) => Math.round(P[k] - P0[k])).join('/') + ' g' + glowMade);
 	msLog.push(performance.now() - t0); if (msLog.length > 600) msLog.shift();
 	return true;
 }
 const GEO_PROPS = /(^|;)\s*(left|top|right|bottom|width|height|inset|margin[a-z-]*|padding[a-z-]*|display|position)\s*:/;
 const geoPart = (css: string | null) => (css || '').split(';').filter((d) => GEO_PROPS.test(';' + d)).map((d) => d.trim()).sort().join(';');
+let lastWhy = '';
+/** nearest measured element at or above t (a node added in the same batch is measured with its parent) */
+const known = (t: HTMLElement | null) => { for (let a = t; a; a = a.parentElement) if (geo.has(a)) return a; return null; };
 function onMutations(recs: MutationRecord[]) {
 	for (const r of recs) {
 		const t = r.target as HTMLElement;
-		if (r.type === 'childList') { geoDirty = true; continue; }
+		if (r.type === 'childList') { const a = known(t); if (a) geoQ.add(a); else { geoDirty = true; lastWhy = 'cl:' + (t.id || t.className); } continue; }
 		if (r.attributeName === 'style') {
 			// a layout property changed (the merge stage's left / width, a hidden cell): re-measure; else transforms / opacity only
-			if (geoPart(r.oldValue) !== geoPart(t.getAttribute('style'))) geoDirty = true;
+			if (geoPart(r.oldValue) !== geoPart(t.getAttribute('style'))) { const a = known(t); if (a) geoQ.add(a); else geoDirty = true; }
 			else inlineQ.add(t);
-		} else if (r.attributeName === 'class' && t === document.body) geoDirty = true;
-		else if (r.attributeName === 'class') { styleQ.add(t); geoDirty = geoDirty || CLASS_GEO.test((r.oldValue || '') + ' ' + t.className); }
-		else geoDirty = true;   // src / data-v
+		} else if (r.attributeName === 'class' && t === document.body) {
+			const a = new Set((r.oldValue || '').split(/\s+/)), b = new Set(t.className.split(/\s+/)), diff = [...a, ...b].filter((x) => x && a.has(x) !== b.has(x));
+			if (diff.some((x) => BODY_GEO.test(x))) { geoDirty = true; lastWhy = 'body:' + diff.join(','); } else if (diff.length) for (const rt of roots) styleQ.add(rt);
+		}
+		else if (r.attributeName === 'class') { if (CLASS_GEO.test((r.oldValue || '') + ' ' + t.className)) { const a = known(t); if (a) geoQ.add(a); else geoDirty = true; } else if (geo.has(t)) styleQ.add(t); else { const a = known(t); if (a) geoQ.add(a); } }
+		else { const a = known(t); if (a) geoQ.add(a); else geoDirty = true; }   // src / data-v
 	}
 	kick();
 }
 // classes that change a box's size or presence (spinner in / out, merge, hidden): re-measure on those
+const BODY_GEO = /^(portrait|landscape|phone|tablet|desktop|mk|skin|phl|pixiBoard|replay)$/;
 const CLASS_GEO = /\b(spinning|merge|full|hidden|gone|cspin|mStage|big|landed)\b/;
 /** Start mirroring #board's state model into the board stage (idempotent). */
 export async function startMirror() {
@@ -439,9 +498,9 @@ export async function startMirror() {
 	mo = new MutationObserver(onMutations);
 	for (const r of roots) mo!.observe(r, { subtree: true, childList: true, attributes: true, attributeOldValue: true, attributeFilter: ['class', 'style', 'src', 'data-v'] });
 	mo!.observe(board!, { attributes: true, attributeOldValue: true, attributeFilter: ['class', 'style'] });
-	mo!.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+	mo!.observe(document.body, { attributes: true, attributeOldValue: true, attributeFilter: ['class'] });
 	addEventListener('resize', () => { geoDirty = true; kick(); });
 	onLayout(() => { geoDirty = true; });
 	animate(tick);
 }
-export const mirrorDirty = () => { geoDirty = true; kick(); };
+export const mirrorDirty = () => { geoDirty = true; changed = true; kick(); };
