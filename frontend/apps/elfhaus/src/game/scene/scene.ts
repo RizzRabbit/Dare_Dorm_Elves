@@ -201,7 +201,7 @@ export function placeScene(portrait: boolean, fr: DOMRect) {
 		const k = g.k, X = (x: number) => g.ox + x * k, Y = (y: number) => g.oy + y * k;
 		let x: number, feet: number, s: number;
 		if (g.mode === 'cmp') { x = X(g.cmp.x); feet = Y(g.cmp.y); s = g.cmp.s * f * k; }
-		else { x = X(1375); feet = Y(852); s = 1.26 * f * k; }   // review #13: cup hand / hip tuck just behind the frame's right edge (room < Roxy < board); boots on her log round (rig ground), raised so its bark side shows above the HUD bar; head still clear of the top
+		else { x = X(1315); feet = Y(852); s = 1.26 * f * k; }   // review #13: cup hand / hip tuck just behind the frame's right edge (room < Roxy < board); boots on her log round (rig ground), raised so its bark side shows above the HUD bar; head still clear of the top
 		if (!hold) { R.view.position.set(x, feet); R.view.scale.set(s); }
 		roxyL.visible = true; clipRoxy(null); R.shadow(true);
 		Object.assign(roxyAt, { x, y: feet, s, portrait });
