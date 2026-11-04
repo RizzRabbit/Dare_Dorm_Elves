@@ -76,3 +76,7 @@ html body:not(.portrait) #autoMenu .modal{background:var(--c-cream,#F6EBD3)!impo
    the stack's own painted alpha (drop-shadow of the elf cut-outs): white core, fluorescent teal-blue halo. */
 html body .ov>.tGl,html body .ov>.tGw,html body .ov .ovWinO,html body .ov .wFrame{display:none!important}
 html body .ov.win .wart.chaletStk .stkGrp>.stkElf{filter:drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 2px #fff) drop-shadow(0 0 6px #5ff3ff) drop-shadow(0 0 14px #19b8ff)}
+/* fix4 proof C: most merged / full-reel wilds are DragonBones canvases (canvas.stk_body), not the chalet DOM stack, so the
+   traced outline goes on the canvas (its alpha is the silhouette) and the baked rectangle-ish glow plate is hidden on a win */
+html body .ov.win canvas.stk_body{filter:drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 2px #fff) drop-shadow(0 0 6px #5ff3ff) drop-shadow(0 0 14px #19b8ff)}
+html body .ov.win img.stk_glow{opacity:0!important}
