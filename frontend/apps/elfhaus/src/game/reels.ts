@@ -150,6 +150,14 @@ function pos(C: Cell, now: number) {
 	const u = Math.min(1, (td - P0.D) / p.set);
 	return { s: P0.sEnd + p.ov * Math.pow(1 - u, 3) * (1 + 3 * u) * Math.cos(1.5 * Math.PI * u), v: 0, ph: u >= 1 ? 3 : 2, u };
 }
+function paint(C: Cell, at: number, pitch: number) {
+	const base = Math.floor(at);
+	for (let n = base - 1; n <= base + 1; n++) {
+		const sl = C.slots[((n % 3) + 3) % 3];
+		if (sl.n !== n) setSlot(C, sl, n);
+		sl.style.transform = `translate3d(0,${((at - n) * pitch).toFixed(2)}px,0)`;
+	}
+}
 function frame(now: number) {
 	raf = 0;
 	const pitch = S.cell * 0.925 * 1.08;
@@ -157,12 +165,7 @@ function frame(now: number) {
 		const m = pos(C, now);
 		if (m.ph >= 1 && !C.impacted && C.plan && now >= C.t0 + C.plan.E - 30) impact(C);
 		if (m.ph === 3) { finish(C); continue; }
-		const base = Math.floor(m.s);
-		for (let n = base - 1; n <= base + 1; n++) {
-			const sl = C.slots[((n % 3) + 3) % 3];
-			if (sl.n !== n) setSlot(C, sl, n);
-			sl.style.transform = `translate3d(0,${((m.s - n) * pitch).toFixed(2)}px,0)`;
-		}
+		paint(C, m.s, pitch);
 		// light trail + stretch only at full speed
 		const k = Math.round(Math.max(0, Math.min(1, (Math.abs(m.v) / C.p.v - 0.8) / 0.2)) * 20) / 20;
 		if (k !== C.tr) { C.tr = k; C.win.style.setProperty('--tr', String(k)); }
@@ -208,7 +211,13 @@ export function spinCells(list: { reel: number; row: number }[]) {
 		if (wasPuffed && prev) { C.init = prev; C.empty = true; }
 		c.classList.remove('win', 'dim', 'sprWin', 'replace', 'out', 'locked', 'mLand', 'puffed', 'tLand', 'tGlint', 'rgLand');
 		c.querySelectorAll('canvas').forEach((x) => x.remove());
-		c.classList.add('spinning'); cells.set(id, C);
+		// fix7: the spinner's units are painted NOW (the resting symbol in place), before the cell hides under it: spin start
+		// goes straight from the resting symbols into motion, never a frame with every symbol gone
+		paint(C, 0, S.cell * 0.925 * 1.08);
+		// the resting cell stays shown under the spinner for two frames, while the spinner's fresh background images decode
+		// (hiding it at once left one frame with the whole board empty); the wind-up keeps them aligned meanwhile
+		cells.set(id, C);
+		requestAnimationFrame(() => requestAnimationFrame(() => { if (cells.get(id) === C) c.classList.add('spinning'); }));
 	});
 	if (list.length) spinSound();
 	ensureLoop();
