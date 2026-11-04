@@ -285,10 +285,9 @@ function prime() {   // the game in its "behind the doors" state
   sceneHold(true); if (rig) { rig.doorway(true); rig.face('surprised', 0); }
   primed = true; setGame(0);
 }
-let sndLever = false, sndDoors = false;   // intro one-shots (AUDIO_WIRING_RUN3), re-armed when the clock rewinds
+let sndDoors = false;   // intro one-shot (AUDIO_WIRING_RUN3), re-armed when the clock rewinds; uifix: no lever sound, the doors open on their own
 function setGame(tt) {   // all game objects driven from the intro clock (transform + opacity only)
-  if (tt < T.doorL[0]) sndLever = sndDoors = false;
-  if (!sndLever && tt >= T.doorL[0]) { sndLever = true; sfx('intro_door_lever'); }
+  if (tt < T.doorL[0]) sndDoors = false;
   if (!sndDoors && tt >= T.doorR[0]) { sndDoors = true; sfx('intro_doors_open'); }
   applyCam(lerp(CAM0, 1, seg(tt, ...T.cam, ease.inOutCubic)));
   const H = ST.h, dropH = H * 0.62;
