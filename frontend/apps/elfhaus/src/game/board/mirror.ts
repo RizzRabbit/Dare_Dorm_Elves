@@ -300,9 +300,15 @@ function rebuild() {
 // ---------- motion without layout reads: inline transforms parsed from el.style, CSS / WAAPI motion from the
 // animation's own keyframes at its current progress (getComputedTiming: no style or layout flush) ----------
 const inlineQ = new Set<HTMLElement>(), styleQ = new Set<HTMLElement>(), geoQ = new Set<HTMLElement>();
+// ghostfix: an inline visibility change (a cell hidden under a full-reel / merged wild, bookEventHandlerMap) inherits to
+// the whole subtree in CSS, but the cache held each descendant's old 'visible': the hidden cell's bust, WILD letters,
+// badge and their teal win-glow copies kept drawing under the stack and showed through the gaps (between the legs) as
+// faint mini silhouettes. A visibility change now restyles the subtree.
+const visQ = new Set<HTMLElement>(), lastVis = new WeakMap<HTMLElement, string>();
 function inlineUpdate(el: HTMLElement) {
 	const s = cache.get(el); if (!s) { styleQ.add(el); return; }
 	const st = el.style;
+	if ((lastVis.get(el) ?? '') !== st.visibility) { lastVis.set(el, st.visibility); visQ.add(el); }
 	if (st.transform || st.translate || st.scale || st.rotate) {
 		const tp: TP = { transformOrigin: st.transformOrigin || s.o, translate: st.translate || s.tr, rotate: st.rotate || s.ro, scale: st.scale || s.sc, transform: st.transform || s.tf };
 		s.tr = tp.translate; s.ro = tp.rotate; s.sc = tp.scale; s.tf = tp.transform; s.o = tp.transformOrigin;
@@ -392,7 +398,8 @@ function walk(el: HTMLElement, parent: Af, pc: Ctx, isRoot: boolean) {
 		if (tag === 'IMG') {
 			const im = el as HTMLImageElement, t = im.currentSrc || im.src ? source(im.currentSrc || im.src) : null; if (!t) return;
 			let x = 0, y = 0, dw = w, dh = h;
-			if (s.fit === 'contain') { const k = Math.min(w / t.width, h / t.height); dw = t.width * k; dh = t.height * k; x = (w - dw) / 2; y = (h - dh) / 2; }
+			if (s.fit === 'contain' || s.fit === 'cover') { const k = (s.fit === 'cover' ? Math.max : Math.min)(w / t.width, h / t.height); // cover: no crop (the stk_glow outline overflows like its rig)
+				 dw = t.width * k; dh = t.height * k; x = (w - dw) / 2; y = (h - dh) / 2; }
 			sprite(el, t, c, x, y, dw, dh, s); return;
 		}
 		if (base.f & F_NINE) { nine(el, s, w, h, c); }
@@ -428,6 +435,8 @@ function tick() {
 	styleQ.clear();
 	for (const el of inlineQ) inlineUpdate(el);
 	inlineQ.clear();
+	for (const el of visQ) if (el.isConnected) restyle(el);
+	visQ.clear();
 	for (const el of styleQ) style(el, true);
 	styleQ.clear();
 	// an element whose animation just ended: its base style was read mid-animation, so read it again (once)
