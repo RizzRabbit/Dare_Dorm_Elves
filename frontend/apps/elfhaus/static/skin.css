@@ -37,3 +37,5 @@ html body #menu .rules p,html body #menu .rules li{font-size:max(18px,calc(var(-
 html body #menu .rules table,html body #menu .rules td,html body #menu .rules th{font-size:max(16px,calc(var(--t14)*1.15))!important}
 html body #menu .rules .plGrid figcaption{font-size:15px!important}
 html body #menu .rules .ri{width:40px!important;height:40px!important}
+html body #menu .rules p,html body #menu .rules li{padding-inline:clamp(10px,3%,28px)!important;box-sizing:border-box}
+html body #menu .rules .pl>.plA{flex:1 1 auto!important;min-width:60px;max-width:110px;width:100%}
