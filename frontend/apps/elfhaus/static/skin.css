@@ -60,3 +60,15 @@ html body #outro .otHint{font-size:34px!important;white-space:nowrap;max-width:1
 html body.portrait #outro .otHint{font-size:22px!important}
 /* fix4 #8: portrait buy menu: both card rows fit (shorter card art) */
 html body.portrait #buyCards .bcard .bArt{aspect-ratio:1.4!important}
+/* fix4 E/G: the painted sprite is the only frame. id-weight (:is with an id argument) so chalet.css #id !important fills,
+   ink borders, rings and shadows no longer draw over the painted plates (the gold square ring around SPIN, BUY BONUS box...) */
+html body.skin :is(.sk,#_skA#_skB#_skC#_skD#_skE#_skF){background:none!important;border-color:transparent!important;border-width:0!important;border-image:none!important;box-shadow:none!important;outline:none!important}
+html body.skin :is(.sk,#_skA#_skB#_skC#_skD#_skE#_skF)::before,html body.skin :is(.sk,#_skA#_skB#_skC#_skD#_skE#_skF)::after{background:none!important;box-shadow:none!important;border-color:transparent!important}
+html body.skin :is(.sk,#_skA#_skB#_skC#_skD#_skE#_skF):focus-visible{outline:2px solid #E7B54A!important;outline-offset:3px}
+html body.skin :is(#anteSw,#turboSw,#stBonus,#stFeat,#stSnd,#stTurbo){box-shadow:none!important;border:0!important}
+html body.skin #buyCards .bcard .bArt{border:0!important}
+html body.skin #rulesBody h3{border-width:0!important}
+html body.skin #popMenu .pmRow:hover{background:none!important}
+html body #maxwin .mwAmt{background:none!important;border:0!important;box-shadow:none!important}
+html body #maxwin .mwHint{font-size:34px}
+html body:not(.portrait) #autoMenu .modal{background:var(--c-cream,#F6EBD3)!important}

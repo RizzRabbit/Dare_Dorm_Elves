@@ -37,7 +37,7 @@ html body.mk #app #hud #buyBtn.plate{background:var(--c-cream)!important;border:
   box-shadow:inset 0 0 0 calc(5px*var(--ps)) var(--c-gold),inset 0 calc(-26px*var(--ps)) 0 var(--c-paper),0 calc(9px*var(--ps)) 0 rgba(20,8,4,.6)!important}
 html body.mk #app #hud #buyBtn.plate .disc{background:transparent!important}
 html body.mk #app #hud #buyBtn.plate .lbl{font-family:var(--ui)!important;font-weight:400!important;color:var(--c-cran)!important;text-shadow:none!important}
-html body.mk #app #hud #buyBtn.plate::after{background:linear-gradient(90deg,transparent 46%,rgba(255,255,255,.55) 46% 54%,transparent 54%)!important;mix-blend-mode:normal}
+/* fix4: BUY BONUS sheen stripe removed (painted plate only) */
 
 /* armed pill by SPIN */
 html body.mk #app #armTag{background:var(--c-gold)!important;color:var(--c-ink)!important;border:2px solid var(--c-ink)!important;font-family:var(--ui)!important;font-weight:400!important;
@@ -116,7 +116,7 @@ html body #bmConfirm .cfHint{color:#7a5a48!important}
 /* menu popout */
 html body #popMenu{background:var(--c-cream)!important;border:4px solid var(--c-ink)!important;border-radius:16px!important;box-shadow:0 6px 0 rgba(20,8,4,.7)!important}
 html body #popMenu .pmRow{color:var(--c-ink)!important;font-family:var(--ui)!important;font-weight:400!important;background:none!important}
-html body #popMenu .pmRow:hover{background:var(--c-paper)!important}
+/* fix4: pop-menu hover rectangle removed */
 html body #popMenu svg :is(path,circle){stroke:var(--c-cran)!important}
 html body #popMenu input[type=range]{accent-color:var(--c-cran)}
 

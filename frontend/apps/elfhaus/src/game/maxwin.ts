@@ -86,8 +86,7 @@ export async function maxWinCelebration(capX: number = MAX_WIN_X) {
 	const tier = M.querySelector('.mwTier') as HTMLElement; tier.classList.add('spr');
 	const total = capX * bet(), dp = moneyDigits(total); let skipped = false;
 	xEl.textContent = '0x'; amtEl.textContent = moneyWin(0, dp);
-	hint.textContent = (matchMedia('(pointer: coarse)').matches || matchMedia('(any-pointer: coarse)').matches || navigator.maxTouchPoints > 0) ? // L9: any touch screen says TAP
-		 'TAP TO CONTINUE' : 'CLICK TO CONTINUE';
+	hint.textContent = 'TAP TO CONTINUE';   // fix4 G: one wording everywhere (outro card, max win)
 	M.classList.remove('hidden', 'held', 'out'); void M.offsetWidth; M.classList.add('on');
 	sfx('bigwin_sting'); duck(true); const cu = loop('bigwin_countup_loop'); setTimeout(() => voice('maxwin'), VOICE.bigWinDelayMs);
 	const landAt = COUNT_AT + COUNT_MS;

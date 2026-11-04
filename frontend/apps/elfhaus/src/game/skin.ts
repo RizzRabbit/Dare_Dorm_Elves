@@ -163,6 +163,11 @@ function apply() {
 	$$('#settings .stSl').forEach((e) => { skin(e, () => ({ pkg: 'ui', frame: 'slider_track', k: 2 }));
 		skin(e.querySelector<HTMLElement>('.slF'), () => ({ pkg: 'ui', frame: 'slider_fill', k: 2 })); skin(e.querySelector<HTMLElement>('.slT'), () => ({ pkg: 'ui', frame: 'slider_thumb', fit: 'contain' })); });
 	bmText(document.querySelector<HTMLElement>('#pmSettings span'), 'font_ink');
+	// fix4 G: every pop-menu row, the ANTE / TURBO / autoplay labels, ADVANCED and the max-win hint in the bitmap fonts
+	$$('#popMenu .pmRow span').forEach((e) => bmText(e, 'font_ink'));
+	$$('#anteRow .lbl, #turboRow .lbl, #abRow .lbl').forEach((e) => bmText(e, 'font_ink'));
+	bmText(document.getElementById('advBtn'), 'font_ink');
+	bmText(document.querySelector<HTMLElement>('#maxwin .mwHint'), 'font_cream');
 	skin(document.getElementById('replayBar'), () => ({ pkg: 'ui', frame: 'toast', k: 2 }));                                 // 73
 	$$('#intro .card, #outro .card, #fsMore .card').forEach((e) => skin(e, () => ({ pkg: 'ui', frame: 'sign_plate', k: 2 })));   // 24, 25
 	$$('#intro .cont').forEach((e) => { skin(e, go); word(e); });
@@ -179,7 +184,8 @@ function apply() {
 /** pieces built later (buy cards, rules headers, lock chips, respin pill, mystery badge, card faces, line-win ticket) */
 function late(n: HTMLElement) {
 	n.querySelectorAll<HTMLElement>('.bcard').forEach((e) => skin(e, (el) => ({ pkg: 'ui', frame: dis(el) ? 'card_ticket_off' : (el.classList.contains('armed') || el.classList.contains('on')) ? 'card_ticket_armed' : 'card_ticket', k: 2 })));   // 35
-	n.querySelectorAll<HTMLElement>('#rulesBody h3').forEach((e) => { skin(e, () => ({ pkg: 'ui', frame: 'pill_cran', k: 2 })); });   // 78
+	n.querySelectorAll<HTMLElement>('#rulesBody h3').forEach((e) => { skin(e, () => ({ pkg: 'ui', frame: 'pill_cran', k: 2 })); bmText(e, 'font_cream'); });   // 78
+	n.querySelectorAll<HTMLElement>('#buyCards .bPrice, #buyCards .bX').forEach((e) => bmText(e, 'font_ink'));   // fix4 G: no HTML Lilita on the cards
 	n.querySelectorAll<HTMLElement>('#rsCtr, .lock').forEach((e) => skin(e, () => ({ pkg: 'ui', frame: 'chip_cream', k: 2 })));   // 51, 65
 	n.querySelectorAll<HTMLElement>('.rd > i').forEach((e) => skin(e, (el) => ({ pkg: 'ui', frame: on(el) || el.classList.contains('full') ? 'dot_full' : 'dot_empty', fit: 'contain' })));
 	n.querySelectorAll<HTMLElement>('.bMystQ').forEach((e) => skin(e, () => ({ pkg: 'ui', frame: 'badge_q', fit: 'contain' })));   // 66
