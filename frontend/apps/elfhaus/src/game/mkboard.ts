@@ -12,6 +12,7 @@
 import { ST } from './stage';
 import ART_G from './art.generated.json';
 // Chrome floors border widths to whole device px, so a 2.9px stroke would draw at 2; round in screen space instead.
+const BUY_K = 0.78;
 const bwPx = (w: number) => { const d = ST.s * (window.devicePixelRatio || 1); return (Math.max(1, Math.round(w * d)) + 0.01) / d + 'px'; };
 
 export const CELL = 160, FT = 34, FB = 52, BW = 800, BH = 640, FW = BW + 2 * FT, FH = BH + FT + FB, M = 40;
@@ -151,7 +152,7 @@ export function mkPlace(cell: number) {
 	const sp = btn('#spinBtn', g.spin);
 	btn('#autoBtn', g.auto); btn('#turboBtn', g.turbo);
 	// BUY plate (mockup paintBonus 'v' = tall, 'p' = wide portrait row)
-	const bv = g.bonus.v, bw0 = bv === 'p' ? 580 : 216, bh0 = bv === 'p' ? 176 : 240, ps = L(g.bonus.s);
+	const bv = g.bonus.v, bw0 = bv === 'p' ? 580 : 216, bh0 = bv === 'p' ? 176 : 240, ps = L(g.bonus.s) * (bv === 'p' ? BUY_K : 0.92);   // fix2: portrait plate shrunk about its centre (landscape lightly) to sit in proportion with turbo / auto
 	const bp = rel(g.bonus.x, g.bonus.y), b = $('#buyBtn');
 	b.classList.remove('side'); b.classList.toggle('mkP', bv === 'p'); b.classList.toggle('mkV', bv !== 'p');
 	const pr = { position: 'absolute', left: bp.x - bw0 * ps / 2, top: bp.y - bh0 * ps / 2, width: bw0 * ps, height: bh0 * ps, margin: '0', 'border-radius': (bv === 'p' ? 48 : 44) * ps + 'px' };
