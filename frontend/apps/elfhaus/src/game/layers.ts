@@ -25,7 +25,7 @@ const rules: [string, number][] = [
 	['#board>#strips', BZ.strips], ['#board>#reelLines', BZ.reelLines], ['#board>#cells', BZ.cells], ['#cells>.cell.win', BZ.cellWin],
 	['#board>#overlays', BZ.overlays], ['#frame>#boardStage', FRZ.fx],
 	['#frame>#mkFrame', FRZ.frameBack], ['#frame>#board', FRZ.board], ['#frame>#frameLit', FRZ.frameLit], ['#frame>#frameGlint', FRZ.frameLit], ['#frame>#mkGarland', FRZ.garland],
-	['#stage>#frame', SZ.frame], ['#stage>#rsCtr', SZ.respins], ['#stage>#fsBar', SZ.fsBar], ['#stage>#stepToast', SZ.toast], ['#stage>#banner', SZ.banner],
+	['#stage>#frame', SZ.frame], ['#stage>#fsBar', SZ.fsBar], ['#stage>#stepToast', SZ.toast], ['#stage>#banner', SZ.banner],
 	['#app>#stage', AZ.stage], ['#app>#hud', AZ.hud], ['#app>#top', AZ.top],
 	['#replayBar', TZ.replayBar], ['#popMenu', TZ.popMenu], ['#buyMenu', TZ.modal], ['#autoMenu', TZ.modal], ['#settings', TZ.modal], ['#menu', TZ.modal],
 	['#intro', TZ.modal], ['#outro', TZ.modal], ['#fsMore', TZ.modal], ['#bigwin', TZ.modal], ['#cardFlip', TZ.modal], ['#bmConfirm', TZ.confirm],

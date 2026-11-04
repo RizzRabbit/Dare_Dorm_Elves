@@ -8,7 +8,8 @@
 // State lives on <body> (class .respinning, data-rl = lit count) so freshly rendered cells/overlays pick it up.
 import { FX, rcFill, rcFlash } from './fx';
 import { hasSheet } from './sprite';
-import { T } from './tempo'; // the dots' beats x ANIM_TEMPO (their fill sheet slows in sprite.ts)
+import { T } from './tempo';
+import { respinBanner, pulseDot, place as placeBanner } from './board/banners'; // the dots' beats x ANIM_TEMPO (their fill sheet slows in sprite.ts)
 const MAX = 3;
 let dimT = 0, hideT = 0;
 const B = () => document.body;
@@ -19,6 +20,8 @@ function setLit(n: number, anim: 'dim' | 'refill' | null) {
 	const prev = lit();
 	B().dataset.rl = String(n);
 	B().classList.add('respinning');
+	void respinBanner(true, n);
+	for (let i = 0; i < MAX; i++) if ((i < prev) !== (i < n) && prev >= 0) pulseDot(i);
 	if (!anim || !hasSheet(FX)) return;
 	for (let i = 0; i < MAX; i++) {
 		const was = i < prev, on = i < n;
@@ -47,27 +50,9 @@ export function endRespin(delay = 700) {
 export function hideRespin() {
 	clearTimeout(dimT); clearTimeout(hideT);
 	B().classList.remove('respinning'); delete B().dataset.rl;
+	void respinBanner(false);
 	document.querySelectorAll('.rd canvas').forEach((c) => c.remove());
 }
-/** ONE board counter (RESPINS + the 3 dots) on the frame's bottom rail, under the cells, so it never covers a
- *  symbol at any size (the per-wild chips / stack-foot dots covered the art; hidden in chalet.css). layout() calls this
- *  on every resize: it sits centred in the rail between the board's last row and the frame's bottom edge. */
-function counter() {
-	let el = document.getElementById('rsCtr');
-	if (!el) {
-		const st = document.getElementById('stage'); if (!st) return null;
-		el = document.createElement('div'); el.id = 'rsCtr'; el.setAttribute('aria-hidden', 'true');
-		el.innerHTML = `<b>RESPINS</b>${DOTS}`;
-		st.appendChild(el);   // fix6 #11: in #stage over the frame (layers.ts SZ.respins), never under the frame's bottom rail
-	}
-	return el;
-}
-export function placeRespin() {
-	const el = counter(), fr = document.getElementById('frame'), bd = document.getElementById('board');
-	if (!el || !fr || !bd) return;
-	// fix6 #11: centred on the frame, straddling its bottom edge, fully drawn above it (it was inside #frame, clipped by the rail)
-	const bot = fr.offsetTop + fr.offsetHeight, rail = Math.max(8, fr.clientHeight - (bd.offsetTop + bd.offsetHeight));
-	const h = Math.round(Math.min(40, Math.max(26, rail * 1.1)));
-	el.style.cssText = `top:${Math.round(bot - h * 0.35)}px;left:${Math.round(fr.offsetLeft + fr.offsetWidth / 2)}px;height:${h}px;--rsh:${h}px`;
-}
+/** ONE board counter (RESPINS + the 3 dots), drawn in the board stage's banners layer (board/banners.ts). */
+export function placeRespin() { placeBanner(); }
 export const DOTS: string = '<span class="rd" aria-hidden="true"><i></i><i></i><i></i></span>';
