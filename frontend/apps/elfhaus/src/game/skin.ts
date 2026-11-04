@@ -97,11 +97,14 @@ export function bmText(el: HTMLElement | null, font: string | ((el: HTMLElement)
 		const fn = typeof font === 'string' ? font : font(el), P = ready.get(fn); if (!P) { void load(fn); return; }
 		if (cv.parentNode !== el) el.append(cv);
 		const txt = (el.textContent || '').trim(), cs = getComputedStyle(el), fs = parseFloat(cs.fontSize) || 16;
-		const m = P.meta, sc = (fs * 1.05) / m.px, k = dpr();
+		const m = P.meta, k = dpr(); let sc = (fs * 1.05) / m.px;
 		const gl = [...txt].map((ch) => (ch === ' ' ? null : P.fr['u' + ch.toUpperCase().codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0')] || P.fr['u' + ch.codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0')]));
-		const adv = gl.reduce((s, f) => s + (f ? f.adv ?? f.sw : m.space), 0) * sc;
+		const adv0 = gl.reduce((s, f) => s + (f ? f.adv ?? f.sw : m.space), 0) * sc;
 		// fix4: the last glyph's art can run past its advance (the '0' in '$1.00'); size the canvas to the inked edge
 		let ink = 0, ax = 0; for (const f of gl) { if (!f) { ax += m.space * sc; continue; } ink = Math.max(ink, ax + f.sw * sc); ax += (f.adv ?? f.sw) * sc; }
+		// fix5 #1: an element capped by max-width (outro TAP TO CONTINUE) scales its bitmap line down to fit its box
+		let adv = adv0;
+		if (cs.maxWidth !== 'none' && el.clientWidth > 0 && ink > el.clientWidth) { const f = el.clientWidth / ink; sc *= f; adv *= f; ink = el.clientWidth; }
 		const w = Math.max(el.clientWidth, adv, Math.ceil(ink)), h = Math.max(el.clientHeight, m.lh * sc);
 		const W = Math.max(1, Math.round(w * k)), H = Math.max(1, Math.round(h * k));
 		cv.style.cssText = `position:absolute;left:0;top:0;width:${w}px;height:${h}px;pointer-events:none;z-index:2`;
