@@ -148,7 +148,9 @@ function word(el: HTMLElement | null, font = 'font_cream', gold = false) {
 const ICON: Record<string, (el: HTMLElement) => string> = {
 	menuBtn: () => 'ico_menu', betDown: () => 'ico_minus', betUp: () => 'ico_plus', bmDown: () => 'ico_minus', bmUp: () => 'ico_plus',
 	turboBtn: () => 'ico_turbo', autoBtn: (el) => (on(el) || el.classList.contains('running') ? 'ico_stop' : 'ico_auto'),
-	spinBtn: (el) => (el.classList.contains('stop') || el.classList.contains('busy') ? 'ico_stop' : 'ico_spin'),
+	// fix6: the stop square only while reels are actually moving (a tap slams them) or autoplay runs (a tap stops it); the spin
+	// icon whenever the reels stand still: idle, win presentation, between respins
+	spinBtn: (el) => (el.classList.contains('auto') || el.classList.contains('stop') || (el.classList.contains('busy') && !!document.querySelector('#cells .cell.spinning, #strips .cspin')) ? 'ico_stop' : 'ico_spin'),
 };
 function apply() {
 	skin(document.getElementById('bar'), () => ({ pkg: 'ui', frame: 'hud_bar', k: 2.4, out: 6 }));                       // 3
@@ -158,6 +160,8 @@ function apply() {
 	const sp = document.getElementById('spinBtn');                                                                            // 5
 	skin(sp, (el) => ({ pkg: 'ui', frame: dis(el) ? 'spin_plate_busy' : 'spin_plate', fit: 'contain', size: 1.06 }));
 	icon(sp, (e) => ({ pkg: 'ui', frame: ICON.spinBtn(e), size: 0.5 }));
+	{ const cells = document.getElementById('cells')?.parentElement || document.getElementById('board'); let q = 0;   // fix6: redraw the icon when reels start / stop
+		if (cells && sp) new MutationObserver(() => { if (!q) q = requestAnimationFrame(() => { q = 0; const i = sp.querySelector<HTMLElement>(':scope > .skI'); if (i) looks.get(i)?.(); }); }).observe(cells, { subtree: true, childList: true, attributes: true, attributeFilter: ['class'] }); }
 	// fix6: portrait BUY BONUS on the same pine plate as the other HUD buttons; disabled keeps its plate and is dimmed (skin.css), never a grey box
 	skin(document.getElementById('buyBtn'), (el) => (el.classList.contains('mkP') ? { pkg: 'ui', frame: 'btn_pine', k: 2 } : { pkg: 'ui', frame: 'buy_plate', k: 2 }));   // fix2: the wide portrait plate keeps slim corners (k = sprite px per canvas px)   // 9
 	{ const bl = document.getElementById('buyLbl'); if (bl) bl.dataset.fit = 'box'; word(bl); }   // fix6: always fits its plate                                                                                  // 44
