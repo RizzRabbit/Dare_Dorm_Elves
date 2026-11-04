@@ -41,24 +41,7 @@ let app = null, state = 'off', t = 0, tt = 0, prog = 0, G = null, primed = false
 let doneRes = () => {}, tapRes = () => {}, killed = false;
 const root = new Container(), ov = new Container();
 const tex = {};
-// Roxy through the adapter; her door points come back in the scene canvas, mapped through the camera into intro space
-const RXA = {
-  get ok() { return !!rig; },
-  doorPts() { if (!rig) return null; const q = rig.doorPts(); if (!q) return null; return { sh: camPt(q.sh), hand: camPt(q.hand), r: q.r, k: q.k ?? 1 }; },
-};
-
 function rr(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
-function holdL() {   // the left leaf stops where Roxy's door hand holds it: the lever never swings past her arm's reach
-  const q0 = state === 'trans' && tt < T.roxyOut[0] ? RXA.doorPts() : null; if (!q0) return 1;
-  const q = q0, reach = Math.hypot(q.hand.x - q.sh.x, q.hand.y - q.sh.y) + 1.5;
-  const dist = (a) => { const h = handleL(a); return Math.hypot(h.x - q.sh.x, h.y - q.sh.y); };
-  if (dist(1) <= reach) return 1;
-  let am = 0, dm = 1e9; for (let i = 0; i <= 40; i++) { const d = dist(i / 40); if (d < dm) { dm = d; am = i / 40; } }   // closest swing to her shoulder
-  if (dm > reach) return am;
-  let lo = am, hi = 1; for (let i = 0; i < 22; i++) { const m = (lo + hi) / 2; if (dist(m) > reach) hi = m; else lo = m; }
-  return lo;
-}
-let HANDLE_Y = 0.54;    // QC_LOG: painted lever sits at 0.54 of the leaf; lever height (fraction of the leaf): Roxy's door hand meets it with the leaf open
 const hex = (c) => '#' + c.toString(16).padStart(6, '0');
 
 // door leaves, lanterns, wall, floor, light: painted frames of the intro / fx / ui atlases (scene/atlas.ts)
@@ -111,9 +94,7 @@ function build() {
   const XL = cx - dw / 2, XR = cx + dw / 2;
   // doorway interior when the game is not attached yet: warm dark (never seen while closed)
   // leaves (behind the wall)
-  // painted door leaves (intro atlas leaf_land / leaf_port, hinge-left; the right leaf is the same frame mirrored); the
-  // lever sits at the frame's painted handle_y (QC_LOG: 0.54 landscape, 0.415 portrait)
-  HANDLE_Y = G.port ? 0.415 : 0.54;
+  // painted door leaves (intro atlas leaf_land / leaf_port, hinge-left; the right leaf is the same frame mirrored)
   tex.leafL = atlasTex('intro', G.port ? 'leaf_port' : 'leaf_land'); tex.leafR = mirrored('intro', G.port ? 'leaf_port' : 'leaf_land');
   leafL = new PerspectiveMesh({ texture: tex.leafL, verticesX: 8, verticesY: 8 }); leafR = new PerspectiveMesh({ texture: tex.leafR, verticesX: 8, verticesY: 8 });
   ov.addChild(leafL, leafR);
@@ -272,11 +253,6 @@ function setDoors(aL, aR) {   // 0 = closed, 1 = ~80 deg open, swinging INTO the
   { const t_ = th(aR), X = XR - w * Math.cos(t_), z = w * Math.sin(t_); const [x1, y1] = pr(X, top, z), [x2, y2] = pr(X, FL, z);
     leafR.setCorners(x1, y1, XR, top, XR, FL, x2, y2); leafR.tint = shade(aR); }
 }
-function handleL(aL = G.aL || 0) {   // the left leaf's lever (rose) in screen space, for a swing aL (same projection as setDoors)
-  const { cx, dw, dh, top, F } = G, w = dw / 2, XL = cx - dw / 2, HZ = top + dh * 0.33, VX = cx, t_ = aL * 1.4, u = 0.925;
-  const X = XL + u * w * Math.cos(t_), z = u * w * Math.sin(t_), p = F / (F + z), Y = top + dh * HANDLE_Y;
-  return leafL.parent.toGlobal({ x: VX + (X - VX) * p, y: HZ + (Y - HZ) * p });
-}
 const shade = (a) => { const v = Math.round(255 * (1 - 0.35 * a)); return (v << 16) | (v << 8) | v; };   // leaf turns away from the vestibule light
 
 // ---------------- game hand-off (DOM board / HUD + Pixi room layer) ----------------
@@ -286,7 +262,6 @@ const $id = (id) => document.getElementById(id);
 // #alcove is display:contents, so its pieces move one by one
 const BOARD = ['stage', 'alcoveAmbient', 'alcoveGlow', 'alcoveRecess', 'alcoveLedge', 'alcoveRail', 'alcoveCrown'];
 const camEls = () => ['bg', 'scene', 'app'].map($id).filter(Boolean);
-function camPt(q) { return { x: PV.x + cam * (q.x - PV.x), y: PV.y + cam * (q.y - PV.y) }; }    // scene px -> intro px
 const unCam = (x, y, c) => ({ x: PV.x + (x - PV.x) / c, y: PV.y + (y - PV.y) / c });         // intro px -> scene px
 function applyCam(c) { cam = c; for (const e of camEls()) { e.style.transformOrigin = `${PV.x}px ${PV.y}px`; e.style.scale = c === 1 ? '' : String(c); } }
 function setEl(id, dy, a) { const e = $id(id); if (!e) return; e.style.translate = dy ? `0 ${dy.toFixed(1)}px` : ''; e.style.opacity = a >= 1 ? '' : a.toFixed(3); }
@@ -304,7 +279,7 @@ function predecode() {
 function prime() {   // the game in its "behind the doors" state
   predecode();
   PV = { x: G.cx * G.k, y: (G.top + G.dh * 0.5) * G.k };
-  sceneHold(true); if (rig) { rig.doorReach(true, 0); rig.face('surprised', 0); }
+  sceneHold(true); if (rig) { rig.doorway(true); rig.face('surprised', 0); }
   primed = true; setGame(0);
 }
 let sndLever = false, sndDoors = false;   // intro one-shots (AUDIO_WIRING_RUN3), re-armed when the clock rewinds
@@ -321,20 +296,14 @@ function setGame(tt) {   // all game objects driven from the intro clock (transf
   const kh = seg(tt, ...T.hud, ease.outCubic); setEl('hud', 80 * (1 - kh), kh);
   if (!rig) return;
   const v = rig.view;
-  if (tt < T.drop[0]) {   // Roxy in the doorway holding the left leaf (wink held in the gap), steps out as the camera pushes
-    if (faceOff) { faceOff = false; sceneHold(true, true); rig.doorReach(true, 0); }
+  if (tt < T.drop[0]) {   // Roxy standing in the doorway as the doors swing open on their own (wink held in the gap), steps out as the camera pushes
+    if (faceOff) { faceOff = false; sceneHold(true, true); rig.doorway(true); }
     rig.face('wink', tt > T.wink[0] + 0.12 && tt < T.wink[1] - 0.1 ? 1 : 0);
     const hScreen = G.dh * 0.8 * G.k, s = hScreen / (rig.height * cam);
     const fx = (G.cx - G.dw * 0.12) * G.k, fy = (G.FL - 8) * G.k, p = unCam(fx, fy, cam);
     v.position.set(p.x - rig.offsetX * s + 60 * s * seg(tt, ...T.roxyOut, ease.inCubic), p.y); v.scale.set(s); v.alpha = 1 - seg(tt, ...T.roxyOut);
-    if (tt < T.roxyOut[0] && state === 'trans') { const q = RXA.doorPts(), hg = handleL();   // her door hand follows the lever as the leaf swings
-      if (import.meta.env.DEV && q) (window as any).__rxDbg = { tt, hand: [q.hand.x, q.hand.y], sh: [q.sh.x, q.sh.y], rose: [hg.x, hg.y], aL: G.aL };
-      if (q) { const d = Math.atan2(hg.y - q.sh.y, hg.x - q.sh.x) - Math.atan2(q.hand.y - q.sh.y, q.hand.x - q.sh.x);
-        // fix5 #3: the arm also stretches (rig.doorReach reachK) until the fingertips meet the lever: d(shoulder, lever) / d(shoulder, tip)
-        const kR = q.k * Math.hypot(hg.x - q.sh.x, hg.y - q.sh.y) / Math.max(1, Math.hypot(q.hand.x - q.sh.x, q.hand.y - q.sh.y));
-        rig.doorReach(true, Math.max(-45, Math.min(45, q.r + Math.atan2(Math.sin(d), Math.cos(d)) * 180 / Math.PI)), kR); } }
   } else if (tt < T.face[1]) {   // dropped in with the board on her rest pose, wide-eyed; the face eases back at T.face
-    if (!faceOff) { faceOff = true; rig.doorReach(false); rig.face('wink', 0); sceneHold(true, false); }
+    if (!faceOff) { faceOff = true; rig.doorway(false); rig.face('wink', 0); sceneHold(true, false); }
     rig.face('surprised', tt < T.face[0] ? 1 : 0);
     const m = lerp(0.94, 1, ease.outCubic(kd));
     v.scale.set(roxyAt.s * m); v.position.set(roxyAt.x, roxyAt.y + dropY); v.alpha = dA;
@@ -383,7 +352,7 @@ function update(dt) {
     placeCards(t, tt); barC.alpha = 0;
     btnC.scale.set(lerp(1, 0.92, seg(tt, 0, 0.08))); btnC.alpha = 1 - seg(tt, 0.02, 0.16);
     logoS.alpha = logoBack.alpha = 1 - seg(tt, T.push[0], T.push[0] + 0.2); logoS.y = G.logo.y - 30 * seg(tt, T.push[0], T.push[0] + 0.2, ease.inCubic); logoBack.alpha *= 0.5;
-    const aL = seg(tt, ...T.doorL, ease.inOutSine), aR = seg(tt, ...T.doorR, ease.inOutSine); setDoors(Math.min(aL, holdL()), aR);
+    const aL = seg(tt, ...T.doorL, ease.inOutSine), aR = seg(tt, ...T.doorR, ease.inOutSine); setDoors(aL, aR);
     const open = Math.max(aL, aR); spill.alpha = 0.32 * open; glowL.alpha = 0.18 * open * (1 - seg(tt, ...T.push));
     const kp = seg(tt, ...T.push, ease.inCubic), s = lerp(1, G.sMax, kp);   // camera push: the vestibule flies past the lens
     const px = G.cx, py = G.top + G.dh * 0.5; ov.pivot.set(px, py); ov.position.set(px, py); ov.scale.set(s);
