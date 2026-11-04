@@ -4,6 +4,7 @@
 // sheet) with its own small Pixi renderer, made on demand and destroyed with the overlay. Split rigs (_A/_B, per
 // <name>_parts.json) are built and played together. Rigs: static/assets/rig/db/ (scripts/import-art.mjs rigs).
 import { Application, Container } from 'pixi.js';
+import { ST } from './stage';
 import { PixiFactory, type PixiArmatureDisplay } from 'pixi-dragonbones-runtime';
 const DIR = 'assets/rig/db/';
 let index: Promise<Set<string>> | null = null;
@@ -64,7 +65,9 @@ export async function dbPlay(ov: HTMLElement, anim: 'idle' | 'win'): Promise<boo
 	const root = new Container(); app.stage.addChild(root);
 	const arms = parts.map((p) => { const d = PixiFactory.factory.buildArmatureDisplay(p, p, '', p) as PixiArmatureDisplay; root.addChild(d); return d; });
 	const W = arms[0].armature.armatureData.aabb.width, H = arms[0].armature.armatureData.aabb.height;
-	const fit = () => { const w = ov.clientWidth || 1, h = ov.clientHeight || 1; app.renderer.resize(w, h); const k = h / H; root.scale.set(k); root.position.set((w - W * k) / 2, 0); };
+	// fix4 glow_portrait: the board is CSS-scaled by the stage (ST.s); render at screen resolution so the silhouette edge
+	// (which the win glow traces) is not a 2.77x-upscaled blur in portrait
+	const fit = () => { const w = ov.clientWidth || 1, h = ov.clientHeight || 1; app.renderer.resize(w, h, Math.min(3, (window.devicePixelRatio || 1) * Math.max(1, ST.s))); const k = h / H; root.scale.set(k); root.position.set((w - W * k) / 2, 0); };
 	ov.prepend(cv);
 	// review #18: single-reel wilds get their calm breathing neon outline (WF_Rn_glow, same frame as the rig aabb),
 	// with one gentle brighten as they land, then the breathe loop (CSS .stk_glow in notile.css)
