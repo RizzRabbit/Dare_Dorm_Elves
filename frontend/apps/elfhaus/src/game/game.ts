@@ -48,6 +48,10 @@ import { applyLayers } from './layers';
 import { loadAllFx } from './fx';
 import { startSpin, abortSpin, hurry } from './reels';
 import { hideRespin } from './respin';
+// fix7: the mock RGS (src/mock) is a compile-time flag. DEV, or a demo build (VITE_ELFHAUS_DEMO=1 in the environment).
+// .env.production pins VITE_ELFHAUS_DEMO=0 so a release build sees a literal ('0' === '1' -> false) and Rollup drops
+// every import('../mock/mockRgs') with its books; an unset VITE_ var stays a runtime lookup and kept the module inlined.
+const MOCK_RGS = import.meta.env.DEV || import.meta.env.VITE_ELFHAUS_DEMO === '1';
 import type { BookEvent } from './typesBookEvent';
 
 const DISCLAIMER =
@@ -61,7 +65,7 @@ const url = {
 	event: q.get('event') || '', amount: Number(q.get('amount')) || 0,
 	// dev-only (vite dev, offline fixture books): in the release build this spread is {} so not even the field names
 	// reach the bundle, and a missing rgs_url can only end in the ERR_RGS_URL error screen
-	...(((import.meta.env.DEV || import.meta.env.VITE_ELFHAUS_DEMO === '1') ? { mock: q.get('mock') === 'true' || (!q.get('rgs_url') && !q.get('replay')), book: q.get('book') || '' } : {}) as { mock?: boolean; book?: string }),
+	...((MOCK_RGS ? { mock: q.get('mock') === 'true' || (!q.get('rgs_url') && !q.get('replay')), book: q.get('book') || '' } : {}) as { mock?: boolean; book?: string }),
 };
 let sessionReady = false;
 let replayState: BookEvent[] = [];
@@ -215,7 +219,7 @@ function roundPayout(round: any) {
 }
 async function finishRound(round: any) {
 	if (round?.active) { // v3.16e (#221): end-round only for an open round (the RGS returns wins active, 0x rounds already closed)
-		const end: any = (import.meta.env.DEV || import.meta.env.VITE_ELFHAUS_DEMO === '1') && url.mock ? await (await import('../mock/mockRgs')).mockEndRound({}) : await requestEndRound({ sessionID: url.sessionID, rgsUrl: url.rgsUrl });
+		const end: any = MOCK_RGS && url.mock ? await (await import('../mock/mockRgs')).mockEndRound({}) : await requestEndRound({ sessionID: url.sessionID, rgsUrl: url.rgsUrl });
 		if (end?.error) throw end;
 		// v20 (James on Stake: a $5.368 win only reached the balance at the next press, $974.57 -> $979.94 -> $972.44):
 		// the win is credited here, at the end of the round after its presentation. The end-round balance is the server
@@ -240,7 +244,7 @@ async function round(mode: ModeKey) {
 	document.querySelectorAll<HTMLElement>('#cells .cell').forEach((c) => { c.classList.remove('locked'); c.style.visibility = ''; });
 	startSpin();
 	try {
-		const data: any = (import.meta.env.DEV || import.meta.env.VITE_ELFHAUS_DEMO === '1') && url.mock
+		const data: any = MOCK_RGS && url.mock
 			? await (await import('../mock/mockRgs')).mockBet({ currency: S.currency, amount: bet(), mode, forcedBook: url.book || undefined })
 			: await requestBet({ sessionID: url.sessionID, rgsUrl: url.rgsUrl, currency: S.currency, amount: bet(), mode });
 		if (data?.error) throw data;
@@ -264,7 +268,7 @@ async function round(mode: ModeKey) {
 
 // ---------- startup ----------
 async function authenticate() {
-	if ((import.meta.env.DEV || import.meta.env.VITE_ELFHAUS_DEMO === '1') && url.mock) {
+	if (MOCK_RGS && url.mock) {
 		const a = await (await import('../mock/mockRgs')).mockAuthenticate({ language: url.lang, currency: url.currency || undefined });
 		if (a.balance) { S.currency = a.balance.currency; setCurrency(S.currency); S.balance = a.balance.amount / API_AMOUNT_MULTIPLIER; }
 		const c = a.config || {};
@@ -334,7 +338,7 @@ async function loadReplay() {
 	S.currency = url.currency || 'USD'; setCurrency(S.currency);
 	// v3.16 (#172): a missing or bad amount never shows $0.00; amounts are then shown for a 1.00 bet
 	S.replayBet = url.amount > 0 ? url.amount / API_AMOUNT_MULTIPLIER : 1; replayNoAmt = !(url.amount > 0);
-	if ((import.meta.env.DEV || import.meta.env.VITE_ELFHAUS_DEMO === '1') && (url.mock || !url.rgsUrl)) {
+	if (MOCK_RGS && (url.mock || !url.rgsUrl)) {
 		const d: any = await (await import('../mock/mockRgs')).mockReplay({ mode: url.mode, event: url.event || url.book || '' });
 		replayState = d.state; replayCost = Number(d.costMultiplier) || modeCost(url.mode as ModeKey) || 1; setRoundMode(url.mode);
 		$('#replayMode').textContent = replayLabel();
