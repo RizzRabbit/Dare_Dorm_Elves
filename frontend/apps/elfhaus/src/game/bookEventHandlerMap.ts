@@ -278,7 +278,7 @@ export const bookEventHandlerMap: Handlers = {
 				dare: { u: 'assets/cards/card_dare.webp', c: [0, 0, 1, 1], px: [640, 640] },
 				double_dare: { u: 'assets/cards/card_double_dare.webp', c: [0, 0, 1, 1], px: [640, 640] },
 				triple_dare: { u: 'assets/cards/card_triple_dare.webp', c: [0, 0, 1, 1], px: [640, 640] },
-				hidden: { u: 'assets/cards/card_egw.webp', c: [0, 0, 1, 1], px: [640, 640] } };
+				hidden: { u: 'assets/cards/card_powder_day.webp', c: [0, 0, 1, 1], px: [640, 640] } };
 		  const t = art[ev.tier] || art.double_dare, [x0, y0, x1, y1] = t.c, cw = x1 - x0, ch = y1 - y0;
 		  let wv = I.querySelector<HTMLElement>('.card .tArtWin'), a = wv?.querySelector<HTMLImageElement>('img.tArt');
 		  if (!wv || !a) { wv = document.createElement('div'); wv.className = 'tArtWin'; a = document.createElement('img'); a.className = 'tArt'; a.alt = ''; a.draggable = false;
