@@ -32,6 +32,7 @@ import { skipHolds, syncTempo } from './tempo';
 import { playBookEvents, endBonusUi } from './bookEventHandlerMap';
 import { initRoxy, placeRoxy } from './roxy';
 import { initStacks, stackIdle } from './stacks';
+import { initSkin } from './skin';
 import { setBg, warmBg } from './bg';
 import { placeAlcove } from './alcove';
 import { mkCell, mkPlace, fitArmTag } from './mkboard';
@@ -685,6 +686,7 @@ export async function initGame() {
 	document.addEventListener('pointerdown', (e) => { const t = e.target as Element; if (!t?.closest?.('#bigwin,#outro')) { const ui = !!t?.closest?.('#menu,#popMenu,#buyMenu,#bmConfirm,#autoMenu,#msg,#resumeCard'); skipBoard(false, !ui && !t?.closest?.('#menuBtn,#buyBtn,#autoBtn,#turboBtn,#betUp,#betDown') && !anyOpen() && !popOpen()); if (!ui && !winPresenting()) hurry(); } }, { capture: true, passive: true });
 	track(initRoxy(layout));
 	loadAllFx(track).then(() => renderAll());
+	initSkin();   // painted sprite skin for the DOM pieces (skin.ts)
 	setOverlayHook(stackIdle); initStacks().then(() => renderOverlays(false)); // optional stack / per-reel expand sheets (placeholders until imported)
 	track(document.fonts?.ready ?? Promise.resolve());
 	buildCells(); S.sym = IDLE.map((c) => [...c]); S.vals = new Map([[2 * 4 + 2, 1]]);

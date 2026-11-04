@@ -1,0 +1,20 @@
+/* Painted-sprite skin (src/game/skin.ts). Loaded last. CSS here only removes the old code-drawn looks (fills, borders,
+   radii, shadows, gradients, text strokes, inline SVG icons) from pieces that now show an atlas frame on a canvas
+   (.skC behind / .skI over) or bitmap-font glyphs (.bmC). It draws nothing itself. */
+html body.skin .sk{position:relative;isolation:isolate;background:none!important;border-color:transparent!important;border-image:none!important;box-shadow:none!important;outline-color:transparent;filter:none!important;-webkit-mask:none;mask:none}
+html body.skin .sk::before,html body.skin .sk::after{background:none!important;box-shadow:none!important;border-color:transparent!important}
+html body.skin .sk>svg,html body.skin .sk>.mkI,html body.skin .sk>.pmI,html body.skin .sk>.disc>svg{visibility:hidden}
+html body.skin .skI,html body.skin .skWd{position:absolute;inset:0;pointer-events:none;z-index:1;display:block}
+html body.skin .skW{color:transparent!important;-webkit-text-stroke:0!important;text-shadow:none!important;position:relative}
+html body.skin .bm{color:transparent!important;-webkit-text-stroke:0!important;text-shadow:none!important;background:none!important;position:relative}
+html body.skin .bm>*{color:transparent!important;-webkit-text-stroke:0!important;text-shadow:none!important}
+/* 71: the dim is the ui atlas 'dim' frame (30%) on the overlay's canvas */
+html body.skin .overlay.sk{background:none!important;backdrop-filter:none!important}
+/* 23: the sunburst is the fx atlas frame, turned slowly (transform only) */
+html body.skin .bwFx.sk>.skC{animation:skSpin 24s linear infinite;transform-origin:50% 50%}
+@keyframes skSpin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){html body.skin .bwFx.sk>.skC{animation:none}}
+/* 70, 75, 79, 80: legacy code-drawn pieces removed */
+html body.skin #reelLines,html body.skin #mkBuyGlow,html body.skin .wFrame{display:none!important}
+html body.skin #frame,html body.skin #board{box-shadow:none!important;border-color:transparent!important}
+html body.skin #spinBtn.spinning .skI{animation:skSpin 0.9s linear infinite}
