@@ -586,3 +586,53 @@ body.hasRoom #bg,body.hasRoom #bgFade{visibility:hidden}
    inner edge toward the fire, shaded edge away. A sprite, not a drawn shadow. */
 body.mk #app #cells .cell>.tile:not(.tTop)::before,body.mk #app #strips .cspin>.cwin>.sl>.slT::after{content:"";position:absolute;inset:0;z-index:4;pointer-events:none;
   background:url(assets/board/boardfx.webp) no-repeat 27.3611% 95.2000%/586.4865% 775.6757%}
+/* bonus cards (#intro, #fsMore, #outro): every visual is a sprite part of assets/ui (scripts/gen-modal-sprites.mjs), placed as
+   pixel-snapped 9-slices (ninepanel.ts canvas behind the content); CSS only sizes, places and fades them. The words / numbers are the title lettering (titletype.ts glyphs). */
+html body #intro.overlay,html body #outro.overlay{background:url(assets/ui/modal_dim.webp) 0 0/100% 100% no-repeat!important}
+html body #fsMore.overlay{background:none!important}
+html body #fsMore.overlay::before{content:"";position:absolute;inset:0;background:url(assets/ui/modal_dim.webp) 0 0/100% 100% no-repeat;opacity:.35;pointer-events:none}
+html body #intro .card,html body #outro .card,html body #fsMore .card{background:none!important;box-shadow:none!important;border-radius:0!important;
+  border:0!important;border-image:none!important;padding:34px 64px 38px!important;max-width:calc(var(--dw) - 40px)!important;box-sizing:border-box}
+html body #intro .card,html body #outro .card,html body #fsMore .card,html body #intro .cont{position:relative;isolation:isolate}
+html body #intro .card{display:flex;flex-direction:column;align-items:center}
+html body #intro .tierName img.tTitle{filter:none!important}
+html body #intro .tierName,html body #outro .tierName,html body #fsMore .fmBig{text-shadow:none!important}
+/* title lettering: 1em = one glyph row; the cells carry the letters' own breathing room, trimmed a little so words sit together */
+html body .tgRow{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;line-height:1;vertical-align:middle;pointer-events:none}
+html body .tg{display:block;height:1em;width:calc(var(--w)*1em);margin:0 -.07em;background-image:url(assets/ui/titletype.webp);background-repeat:no-repeat}
+html body .tgS{display:block;width:.12em;height:1em}
+html body .tgF{font-family:var(--ui);font-weight:400;color:var(--c-cream);font-size:.62em;line-height:1}
+html body .tgA,html body .ttSrc{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip-path:inset(50%)!important;white-space:nowrap!important;margin:0!important;padding:0!important}
+/* intro: picture window (head and shoulders; crop per tier in bookEventHandlerMap.ts), hero spin count, START */
+html body #intro .tArtWin{--ah:320px;position:relative;overflow:hidden;border-radius:16px;aspect-ratio:var(--ar);width:min(100%,calc(var(--ah)*var(--ar)),560px);
+  margin:.1em auto 0;flex:none}
+html body #intro .tArtWin img.tArt{position:absolute!important;display:block;max-width:none!important;object-fit:fill!important;margin:0!important;border:0!important;
+  border-radius:0!important;box-shadow:none!important;background:none!important}
+html body #intro .tArtWin .tArtFr{position:absolute;inset:0;isolation:isolate;pointer-events:none}
+html body #intro .spins{font-size:118px!important;line-height:1!important;margin:.06em 0 .02em!important;letter-spacing:0!important;color:inherit!important}
+html body #intro .cont,html body #intro .cont:hover{background:none!important;box-shadow:none!important;text-shadow:none!important;border-radius:0!important;
+  border:0!important;border-image:none!important;font-size:58px!important;line-height:1!important;min-height:92px!important;min-width:260px!important;padding:12px 56px 20px!important;margin-top:.15em!important;
+  display:inline-flex;align-items:center;justify-content:center;transition:transform .12s ease-out}
+html body #intro .cont:hover{transform:scale(1.04)}
+html body #intro .cont:active{transform:scale(.97)}
+/* retrigger card */
+html body #fsMore .fmBig{font-size:136px!important;line-height:1!important;letter-spacing:0!important}
+html body #fsMore[data-max="1"] .fmBig{font-size:104px!important}
+html body #fsMore .fmSub{font-size:56px!important;line-height:1!important;margin-top:0!important;letter-spacing:0!important}
+html body #fsMore .card{padding:28px 60px 36px!important}
+/* outro */
+html body #outro .card{display:flex;flex-direction:column;align-items:center}
+html body #outro .tierName{font-size:84px!important;line-height:1!important}
+html body #outro .otAmtG{font-size:124px;line-height:1;margin-top:.04em;min-height:1em}
+html body #outro .otHint{font-size:44px!important;line-height:1!important;margin-top:.3em!important;letter-spacing:0!important}
+/* portrait (390 design px wide): one line each, still the biggest thing on the card */
+html body.portrait #intro .card,html body.portrait #outro .card{padding:28px 30px 32px!important}
+html body.portrait #intro .tArtWin{--ah:236px;width:min(100%,calc(var(--ah)*var(--ar)),300px)}
+html body.portrait #intro .spins{font-size:66px!important}
+html body.portrait #intro .cont{font-size:44px!important;min-height:76px!important;min-width:210px!important;padding:10px 40px 16px!important}
+html body.portrait #fsMore .card{padding:22px 34px 30px!important}
+html body.portrait #fsMore .fmBig{font-size:92px!important} html body.portrait #fsMore[data-max="1"] .fmBig{font-size:66px!important}
+html body.portrait #fsMore .fmSub{font-size:40px!important}
+html body.portrait #outro .tierName{font-size:56px!important}
+html body.portrait #outro .otAmtG{font-size:70px}
+html body.portrait #outro .otHint{font-size:30px!important}
