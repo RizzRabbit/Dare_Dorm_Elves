@@ -6,7 +6,9 @@
 // stage (eased settle) and the next one plays normally. Turbo plays a fast version (no b). Normal pace = studio pace (anim-v4, tempo.ts TG; was x ANIM_TEMPO).
 // Cost: one canvas, one painted line_seg per segment + joints + the line_head stamp (fx atlas);
 // nothing animates filter/shadow, and the canvas is cleared and idle between lines.
-import { atlasFrame, drawFrame } from './skin';
+import { Container, Sprite } from 'pixi.js';
+import { loadAtlas, atlasTex } from './scene/atlas';
+import { boardStage, layer, kick, centreOf } from './board/stage';
 import { LINES, REELS } from './config';
 import { S, $, bet, cellEl, setWinMeter } from './ui';
 import { symWin, clearSymWins, litOn, burst } from './fx';
@@ -19,44 +21,43 @@ import { voice } from './voice';
 import { skipCounts, levelOf, WIN_EDGES, BIG_TIERS, maxLevel } from './countup';
 import { presenting, stage } from './winstage';
 
-let cv: HTMLCanvasElement | null = null, ctx: CanvasRenderingContext2D | null = null, dpr = 1;
 let skipLine = false, skipAll = false, active = false;
-
+// fix7: the lines are Pixi sprites (painted fx-atlas line_seg / line_joint / line_head) in the unified board stage
+// (board/stage.ts layer `lines`), drawn once per frame at device px. Nodes sit on each cell's real centre (centreOf).
+let G: Container | null = null, ready = false;
+const pool: Sprite[] = []; let used = 0;
 function ensure() {
-	const board = $('#board');
-	if (!cv) { cv = $('#lines') as unknown as HTMLCanvasElement; ctx = cv.getContext('2d'); }
-	const w = board.clientWidth, h = board.clientHeight; dpr = Math.min(2, window.devicePixelRatio || 1);
-	if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
-	atlasFrame('fx', 'line_seg');   // start decoding the painted line parts
+	void boardStage().then((a) => { if (!a || G) return; G = new Container(); G.label = 'winlines'; layer.lines.addChild(G); });
+	if (!ready) void loadAtlas('fx').then(() => { ready = true; });
 }
-/** Points of the line through cell centres, from just outside reel 1 to just outside the last reel. */
+function begin() { used = 0; }
+function end() { for (let i = used; i < pool.length; i++) pool[i].visible = false; kick(); }
+function put(name: string, x: number, y: number, w: number, h: number, rot: number, alpha: number) {
+	if (!G || !ready) return;
+	let s = pool[used]; if (!s) { s = new Sprite(); s.anchor.set(0.5); pool.push(s); G.addChild(s); }
+	used++; s.texture = atlasTex('fx', name); s.visible = true; s.position.set(x, y); s.rotation = rot; s.width = w; s.height = h; s.alpha = alpha;
+}
+/** Points of the line through the cells' real centres (frame-local px), from just outside reel 1 to just outside the last reel. */
 function path(li: number) {
-	const ln = LINES[li - 1], c = S.cell, pts = ln.map((row, r) => [r * c + c / 2, row * c + c / 2]);
-	const ext = c * 0.42; pts.unshift([pts[0][0] - ext, pts[0][1]]); pts.push([pts[pts.length - 1][0] + ext, pts[pts.length - 1][1]]);
+	const ln = LINES[li - 1], pts = ln.map((row, r) => { const C = centreOf(cellEl(r, row)); return [C.x, C.y]; });
+	const c = cellEl(0, 0).offsetWidth || S.cell, ext = c * 0.42;
+	pts.unshift([pts[0][0] - ext, pts[0][1]]); pts.push([pts[pts.length - 1][0] + ext, pts[pts.length - 1][1]]);
 	const seg = pts.slice(1).map((p, i) => Math.hypot(p[0] - pts[i][0], p[1] - pts[i][1]));
-	return { pts, seg, len: seg.reduce((a, b) => a + b, 0) };
+	return { pts, seg, len: seg.reduce((a, b) => a + b, 0), c };
 }
 function draw(P: ReturnType<typeof path>, p: number, alpha: number) {
-	const g = ctx!; g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, cv!.width, cv!.height);
-	if (alpha <= 0) return;
-	let left = P.len * p; const pts = [P.pts[0]];
-	for (let i = 0; i < P.seg.length && left > 0; i++) {
-		const f = Math.min(1, left / P.seg[i]), a = P.pts[i], b = P.pts[i + 1];
-		pts.push([a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f]); left -= P.seg[i];
-	}
-	stroke(g, pts, p, alpha);
-	g.globalAlpha = 1;
+	begin(); if (alpha > 0) stroke(cut(P, p), p, alpha, P.c); end();
 }
 /** The win line as painted fx-atlas parts laid along the path: line_seg stretched along each segment, line_joint on every
  *  bend, line_head leading while it draws on (no code-drawn strokes or gradients). */
-function stroke(g: CanvasRenderingContext2D, pts: number[][], p: number, alpha: number) {
-	const k = S.cell / 78, th = 18 * k; g.globalAlpha = alpha;
+function stroke(pts: number[][], p: number, alpha: number, c: number) {
+	const k = c / 78, th = 18 * k;
 	for (let i = 1; i < pts.length; i++) {
 		const a = pts[i - 1], b = pts[i], dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy); if (L < 0.5) continue;
-		drawFrame(g, 'fx', 'line_seg', (a[0] + b[0]) / 2, (a[1] + b[1]) / 2, L + th * 0.5, th, Math.atan2(dy, dx));
+		put('line_seg', (a[0] + b[0]) / 2, (a[1] + b[1]) / 2, L + th * 0.5, th, Math.atan2(dy, dx), alpha);
 	}
-	for (let i = 1; i < pts.length - 1; i++) drawFrame(g, 'fx', 'line_joint', pts[i][0], pts[i][1], th * 1.3, th * 1.3);
-	if (p < 1) { const h = pts[pts.length - 1], s = 30 * k; drawFrame(g, 'fx', 'line_head', h[0], h[1], s, s); }
+	for (let i = 1; i < pts.length - 1; i++) put('line_joint', pts[i][0], pts[i][1], th * 1.3, th * 1.3, 0, alpha);
+	if (p < 1) { const h = pts[pts.length - 1], s = 30 * k; put('line_head', h[0], h[1], s, s, 0, alpha); }
 }
 function cut(P: ReturnType<typeof path>, p: number) {
 	let left = P.len * p; const pts = [P.pts[0]];
@@ -67,10 +68,7 @@ function cut(P: ReturnType<typeof path>, p: number) {
 	return pts;
 }
 function drawAll(Ps: ReturnType<typeof path>[], p: number, alpha: number) {
-	const g = ctx!; g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, cv!.width, cv!.height);
-	if (alpha <= 0) return;
-	for (const P of Ps) stroke(g, cut(P, p), p, alpha);
-	g.globalAlpha = 1;
+	begin(); if (alpha > 0) for (const P of Ps) stroke(cut(P, p), p, alpha, P.c); end();
 }
 const frame = () => new Promise<number>((r) => requestAnimationFrame(r));
 const easeIO = (t: number) => (t < .5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
@@ -93,7 +91,7 @@ function label(pos: { reel: number; row: number }[], txt: string) {
 	$('#board').appendChild(el); return el;
 }
 export function clearRace() {
-	if (ctx && cv) { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height); }
+	begin(); end();
 	document.querySelectorAll('.wlAmt').forEach((e) => e.remove());
 }
 
