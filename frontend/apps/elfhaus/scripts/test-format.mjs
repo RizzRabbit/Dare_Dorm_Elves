@@ -9,7 +9,7 @@ const cases = [ // moneyWin(): exact win amounts
 	['USD', 0, '$0.00'], ['USD', 0.01, '$0.01'], ['USD', 0.0025, '$0.0025'], ['USD', 0.025, '$0.025'], ['USD', 0.0250, '$0.025'],
 	['USD', 1.5, '$1.50'], ['USD', 1234.5678, '$1,234.5678'], ['USD', 1234567.891, '$1,234,567.891'], ['USD', 25000000, '$25,000,000.00'],
 	['USD', 0.1 + 0.2, '$0.30'], ['USD', 0.30000000004, '$0.30'], ['USD', 12.3456, '$12.3456'], ['USD', 0.2, '$0.20'], ['USD', -1.5, '-$1.50'],
-	['JPY', 1234.5, '¥1,234.5'], ['JPY', 0.5, '¥0.5'], ['EUR', 1.5, '€1.50'], ['XGC', 1234.5, '1,234.50\u00a0GC'], ['XSC', 0.0025, '0.0025\u00a0SC'], ['XGC', 1234567.891, '1,234,567.891\u00a0GC'], ['XEC', 22.8, '22.80\u00a0SC'], ['CHF', 1.5, 'CHF\u00a01.50'], ['ZZZ', 1.5, 'ZZZ\u00a01.50'],
+	['JPY', 1234.5, '¥1,234.5'], ['JPY', 0.5, '¥0.5'], ['EUR', 1.5, '€1.50'], ['XGC', 1234.5, '1,234.50\u00a0GC'], ['XSC', 0.0025, '0.0025\u00a0SC'], ['XGC', 1234567.891, '1,234,567.891\u00a0GC'], ['XEC', 22.8, '22.80\u00a0SC'], ['CHF', 1.5, '1.50\u00a0CHF'], ['ZZZ', 1.5, '1.50\u00a0ZZZ'], ['BRL', 12.5, 'R$12.50'], ['INR', 1234.5, '₹1,234.50'], ['KRW', 1500, '₩1,500'], ['VND', 25000, '25,000\u00a0₫'], ['PLN', 10, '10.00\u00a0zł'], ['CLP', 900, '900\u00a0CLP'], ['KWD', 1.5, 'KD1.500'], ['GBP', 3, '£3.00'], ['TRY', 2.5, '₺2.50'], ['PHP', 1, '₱1.00'], ['MXN', 5, 'MX$5.00'], ['CAD', 5, 'CA$5.00'], ['PEN', 5, 'S/5.00'], ['DKK', 5, '5.00\u00a0kr'],
 ];
 let fail = 0;
 console.log('\n=== Money formatter ===');
@@ -39,11 +39,17 @@ if (fail === f0) console.log('  OK exact sub-unit amounts ($0.975, $0.5625, $0.0
 if (fail === f0) console.log('  OK exact at every magnitude ($1.212, $2.225, $1,234.5675, $50,400.00, 1,234,567.891234 GC, 1.212 SC, ¥1.212, ¥50,400; 0.1+0.2 -> $0.30)'); }
 // v3.16i (James): balance and bet / PLAY always at the currency's standard decimals, normal rounding, float-safe
 { const f0 = fail; for (const [c, v, w] of [['USD', 0, '$0.00'], ['USD', 1001.212, '$1,001.21'], ['USD', 1002.225, '$1,002.23'], ['USD', 1234567.891234, '$1,234,567.89'], ['USD', 1.005, '$1.01'], ['USD', 0.1 + 0.2, '$0.30'], ['USD', 0.0025, '$0.00'], ['USD', 50400, '$50,400.00'], ['USD', 1.2, '$1.20'], ['USD', -1.5, '-$1.50'],
-	['JPY', 1234.5, '¥1,235'], ['JPY', 50400, '¥50,400'], ['EUR', 1.5, '€1.50'], ['XGC', 1234567.891234, '1,234,567.89\u00a0GC'], ['XGC', 1001.212, '1,001.21\u00a0GC'], ['XSC', 10000, '10,000.00\u00a0SC'], ['XEC', 22.8, '22.80\u00a0SC'], ['CHF', 1.5, 'CHF\u00a01.50'], ['ZZZ', 1.5, 'ZZZ\u00a01.50']]) {
+	['JPY', 1234.5, '¥1,235'], ['JPY', 50400, '¥50,400'], ['EUR', 1.5, '€1.50'], ['XGC', 1234567.891234, '1,234,567.89\u00a0GC'], ['XGC', 1001.212, '1,001.21\u00a0GC'], ['XSC', 10000, '10,000.00\u00a0SC'], ['XEC', 22.8, '22.80\u00a0SC'], ['CHF', 1.5, '1.50\u00a0CHF'], ['ZZZ', 1.5, '1.50\u00a0ZZZ'], ['BRL', 12.5, 'R$12.50'], ['INR', 1234.5, '₹1,234.50'], ['KRW', 1500, '₩1,500'], ['VND', 25000, '25,000\u00a0₫'], ['PLN', 10, '10.00\u00a0zł'], ['CLP', 900, '900\u00a0CLP'], ['KWD', 1.5, 'KD1.500'], ['GBP', 3, '£3.00'], ['TRY', 2.5, '₺2.50'], ['PHP', 1, '₱1.00'], ['MXN', 5, 'MX$5.00'], ['CAD', 5, 'CA$5.00'], ['PEN', 5, 'S/5.00'], ['DKK', 5, '5.00\u00a0kr']]) {
 	F.setCurrency(c); const g = F.money(v); if (g !== w) { fail++; console.error(`  FAIL standard ${c} ${v}: got ${JSON.stringify(g)} want ${JSON.stringify(w)}`); } }
 if (fail === f0) console.log('  OK standard decimals for balance / bet ($1,001.21 not $1,001.212, $1,234,567.89, ¥1,235, 1,234,567.89 GC, 10,000.00 SC)'); }
 // v3.16i: the same win is $1.212 on the card / HUD win (moneyWin) while the balance after it reads $1,001.21 (money)
 F.setCurrency('USD'); if (F.moneyWin(1.2 * 1.01) !== '$1.212' || F.money(1000 + 1.2 * 1.01) !== '$1,001.21') { fail++; console.error('  FAIL win exact / balance standard split'); } else console.log('  OK win $1.212 (exact) / balance $1,001.21 (standard)');
 F.setCurrency('USD');
 console.log(`Formatter: ${fail ? fail + ' failures' : `${cases.length + 15}/${cases.length + 15} passed`}`);
+// Currency glyphs: every character a formatted amount can contain exists in the painted fonts (no dropped symbols)
+{ const f0 = fail; for (const font of ['font_gold', 'font_cream', 'font_ink', 'font_cran']) {
+	const fr = JSON.parse(readFileSync(new URL(`../static/assets/sprites/${font}/${font}.json`, import.meta.url), 'utf8')).frames;
+	for (const c of [...F.CURRENCIES, 'ZZZ']) { F.setCurrency(c); for (const ch of F.money(-1234.5) + F.moneyWin(0.25)) { if (ch === '\u00a0' || ch === ' ') continue;
+		const k = (x) => 'u' + x.codePointAt(0).toString(16).toUpperCase().padStart(4, '0'); if (!fr[k(ch.toUpperCase())] && !fr[k(ch)]) { fail++; console.error(`  FAIL ${font} lacks '${ch}' (${c})`); } } } }
+  if (fail === f0) console.log(`  OK painted fonts carry every character for ${F.CURRENCIES.length} currencies`); F.setCurrency('USD'); }
 process.exit(fail ? 1 : 0);

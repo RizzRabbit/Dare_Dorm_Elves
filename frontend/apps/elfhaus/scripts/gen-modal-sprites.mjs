@@ -6,7 +6,8 @@
 //   static/assets/ui/modal_dim.webp      the room dimming behind a bonus card (a soft vignette, stretched over the stage)
 //   static/assets/ui/titletype.webp + src/game/chalet/titletype.json   the title lettering (cream face, ink line, green rim and a
 //       darker green extrusion, as on the hand-lettered bonus titles) for digits, + $ . , x / and the card words
-// Run from frontend/apps/elfhaus:  node scripts/gen-modal-sprites.mjs
+// Run from frontend/apps/elfhaus:  node scripts/gen-modal-sprites.mjs   (ONLY=title: just the title lettering)
+// Currency: the lettering also carries every currency symbol and A-Z (codes like CA$, KR, GC), see format.ts.
 import { writeFileSync, readFileSync } from 'node:fs';
 const PW = process.env.PW || '/usr/local/lib/pnpm/5/.pnpm/playwright@1.63.0-alpha-2026-08-31/node_modules/playwright/index.mjs';
 const { chromium } = await import(PW);
@@ -58,7 +59,7 @@ const out = await p.evaluate(async ({ font }) => {
 	{ // title lettering
 		const ff = new FontFace('Lilita One', `url(${font})`); await ff.load(); document.fonts.add(ff);
 		const FS = 120, E = 10, PAD = 16, H = Math.round(FS * 1.08) + E + 2 * PAD;   // cell: cap height area + extrusion + room for the strokes
-		const toks = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '$', '.', ',', 'x', '/', 'FREE SPINS', 'START', 'MAX', 'TOTAL WIN', 'TAP TO CONTINUE'];
+		const toks = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '$', '.', ',', 'x', '/', '-', ...'€£¥₹₩₺₱₫₽₦₪₡₨₵₸₴฿ŁČŠ', ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'FREE SPINS', 'START', 'MAX', 'TOTAL WIN', 'TAP TO CONTINUE'];
 		const m = document.createElement('canvas').getContext('2d'); m.font = `${FS}px "Lilita One"`;
 		const cells = toks.map((t) => { const w = Math.ceil(m.measureText(t).width + 2 * PAD + 8); return { t, w }; });
 		const AW = 2048; let x = 0, y = 0; for (const c of cells) { if (x + c.w > AW) { x = 0; y += H + 2; } c.x = x; c.y = y; x += c.w + 2; }
@@ -82,7 +83,7 @@ const out = await p.evaluate(async ({ font }) => {
 	return res;
 }, { font });
 const save = (path, url) => writeFileSync(path, Buffer.from(url.split(',')[1], 'base64'));
-save('static/assets/ui/modal_card9.webp', out.card); save('static/assets/ui/modal_window9.webp', out.window); save('static/assets/ui/modal_btn9.webp', out.btn); save('static/assets/ui/modal_dim.webp', out.dim);
+if (process.env.ONLY !== 'title') { save('static/assets/ui/modal_card9.webp', out.card); save('static/assets/ui/modal_window9.webp', out.window); save('static/assets/ui/modal_btn9.webp', out.btn); save('static/assets/ui/modal_dim.webp', out.dim); }
 save('static/assets/ui/titletype.webp', out.title); writeFileSync('src/game/chalet/titletype.json', JSON.stringify(out.titleJson));
 console.log(out.titleJson.size, out.titleJson.h);
 await b.close();
