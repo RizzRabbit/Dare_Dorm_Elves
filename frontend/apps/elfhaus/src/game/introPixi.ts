@@ -7,7 +7,7 @@
 // Own transparent canvas (#introCv) inside #root just under #loader (which stays as the transparent tap / keyboard /
 // "Don't show this again" layer). The game is driven with CSS individual transforms (scale / translate / opacity) and Roxy
 // through the rig adapter. No WebGL -> initIntro() resolves false and the DOM splash shows instead.
-import { Application, Container, Graphics, PerspectiveMesh, Sprite, Text, Texture } from 'pixi.js';
+import { Application, BlurFilter, Container, Graphics, PerspectiveMesh, Sprite, Text, Texture } from 'pixi.js';
 import { ST, fitStage } from './stage';
 import { ease, clamp, seg, lerp } from './scene/util';
 import { loadTex } from './scene/load';
@@ -180,6 +180,22 @@ function cardText(c, size, wrapW, maxH) {   // title + detail in the painted fon
   if (ti?.scale && ti.width > wrapW * 0.96) ti.scale.set(ti.scale.x * wrapW * 0.96 / ti.width);   // uifix: title always fits inside the card padding
   return { ti, ln };
 }
+function addDepth(C, n, kind) {   // carddepth: painted depth so title / detail / art sit ON the cream card, not pasted flat
+  if (!(n instanceof Sprite) || n instanceof Text) { C.addChild(n); return; }
+  const cp = (tint, dx, dy, a) => { const s = new Sprite(n.texture); s.anchor.copyFrom(n.anchor); s.scale.copyFrom(n.scale);
+    s.position.set(n.x + dx, n.y + dy); s.tint = tint; s.alpha = a; C.addChild(s); return s; };
+  if (kind === 'art') {   // soft contact shadow under the symbol + a faint warm rim
+    const sh = cp(0x3a1d10, 3, 6, 0.42); sh.filters = [new BlurFilter({ strength: 6, quality: 3 })];
+    for (const [dx, dy] of [[-1.5, 0], [1.5, 0], [0, -1.5], [0, 1.5]]) cp(0xfff6e0, dx, dy, 0.55);
+  } else if (kind === 'title') {   // cream/white outline + bevel highlight + soft drop shadow
+    const sh = cp(0x4a2414, 2, 3, 0.45); sh.filters = [new BlurFilter({ strength: 2, quality: 2 })];
+    for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4; cp(0xfffaee, Math.cos(a) * 2.2, Math.sin(a) * 2.2, 1); }
+    cp(0x5a1010, 0, 1.4, 0.9);   // lower bevel edge
+  } else {   // detail: letterpress (light below, faint dark above) so it reads as printed into the card
+    cp(0xffffff, 0, 1.2, 0.75); cp(0x2a160c, 0, -0.6, 0.18);
+  }
+  C.addChild(n);
+}
 function buildCards() {
   cardsC = new Container(); cardsC.sortableChildren = true; root.addChild(cardsC); cardEls = [];
   const { cw: w, ch: h, row } = G.pc;
@@ -188,16 +204,16 @@ function buildCards() {
     const art = new Sprite(tex['card_' + c.key]); art.anchor.set(0.5); const tw = art.texture.width, th = art.texture.height;
     if (row) {   // landscape: art left, title + detail right
       const ah = h - 24, aw = w * 0.36, fit = Math.min(aw / tw, ah / th);
-      art.scale.set(fit); const artW = tw * fit; art.position.set(-w / 2 + 14 + aw / 2, 0); C.addChild(art);
+      art.scale.set(fit); const artW = tw * fit; art.position.set(-w / 2 + 14 + aw / 2, 0); addDepth(C, art, 'art');
       const tx = -w / 2 + 14 + aw + 14, wrapW = w / 2 - 16 - tx;
       const { ti, ln } = cardText(c, { t: ST.compact ? Math.min(26, h * 0.1) : Math.max(16, Math.min(36, h * 0.11)), l: ST.compact ? Math.min(18, h * 0.065) : Math.max(12.5, Math.min(25, h * 0.075)), al: 'left' }, wrapW, h - 28);
       const bh = ti.height + 6 + ln.height, y = -bh / 2;
-      ti.position.set(tx, y); ln.position.set(tx, y + ti.height + 6); C.addChild(ti, ln);
+      ti.position.set(tx, y); ln.position.set(tx, y + ti.height + 6); addDepth(C, ti, 'title'); addDepth(C, ln, 'line');
     } else {     // portrait: art on top, title + detail under it
       const { ti, ln } = cardText(c, { t: Math.max(17, Math.min(24, w * 0.072)), l: Math.max(12.5, Math.min(15.5, w * 0.047)), al: 'center' }, w - 30, h * 0.56);
       const textH = ti.height + 6 + ln.height, ab = Math.max(50, h - 14 - textH - 14 - 10), fit = Math.min((w - 30) / tw, ab / th);
-      art.scale.set(fit); art.position.set(0, -h / 2 + 14 + ab / 2); C.addChild(art);
-      ti.anchor.set(0.5, 0); ti.position.set(0, -h / 2 + 14 + ab + 8); ln.anchor.set(0.5, 0); ln.position.set(0, ti.y + ti.height + 6); C.addChild(ti, ln);
+      art.scale.set(fit); art.position.set(0, -h / 2 + 14 + ab / 2); addDepth(C, art, 'art');
+      ti.anchor.set(0.5, 0); ti.position.set(0, -h / 2 + 14 + ab + 8); ln.anchor.set(0.5, 0); ln.position.set(0, ti.y + ti.height + 6); addDepth(C, ti, 'title'); addDepth(C, ln, 'line');
     }
     const shade = nine('ui', 'plate_cream_flat', w + 4, h + 4, 2); shade.tint = 0x1a0d08; shade.position.set(-w / 2 - 2, -h / 2 - 2); shade.alpha = 0; C.addChild(shade);   // darkens the neighbours
     cardEls.push({ C, i, shade }); });
