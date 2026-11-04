@@ -40,7 +40,7 @@ function step() {
 }
 /** board/mirror.ts: the stage display for a rig placeholder canvas. */
 export function dbDisplay(cv: HTMLCanvasElement) {
-	const L = byCv.get(cv); if (!L) return null;
+	const L = byCv.get(cv); if (!L || L.root.destroyed) return null;
 	return { root: L.root, W: L.W, H: L.H, glow: () => {} };
 }
 export function initDbStacks() {
@@ -118,7 +118,7 @@ function face(L: Live, kind: 'blink' | 'laugh') {
 export function dbHas(ov: HTMLElement) { return lives.has(ov); }
 export function dbStop(ov: HTMLElement) {
 	const L = lives.get(ov); if (!L) return; lives.delete(ov);
-	L.cv.remove(); ov.querySelector(':scope > img.stk_glow')?.remove();
+	byCv.delete(L.cv); L.cv.remove(); ov.querySelector(':scope > img.stk_glow')?.remove();
 	L.root.removeFromParent(); L.gf?.destroy(); L.root.destroy({ children: true }); kick();
 }
 

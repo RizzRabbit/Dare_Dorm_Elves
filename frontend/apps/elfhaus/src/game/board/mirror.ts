@@ -132,7 +132,7 @@ const live = new Set<Out>();
 let frameNo = 0;
 function out(el: Element, kind: string, make: () => Container): Out {
 	let o = outs.get(el);
-	if (!o || o.kind !== kind) { if (o) { o.d.destroy({ children: kind !== 'db' }); live.delete(o); } o = { d: make(), used: 0, kind }; outs.set(el, o); live.add(o); }
+	if (!o || o.kind !== kind) { if (o) { o.d.removeFromParent(); if (o.kind !== 'db' && !o.d.destroyed) o.d.destroy({ children: true }); live.delete(o); } o = { d: make(), used: 0, kind }; outs.set(el, o); live.add(o); }
 	o.used = frameNo; return o;
 }
 const SKIP = /\b(tGl|tGw|rgShine|wFrame|ovWinO|ovGlow|lock|nm|plate|mfRays|mfCore)\b/;
@@ -245,7 +245,7 @@ function walk(el: HTMLElement, parent: DOMMatrix, pc: Ctx, px: number, py: numbe
 		if (/\bmx\b/.test(cl)) { badge(el, c, w, h); return; }
 		if (tag === 'CANVAS') {
 			const cv = el as unknown as HTMLCanvasElement;
-			if (/\bstk_db\b/.test(cl)) { const d = dbDisplay(cv); if (d) { const o = out(el, 'db', () => d.root); if (o.d !== d.root) o.d = d.root; if (d.root.parent !== c.host) c.host.addChild(d.root); { const k = h / d.H; place(d.root, M, (w - d.W * k) / 2, 0, k, k); } d.root.alpha = c.op; d.root.zIndex = order++; d.root.visible = true; } return; }
+			if (/\bstk_db\b/.test(cl)) { const d = dbDisplay(cv); if (d) { const o = out(el, 'db', () => d.root); if (o.d !== d.root) o.d = d.root; if (d.root.destroyed) return; if (d.root.parent !== c.host) c.host.addChild(d.root); { const k = h / d.H; place(d.root, M, (w - d.W * k) / 2, 0, k, k); } d.root.alpha = c.op; d.root.zIndex = order++; d.root.visible = true; } return; }
 			if (!cv.width) return;
 			let t = cvTex.get(cv); if (!t) { t = Texture.from(cv); cvTex.set(cv, t); }
 			sprite(el, t, c, 0, 0, w, h, s); return;
@@ -287,7 +287,7 @@ function tick() {
 	const M = new DOMMatrix().translate(o.x, o.y).multiply(bs.m);
 	const base: Ctx = { M, op: 1, br: 1, host: layer.reels, glow: false };
 	for (const r of roots) walk(r, M, base, r.offsetLeft, r.offsetTop, force);
-	for (const x of live) if (x.used !== frameNo) { if (x.d.visible) x.d.visible = false; if (!x.d.parent || x.used < frameNo - 120) { x.d.removeFromParent(); if (x.kind !== 'db') x.d.destroy({ children: true }); live.delete(x); } }
+	for (const x of live) if (x.d.destroyed) live.delete(x); else if (x.used !== frameNo) { if (x.d.visible) x.d.visible = false; if (!x.d.parent || x.used < frameNo - 120) { x.d.removeFromParent(); if (x.kind !== 'db') x.d.destroy({ children: true }); live.delete(x); } }
 	for (const k of liveClips) if (k.used !== frameNo) { k.c.visible = false; if (k.used < frameNo - 120) { k.c.removeFromParent(); liveClips.delete(k); } } else k.c.visible = true;
 	return true;
 }
