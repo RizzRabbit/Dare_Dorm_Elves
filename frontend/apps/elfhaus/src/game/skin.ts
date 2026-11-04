@@ -119,7 +119,13 @@ const WORDS: Record<string, string> = { 'TOTAL WIN': 'w_total_win', 'FREE SPINS'
 function word(el: HTMLElement | null, font = 'font_cream', gold = false) {
 	if (!el) return;
 	const key = () => WORDS[(el.textContent || '').trim().toUpperCase()];
-	if (key()) { el.classList.add('skW'); icon(el, () => { const w = key(); return w ? { pkg: 'titles', frame: gold && ready.get('titles')?.fr[w + '_gold'] ? w + '_gold' : w, fit: 'contain' } : null; }, 'skWd'); }
+	if (key()) {
+		el.classList.add('skW');
+		const put = () => icon(el, () => { const w = key(); return w ? { pkg: 'titles', frame: gold && ready.get('titles')?.fr[w + '_gold'] ? w + '_gold' : w, fit: 'contain' } : null; }, 'skWd');
+		put();
+		// game code re-sets textContent on locale load (e.g. #buyTitle), which drops the painted word: put it back
+		new MutationObserver(() => { if (!el.querySelector(':scope > .skWd')) put(); }).observe(el, { childList: true });
+	}
 	else bmText(el, font);
 }
 const ICON: Record<string, (el: HTMLElement) => string> = {
@@ -146,7 +152,8 @@ function apply() {
 	$$('.mX').forEach((e) => skin(e, () => ({ pkg: 'ui', frame: 'btn_close', fit: 'contain' })));                           // 55
 	$$('button.go, #msgOk, #replayPlay').forEach((e) => { skin(e, go); word(e); });                                          // 58
 	$$('.row').forEach((e) => skin(e, () => ({ pkg: 'ui', frame: 'row_plate', k: 2 })));                                    // 56
-	$$('.sw').forEach((e) => { skin(e, (el) => ({ pkg: 'ui', frame: on(el) ? 'sw_on' : 'sw_off', k: 2 })); });
+	// the switch: painted track (sw_on / sw_off) + its own painted knob part (sw_knob), slid by transform (skin.css .skK)
+	$$('.sw').forEach((e) => { skin(e, (el) => ({ pkg: 'ui', frame: on(el) ? 'sw_on' : 'sw_off', k: 2 })); icon(e, () => ({ pkg: 'ui', frame: 'sw_knob', fit: 'contain' }), 'skK'); });
 	$$('.row input').forEach((e) => skin(e.parentElement?.querySelector('input') ? (e as HTMLElement) : null, () => ({ pkg: 'ui', frame: 'field', fit: 'fill' })));
 	skin(document.getElementById('popMenu'), () => ({ pkg: 'ui', frame: 'plate_cream', k: 2 }));                           // 57
 	const PM: Record<string, string> = { pmInfo: 'ico_info_ink', pmMusic: 'ico_music_ink', pmSound: 'ico_sound_ink', pmMute: 'ico_mute_ink' };
@@ -190,4 +197,24 @@ export function initSkin() {
 	new MutationObserver((ms) => { for (const m of ms) m.addedNodes.forEach((n) => { if (n instanceof HTMLElement && !n.classList.contains('skC') && !n.classList.contains('bmC')) late(n.parentElement || n); }); })
 		.observe(document.body, { childList: true, subtree: true });
 	window.addEventListener('resize', () => requestAnimationFrame(() => redraws.forEach((f) => f())));
+}
+/** Preload a painted bitmap font package (for Pixi scenes that set text before the DOM skin runs). */
+export const loadFont = (name: string) => load(name);
+/** Set `txt` in a painted bitmap font onto a canvas (word-wrapped at wrapW CSS px, `px` = glyph cap size), drawn at
+ *  `res` x for crisp scaling. Returns null until the font is decoded. Used by the intro cards (introPixi.ts cardText). */
+export function paintTextCanvas(txt: string, font: string, px: number, wrapW: number, align: 'left' | 'center' = 'left', lineK = 1.25, res = 2) {
+	const P = ready.get(font); if (!P) { void load(font); return null; }
+	const m = P.meta, sc = (px * 1.05) / m.px;
+	const glyph = (ch: string) => P.fr['u' + ch.toUpperCase().codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0')] || P.fr['u' + ch.codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0')] || null;
+	const wAdv = (w: string) => [...w].reduce((s, ch) => { const f = glyph(ch); return s + (f ? f.adv ?? f.sw : m.space); }, 0) * sc;
+	const sp = m.space * sc, lines: string[] = [];
+	let cur = '';
+	for (const w of txt.split(/\s+/).filter(Boolean)) { const t = cur ? cur + ' ' + w : w; if (cur && wAdv(t) > wrapW) { lines.push(cur); cur = w; } else cur = t; }
+	if (cur) lines.push(cur);
+	const lh = m.lh * sc * lineK, W = Math.max(1, Math.ceil(Math.max(...lines.map(wAdv), 1))), H = Math.max(1, Math.ceil(lh * (lines.length - 1) + m.lh * sc));
+	const cv = document.createElement('canvas'); cv.width = W * res; cv.height = H * res;
+	const g = cv.getContext('2d')!; g.imageSmoothingQuality = 'high'; const s = sc * res;
+	lines.forEach((ln, i) => { let x = (align === 'center' ? (W - wAdv(ln)) / 2 : 0) * res; const y = i * lh * res;
+		for (const ch of ln) { if (ch === ' ') { x += sp * res; continue; } const f = glyph(ch); if (!f) { x += sp * res; continue; } blit(g, P, f, x, y, f.sw * s, f.sh * s, false, 1); x += (f.adv ?? f.sw) * s; } });
+	return { cv, w: W, h: H, res };
 }
