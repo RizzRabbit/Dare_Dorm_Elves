@@ -515,7 +515,8 @@ html body .sym.fr .rgBody{filter:contrast(1.06) saturate(1.1)}   /* colour grade
 /* wild pieces: bust, WILD and glow move by their rig keyframes only (in step), never by the .sym pop; the bust is
    clipped just inside the tile edge so its pop never spills past the tile */
 html body .cell.win>.sym.W.rigd,html body .cell.wLand>.sym.W.rigd{transform:none!important;animation:none!important}
-html body .cell>.sym.W.wReel.rigd{clip-path:inset(2.5% round 13%)}
+/* fix4 A: the rounded inset mask clipped the bust head top and the WILD corner (portrait notch); unclipped, pop is off on win/land anyway */
+html body .cell>.sym.W.wReel.rigd{clip-path:none}
 html body .cell.rgLand .sym.symTop .rgBody{animation:rgWLand .3s both!important}
 html body .cell.win .sym.symTop .rgBody{animation:rgWWin .56s both!important}
 body.rgAnt #cells .cell:not(.spinning) .sym.symTop .rgBody{animation:rgAnt .5s ease-in-out infinite alternate}
@@ -637,3 +638,6 @@ html body.portrait #fsMore .fmSub{font-size:40px!important}
 html body.portrait #outro .tierName{font-size:56px!important}
 html body.portrait #outro .otAmtG{font-size:70px}
 html body.portrait #outro .otHint{font-size:30px!important}
+/* fix4 reel-3 WILD notch: the shared _wild frame picks up a gold sliver of its atlas neighbour at its lower-left (texture
+   packing bleed, sheets/symbols.webp, no padding); cut that corner out of the letters frame only */
+html body .rp.f__wild{clip-path:polygon(0 0,100% 0,100% 100%,19% 100%,19% 78%,0 78%)}
