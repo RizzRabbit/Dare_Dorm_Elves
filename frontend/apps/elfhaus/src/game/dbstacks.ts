@@ -8,16 +8,24 @@ import { PixiFactory, type PixiArmatureDisplay } from 'pixi-dragonbones-runtime'
 const DIR = 'assets/rig/db/';
 let index: Promise<Set<string>> | null = null;
 const known = new Set<string>();
+const split = new Set<string>();   // rigs exported as _A/_B armatures (only these have a <name>_parts.json)
 /** sync: is there a rig for this overlay (after initDbStacks resolved)? */
 export const dbKnown = (ov: HTMLElement) => known.has(rigName(ov));
 const parsed = new Map<string, Promise<string[] | null>>();
 type Live = { app: Application; arms: PixiArmatureDisplay[]; anim: string; raf: number; t: number; blinkAt: number; ro: ResizeObserver };
 const lives = new Map<HTMLElement, Live>();
+const pool: Application[] = [];
+async function takeApp() {
+	const a = pool.pop(); if (a) return a;
+	const app = new Application();
+	await app.init({ backgroundAlpha: 0, antialias: true, autoStart: false, resolution: Math.min(2, window.devicePixelRatio || 1), width: 8, height: 8 });
+	return app;
+}
 const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 export function initDbStacks() {
 	return (index ||= fetch(DIR + 'index.json').then((r) => (r.ok ? r.json() : { rigs: [] })).catch(() => ({ rigs: [] }))
-		.then((j: { rigs?: string[] }) => { (j.rigs || []).forEach((n) => known.add(n.replace(/_[AB]$/, ''))); return known; }));
+		.then((j: { rigs?: string[] }) => { (j.rigs || []).forEach((n) => { const b = n.replace(/_[AB]$/, ''); known.add(b); if (b !== n) split.add(b); }); return known; }));
 }
 /** rig name for an overlay: WF_R<n> for a single reel, WM<k>_R<a>-<b> for a merge. */
 export function rigName(ov: HTMLElement) {
@@ -28,7 +36,7 @@ export function rigName(ov: HTMLElement) {
 function load(name: string) {
 	let p = parsed.get(name);
 	if (!p) parsed.set(name, (p = (async () => {
-		const pj = await fetch(DIR + name + '_parts.json').then((r) => (r.ok ? r.json() : null)).catch(() => null);
+		const pj = !split.has(name) ? null : await fetch(DIR + name + '_parts.json').then((r) => (r.ok ? r.json() : null)).catch(() => null);
 		const parts: string[] = pj?.parts || [name];
 		PixiFactory.useSharedTicker = false;
 		const { Assets } = await import('pixi.js');
@@ -48,10 +56,11 @@ export async function dbPlay(ov: HTMLElement, anim: 'idle' | 'win'): Promise<boo
 	if (cur) { if (cur.anim !== anim) { cur.anim = anim; fade(cur, anim); } return true; }
 	const parts = await load(name); if (!parts || !ov.isConnected) return !!parts;
 	if (lives.has(ov)) return dbPlay(ov, anim);
-	const app = new Application();
-	await app.init({ backgroundAlpha: 0, antialias: true, autoStart: false, resolution: Math.min(2, window.devicePixelRatio || 1), width: 8, height: 8 });
+	const app = await takeApp();
+	if (lives.has(ov) || !ov.isConnected) { pool.push(app); return lives.has(ov) ? dbPlay(ov, anim) : true; }
 	const cv = app.canvas as HTMLCanvasElement; cv.className = 'stk stk_body stk_db'; cv.setAttribute('aria-hidden', 'true');
 	cv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none';
+	app.stage.removeChildren().forEach((o) => o.destroy({ children: true }));
 	const root = new Container(); app.stage.addChild(root);
 	const arms = parts.map((p) => { const d = PixiFactory.factory.buildArmatureDisplay(p, p, '', p) as PixiArmatureDisplay; root.addChild(d); return d; });
 	const W = arms[0].armature.armatureData.aabb.width, H = arms[0].armature.armatureData.aabb.height;
@@ -83,5 +92,8 @@ function face(L: Live, kind: 'blink' | 'laugh') {
 export function dbHas(ov: HTMLElement) { return lives.has(ov); }
 export function dbStop(ov: HTMLElement) {
 	const L = lives.get(ov); if (!L) return; lives.delete(ov);
-	cancelAnimationFrame(L.raf); L.ro.disconnect(); L.app.canvas.remove(); L.app.destroy(true, { children: true });
+	cancelAnimationFrame(L.raf); L.ro.disconnect(); L.app.canvas.remove();
+	// Pixi 8 keeps one global batch pool shared by every renderer: destroying a renderer leaves destroyed batches in it
+	// and the next render of any other app (the room, Roxy) throws "reading 'clear'". So renderers are pooled, never destroyed.
+	L.app.stage.removeChildren().forEach((o) => o.destroy({ children: true })); pool.push(L.app);
 }
