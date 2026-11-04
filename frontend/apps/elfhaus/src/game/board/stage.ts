@@ -45,8 +45,9 @@ export function boardStage() {
 		a.stage.sortableChildren = true;
 		for (const n of Object.keys(BL) as BLayer[]) { const c = new Container(); c.label = n; c.zIndex = BL[n]; c.sortableChildren = true; layer[n] = c; a.stage.addChild(c); }
 		app = a; place();
-		addEventListener('resize', () => requestAnimationFrame(place));
-		new ResizeObserver(() => place()).observe(fr);
+		// resize + the frame's own ResizeObserver both fire on one resize: coalesced into one place() per frame
+		let q = 0; const later = () => { if (!q) q = requestAnimationFrame(() => { q = 0; place(); }); };
+		addEventListener('resize', later); new ResizeObserver(later).observe(fr);
 		a.ticker.add(() => { let live = false; for (const t of tickers) { if (t()) live = true; else tickers.delete(t); } a.render(); dirty = false; if (!live && !tickers.size) a.ticker.stop(); });
 		return a;
 	})());

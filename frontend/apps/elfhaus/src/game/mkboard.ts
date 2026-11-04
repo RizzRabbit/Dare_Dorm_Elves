@@ -264,6 +264,9 @@ function drawFrame(u: number) {
 	// their FX in the board stage, so oversize art (a wild's bust, a swell, a flake) tucks behind the frame
 	const lc = document.createElement('canvas'); lc.width = fc.width; lc.height = fc.height;
 	const lg = lc.getContext('2d')!; lg.setTransform(sc, 0, 0, sc, M * sc, M * sc); lg.imageSmoothingQuality = 'high';
+	// FSD LOW: only the front (bottom) rail is redrawn as the lip, from just above the window's bottom edge down: the full
+	// frame drawn again over #mkFrame doubled its edges' shading (darker sides / top)
+	lg.beginPath(); lg.rect(-M, FT + BH - 6, FW + 2 * M, FH + M - (FT + BH - 6)); lg.clip();
 	const g0 = g; g = lg; part('frame', 0, -B.frameTop); nine('trim9', 0, 0, FW, BH + 2 * FT); g = g0;
 	setLip(lc, -M * u, -M * u, cw, ch);
 }
