@@ -74,11 +74,10 @@ function tealGlow(key: string, tex: Texture): Texture | null {
 		a[i + 3] = Math.round(255 * Math.min(1, al * 1.25));
 	}
 	x.putImageData(d, 0, 0);
-	g = Texture.from(c); (g as any)._pad = P / ks; (g as any)._ks = ks; glows.set(key, g); glowMade++;
+	g = Texture.from(c); (g as any)._pad = P / ks; (g as any)._ks = ks; glows.set(key, g);
 	return g;
 }
 
-let glowMade = 0;
 // ---------- computed style cache ----------
 type St = { f: number; pd: number; o: string; tr: string; ro: string; sc: string; tf: string; w: number; h: number; m: DOMMatrix; op: number; vis: boolean; z: number; br: number; blend: string; clip: null | { inset: number[]; r: number[] }; ov: boolean; bg: string; bs: string; bp: string; bw: number; fit: string; disp: boolean };
 const cache = new WeakMap<Element, St>();
@@ -286,7 +285,6 @@ function remeasure(el: HTMLElement) {
 	pg.kids = ([...p.children] as HTMLElement[]).map((k, i) => [cache.get(k)?.z ?? 0, i, k] as const).sort((a, b) => a[0] - b[0] || a[1] - b[1]).map((v) => v[2]);
 }
 function rebuild() {
-	const P = (globalThis as any).__mp; if (P) { P.full = (P.full || 0) + 1; P.why ??= []; if (P.why.length < 40) P.why.push(lastWhy); }
 	geoDirty = false;
 	let x = 0, y = 0; for (let e: HTMLElement | null = board; e && e !== frame; e = e.offsetParent as HTMLElement | null) { x += e.offsetLeft; y += e.offsetTop; }
 	origin = { x, y };
@@ -410,21 +408,19 @@ let extras: HTMLElement[] = [], mo: MutationObserver | null = null;
 const watched = new WeakSet<Element>();
 let roots: HTMLElement[] = [], board: HTMLElement | null = null, frame: HTMLElement | null = null, started = false;
 // frame timing probe (window.__mirrorMs: the mirror's own cost per frame, last 600 frames)
-const msLog: number[] = []; (globalThis as any).__mirrorMs = msLog;
+const msLog: number[] = []; if (import.meta.env.DEV) (globalThis as any).__mirrorMs = msLog;
 function tick() {
 	if (!board || !board.isConnected) return true;
 	const t0 = performance.now();
 	frameNo++; order = 0;
-	const P = ((globalThis as any).__mp ??= { rebuild: 0, restyle: 0, anims: 0, walk: 0, n: 0, slow: [] }); let tq = performance.now(); P.n++; const P0 = { ...P, slow: 0 };
 	if (geoDirty) { rebuild(); changed = true; }
 	else if (geoQ.size) {
 		// outermost changed subtrees only (a parent's re-measure covers its children)
 		const list = [...geoQ].filter((e) => { for (let a = e.parentElement; a; a = a.parentElement) if (geoQ.has(a)) return false; return true; });
-		geoQ.clear(); changed = true; P.part = (P.part || 0) + list.length;
+		geoQ.clear(); changed = true;
 		for (const e of list) if (geo.has(e) || (e.parentElement && geo.has(e.parentElement))) remeasure(e); else geoDirty = true;
 		if (geoDirty) rebuild();
 	}
-	P.rebuild += performance.now() - tq; tq = performance.now();
 	if (styleQ.size || inlineQ.size) changed = true;
 	// a class change restyles the element's subtree (descendant selectors) and re-sorts its siblings (z-index)
 	for (const el of styleQ) { if (!el.isConnected) continue; restyle(el); const p = el.parentElement, pg = p && geo.get(p);
@@ -434,7 +430,6 @@ function tick() {
 	inlineQ.clear();
 	for (const el of styleQ) style(el, true);
 	styleQ.clear();
-	P.restyle += performance.now() - tq; tq = performance.now();
 	// an element whose animation just ended: its base style was read mid-animation, so read it again (once)
 	const was = [...running.keys()]; running.clear();
 	for (const a of board.getAnimations({ subtree: true })) {
@@ -442,9 +437,8 @@ function tick() {
 		const l = running.get(t); if (l) l.push(a); else running.set(t, [a]);
 	}
 	for (const el of was) if (!running.has(el) && (el as HTMLElement).isConnected) style(el as HTMLElement, true);
-	P.anims += performance.now() - tq; tq = performance.now();
 	// nothing moved, nothing changed: the stage keeps last frame's displays (idle costs one getAnimations call)
-	if (!changed && !running.size && !extraMoving()) { msLog.push(performance.now() - t0); if (msLog.length > 600) msLog.shift(); return true; }
+	if (!changed && !running.size && !extraMoving()) { if (import.meta.env.DEV) { msLog.push(performance.now() - t0); if (msLog.length > 600) msLog.shift(); } return true; }
 	changed = false;
 	const bs = cache.get(board)!, ba = running.get(board), b = ba ? animStyle(board, bs, ba) : bs;
 	const M = compose([1, 0, 0, 1, 0, 0], origin.x, origin.y, b.m);
@@ -455,27 +449,24 @@ function tick() {
 	for (const e of extras) { if (!e.isConnected) { geoDirty = true; continue; } for (const a of e.getAnimations({ subtree: true })) { const t = (a.effect as KeyframeEffect | null)?.target as Element | null; if (t) { const l = running.get(t); if (l) l.push(a); else running.set(t, [a]); } } walk(e, fb.M, fb, false); }
 	for (const x of live) if (x.d.destroyed) live.delete(x); else if (x.used !== frameNo) { if (x.d.visible) x.d.visible = false; if (!x.d.parent || x.used < frameNo - 120) { x.d.removeFromParent(); if (x.kind !== 'db') x.d.destroy({ children: true }); live.delete(x); } }
 	for (const k of liveClips) if (k.used !== frameNo) { k.c.visible = false; if (k.used < frameNo - 120) { k.c.removeFromParent(); liveClips.delete(k); } } else k.c.visible = true;
-	P.walk += performance.now() - tq;
-	if (performance.now() - t0 > 40 && P.slow.length < 30) P.slow.push(['rebuild', 'restyle', 'anims', 'walk'].map((k) => Math.round(P[k] - P0[k])).join('/') + ' g' + glowMade);
-	msLog.push(performance.now() - t0); if (msLog.length > 600) msLog.shift();
+	if (import.meta.env.DEV) { msLog.push(performance.now() - t0); if (msLog.length > 600) msLog.shift(); }
 	return true;
 }
 const GEO_PROPS = /(^|;)\s*(left|top|right|bottom|width|height|inset|margin[a-z-]*|padding[a-z-]*|display|position)\s*:/;
 const geoPart = (css: string | null) => (css || '').split(';').filter((d) => GEO_PROPS.test(';' + d)).map((d) => d.trim()).sort().join(';');
-let lastWhy = '';
 /** nearest measured element at or above t (a node added in the same batch is measured with its parent) */
 const known = (t: HTMLElement | null) => { for (let a = t; a; a = a.parentElement) if (geo.has(a)) return a; return null; };
 function onMutations(recs: MutationRecord[]) {
 	for (const r of recs) {
 		const t = r.target as HTMLElement;
-		if (r.type === 'childList') { const a = known(t); if (a) geoQ.add(a); else { geoDirty = true; lastWhy = 'cl:' + (t.id || t.className); } continue; }
+		if (r.type === 'childList') { const a = known(t); if (a) geoQ.add(a); else { geoDirty = true; } continue; }
 		if (r.attributeName === 'style') {
 			// a layout property changed (the merge stage's left / width, a hidden cell): re-measure; else transforms / opacity only
 			if (geoPart(r.oldValue) !== geoPart(t.getAttribute('style'))) { const a = known(t); if (a) geoQ.add(a); else geoDirty = true; }
 			else inlineQ.add(t);
 		} else if (r.attributeName === 'class' && t === document.body) {
 			const a = new Set((r.oldValue || '').split(/\s+/)), b = new Set(t.className.split(/\s+/)), diff = [...a, ...b].filter((x) => x && a.has(x) !== b.has(x));
-			if (diff.some((x) => BODY_GEO.test(x))) { geoDirty = true; lastWhy = 'body:' + diff.join(','); } else if (diff.length) for (const rt of roots) styleQ.add(rt);
+			if (diff.some((x) => BODY_GEO.test(x))) { geoDirty = true; } else if (diff.length) for (const rt of roots) styleQ.add(rt);
 		}
 		else if (r.attributeName === 'class') { if (CLASS_GEO.test((r.oldValue || '') + ' ' + t.className)) { const a = known(t); if (a) geoQ.add(a); else geoDirty = true; } else if (geo.has(t)) styleQ.add(t); else { const a = known(t); if (a) geoQ.add(a); } }
 		else { const a = known(t); if (a) geoQ.add(a); else geoDirty = true; }   // src / data-v

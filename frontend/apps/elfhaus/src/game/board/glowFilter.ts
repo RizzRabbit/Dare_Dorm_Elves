@@ -5,7 +5,7 @@ const frag = `
 in vec2 vTextureCoord;
 out vec4 finalColor;
 uniform sampler2D uTexture;
-uniform vec4 uInputSize;
+uniform highp vec4 uInputSize; // highp: must match the filter vertex shader or the program fails to link (the rig vanishes)
 uniform float uDist;
 uniform float uAmt;
 void main(void){
