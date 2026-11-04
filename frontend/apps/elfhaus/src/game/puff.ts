@@ -22,7 +22,16 @@ const TX: Partial<Record<PartN | 'cloud' | 'bigFlake', Texture>> = {};
 const symTex = new Map<string, Texture>();
 const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 let app: Application | null = null, appP: Promise<Application | null> | null = null, root: Container, L: Record<keyof typeof FZ, Container>;
-type P = { s: Sprite; t0: number; dur: number; step: (u: number, s: Sprite) => void; linger: boolean; done?: () => void; out?: number };
+type P = { s: Sprite; t0: number; dur: number; step: (u: number, s: Sprite) => void; linger: boolean; done?: () => void; out?: number; edge: boolean };
+// the board window (frame-local px): FX stay inside it and fade out near its edge, so the front lip never visibly chops
+// a flake mid-air (James 2026-11-04: FX below the lip, nothing spills past the frame)
+let win = { x0: 0, y0: 0, x1: 1e6, y1: 1e6, f: 12 };
+function measureWin() { const b = document.getElementById('board'); if (!b) return; const c = centreOf(b); win = { x0: c.x - c.w / 2, y0: c.y - c.h / 2, x1: c.x + c.w / 2, y1: c.y + c.h / 2, f: Math.max(8, c.w * 0.05) }; }
+function edgeA(s: Sprite) {
+	const hw = s.width / 2, hh = s.height / 2;
+	const d = Math.min(s.x - hw - win.x0, win.x1 - s.x - hw, s.y - hh - win.y0, win.y1 - s.y - hh);
+	return d >= win.f ? 1 : d <= 0 ? 0 : d / win.f;
+}
 const ps = new Set<P>();
 const now = () => performance.now();
 const W = window as unknown as { __puffN?: number; __puffLog?: unknown[] };
@@ -43,6 +52,7 @@ function tick() {
 		if (u < 0) { p.s.visible = false; continue; }
 		p.s.visible = true; p.step(Math.min(1, u), p.s);
 		if (p.out != null) p.s.alpha *= Math.max(0, 1 - (t - p.out) / 200);
+		if (p.edge) p.s.alpha *= edgeA(p.s);
 		if (u >= 1 || (p.out != null && t - p.out >= 200)) { ps.delete(p); p.s.destroy(); p.done?.(); }
 	}
 	return ps.size > 0;
@@ -51,7 +61,7 @@ function add(layer: Container, tex: Texture | undefined, t0: number, dur: number
 	return new Promise<void>((done) => {
 		if (!tex) return done();
 		const s = new Sprite(tex); s.anchor.set(0.5); s.visible = false; layer.addChild(s);
-		ps.add({ s, t0, dur, step, linger, done }); animate(tick);
+		ps.add({ s, t0, dur, step, linger, done, edge: linger && layer !== L.powder }); animate(tick);
 	});
 }
 const lerp = (a: number, b: number, u: number) => a + (b - a) * u;
@@ -185,7 +195,7 @@ export function puffWith(wins: { positions: Pos[] }[], next: BookEvent | undefin
 	const skipped = new Promise<void>((r) => { release = r; });
 	const finish = () => release();
 	const start = async () => {
-		await ensureApp(); fadeLinger();
+		await ensureApp(); fadeLinger(); measureWin();
 		const run = Promise.all(cells.map((p, i) => { const el = document.getElementById(`c${p.reel}${p.row}`);
 			return el ? puffCell(el, S.sym[p.reel]?.[p.row] || '', i * 35 * kT, kT, rm) : Promise.resolve(); }));
 		await Promise.race([run, skipped]);
