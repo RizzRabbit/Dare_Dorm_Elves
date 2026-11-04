@@ -28,8 +28,10 @@ let G: Container | null = null, ready = false;
 const pool: Sprite[] = []; let used = 0;
 function ensure() {
 	void boardStage().then((a) => { if (!a || G) return; G = new Container(); G.label = 'winlines'; layer.lines.addChild(G); });
-	if (!ready) void loadAtlas('fx').then(() => { ready = true; });
+	if (!ready) atlasReady = loadAtlas('fx').then(() => { ready = true; }, () => {});
 }
+// the first win waits for the fx atlas (it used to skip drawing until the atlas arrived)
+let atlasReady: Promise<void> = Promise.resolve();
 function begin() { used = 0; }
 function end() { for (let i = used; i < pool.length; i++) pool[i].visible = false; kick(); }
 function put(name: string, x: number, y: number, w: number, h: number, rot: number, alpha: number) {
@@ -40,8 +42,9 @@ function put(name: string, x: number, y: number, w: number, h: number, rot: numb
 /** Points of the line through the cells' real centres (frame-local px), from just outside reel 1 to just outside the last reel. */
 function path(li: number) {
 	const ln = LINES[li - 1], pts = ln.map((row, r) => { const C = centreOf(cellEl(r, row)); return [C.x, C.y]; });
-	const c = cellEl(0, 0).offsetWidth || S.cell, ext = c * 0.42;
-	pts.unshift([pts[0][0] - ext, pts[0][1]]); pts.push([pts[pts.length - 1][0] + ext, pts[pts.length - 1][1]]);
+	// the ends run out to the board window's inner edge, never over the frame's inner trim
+	const c = cellEl(0, 0).offsetWidth || S.cell, bd = centreOf($('#board')), x0 = bd.x - bd.w / 2 + c * 0.06, x1 = bd.x + bd.w / 2 - c * 0.06;
+	pts.unshift([Math.max(x0, pts[0][0] - c * 0.42), pts[0][1]]); pts.push([Math.min(x1, pts[pts.length - 1][0] + c * 0.42), pts[pts.length - 1][1]]);
 	const seg = pts.slice(1).map((p, i) => Math.hypot(p[0] - pts[i][0], p[1] - pts[i][1]));
 	return { pts, seg, len: seg.reduce((a, b) => a + b, 0), c };
 }
@@ -114,7 +117,7 @@ export function clearRace() {
  *  landing on the step total; a skip ends only the current stage. base = WIN meter value (x bet) before this step. */
 export type WithLines = { start: () => Promise<void>; finish: () => void; holes: boolean } | null;
 export async function playWins(wins: LineWin[], base: number, stepTotal?: number, fx: WithLines = null) {
-	ensure(); active = true; skipAll = false; skipLine = false;
+	ensure(); await atlasReady; active = true; skipAll = false; skipLine = false;
 	presenting(true);
 	try {
 	const cells = document.querySelectorAll('.cell'); cells.forEach((c) => c.classList.add('dim'));
@@ -132,16 +135,19 @@ export async function playWins(wins: LineWin[], base: number, stepTotal?: number
 	wins.forEach((w) => w.positions.forEach((p) => { ovWin(p.reel); const c = cellEl(p.reel, p.row); c.classList.remove('dim');
 		const fresh = !c.classList.contains('win'); c.classList.add('win'); litOn(c); symWin(c); if (fresh && !turbo) burst(c, 'pop'); }));
 	const meter = setWinMeter(tot);
+	let amtA: { remove: () => void } | null = null;
 	const drawOn = turbo ? 160 : TG(420);
 	// chalet item 6: the winning symbols pop and puff into snow WHILE the lines draw on (fx, puff.ts puffWith): the
 	// puff fires as the lines reach across (~half the draw-on) and stage a holds until both are done
 	await stage('a', () => { skipLine = true; fx?.finish(); }, async () => {
 		const puff = fx ? new Promise<void>((r) => setTimeout(r, skipLine ? 0 : drawOn * 0.45)).then(fx.start) : null;
 		await run(drawOn, (t) => drawAll(Ps, easeIO(t), 1));
+		// the amount shows on every win: one line -> its amount; a respin step (no cycle) -> the step total on line 1
+		if (n === 1 || (n > 1 && (turbo || fx?.holes))) amtA = label(wins[0].positions, moneyWin((n === 1 ? wins[0].win : Math.round((tot - base) * 100)) / 100 * bet()));
 		await hold(turbo ? 120 : TG(Math.min(small ? 500 : 900, 380 + 120 * n)));
 		if (puff) await puff;
 	});
-	skipLine = false;
+	skipLine = false; amtA?.remove(); amtA = null;
 	// b) cycle: each line alone with its amount (more than one line, not turbo); capped at ~2.4 s in total
 	// (a respin refills the puffed cells next: no per-line cycle over the empty cells)
 	if (n > 1 && !turbo && !fx?.holes) {
@@ -161,7 +167,9 @@ export async function playWins(wins: LineWin[], base: number, stepTotal?: number
 		clearAmts();
 	}
 	skipLine = false; skipAll = false;
-	clearRace();
+	// fix7 (James: a ~2 s dead pause after a win): the lines stay up while the meter lands (stage c) and clear with it,
+	// so the board is never sitting dim with nothing on it; the closing beat is short
+	if (fx?.holes) clearRace();   // a respin refills the popped cells next: lines off before the refill
 	// c) the meter lands on the step total (a skip eases it there, countup SETTLE_MS), then a short beat
 	let skipC = false;
 	await stage('c', () => { skipC = true; skipCounts(); }, async () => {
@@ -172,8 +180,9 @@ export async function playWins(wins: LineWin[], base: number, stepTotal?: number
 		if (n && lv < bl) sfx(turbo || lv < medL ? 'win_small' : lv === medL ? 'win_medium' : 'win_big');
 		if (n && !turbo && lv >= medL && lv < bl) voice('win');
 		wins.forEach((w) => w.positions.forEach((p) => { ovWin(p.reel); const c = cellEl(p.reel, p.row); c.classList.remove('dim'); c.classList.add('win'); litOn(c); symWin(c); }));
-		if (!skipC) { const t0 = performance.now(), ms = turbo ? 200 : TG(small ? 300 : 500); while (performance.now() - t0 < ms && !skipC) await frame(); }
+		if (!skipC) { const t0 = performance.now(), ms = turbo ? 120 : TG(small ? 150 : 300); while (performance.now() - t0 < ms && !skipC) await frame(); }
 	});
+	clearRace();
 	document.querySelectorAll('.cell.pulse').forEach((c) => c.classList.remove('pulse'));
 	} finally { active = false; skipAll = false; skipLine = false; presenting(false); }
 }
