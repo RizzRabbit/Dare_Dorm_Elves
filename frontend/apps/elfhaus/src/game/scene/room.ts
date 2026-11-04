@@ -14,13 +14,13 @@ import { loadSheet, loadTex } from './load';
 import ROOM from '../chalet/room.json';
 
 export type Key = 'land' | 'port';
-type RoomTex = { wall: Texture; parts: Record<string, Texture> };
+type RoomTex = { wall: Texture; party: Texture | null; parts: Record<string, Texture> };
 const cache: Partial<Record<Key, Promise<RoomTex | null>>> = {};
 export const tex: { room: Partial<Record<Key, RoomTex>>; fx: Record<string, Texture> | null } = { room: {}, fx: null };
 /** Fetch one orientation's planes (wall plate + trimmed parts atlas). Resolves null on failure (the #bg painting stays). */
 export function loadRoom(k: Key) {
-	return (cache[k] ||= Promise.all([loadTex(`assets/room/room_${k}_wall.webp`), loadSheet('assets/room/', `room_${k}`)])
-		.then(([wall, s]) => (tex.room[k] = { wall, parts: s.sheet.textures as Record<string, Texture> }))
+	return (cache[k] ||= Promise.all([loadTex(`assets/room/room_${k}_wall.webp`), loadSheet('assets/room/', `room_${k}`), loadTex(`assets/room/room_${k}_wall_party.webp`).catch(() => null)])
+		.then(([wall, s, party]) => (tex.room[k] = { wall, party, parts: s.sheet.textures as Record<string, Texture> }))
 		.catch((e) => { console.warn('room planes off', e); return null; }));
 }
 export async function loadFx() {
@@ -77,6 +77,7 @@ export const P = {
 	grade: new Container(), chimFx: new Container(), shadow: new Container(), near: new Container(),
 };
 let mesh: MeshPlane | null = null, meshBase: Float32Array | null = null, meshKey: Key | null = null;
+let partyMesh: MeshPlane | null = null;
 type Item = { o: Container; x: number; y: number; d: number };
 let wallItems: Item[] = [];
 const tinted: Container[] = [];
@@ -93,9 +94,12 @@ export function buildRoom(k: Key, fit: { c: number; ox: number; oy: number }, W:
 	for (const n of Object.keys(R.at)) if (n.startsWith('out')) { const s = at(n); P.out.addChild(s); tinted.push(s); }
 	if (!mesh || meshKey !== k) {
 		mesh?.destroy(); mesh = new MeshPlane({ texture: T.wall, verticesX: 2, verticesY: 15 }); meshKey = k;
+		// free spins party plate: the painted festive version of the same far plate (same layout), crossfaded in by tickRoom
+		partyMesh?.destroy(); partyMesh = T.party ? new MeshPlane({ texture: T.party, verticesX: 2, verticesY: 15 }) : null;
 		meshBase = Float32Array.from(mesh.geometry.positions as Float32Array);
 	}
 	mesh.position.set(fit.ox, fit.oy); mesh.scale.set(fit.c); P.wall.addChild(mesh); tinted.push(mesh);
+	if (partyMesh) { partyMesh.position.set(fit.ox, fit.oy); partyMesh.scale.set(fit.c); partyMesh.alpha = 0; P.wall.addChild(partyMesh); }
 	// moonlight: a cool glow over each window (wall depth)
 	for (const [u0, v0, u1, v1] of (k === 'land' ? [[0.235, 0.205, 0.33, 0.56], [0.722, 0.18, 0.852, 0.56]] : [[0.31, 0.105, 0.9, 0.645]])) {
 		const g = new NineSliceSprite({ texture: F.glow9, leftWidth: 40, rightWidth: 40, topHeight: 40, bottomHeight: 40 });
@@ -143,10 +147,12 @@ export function tickRoom(k: Key, fit: { c: number }, night: number) {
 		const pos = mesh.geometry.positions as Float32Array, ih = ROOMS[k].size[1], ix = cx / fit.c, iy = cy / fit.c;
 		for (let i = 0; i < pos.length; i += 2) { const d = dAt(k, meshBase[i + 1] / ih); pos[i] = meshBase[i] + ix * d; pos[i + 1] = meshBase[i + 1] + iy * d; }
 		mesh.geometry.getBuffer('aPosition').update();
+		if (partyMesh) { (partyMesh.geometry.positions as Float32Array).set(pos); partyMesh.geometry.getBuffer('aPosition').update(); }
 	}
-	// bonus night grade (was CSS brightness(.66) on #bg): the same darkening as a tint, slightly cool
+	// free spins = party mode: the festive far plate fades in and the room warms (amber), no night darkening
 	if (Math.abs(night - lastNight) > 0.002) {
-		lastNight = night; const r = Math.round(255 * (1 - 0.34 * night)), g = Math.round(255 * (1 - 0.33 * night)), b = Math.round(255 * (1 - 0.27 * night));
+		lastNight = night; if (partyMesh) partyMesh.alpha = night;
+		const r = 255, g = Math.round(255 * (1 - 0.07 * night)), b = Math.round(255 * (1 - 0.18 * night));
 		const t = (r << 16) | (g << 8) | b; for (const o of tinted) (o as Sprite).tint = t;
 	}
 }
