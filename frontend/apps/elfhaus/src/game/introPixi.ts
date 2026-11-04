@@ -15,6 +15,7 @@ import { loadAtlas, spr, nine, tile, mirrored, atlasTex } from './scene/atlas';
 import { rig, roxyAt, sceneHold } from './scene/scene';
 import ARTG from './art.generated.json';
 import { symArtReady } from './symrig';
+import { dbStill } from './dbstacks';
 const TITLE = ARTG.logo || 'art/logo.webp';
 import { EGW_STACK_X } from './config';
 import { sfx } from './audio';
@@ -28,13 +29,16 @@ const GOLD = 0xf2b935, CREAM = 0xfbf3e4, CRAN = 0xa61c34, PINE = 0x1f4b38;
 // timeline (seconds after the tap), pass 2 (James: "I think it's great")
 export const T = { cards: [0.0, 0.42], doorL: [0.40, 1.30], doorR: [0.50, 1.40], wink: [0.75, 1.45], push: [1.55, 2.13], roxyOut: [1.55, 1.73], over: [1.95, 2.13],
   cam: [1.55, 2.17], drop: [1.99, 2.37], logo: [2.15, 2.45], hud: [2.17, 2.47], btn: [2.23, 2.55], face: [3.01, 3.13], end: 3.25 };
-// the build's own feature cards (same titles + lines as the old splash), restyled black / gold
+// the build's own feature cards on the cream painted plates; art = the board's current symbols (uifix)
 const CARDS = [
-  { key: 'modes', art: 'S', title: '4 Bonus Modes',
+  { key: 'modes', art: 'S_flat',   // uifix: the bare board symbol (ART.S is the framed paytable cell)
+    title: '4 Bonus Modes',
     line: '3, 4 or 5 Ski Passes start Bunny Slope, Black Diamond or Double Black free spins. A Secret Santa spin always lands 2 Ski Passes and the other reels reveal the result.' },
-  { key: 'sticky', art: 'W_R2', title: 'Sticky Wilds',
+  { key: 'sticky', art: 'W_R2_cut',   // uifix: Jade exactly as the board's bust wild (no old card plate behind her)
+    title: 'Sticky Wilds',
     line: 'In Black Diamond and Double Black the wilds lock in place and keep growing every free spin. Double Black guarantees at least one full-reel wild.' },
-  { key: 'egw', art: 'assets/stacks/still/WM2_R1-2.webp', title: 'Wild Winter Spins',
+  { key: 'egw', art: 'rig:WM2_R1-2',   // uifix: the board's own merged-wild rig (DragonBones), not the older r8d still
+    title: 'Wild Winter Spins',
     line: `One supercharged spin: 2 to 5 reels land wilds that grow into full-reel wilds (x${EGW_STACK_X} each), then respins. Full wild reels side by side multiply.` },
 ];
 let app = null, state = 'off', t = 0, tt = 0, prog = 0, G = null, primed = false, roxyFree = false, faceOff = false, progFn = () => 0;
@@ -383,7 +387,12 @@ export async function initIntro(progress: () => number): Promise<boolean> {
       backgroundAlpha: 0, antialias: true, preference: 'webgl', sharedTicker: false, hello: false, autoStart: false });
     app = a; size();
     await symArtReady;   // S / W_R2 are rebuilt from the symbols sheet (symrig.ts)
-    const [title, ...cardT] = await Promise.all([loadTex(TITLE), ...CARDS.map((c) => loadTex(c.art.includes('/') ? c.art : (ARTG as Record<string, string | null>)[c.art] || ''))]);
+    // uifix: card art = exactly what the board renders: S / W_R2 baked from the current symbols sheet (symrig), the egw card a
+    // rest-pose still of the board's WM2 rig (dbstacks)
+    const cardTex = (c) => c.art.startsWith('rig:')
+      ? dbStill(c.art.slice(4), a.renderer).then((cv) => (cv ? Texture.from(cv) : Texture.EMPTY))
+      : loadTex(c.art.includes('/') ? c.art : (ARTG as Record<string, string | null>)[c.art] || '');
+    const [title, ...cardT] = await Promise.all([loadTex(TITLE), ...CARDS.map(cardTex)]);
     tex.title = title;
     await Promise.all([...['intro', 'fx', 'ui', 'titles'].map(loadAtlas), loadFont('font_cran'), loadFont('font_ink')]);
     CARDS.forEach((c, i) => { tex['card_' + c.key] = cardT[i]; try { cardT[i].source.autoGenerateMipmaps = true; cardT[i].source.updateMipmaps(); } catch {} });
