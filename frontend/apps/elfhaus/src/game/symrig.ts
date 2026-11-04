@@ -209,6 +209,8 @@ async function bakeAll() {
 			const cell = composeCell(page, k, Math.max(b.sourceSize.w, b.sourceSize.h, 256)), u = cell && (await blobURL(cell));
 			const f = flat(page, k), uf = f && (await blobURL(f));
 			if (uf) ART[k + '_flat'] = uf;   // the bare symbol (Secret Santa card gift)
+			// uifix: a bust wild as the board shows it (its layers only, no base card behind her): the Sticky Wilds intro card
+			if (k.startsWith('W_R')) { const fc = flat(page, k, () => true), uc = fc && (await blobURL(fc)); if (uc) ART[k + '_cut'] = uc; }
 			if (!u) return;
 			ART[k] = u; for (const c of CARD_ALIASES[k] || []) ART[c] = u;
 			// cell spinner slot (reels.ts): the lifted symbol alone (tiers) / the whole card (bust wilds), tile-box sized

@@ -15,7 +15,9 @@ const pop = () => $('#popMenu'), btn = () => $('#menuBtn');
 export const popOpen = () => pop().classList.contains('open');
 const items = () => Array.from(pop().querySelectorAll<HTMLElement>('.pmItem'));
 const range = (k: K) => pop().querySelector<HTMLInputElement>(`.pmItem[data-k="${k}"] input`)!;
-const paint = (k: K) => { const r = range(k), v = Math.round(audioVol(k) * 100); r.value = String(v); r.style.setProperty('--v', v + '%'); r.setAttribute('aria-valuetext', v ? v + '%' : 'off'); };
+const paint = (k: K) => { const r = range(k), v = Math.round(audioVol(k) * 100); r.value = String(v); r.style.setProperty('--v', v + '%'); r.parentElement?.style.setProperty('--v', v + '%'); r.setAttribute('aria-valuetext', v ? v + '%' : 'off'); dispatchEvent(new Event('elfhaus:audio')); };
+// uifix: the painted row icons (skin.ts) read the live volume / mute state from here
+(window as any).__elfAudio = () => ({ muted: muted(), mus: audioVol('mus'), sfx: audioVol('sfx') });
 
 function slide(k: K | null) {
 	for (const it of items()) {
@@ -34,7 +36,7 @@ function place() {
 }
 // re-audit L6: one-tap mute (master Sound switch; the volumes are kept for un-mute)
 const muted = () => { const p = audioPrefs(); return !p.snd || p.muted; };
-function paintMute() { const m = muted(), b = $('#pmMute'); b.setAttribute('aria-checked', String(m)); b.classList.toggle('on', m); b.querySelector('span')!.textContent = m ? 'Unmute' : 'Mute all'; }
+function paintMute() { const m = muted(), b = $('#pmMute'); b.setAttribute('aria-checked', String(m)); b.classList.toggle('on', m); b.querySelector(':scope > span')!.textContent = m ? 'Unmute' : 'Mute all'; dispatchEvent(new Event('elfhaus:audio')); }
 export function openPop() {
 	place(); slide(null); paint('mus'); paint('sfx'); paintMute();
 	pop().classList.add('open'); pop().setAttribute('aria-hidden', 'false'); btn().setAttribute('aria-expanded', 'true');

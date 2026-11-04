@@ -112,3 +112,22 @@ html body :is(#buyMenu,#bmConfirm,#autoMenu,#settings,#menu,#_zA#_zB#_zC){z-inde
 html body :is(#replayBar,#_zA#_zB#_zC){z-index:85!important}
 html body :is(#msg,#resumeCard,#_zA#_zB#_zC){z-index:90!important}
 html body :is(#loader,#_zA#_zB#_zC){z-index:200!important}
+/* uifix: pop-out menu (Music / Sound / Info): painted row plates, a small painted icon slot per row, painted volume sliders.
+   No CSS fills / borders / shadows; the old SVG icons + the X stay hidden (.sk > svg). */
+html body.skin #popMenu{padding:8px!important}
+html body.skin #popMenu .pmRow{position:relative;margin:4px 0;padding:8px 16px 8px 12px;gap:10px}
+html body.skin #popMenu .pmRow>svg{display:none!important}
+html body.skin #popMenu .pmIco{position:relative;display:block;flex:none;width:26px;height:26px}
+html body.skin #popMenu .pmItem.open .pmRow,html body.skin #popMenu .pmRow:focus-visible{filter:brightness(1.08)!important}
+html body.skin #popMenu .pmSlide{background:none!important;border:0!important;box-shadow:none!important;height:52px;padding:0 22px;left:calc(100% + 8px)}
+html body.skin #popMenu .pmSlide::before{display:none!important}
+html body.skin #popMenu .pmTr{position:relative;display:block;width:150px;height:22px;--v:100%}
+html body.skin #popMenu .pmTr>.slF{min-width:22px;position:absolute;left:0;top:0;bottom:0;width:var(--v);display:block;pointer-events:none}
+html body.skin #popMenu .pmTr>.slT{position:absolute;top:50%;left:var(--v);width:32px;height:32px;margin:-16px 0 0 -16px;display:block;pointer-events:none;z-index:3}
+html body.skin #popMenu .pmTr>input[type=range]{position:absolute;left:-14px;top:-12px;width:calc(100% + 28px)!important;height:46px;margin:0;opacity:0;z-index:4;touch-action:none}
+html body.skin.portrait #popMenu .pmTr{width:min(120px,calc(100vw - 260px))}
+/* uifix: rules headings: the painted words fit inside the pill */
+html body.skin #rulesBody h3{padding:.3em 1.1em!important;text-align:center}
+/* uifix: info panel keeps a margin in short landscape so the painted rim + close X are clear of the screen edge */
+@media (max-height:500px){html body.skin .rules{inset:10px 18px!important;max-height:calc(100% - 20px)!important}}
+html body.skin .rules .rulesX,html body.skin #rulesClose{margin:6px!important}

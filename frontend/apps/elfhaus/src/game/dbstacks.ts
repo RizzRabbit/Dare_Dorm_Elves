@@ -122,3 +122,15 @@ export function dbStop(ov: HTMLElement) {
 	L.root.removeFromParent(); L.gf?.destroy(); L.root.destroy({ children: true }); kick();
 }
 
+/** uifix: a still of a board wild rig at its rest pose ('idle' frame 0), rendered with the caller's renderer, for the intro
+ *  cards (so the Wild Winter Spins card shows exactly the elves the board shows). null when the rig is missing. */
+export async function dbStill(name: string, renderer: { extract: { canvas: (o: object) => unknown } }): Promise<HTMLCanvasElement | null> {
+	if (!(await initDbStacks()).has(name)) return null;
+	const parts = await load(name); if (!parts) return null;
+	const root = new Container();
+	try {
+		for (const p of parts) { const d = PixiFactory.factory.buildArmatureDisplay(p, p, '', p) as PixiArmatureDisplay; root.addChild(d); d.animation.gotoAndStopByFrame('idle', 0); d.armature.advanceTime(0); }
+		const b = root.getLocalBounds();
+		return renderer.extract.canvas({ target: root, frame: new Rectangle(b.x, b.y, b.width, b.height), resolution: Math.min(1, 900 / Math.max(1, b.height)) }) as HTMLCanvasElement;
+	} catch { return null; } finally { root.destroy({ children: true }); }
+}
