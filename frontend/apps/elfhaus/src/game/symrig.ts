@@ -135,6 +135,8 @@ function flat(page: HTMLImageElement, key: string, only?: (p: Part) => boolean) 
 	for (const p of r.parts) if (!p.hide && (!only || only(p))) drawFr(g, page, p.f, 0, 0, 1);
 	return c;
 }
+/** fix2: visible-content centre of each bust wild (bust + WILD union) in its 384 src box, from the art's alpha (notile.css uses the same). */
+export const WILD_CEN: Record<string, [number, number]> = { W_R1: [-9.3, 8.7], W_R2: [2.7, 8.7], W_R3: [0, 8.7], W_R4: [-3.3, 8.7], W_R5: [-2.7, 8.7] };
 /** A whole cell at `size` px, from the shared parts (strips, paytable, intro and flip cards). */
 function composeCell(page: HTMLImageElement, key: string, size: number, bare = false) {
 	const r = RIG[key], b = FRAMES[key]; if (!r || !b) return null;
@@ -157,6 +159,14 @@ function composeCell(page: HTMLImageElement, key: string, size: number, bare = f
 	}
 	// bust wild: card, recess, border, the lifted bust, the other details, the raised WILD
 	const k = size / Math.max(b.sourceSize.w, b.sourceSize.h);
+	if (bare) {   // fix2 spinner slot: no card / recess / border (no tile shapes), centred by visible content like the live cell
+		const fig = flat(page, key, (p) => p.cls === 'fig'), det = flat(page, key, (p) => p.cls !== 'fig' && p.cls !== 'lets'), lets = flat(page, key, (p) => p.cls === 'lets');
+		const o = WILD_CEN[key] || [0, 0]; g.translate(-o[0] * k, -o[1] * k);
+		if (fig) drawLifted(g, fig, 0, 0, size, size, key);
+		if (det) g.drawImage(det, 0, 0, size, size);
+		if (lets) drawLifted(g, lets, 0, 0, size, size, 'lets');
+		return c;
+	}
 	drawFr(g, page, key, 0, 0, k);
 	drawNine(g, page, '_recess', 0, 0, size, size, bw);
 	const fig = flat(page, key, (p) => p.cls === 'fig'), det = flat(page, key, (p) => p.cls !== 'fig' && p.cls !== 'lets'), lets = flat(page, key, (p) => p.cls === 'lets');

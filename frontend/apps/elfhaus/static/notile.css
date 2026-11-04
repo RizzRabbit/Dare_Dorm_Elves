@@ -25,3 +25,12 @@ html body.mk #app #hud #buyBtn.plate.mkP .disc{width:calc(116px*var(--ps))!impor
 html body.mk #app #hud #buyBtn.plate.mkP .lbl{left:calc(354px*var(--ps) + var(--pl)/2)!important;top:calc(80px*var(--ps))!important;font-size:calc(44px*var(--ps))!important;max-width:calc(390px*var(--ps))!important}
 html body.mk #app #hud #buyBtn.plate.mkV .disc{left:calc(48.6px*var(--ps))!important;top:calc(28px*var(--ps))!important}
 html body.mk #app #hud #buyBtn.plate.mkV .lbl{left:calc(50% + var(--pl)/2)!important;top:calc(186px*var(--ps))!important}
+/* fix2: single bust wilds centred in the cell by their visible content (bust + WILD lettering union, measured from the
+   symdepth edge alpha in the 384 box): the bust, lettering and outline glow move together; symrig.ts WILD_CEN bakes the same into the spinner */
+html body .cell:has(.rig.k_W_R1)>.sym{translate:2.42% -2.27%}
+html body .cell:has(.rig.k_W_R2)>.sym{translate:-0.70% -2.27%}
+html body .cell:has(.rig.k_W_R3)>.sym{translate:0.00% -2.27%}
+html body .cell:has(.rig.k_W_R4)>.sym{translate:0.86% -2.27%}
+html body .cell:has(.rig.k_W_R5)>.sym{translate:0.70% -2.27%}
+/* fix2 (James): no tile shapes anywhere: the stack / merge rounded glow frame goes too; the only glow is the outline traced from the art */
+html body .ov>.wFrame{display:none!important}
