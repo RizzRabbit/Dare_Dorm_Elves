@@ -34,6 +34,7 @@ export async function createRoxy(): Promise<RoxyAdapter> {
 	body.addChild(d); view.addChild(ground, shadowG, body);
 	const A = d.animation, arm = d.armature;
 	let still = reduced(), shOn = true, door = false, t = 0, blinkAt = 2.5, back = -1, party = 0, aim = 0;
+	let reach = 1;   // fix5 #3: door-reach arm stretch along the uarm bone
 	let faceK: Partial<Record<RoxyFace, number>> = {};
 	const showGround = () => { shadowG.visible = shOn && !door; ground.visible = shOn && !door; };
 	const bodyPlay = (name: string, times = -1) => { const s = A.fadeIn(name, FADE, times, 0, 'body'); return s; };
@@ -57,7 +58,8 @@ export async function createRoxy(): Promise<RoxyAdapter> {
 		const hop = pelvis ? Math.max(0, -pelvis.animationPose.y) * K : 0;
 		shadowG.scale.set(1 - Math.min(0.35, hop / 120)); shadowG.alpha = 1 - Math.min(0.5, hop / 90);
 		// fix4: the reach swings the whole arm from the shoulder (uarm) so the painted hand lands on the lever
-		if (uarm) { uarm.offset.rotation = aim * Math.PI / 180; uarm.invalidUpdate(); }
+		// fix5 #3: and stretches it along its length (reach, <= 1.6) so the fingertips land on the lever grip, not short of it
+		if (uarm) { uarm.offset.rotation = aim * Math.PI / 180; uarm.offset.scaleY = reach; uarm.invalidUpdate(); }   // the arm chain runs along uarm's local y (farm at y 213)
 	}
 	const tint = () => { const k = party; view.tint = (Math.round(255 - 40 * k) << 16) | (Math.round(255 - 30 * k) << 8) | 255; };
 	try { matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', () => { still = reduced(); }); } catch { /* old engines */ }
@@ -77,8 +79,9 @@ export async function createRoxy(): Promise<RoxyAdapter> {
 		surprised(on) { if (on) facePlay('eager'); },
 		anticipate(on) { if (on) facePlay('eager'); },
 		disappointed() { facePlay('disappointed'); },
-		doorReach(on, aimDeg = 0) {
+		doorReach(on, aimDeg = 0, reachK = 1) {
 			aim = on ? Math.max(-45, Math.min(45, aimDeg)) : 0;
+			reach = on ? Math.max(1, Math.min(1.6, reachK)) : 1;
 			if (on && !door) { door = true; bodyPlay('intro_door', 1); }
 			else if (!on && door) { door = false; bodyPlay('intro_step', 1); }
 			showGround();
@@ -87,13 +90,13 @@ export async function createRoxy(): Promise<RoxyAdapter> {
 			if (!hand || !uarm) return null;
 			// shoulder = the uarm pivot; hand = the painted fingertips (door_hand tip); r = the reach offset already applied
 			const h = d.toGlobal(tip(hand, hand.boneData.length * 0.6)), s = d.toGlobal(new Point(uarm.globalTransformMatrix.tx, uarm.globalTransformMatrix.ty));
-			return { sh: s, hand: h, r: aim };
+			return { sh: s, hand: h, r: aim, k: reach };
 		},
 		face(name: RoxyFace, k: number) {
 			const was = faceK[name] ?? 0; faceK[name] = k;
 			if (k >= 0.5 && was < 0.5) { const f = FACE_OF[name]; if (f) facePlay(f); }
 		},
-		release() { faceK = {}; aim = 0; if (door) door = false; showGround(); bodyPlay('intro_land', 1); },
+		release() { faceK = {}; aim = 0; reach = 1; if (door) door = false; showGround(); bodyPlay('intro_land', 1); },
 		setGrade(_g: RoxyGrade) {},
 		setParty(k: number) { party = k; tint(); },
 		shadow(on) { shOn = on; showGround(); },

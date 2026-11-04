@@ -31,8 +31,8 @@ export interface RoxyAdapter {
 	surprised(on: boolean): void;       // wide-eyed face pop (eases back through a blink)
 	anticipate(on: boolean): void;      // tense lean + eyes toward the board
 	disappointed(): void;               // tease that missed (v7: ease straight back to idle, no face)
-	doorReach(on: boolean, aimDeg?: number): void;   // intro: door-reach arm on the handle (+ lean)
-	doorPts(): { sh: Point; hand: Point; r: number } | null;
+	doorReach(on: boolean, aimDeg?: number, reachK?: number): void;   // intro: door-reach arm on the handle (+ lean)
+	doorPts(): { sh: Point; hand: Point; r: number; k?: number } | null;
 	face(name: RoxyFace, k: number): void;           // painted face variant on (k >= 0.5) / off
 	release(): void;                    // hand back to idle after the intro
 	setGrade(g: RoxyGrade): void;

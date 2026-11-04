@@ -44,7 +44,7 @@ const tex = {};
 // Roxy through the adapter; her door points come back in the scene canvas, mapped through the camera into intro space
 const RXA = {
   get ok() { return !!rig; },
-  doorPts() { if (!rig) return null; const q = rig.doorPts(); if (!q) return null; return { sh: camPt(q.sh), hand: camPt(q.hand), r: q.r }; },
+  doorPts() { if (!rig) return null; const q = rig.doorPts(); if (!q) return null; return { sh: camPt(q.sh), hand: camPt(q.hand), r: q.r, k: q.k ?? 1 }; },
 };
 
 function rr(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
@@ -328,8 +328,11 @@ function setGame(tt) {   // all game objects driven from the intro clock (transf
     const fx = (G.cx - G.dw * 0.12) * G.k, fy = (G.FL - 8) * G.k, p = unCam(fx, fy, cam);
     v.position.set(p.x - rig.offsetX * s + 60 * s * seg(tt, ...T.roxyOut, ease.inCubic), p.y); v.scale.set(s); v.alpha = 1 - seg(tt, ...T.roxyOut);
     if (tt < T.roxyOut[0] && state === 'trans') { const q = RXA.doorPts(), hg = handleL();   // her door hand follows the lever as the leaf swings
+      if (import.meta.env.DEV && q) (window as any).__rxDbg = { tt, hand: [q.hand.x, q.hand.y], sh: [q.sh.x, q.sh.y], rose: [hg.x, hg.y], aL: G.aL };
       if (q) { const d = Math.atan2(hg.y - q.sh.y, hg.x - q.sh.x) - Math.atan2(q.hand.y - q.sh.y, q.hand.x - q.sh.x);
-        rig.doorReach(true, Math.max(-45, Math.min(45, q.r + Math.atan2(Math.sin(d), Math.cos(d)) * 180 / Math.PI))); } }
+        // fix5 #3: the arm also stretches (rig.doorReach reachK) until the fingertips meet the lever: d(shoulder, lever) / d(shoulder, tip)
+        const kR = q.k * Math.hypot(hg.x - q.sh.x, hg.y - q.sh.y) / Math.max(1, Math.hypot(q.hand.x - q.sh.x, q.hand.y - q.sh.y));
+        rig.doorReach(true, Math.max(-45, Math.min(45, q.r + Math.atan2(Math.sin(d), Math.cos(d)) * 180 / Math.PI)), kR); } }
   } else if (tt < T.face[1]) {   // dropped in with the board on her rest pose, wide-eyed; the face eases back at T.face
     if (!faceOff) { faceOff = true; rig.doorReach(false); rig.face('wink', 0); sceneHold(true, false); }
     rig.face('surprised', tt < T.face[0] ? 1 : 0);
