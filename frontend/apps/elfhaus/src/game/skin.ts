@@ -100,7 +100,7 @@ export function bmText(el: HTMLElement | null, font: string | ((el: HTMLElement)
 		const fn = typeof font === 'string' ? font : font(el), P = ready.get(fn); if (!P) { void load(fn); return; }
 		if (cv.parentNode !== el) el.append(cv);
 		const txt = (el.textContent || '').trim(), cs = getComputedStyle(el), fs = parseFloat(cs.fontSize) || 16;
-		const m = P.meta, k = dpr(); let sc = (fs * 1.05) / m.px;
+		const m = P.meta, br = el.getBoundingClientRect(), k = Math.max(0.25, (el.offsetWidth ? br.width / el.offsetWidth : ST.s) * (window.devicePixelRatio || 1)); let sc = (fs * 1.05) / m.px; // fix6 D7: drawn at the real on-screen scale (no upscaled blur)
 		const gl = [...txt].map((ch) => (ch === ' ' ? null : P.fr['u' + ch.toUpperCase().codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0')] || P.fr['u' + ch.codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0')]));
 		const adv0 = gl.reduce((s, f) => s + (f ? f.adv ?? f.sw : m.space), 0) * sc;
 		// fix4: the last glyph's art can run past its advance (the '0' in '$1.00'); size the canvas to the inked edge
