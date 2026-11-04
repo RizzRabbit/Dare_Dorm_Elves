@@ -245,8 +245,8 @@ export const bookEventHandlerMap: Handlers = {
 		await sleep(T.land);
 	},
 	async respinEnd(ev) {
-		if (ev.step > 0) endRespin();
-		await wait(350);
+		// the 350 ms beat only closes a real respin sequence (no respin: no dead pause after the win)
+		if (ev.step > 0) { endRespin(); await wait(350); }
 	},
 	// v3.19: the banner and its stages follow the math win level of the amount (synced standard edges; the book's winLevel
 	// is cross-checked, winLevel()); below the first banner level is a normal win, the max level is the wincap screen

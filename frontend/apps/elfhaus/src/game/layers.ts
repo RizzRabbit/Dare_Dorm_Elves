@@ -13,7 +13,10 @@ export const FZ = { swell: 0, powder: 10, flakes: 20, glitter: 30 } as const;
 /** DOM: inside #board (one stacking context; #board itself sits in #frame). */
 export const BZ = { strips: 0, reelLines: 1, cells: 2, cellWin: 3, overlays: 4, lines: 6, badges: 8 } as const;
 /** DOM: inside #frame. */
-export const FRZ = { frameBack: -1, board: 1, fx: 2, frameLit: 3, garland: 4 } as const;
+// fix7: the board stage (fx) sits ABOVE the fire light / glint (frameLit): its front lip and RESPINS pill cover the
+// sweep on the bottom rail, so the glint never crosses the pill (it still runs over the top and side timber); the
+// garland stays above everything
+export const FRZ = { frameBack: -1, board: 1, frameLit: 2, fx: 3, garland: 4 } as const;
 /** DOM: inside #stage (over the frame). */
 export const SZ = { frame: 1, respins: 5, fsBar: 6, toast: 7, banner: 8 } as const;
 /** DOM: #app column. */
