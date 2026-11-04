@@ -141,7 +141,7 @@ function apply() {
 	const sp = document.getElementById('spinBtn');                                                                            // 5
 	skin(sp, (el) => ({ pkg: 'ui', frame: dis(el) ? 'spin_plate_busy' : 'spin_plate', fit: 'contain', size: 1.06 }));
 	icon(sp, (e) => ({ pkg: 'ui', frame: ICON.spinBtn(e), size: 0.5 }));
-	skin(document.getElementById('buyBtn'), (el) => ({ pkg: 'ui', frame: dis(el) ? 'card_ticket_off' : 'buy_plate', k: 2 }));   // 9
+	skin(document.getElementById('buyBtn'), (el) => ({ pkg: 'ui', frame: dis(el) ? 'card_ticket_off' : 'buy_plate', k: el.classList.contains('mkP') ? 4 : 2 }));   // fix2: the wide portrait plate keeps slim corners (k = sprite px per canvas px)   // 9
 	word(document.getElementById('buyLbl'));                                                                                  // 44
 	$$('#strip label').forEach((e) => word(e, 'font_cream', true)); $$('#strip span').forEach((e) => bmText(e, 'font_cream'));   // 36
 	skin(document.getElementById('fsBar'), () => ({ pkg: 'ui', frame: 'pill_cran', k: 2 })); bmText(document.getElementById('fsTier'), 'font_gold'); bmText(document.getElementById('fsCount'), 'font_cream');   // 33
