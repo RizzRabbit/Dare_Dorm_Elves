@@ -10,7 +10,7 @@
 import { S } from './ui';
 
 export const ANIM_TEMPO = 2;
-export const SPIN_TEMPO = 1.25; // reel spin + stop pacing (spec: at most 1.3x calmer)
+export const SPIN_TEMPO = 1; // reel spin + stop pacing (spec: at most 1.3x calmer)
 export const STOP_TEMPO = 1.1; // the brake / settle itself stays snappy
 export const tempo = () => (S.turbo ? 1 : ANIM_TEMPO);
 // anim-v4 (James, reviewer feedback "Poor animations"): gameplay feedback is NOT slowed any more. Reel spin / stops,

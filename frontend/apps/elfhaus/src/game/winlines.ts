@@ -144,7 +144,7 @@ export async function playWins(wins: LineWin[], base: number, stepTotal?: number
 		await run(drawOn, (t) => drawAll(Ps, easeIO(t), 1));
 		// the amount shows on every win: one line -> its amount; a respin step (no cycle) -> the step total on line 1
 		if (n === 1 || (n > 1 && (turbo || fx?.holes))) amtA = label(wins[0].positions, moneyWin((n === 1 ? wins[0].win : Math.round((tot - base) * 100)) / 100 * bet()));
-		await hold(turbo ? 120 : TG(Math.min(small ? 500 : 900, 380 + 120 * n)));
+		await hold(turbo ? 120 : TG(Math.min(small ? 380 : 900, 380 + 120 * n)));
 		if (puff) await puff;
 	});
 	skipLine = false; amtA?.remove(); amtA = null;

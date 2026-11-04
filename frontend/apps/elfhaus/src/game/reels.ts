@@ -31,8 +31,8 @@ void STOP_TEMPO;
 // stop top to bottom `casc` ms apart; a reel's last cell impacts ~`at` (+ pad - set) and has settled at at + pad.
 // Normal: last reel's impact ~2.04 s after the press (was 2.08 s + a 0.24 s drop-in). Turbo: the same motion, faster.
 export const timing = () => (S.turbo
-	? { first: 420, gap: 70, ant: 450, antD: 420, resp: 380, land: 60, cell: 35, casc: 20 }
-	: { first: 800, gap: 320, ant: sp(720), antD: sp(760), resp: sp(420), land: 90, cell: sp(70), casc: 60 });
+	? { first: 300, gap: 100, ant: 220, antD: 240, resp: 240, land: 0, cell: 35, casc: 8 }
+	: { first: 600, gap: 200, ant: sp(420), antD: sp(440), resp: sp(360), land: 0, cell: sp(60), casc: 15 });
 // wu/amp: wind-up ms / pitches; acc: spin-up ms; v: pitches/s; D: nominal brake ms (Ds: anticipation); ov: overshoot
 // (pitches); set: settle ms; pw: brake power; pad: settle end after the scheduled stop; vS/dS: tease speed / ease ms;
 // st: start stagger per reel / per row ms; thd: tile thud ms
@@ -40,8 +40,8 @@ const reduced = () => typeof matchMedia !== 'undefined' && matchMedia('(prefers-
 // reduced motion: no wind-up tug, no overshoot / rebound (the trail, thud and glint are off in CSS)
 const P = () => { const p = P0(); return reduced() ? { ...p, amp: 0, ov: 0, wu: 0 } : p; };
 const P0 = () => (S.turbo
-	? { wu: 60, amp: 0.06, acc: 90, v: 22, D: 180, Ds: 420, ov: 0.1, set: 140, pw: 2, pad: 80, vS: 0.45, dS: 200, stR: 12, stW: 4, dMin: 120, dMax: 520, thd: 150 }
-	: { wu: 110, amp: 0.12, acc: 170, v: 14, D: 300, Ds: 720, ov: 0.16, set: 240, pw: 2.2, pad: 200, vS: 0.4, dS: 320, stR: 40, stW: 12, dMin: 220, dMax: 760, thd: 240 });
+	? { wu: 0, amp: 0, acc: 50, v: 26, D: 70, Ds: 240, ov: 0.12, set: 75, pw: 2, pad: 75, vS: 0.45, dS: 120, stR: 6, stW: 2, dMin: 50, dMax: 140, thd: 120 }
+	: { wu: 0, amp: 0, acc: 100, v: 18, D: 110, Ds: 420, ov: 0.12, set: 140, pw: 2, pad: 140, vS: 0.4, dS: 200, stR: 12, stW: 4, dMin: 80, dMax: 200, thd: 200 });
 type Prm = ReturnType<typeof P0>;
 /** The shortest lead (ms from now) the first reel's stop needs so every cell of it can still brake from the future. */
 export const stopLead = () => { const p = P(); return p.D + p.set + 3 * timing().casc + 40 - p.pad; };
@@ -148,7 +148,7 @@ function pos(C: Cell, now: number) {
 	const td = t - P0.tq, p = C.p;
 	if (td < P0.D) { const u = td / P0.D; return { s: P0.sq + P0.dist * (1 - Math.pow(1 - u, p.pw)), v: (p.pw * P0.dist * Math.pow(1 - u, p.pw - 1)) / (P0.D / 1000), ph: 1 }; }
 	const u = Math.min(1, (td - P0.D) / p.set);
-	return { s: P0.sEnd + p.ov * Math.pow(1 - u, 3) * (1 + 3 * u) * Math.cos(1.5 * Math.PI * u), v: 0, ph: u >= 1 ? 3 : 2, u };
+	return { s: P0.sEnd + p.ov * (1 - u) * (1 - u) * (1 + 2 * u), v: 0, ph: u >= 1 ? 3 : 2, u }; // one spring back, no wobble
 }
 function paint(C: Cell, at: number, pitch: number) {
 	const base = Math.floor(at);
@@ -163,7 +163,7 @@ function frame(now: number) {
 	const pitch = S.cell * 0.925 * 1.08;
 	for (const C of [...cells.values()]) {
 		const m = pos(C, now);
-		if (m.ph >= 1 && !C.impacted && C.plan && now >= C.t0 + C.plan.E - 30) impact(C);
+		if (m.ph >= 1 && !C.impacted && C.plan && now >= C.t0 + C.plan.E - 8) impact(C); // stop sound at the overshoot's bottom
 		if (m.ph === 3) { finish(C); continue; }
 		paint(C, m.s, pitch);
 		// light trail + stretch only at full speed
