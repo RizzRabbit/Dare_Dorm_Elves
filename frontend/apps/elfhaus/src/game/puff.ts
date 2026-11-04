@@ -1,8 +1,8 @@
 // Win pop + snow puff, PixiJS (fix6 item 2, James 2026-11-04 "the puff MUST be rendered in PixiJS").
 // On a win that leads into a respin, each cleared (non-wild, replaced) symbol swells, squashes and pops; a burst of cloud
 // puffs, a flash and an ice ring fire as it collapses, then the snow (big + small flakes), the powder dust and the glitter
-// hang about ~1.3 s, drifting down. Everything is drawn by ONE Pixi app (#fxStage, a canvas over the board inside #frame,
-// z per layers.ts FRZ.fx), aligned to the cells' layout boxes. The DOM symbol is hidden the moment its Pixi copy
+// hang about ~1.3 s, drifting down. puffLayer() is a self-contained container in the unified board stage
+// (board/stage.ts, layer symFx), aligned to the cells' layout boxes. The DOM symbol is hidden the moment its Pixi copy
 // takes over, so the pop never depends on DOM / WAAPI compositing. Non-blocking: the game flow waits only for the
 // swell + burst (~0.55 s); the linger never gates anything, survives the respin and fades when the next puff starts.
 // A skip (tap) releases the game flow at once but never cuts the pop or the snow (they keep playing on their own).
@@ -12,7 +12,8 @@ import { S, k, ART } from './ui';
 import { loadAtlas, atlasTex } from './scene/atlas';
 import { loadTex } from './scene/load';
 import { symArtReady } from './symrig';
-import { FRZ, FZ } from './layers';
+import { FZ } from './layers';
+import { boardStage, layer, animate, centreOf } from './board/stage';
 import type { BookEvent, Pos } from './typesBookEvent';
 
 const PP = { url: 'assets/fx/puff_parts.webp', f: { flake: [0, 0, 72, 72], glint: [74, 0, 44, 44], flash: [120, 0, 128, 128], ring: [250, 0, 192, 192] } } as const;
@@ -21,36 +22,21 @@ const TX: Partial<Record<PartN | 'cloud' | 'bigFlake', Texture>> = {};
 const symTex = new Map<string, Texture>();
 const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 let app: Application | null = null, appP: Promise<Application | null> | null = null, root: Container, L: Record<keyof typeof FZ, Container>;
-let fr: HTMLElement | null = null, pad = 0, res = 1;
 type P = { s: Sprite; t0: number; dur: number; step: (u: number, s: Sprite) => void; linger: boolean; done?: () => void; out?: number };
 const ps = new Set<P>();
 const now = () => performance.now();
 const W = window as unknown as { __puffN?: number; __puffLog?: unknown[] };
 
-function place() {
-	if (!app || !fr) return;
-	const cv = app.canvas as HTMLCanvasElement, w = fr.offsetWidth, h = fr.offsetHeight; pad = Math.round(Math.max(w, h) * 0.12);
-	const sc = fr.getBoundingClientRect().width / Math.max(1, w);   // the stage's CSS scale: draw at device px
-	const r = Math.min(3, Math.max(1, sc * (window.devicePixelRatio || 1)));
-	cv.style.cssText = `position:absolute;left:${-pad}px;top:${-pad}px;width:${w + 2 * pad}px;height:${h + 2 * pad}px;pointer-events:none;z-index:${FRZ.fx}`;
-	if (r !== res || app.renderer.width !== Math.round((w + 2 * pad) * r)) { res = r; app.renderer.resolution = r; app.renderer.resize(w + 2 * pad, h + 2 * pad); }
-}
 function ensureApp() {
-	return (appP ??= (async () => {
-		fr = document.getElementById('frame'); if (!fr) return null;
-		const a = new Application();
-		try { await a.init({ backgroundAlpha: 0, antialias: true, preference: 'webgl', autoDensity: false, hello: false, sharedTicker: false, autoStart: false, width: 8, height: 8 }); }
-		catch (e) { console.warn('puff fx stage', e); return null; }
-		const cv = a.canvas as HTMLCanvasElement; cv.id = 'fxStage'; cv.setAttribute('aria-hidden', 'true'); fr.appendChild(cv);
-		root = new Container(); root.sortableChildren = true; a.stage.addChild(root);
+	return (appP ??= boardStage().then((a) => {
+		if (!a) return null;
+		root = new Container(); root.label = 'puff'; root.sortableChildren = true; layer.symFx.addChild(root);
 		L = { swell: new Container(), powder: new Container(), flakes: new Container(), glitter: new Container() };
 		for (const n of Object.keys(L) as (keyof typeof FZ)[]) { L[n].zIndex = FZ[n]; root.addChild(L[n]); }
-		app = a; place(); addEventListener('resize', () => requestAnimationFrame(place));
-		a.ticker.add(tick); return a;
-	})());
+		app = a; return a;
+	}));
 }
 function tick() {
-	if (!app) return;
 	const t = now();
 	for (const p of ps) {
 		const u = (t - p.t0) / p.dur;
@@ -59,14 +45,13 @@ function tick() {
 		if (p.out != null) p.s.alpha *= Math.max(0, 1 - (t - p.out) / 200);
 		if (u >= 1 || (p.out != null && t - p.out >= 200)) { ps.delete(p); p.s.destroy(); p.done?.(); }
 	}
-	app.render();
-	if (!ps.size) app.ticker.stop();
+	return ps.size > 0;
 }
 function add(layer: Container, tex: Texture | undefined, t0: number, dur: number, step: P['step'], linger: boolean) {
 	return new Promise<void>((done) => {
 		if (!tex) return done();
 		const s = new Sprite(tex); s.anchor.set(0.5); s.visible = false; layer.addChild(s);
-		ps.add({ s, t0, dur, step, linger, done }); app!.ticker.start();
+		ps.add({ s, t0, dur, step, linger, done }); animate(tick);
 	});
 }
 const lerp = (a: number, b: number, u: number) => a + (b - a) * u;
@@ -77,7 +62,7 @@ const R = Math.random, sgn = () => (R() < 0.5 ? -1 : 1);
 const fit = (s: Sprite, px: number) => { const t = s.texture; return px / Math.max(t.orig.width, t.orig.height); };
 
 /** The self-contained puff container (layers swell / powder / flakes / glitter, FZ order). Positions are #frame-local
- *  layout px + `pad`; the unified Pixi board stage can re-parent it and drive tick() from its own ticker. */
+ *  layout px; it lives in the unified board stage (board/stage.ts layer symFx). */
 export const puffLayer = () => root;
 /** Load every puff texture (fx atlas, the parts sheet, the baked symbol art) and draw each once (GPU upload). */
 export async function preloadPuff() {
@@ -96,12 +81,10 @@ const artOf = (n: string) => ART[n + '_spin'] || ART[n] || '';
 
 /** One cell: Pixi swell -> pop -> burst -> snow linger. Resolves when the swell + burst are done (the game flow gate). */
 function puffCell(cell: HTMLElement, name: string, delay: number, kT: number, rm: boolean) {
-	if (!app || !fr) return Promise.resolve();
-	place();
+	if (!app) return Promise.resolve();
 	const sym = cell.querySelector<HTMLElement>(':scope>.sym');
-	// the cell's box in #frame coordinates (layout px, the same space the canvas is laid out in) + the canvas pad
-	let x = pad, y = pad; for (let e: HTMLElement | null = cell; e && e !== fr; e = e.offsetParent as HTMLElement | null) { x += e.offsetLeft; y += e.offsetTop; }
-	const cw = cell.offsetWidth, ch = cell.offsetHeight, cx = x + cw / 2, cy = y + ch / 2, c = Math.min(cw, ch);
+	// the cell's centre in frame-local layout px (the board stage's space)
+	const C0 = centreOf(cell), cw = C0.w, ch = C0.h, cx = C0.x, cy = C0.y, c = Math.min(cw, ch), x = cx - cw / 2, y = cy - ch / 2;
 	const t = now() + delay, at = t + 170 * kT, Lk = kT < 1 ? 1 : 2.7, gate: Promise<void>[] = [];
 	// swell: the symbol's own art in Pixi, swelling, squashing, collapsing to nothing (the DOM symbol is hidden at t)
 	const st = symTex.get(name) || (artOf(name) ? Texture.from(artOf(name)) : undefined);
@@ -194,7 +177,9 @@ export function puffTargets(wins: { positions: Pos[] }[], next: BookEvent | unde
 export function puffWith(wins: { positions: Pos[] }[], next: BookEvent | undefined) {
 	const { cells, refill } = puffTargets(wins, next);
 	if (!cells.length) return null;
-	const kT = S.turbo ? 0.7 : 1, rm = reduced();
+	// capture only (dev): window.__fxSlow = n plays the puff n x slower so a frame grab sees the swell
+	const slow = import.meta.env.DEV ? Number((window as any).__fxSlow) || 1 : 1;
+	const kT = (S.turbo ? 0.7 : 1) * slow, rm = reduced();
 	cells.sort((a, b) => a.reel - b.reel || a.row - b.row);
 	let release: () => void = () => {};
 	const skipped = new Promise<void>((r) => { release = r; });

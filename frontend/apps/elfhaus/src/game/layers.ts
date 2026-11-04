@@ -13,7 +13,7 @@ export const FZ = { swell: 0, powder: 10, flakes: 20, glitter: 30 } as const;
 /** DOM: inside #board (one stacking context; #board itself sits in #frame). */
 export const BZ = { strips: 0, reelLines: 1, cells: 2, cellWin: 3, overlays: 4, lines: 6, badges: 8 } as const;
 /** DOM: inside #frame. */
-export const FRZ = { frameBack: -1, board: 1, frameLit: 3, garland: 4, fx: 5 } as const;
+export const FRZ = { frameBack: -1, board: 1, fx: 2, frameLit: 3, garland: 4 } as const;
 /** DOM: inside #stage (over the frame). */
 export const SZ = { frame: 1, respins: 5, fsBar: 6, toast: 7, banner: 8 } as const;
 /** DOM: #app column. */
@@ -23,7 +23,7 @@ export const TZ = { replayBar: 40, popMenu: 45, modal: 50, confirm: 60, resume: 
 
 const rules: [string, number][] = [
 	['#board>#strips', BZ.strips], ['#board>#reelLines', BZ.reelLines], ['#board>#cells', BZ.cells], ['#cells>.cell.win', BZ.cellWin],
-	['#board>#overlays', BZ.overlays], ['#board>#lines', BZ.lines], ['#frame>#fxStage', FRZ.fx],
+	['#board>#overlays', BZ.overlays], ['#board>#lines', BZ.lines], ['#frame>#boardStage', FRZ.fx],
 	['#frame>#mkFrame', FRZ.frameBack], ['#frame>#board', FRZ.board], ['#frame>#frameLit', FRZ.frameLit], ['#frame>#frameGlint', FRZ.frameLit], ['#frame>#mkGarland', FRZ.garland],
 	['#stage>#frame', SZ.frame], ['#stage>#rsCtr', SZ.respins], ['#stage>#fsBar', SZ.fsBar], ['#stage>#stepToast', SZ.toast], ['#stage>#banner', SZ.banner],
 	['#app>#stage', AZ.stage], ['#app>#hud', AZ.hud], ['#app>#top', AZ.top],
