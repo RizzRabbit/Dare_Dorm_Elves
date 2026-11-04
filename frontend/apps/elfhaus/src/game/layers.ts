@@ -49,6 +49,8 @@ export function applyLayers() {
 		// fix8: #strips / #cells / #overlays are the state + motion model only; the board stage draws them
 		+ `\nhtml body.pixiBoard #board>:is(#strips,#cells,#overlays){opacity:0!important}`
 		// fix8: the free-spins bar is drawn in the board stage's banners layer (board/banners.ts); its DOM box only places it
-		+ `\nhtml body.pixiBoard #fsBar{visibility:hidden!important}`;
+		+ `\nhtml body.pixiBoard #fsBar{visibility:hidden!important}`
+		// fix8: the frame back, fire light and glint are drawn in the board stage frameBack layer (filter, not opacity: the mirror reads their own opacity)
+		+ `\nhtml body.pixiBoard #frame>:is(#mkFrame,#frameLit,#frameGlint){filter:opacity(0)!important}`;
 	const st = document.createElement('style'); st.id = 'layerMap'; st.textContent = css; document.head.appendChild(st);
 }

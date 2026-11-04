@@ -18,7 +18,7 @@
 import { Container, Graphics, Matrix, NineSliceSprite, Rectangle, Sprite, Texture, type BLEND_MODES } from 'pixi.js';
 import SHEET_JSON from '../chalet/symbols.sheet.json';
 import DEPTH_JSON from '../chalet/symdepth.json';
-import { boardStage, layer, kick, animate } from './stage';
+import { boardStage, layer, kick, animate, onLayout } from './stage';
 import { dbDisplay } from '../dbstacks';
 import { mxFont } from '../ui';
 
@@ -36,7 +36,7 @@ function source(url: string): Texture | null {
 		s = { tex: null }; srcs.set(url, s);
 		const im = new Image(); im.decoding = 'async'; im.src = url; s.img = im;
 		const S = s;
-		s.p = im.decode().then(() => { S.tex = Texture.from(im); dirtyAll = true; kick(); }).catch(() => {});
+		s.p = im.decode().then(() => { S.tex = Texture.from(im); kick(); }).catch(() => {});
 	}
 	return s.tex;
 }
@@ -77,18 +77,19 @@ function tealGlow(key: string, tex: Texture): Texture | null {
 }
 
 // ---------- computed style cache ----------
-type St = { m: DOMMatrix; op: number; vis: boolean; z: number; br: number; blend: string; clip: null | { inset: number[]; r: number[] }; ov: boolean; bg: string; bs: string; bp: string; bw: number; fit: string; disp: boolean };
+type St = { pd: number; o: string; tr: string; ro: string; sc: string; tf: string; w: number; h: number; m: DOMMatrix; op: number; vis: boolean; z: number; br: number; blend: string; clip: null | { inset: number[]; r: number[] }; ov: boolean; bg: string; bs: string; bp: string; bw: number; fit: string; disp: boolean };
 const cache = new WeakMap<Element, St>();
 const num = (s: string) => parseFloat(s) || 0;
 function lenOf(v: string, ref: number) { return v.endsWith('%') ? (num(v) / 100) * ref : num(v); }
-function localMatrix(cs: CSSStyleDeclaration, w: number, h: number) {
+type TP = { transformOrigin: string; translate: string; rotate: string; scale: string; transform: string };
+function localMatrix(cs: TP, w: number, h: number) {
 	const o = cs.transformOrigin.split(' '), ox = lenOf(o[0] || '50%', w), oy = lenOf(o[1] || '50%', h);
 	let m = new DOMMatrix();
 	const tr = cs.translate, ro = cs.rotate, sc = cs.scale, tf = cs.transform;
 	if (tr && tr !== 'none') { const p = tr.split(' '); m = m.translate(lenOf(p[0], w), lenOf(p[1] || '0', h)); }
 	if (ro && ro !== 'none') { const deg = ro.endsWith('rad') ? (num(ro) * 180) / Math.PI : ro.endsWith('turn') ? num(ro) * 360 : num(ro); m = m.rotate(0, 0, ro.includes(' ') ? num(ro.split(' ').pop()!) : deg); }
 	if (sc && sc !== 'none') { const p = sc.split(' ').map(num); m = m.scale(p[0], p[1] ?? p[0]); }
-	if (tf && tf !== 'none') m = m.multiply(new DOMMatrix(tf));
+	if (tf && tf !== 'none') { try { m = m.multiply(new DOMMatrix(tf)); } catch { m = m.multiply(pctMatrix(tf, w, h)); } }
 	if (m.isIdentity) return m;
 	m = new DOMMatrix().translate(ox, oy).multiply(m).translate(-ox, -oy);
 	if (!m.is2D) {   // project (perspective / translateZ): affine fit through three points
@@ -97,6 +98,15 @@ function localMatrix(cs: CSSStyleDeclaration, w: number, h: number) {
 		m = new DOMMatrix([(x1 - x0) / 100, (y1 - y0) / 100, (x2 - x0) / 100, (y2 - y0) / 100, x0, y0]);
 	}
 	return m;
+}
+/** a transform list with % lengths (DOMMatrix() rejects them): resolve translate %s against the box */
+function pctMatrix(tf: string, w: number, h: number) {
+	const r = tf.replace(/translate(X|Y|3d)?\(([^)]*)\)/g, (_a, ax: string | undefined, args: string) => {
+		const p = args.split(',').map((v) => v.trim());
+		if (ax === 'X') return `translateX(${lenOf(p[0], w)}px)`; if (ax === 'Y') return `translateY(${lenOf(p[0], h)}px)`;
+		return `translate${ax === '3d' ? '3d' : ''}(${lenOf(p[0], w)}px,${lenOf(p[1] || '0', h)}px${ax === '3d' ? ',' + (p[2] || '0') : ''})`;
+	});
+	try { return new DOMMatrix(r); } catch { return new DOMMatrix(); }
 }
 function brightness(f: string) {
 	if (!f || f === 'none') return 1;
@@ -116,8 +126,9 @@ function clipOf(cs: CSSStyleDeclaration, w: number, h: number) {
 function style(el: HTMLElement, force: boolean): St {
 	let s = cache.get(el);
 	if (s && !force) return s;
-	const cs = getComputedStyle(el), w = el.offsetWidth, h = el.offsetHeight;
+	const cs = getComputedStyle(el), g = geo.get(el), w = g ? g.w : el.offsetWidth, h = g ? g.h : el.offsetHeight;
 	s = {
+		pd: num(cs.paddingTop), o: cs.transformOrigin, tr: cs.translate, ro: cs.rotate, sc: cs.scale, tf: cs.transform, w, h,
 		m: localMatrix(cs, w, h), op: num(cs.opacity), vis: cs.visibility !== 'hidden', disp: cs.display !== 'none', z: cs.zIndex === 'auto' ? 0 : parseInt(cs.zIndex) || 0,
 		br: brightness(cs.filter), blend: cs.mixBlendMode, clip: clipOf(cs, w, h), ov: cs.overflow === 'hidden' || cs.overflow === 'clip',
 		bg: cs.backgroundImage, bs: cs.backgroundSize, bp: cs.backgroundPosition, bw: num(cs.borderImageWidth) > 4 ? num(cs.borderImageWidth) : num(cs.borderTopWidth), fit: cs.objectFit,
@@ -155,8 +166,7 @@ function clipFor(el: Element): Clip {
 }
 
 // ---------- the walk ----------
-let order = 0, dirtyAll = true;
-const animated = new Set<Element>();
+let order = 0;
 type Ctx = { M: DOMMatrix; op: number; br: number; host: Container; glow: boolean };
 function bgLeaf(el: HTMLElement, s: St, w: number, h: number, c: Ctx) {
 	const mm = /url\("?([^")]+)"?\)/.exec(s.bg); if (!mm) return;
@@ -220,24 +230,123 @@ function badge(el: HTMLElement, c: Ctx, w: number, h: number) {
 	place(g, c.M, (w - 150 * kk) / 2, (h - 60 * kk) / 2, kk, kk);
 	g.alpha = c.op; g.zIndex = order++; g.visible = true;
 }
-function walk(el: HTMLElement, parent: DOMMatrix, pc: Ctx, px: number, py: number, force: boolean) {
-	if (el.nodeType !== 1) return;
+// ---------- geometry cache (layout is read only in rebuild(): on a resize, a class / child / layout-style change) ----------
+type Geo = { x: number; y: number; w: number; h: number; kids: HTMLElement[] };
+const geo = new WeakMap<Element, Geo>();
+let geoDirty = true, origin = { x: 0, y: 0 };
+function measure(el: HTMLElement, x: number, y: number) {
+	const kids = [...el.children] as HTMLElement[];
+	const g: Geo = { x, y, w: el.offsetWidth, h: el.offsetHeight, kids: [] };
+	geo.set(el, g);
+	for (const k of kids) {
+		const op = k.offsetParent as HTMLElement | null;
+		const kx = op === el ? k.offsetLeft + el.clientLeft : k.offsetLeft - (el.offsetParent === op ? el.offsetLeft : 0);
+		const ky = op === el ? k.offsetTop + el.clientTop : k.offsetTop - (el.offsetParent === op ? el.offsetTop : 0);
+		measure(k, kx, ky);
+	}
+	return g;
+}
+function restyle(el: HTMLElement) {
+	const g = geo.get(el); if (!g) return;
+	style(el, true);
+	for (const k of el.children) restyle(k as HTMLElement);
+	// children in paint order: z-index, then DOM order (negative z under the element's own art)
+	g.kids = ([...el.children] as HTMLElement[]).map((k, i) => [cache.get(k)?.z ?? 0, i, k] as const).sort((p, q) => p[0] - q[0] || p[1] - q[1]).map((v) => v[2]);
+}
+function rebuild() {
+	geoDirty = false;
+	let x = 0, y = 0; for (let e: HTMLElement | null = board; e && e !== frame; e = e.offsetParent as HTMLElement | null) { x += e.offsetLeft; y += e.offsetTop; }
+	origin = { x, y };
+	for (const r of roots) measure(r, r.offsetLeft, r.offsetTop);
+	extras = ['frameLit', 'frameGlint'].map((id) => document.getElementById(id)).filter((x): x is HTMLElement => !!x && x.parentElement === frame);
+	for (const e of extras) { measure(e, e.offsetLeft, e.offsetTop); restyle(e); if (!watched.has(e)) { watched.add(e); mo?.observe(e, { subtree: true, childList: true, attributes: true, attributeOldValue: true, attributeFilter: ['class', 'style'] }); } }
+	geo.set(board!, { x: 0, y: 0, w: board!.offsetWidth, h: board!.offsetHeight, kids: [] });
+	style(board!, true);
+	for (const r of roots) restyle(r);
+	inlineQ.clear(); styleQ.clear();
+}
+
+// ---------- motion without layout reads: inline transforms parsed from el.style, CSS / WAAPI motion from the
+// animation's own keyframes at its current progress (getComputedTiming: no style or layout flush) ----------
+const inlineQ = new Set<HTMLElement>(), styleQ = new Set<HTMLElement>();
+function inlineUpdate(el: HTMLElement) {
+	const s = cache.get(el); if (!s) { styleQ.add(el); return; }
+	const st = el.style;
+	if (st.transform || st.translate || st.scale || st.rotate) {
+		const tp: TP = { transformOrigin: st.transformOrigin || s.o, translate: st.translate || s.tr, rotate: st.rotate || s.ro, scale: st.scale || s.sc, transform: st.transform || s.tf };
+		s.tr = tp.translate; s.ro = tp.rotate; s.sc = tp.scale; s.tf = tp.transform; s.o = tp.transformOrigin;
+		s.m = localMatrix(tp, s.w, s.h);
+	} else styleQ.add(el);
+	if (st.opacity) s.op = num(st.opacity);
+	if (st.visibility) s.vis = st.visibility !== 'hidden';
+	if (st.display) s.disp = st.display !== 'none';
+}
+type KF = { off: number; ease: (t: number) => number; v: Record<string, string> };
+const kfCache = new WeakMap<Animation, KF[]>();
+function bezier(x1: number, y1: number, x2: number, y2: number) {
+	const B = (t: number, a: number, b: number) => 3 * a * t * (1 - t) ** 2 + 3 * b * t * t * (1 - t) + t ** 3;
+	return (x: number) => { let lo = 0, hi = 1, t = x; for (let i = 0; i < 18; i++) { t = (lo + hi) / 2; if (B(t, x1, x2) < x) lo = t; else hi = t; } return B(t, y1, y2); };
+}
+const EASE: Record<string, (t: number) => number> = { linear: (t) => t, ease: bezier(0.25, 0.1, 0.25, 1), 'ease-in': bezier(0.42, 0, 1, 1), 'ease-out': bezier(0, 0, 0.58, 1), 'ease-in-out': bezier(0.42, 0, 0.58, 1) };
+function easeOf(e: string | undefined) {
+	if (!e) return EASE.linear; if (EASE[e]) return EASE[e];
+	const m = /cubic-bezier\(([^)]+)\)/.exec(e); if (m) { const [a, b, c, d] = m[1].split(',').map(num); return (EASE[e] = bezier(a, b, c, d)); }
+	return EASE.linear;
+}
+const PROPS = ['transform', 'translate', 'rotate', 'scale', 'opacity', 'filter', 'transformOrigin'];
+function keyframes(a: Animation): KF[] {
+	let k = kfCache.get(a); if (k) return k;
+	const raw = ((a.effect as KeyframeEffect | null)?.getKeyframes() ?? []) as any[];
+	k = raw.map((f, i) => {
+		const v: Record<string, string> = {}; for (const p of PROPS) if (f[p] != null && f[p] !== '') v[p] = String(f[p]);
+		return { off: f.computedOffset ?? f.offset ?? (raw.length > 1 ? i / (raw.length - 1) : 0), ease: easeOf(f.easing), v };
+	});
+	kfCache.set(a, k); return k;
+}
+const lerpM = (a: DOMMatrix, b: DOMMatrix, t: number) => new DOMMatrix([a.a + (b.a - a.a) * t, a.b + (b.b - a.b) * t, a.c + (b.c - a.c) * t, a.d + (b.d - a.d) * t, a.e + (b.e - a.e) * t, a.f + (b.f - a.f) * t]);
+/** The element's style with its running animations applied (later animations win, like the CSS cascade). */
+function animStyle(el: HTMLElement, base: St, anims: Animation[]): St {
+	let s = base;
+	for (const a of anims) {
+		const p = (a.effect as KeyframeEffect | null)?.getComputedTiming().progress;
+		if (p == null) continue;
+		const kf = keyframes(a); if (!kf.length) continue;
+		let i = 0; while (i < kf.length - 2 && p > kf[i + 1].off) i++;
+		const A = kf[i], B = kf[Math.min(i + 1, kf.length - 1)], span = B.off - A.off, t = span > 0 ? A.ease(Math.max(0, Math.min(1, (p - A.off) / span))) : 1;
+		const has = (k: string) => k in A.v || k in B.v;
+		if (s === base) s = { ...base };
+		if (has('opacity')) { const o0 = A.v.opacity != null ? num(A.v.opacity) : base.op, o1 = B.v.opacity != null ? num(B.v.opacity) : base.op; s.op = o0 + (o1 - o0) * t; }
+		if (has('filter')) { const b0 = A.v.filter != null ? brightness(A.v.filter) : base.br, b1 = B.v.filter != null ? brightness(B.v.filter) : base.br; s.br = b0 + (b1 - b0) * t; }
+		if (has('transform') || has('translate') || has('rotate') || has('scale')) {
+			const tp = (f: KF): TP => ({ transformOrigin: f.v.transformOrigin ?? base.o, translate: f.v.translate ?? base.tr, rotate: f.v.rotate ?? base.ro, scale: f.v.scale ?? base.sc, transform: f.v.transform ?? base.tf });
+			s.m = lerpM(localMatrix(tp(A), base.w, base.h), localMatrix(tp(B), base.w, base.h), t);
+		}
+	}
+	return s;
+}
+
+// ---------- the walk (cached geometry + styles only: no layout or computed-style reads) ----------
+const running = new Map<Element, Animation[]>();
+function walk(el: HTMLElement, parent: DOMMatrix, pc: Ctx, isRoot: boolean) {
+	const g = geo.get(el); if (!g) { geoDirty = true; return; }
 	const cl = el.className && typeof el.className === 'string' ? el.className : '';
 	if (cl && SKIP.test(cl)) return;
-	const s = style(el, force || animated.has(el));
+	const base = cache.get(el); if (!base) { geoDirty = true; return; }
+	const an = running.get(el), s = an ? animStyle(el, base, an) : base;
 	if (!s.disp) return;
-	const isRoot = roots.includes(el);
-	const w = el.offsetWidth, h = el.offsetHeight;
-	const M = parent.translate(px, py).multiply(s.m);
+	const w = g.w, h = g.h;
+	const M = parent.translate(g.x, g.y).multiply(s.m);
 	const c: Ctx = { M, op: pc.op * (isRoot ? 1 : s.op), br: pc.br * s.br, host: pc.host, glow: pc.glow || /\bsymGlow\b/.test(cl) || (el.tagName === 'IMG' && /\bstk_glow\b/.test(cl)) };
 	if (c.op <= 0.003) return;
-	if ((s.ov || s.clip) && el.id !== 'board') {
+	if (s.ov || s.clip) {
 		const k = clipFor(el); if (k.c.parent !== pc.host) pc.host.addChild(k.c);
 		k.c.zIndex = order++; k.g.clear();
 		const [t, r, b, l] = s.clip?.inset ?? [0, 0, 0, 0], rad = s.clip?.r[0] ?? 0;
 		k.g.setFromMatrix(new Matrix(M.a, M.b, M.c, M.d, M.e, M.f));
 		if (rad) k.g.roundRect(l, t, w - l - r, h - t - b, rad); else k.g.rect(l, t, w - l - r, h - t - b);
 		k.g.fill(0xffffff);
+		// #frameGlint: its CSS mask keeps only the padding ring (the timber band + trim), never the window
+		if (el.id === 'frameGlint' && s.pd > 0) k.g.rect(s.pd, s.pd, w - 2 * s.pd, h - 2 * s.pd).cut();
 		c.host = k.c;
 	}
 	const tag = el.tagName;
@@ -259,38 +368,64 @@ function walk(el: HTMLElement, parent: DOMMatrix, pc: Ctx, px: number, py: numbe
 		if (/\bt(Rec|Bd|Fr)\b/.test(cl)) { nine(el, s, w, h, c); }
 		else if (s.bg && s.bg !== 'none' && !s.bg.includes('gradient')) bgLeaf(el, s, w, h, c);
 	}
-	// children in paint order: z-index, then DOM order (negative z under the element's own art)
-	const kids = [...el.children] as HTMLElement[];
-	if (kids.length) {
-		const zs = kids.map((k, i) => [style(k, force || animated.has(k)).z, i, k] as const).sort((a, b) => a[0] - b[0] || a[1] - b[1]);
-		for (const [, , k] of zs) {
-			const op = k.offsetParent as HTMLElement | null;
-			const kx = op === el ? k.offsetLeft + el.clientLeft : k.offsetLeft - (el.offsetParent === op ? el.offsetLeft : 0);
-			const ky = op === el ? k.offsetTop + el.clientTop : k.offsetTop - (el.offsetParent === op ? el.offsetTop : 0);
-			walk(k, M, c, kx, ky, force);
-		}
-	}
+	for (const k of g.kids) walk(k, M, c, false);
 }
 
+let extras: HTMLElement[] = [], mo: MutationObserver | null = null;
+const watched = new WeakSet<Element>();
 let roots: HTMLElement[] = [], board: HTMLElement | null = null, frame: HTMLElement | null = null, started = false;
-function boardOrigin() {
-	let x = 0, y = 0; for (let e: HTMLElement | null = board; e && e !== frame; e = e.offsetParent as HTMLElement | null) { x += e.offsetLeft; y += e.offsetTop; }
-	return { x, y };
-}
+// frame timing probe (window.__mirrorMs: the mirror's own cost per frame, last 600 frames)
+const msLog: number[] = []; (globalThis as any).__mirrorMs = msLog;
 function tick() {
 	if (!board || !board.isConnected) return true;
+	const t0 = performance.now();
 	frameNo++; order = 0;
-	animated.clear();
-	for (const a of board.getAnimations({ subtree: true })) { const t = (a.effect as KeyframeEffect | null)?.target; if (t) animated.add(t); }
-	const force = dirtyAll; dirtyAll = false;
-	const o = boardOrigin(), bs = style(board, force || animated.has(board));
-	const M = new DOMMatrix().translate(o.x, o.y).multiply(bs.m);
+	if (geoDirty) rebuild();
+	// a class change restyles the element's subtree (descendant selectors) and re-sorts its siblings (z-index)
+	for (const el of styleQ) { if (!el.isConnected) continue; restyle(el); const p = el.parentElement, pg = p && geo.get(p);
+		if (p && pg) pg.kids = ([...p.children] as HTMLElement[]).map((k, i) => [cache.get(k)?.z ?? 0, i, k] as const).sort((x, y) => x[0] - y[0] || x[1] - y[1]).map((v) => v[2]); }
+	styleQ.clear();
+	for (const el of inlineQ) inlineUpdate(el);
+	inlineQ.clear();
+	for (const el of styleQ) style(el, true);
+	styleQ.clear();
+	// an element whose animation just ended: its base style was read mid-animation, so read it again (once)
+	const was = [...running.keys()]; running.clear();
+	for (const a of board.getAnimations({ subtree: true })) {
+		const t = (a.effect as KeyframeEffect | null)?.target as Element | null; if (!t) continue;
+		const l = running.get(t); if (l) l.push(a); else running.set(t, [a]);
+	}
+	for (const el of was) if (!running.has(el) && (el as HTMLElement).isConnected) style(el as HTMLElement, true);
+	const bs = cache.get(board)!, ba = running.get(board), b = ba ? animStyle(board, bs, ba) : bs;
+	const M = new DOMMatrix().translate(origin.x, origin.y).multiply(b.m);
 	const base: Ctx = { M, op: 1, br: 1, host: layer.reels, glow: false };
-	for (const r of roots) walk(r, M, base, r.offsetLeft, r.offsetTop, force);
+	for (const r of roots) walk(r, M, base, true);
+	// the frame's fire light and glint, over the frame back (they were DOM over #mkFrame)
+	const fb: Ctx = { M: new DOMMatrix(), op: 1, br: 1, host: layer.frameBack, glow: false };
+	for (const e of extras) { if (!e.isConnected) { geoDirty = true; continue; } for (const a of e.getAnimations({ subtree: true })) { const t = (a.effect as KeyframeEffect | null)?.target as Element | null; if (t) { const l = running.get(t); if (l) l.push(a); else running.set(t, [a]); } } walk(e, fb.M, fb, false); }
 	for (const x of live) if (x.d.destroyed) live.delete(x); else if (x.used !== frameNo) { if (x.d.visible) x.d.visible = false; if (!x.d.parent || x.used < frameNo - 120) { x.d.removeFromParent(); if (x.kind !== 'db') x.d.destroy({ children: true }); live.delete(x); } }
 	for (const k of liveClips) if (k.used !== frameNo) { k.c.visible = false; if (k.used < frameNo - 120) { k.c.removeFromParent(); liveClips.delete(k); } } else k.c.visible = true;
+	msLog.push(performance.now() - t0); if (msLog.length > 600) msLog.shift();
 	return true;
 }
+const GEO_PROPS = /(^|;)\s*(left|top|right|bottom|width|height|inset|margin[a-z-]*|padding[a-z-]*|display|position)\s*:/;
+const geoPart = (css: string | null) => (css || '').split(';').filter((d) => GEO_PROPS.test(';' + d)).map((d) => d.trim()).sort().join(';');
+function onMutations(recs: MutationRecord[]) {
+	for (const r of recs) {
+		const t = r.target as HTMLElement;
+		if (r.type === 'childList') { geoDirty = true; continue; }
+		if (r.attributeName === 'style') {
+			// a layout property changed (the merge stage's left / width, a hidden cell): re-measure; else transforms / opacity only
+			if (geoPart(r.oldValue) !== geoPart(t.getAttribute('style'))) geoDirty = true;
+			else inlineQ.add(t);
+		} else if (r.attributeName === 'class' && t === document.body) geoDirty = true;
+		else if (r.attributeName === 'class') { styleQ.add(t); geoDirty = geoDirty || CLASS_GEO.test((r.oldValue || '') + ' ' + t.className); }
+		else geoDirty = true;   // src / data-v
+	}
+	kick();
+}
+// classes that change a box's size or presence (spinner in / out, merge, hidden): re-measure on those
+const CLASS_GEO = /\b(spinning|merge|full|hidden|gone|cspin|mStage|big|landed)\b/;
 /** Start mirroring #board's state model into the board stage (idempotent). */
 export async function startMirror() {
 	if (started) return; started = true;
@@ -301,11 +436,12 @@ export async function startMirror() {
 	source(SHEET); source('sheets/symdepth.webp');
 	await Promise.all([srcs.get(SHEET)?.p, srcs.get('sheets/symdepth.webp')?.p]);
 	document.body.classList.add('pixiBoard');
-	const mo = new MutationObserver(() => { dirtyAll = true; });
-	for (const r of roots) mo.observe(r, { subtree: true, childList: true, attributes: true, attributeFilter: ['class', 'style', 'src', 'data-v'] });
-	mo.observe(board!, { attributes: true, attributeFilter: ['class', 'style'] });
-	mo.observe(document.body, { attributes: true, attributeFilter: ['class'] });
-	addEventListener('resize', () => { dirtyAll = true; });
+	mo = new MutationObserver(onMutations);
+	for (const r of roots) mo!.observe(r, { subtree: true, childList: true, attributes: true, attributeOldValue: true, attributeFilter: ['class', 'style', 'src', 'data-v'] });
+	mo!.observe(board!, { attributes: true, attributeOldValue: true, attributeFilter: ['class', 'style'] });
+	mo!.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+	addEventListener('resize', () => { geoDirty = true; kick(); });
+	onLayout(() => { geoDirty = true; });
 	animate(tick);
 }
-export const mirrorDirty = () => { dirtyAll = true; kick(); };
+export const mirrorDirty = () => { geoDirty = true; kick(); };

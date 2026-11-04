@@ -69,6 +69,16 @@ export const resolution = () => app?.renderer.resolution ?? Math.min(3, window.d
 export const isDirty = () => dirty;
 let lip: Sprite | null = null;
 /** mkboard.ts hands over the painted frame-front lip (a canvas in frame-local px). */
+let back: Sprite | null = null;
+/** fix8: the frame back (board panel, shadows, timber frame, trim: mkboard.ts drawFrame) as the stage's bottom layer. */
+export function setFrameBack(cv: HTMLCanvasElement, x: number, y: number, w: number, h: number) {
+	void boardStage().then((a) => {
+		if (!a) return;
+		const old = back?.texture; if (!back) { back = new Sprite(); back.label = 'frameBack'; back.zIndex = -1; layer.frameBack.addChild(back); }
+		back.texture = Texture.from(cv); old?.destroy(true);
+		back.position.set(x, y); back.width = w; back.height = h; kick();
+	});
+}
 export function setLip(cv: HTMLCanvasElement, x: number, y: number, w: number, h: number) {
 	void boardStage().then((a) => {
 		if (!a) return;

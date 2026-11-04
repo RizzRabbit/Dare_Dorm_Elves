@@ -10,7 +10,7 @@
 // Game-only pieces the mockup never had: the menu button (top-left corner, same square style), the armed-mode tag
 // (over SPIN), the free-spins bar (on the sill), and 48 px tap floors (controls grow when the mockup size is smaller).
 import { ST } from './stage';
-import { setLip } from './board/stage';
+import { setLip, setFrameBack } from './board/stage';
 import ART_G from './art.generated.json';
 // Chrome floors border widths to whole device px, so a 2.9px stroke would draw at 2; round in screen space instead.
 const BUY_K = 0.78;
@@ -269,6 +269,9 @@ function drawFrame(u: number) {
 	lg.beginPath(); lg.rect(-M, FT + BH - 6, FW + 2 * M, FH + M - (FT + BH - 6)); lg.clip();
 	const g0 = g; g = lg; part('frame', 0, -B.frameTop); nine('trim9', 0, 0, FW, BH + 2 * FT); g = g0;
 	setLip(lc, -M * u, -M * u, cw, ch);
+	// fix8: the frame back is drawn by the board stage too (a copy: the DOM #mkFrame is hidden under body.pixiBoard)
+	const bc = document.createElement('canvas'); bc.width = fc.width; bc.height = fc.height; bc.getContext('2d')!.drawImage(fc, 0, 0);
+	setFrameBack(bc, -M * u, -M * u, cw, ch);
 }
 /** Painted garland across the frame top (behind the logo), sized to the frame; never reaches the reels (FT band only). */
 function garland(u: number) {
