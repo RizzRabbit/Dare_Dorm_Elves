@@ -24,6 +24,7 @@ import { mergeFx, wfExpand } from './wildfx';
 import { grab } from './combine';
 import { toStage } from './stage';
 import { hasStack, stackOnce, stackLetters, stackWin, stackWinOff, stackPrepare, stackRelease, stackWarm, stackReact, stackReactSkip } from './stacks';
+import { dbSnapshot } from './dbstacks';
 import { T } from './tempo';
 
 let skipping = false, running = 0;
@@ -233,7 +234,11 @@ function leanStage(olds: HTMLElement[]) {
 			cvs.forEach((x) => { try { g.drawImage(x, 0, 0, c.width, c.height); } catch { /* empty canvas */ } });
 			c.style.cssText = 'position:absolute;inset:0;width:100%;height:100%'; p.appendChild(c); return c;
 		};
-		if (!snap(':scope>canvas.stk_body')) { const w = o.querySelector(':scope>.wart'); if (w) p.appendChild(w.cloneNode(true)); }
+		// fix8: a DragonBones rig lives in the board stage (its canvas is a 1x1 placeholder): snapshot it from the stage,
+		// fitted like the rig is (overlay height, centred)
+		const dbc = o.querySelector(':scope>canvas.stk_db') ? dbSnapshot(o) : null;
+		if (dbc) { dbc.style.cssText = 'position:absolute;top:0;left:50%;height:100%;width:auto;translate:-50% 0'; p.appendChild(dbc); }
+		else if (!snap(':scope>canvas.stk_body')) { const w = o.querySelector(':scope>.wart'); if (w) p.appendChild(w.cloneNode(true)); }
 		const lets = [snap(':scope>canvas.stk_letters'), o.querySelector<HTMLElement>(':scope>.mLets')?.cloneNode(true) as HTMLElement | undefined].filter((x): x is HTMLElement => !!x);
 		lets.forEach((l) => { if (!l.parentElement) p.appendChild(l); });
 		const rs = (o.dataset.reels ?? o.dataset.reel ?? '0').split(',').map(Number);

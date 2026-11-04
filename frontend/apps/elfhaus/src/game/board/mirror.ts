@@ -132,7 +132,7 @@ const live = new Set<Out>();
 let frameNo = 0;
 function out(el: Element, kind: string, make: () => Container): Out {
 	let o = outs.get(el);
-	if (!o || o.kind !== kind) { if (o) { o.d.removeFromParent(); if (o.kind !== 'db' && !o.d.destroyed) o.d.destroy({ children: true }); live.delete(o); } o = { d: make(), used: 0, kind }; outs.set(el, o); live.add(o); }
+	if (!o || o.kind !== kind || (o.d.destroyed && kind !== 'db') || !live.has(o)) { if (o) { o.d.removeFromParent(); if (o.kind !== 'db' && !o.d.destroyed) o.d.destroy({ children: true }); live.delete(o); } o = { d: make(), used: 0, kind }; outs.set(el, o); live.add(o); }
 	o.used = frameNo; return o;
 }
 const SKIP = /\b(tGl|tGw|rgShine|wFrame|ovWinO|ovGlow|lock|nm|plate|mfRays|mfCore)\b/;

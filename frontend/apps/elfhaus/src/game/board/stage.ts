@@ -7,7 +7,7 @@
 //   lines       win lines (painted fx-atlas parts)            (live)
 //   winAmt      win amount labels                             (phase 2: DOM .wlAmt)
 //   lip         frame-front lip: oversize art tucks behind the frame (live)
-//   banners     RESPINS counter (board/banners.ts, live); FS counter still DOM #fsBar
+//   banners     RESPINS counter (board/banners.ts, live); and the free-spins bar (startFsBanner)
 // Coordinates: #frame-local layout px, offset by `pad` (the canvas overhangs the frame so FX can leave the window).
 // Rendered once per frame at device px (stage CSS scale x devicePixelRatio, capped 3), only while something is live.
 import { Application, Container, Sprite, Texture } from 'pixi.js';

@@ -47,6 +47,8 @@ export function applyLayers() {
 		// fix8: nothing in the DOM board clips any more (the spinner windows are Pixi masks, only while a cell spins)
 		+ `\nhtml body #frame>#board{overflow:visible!important}`
 		// fix8: #strips / #cells / #overlays are the state + motion model only; the board stage draws them
-		+ `\nhtml body.pixiBoard #board>:is(#strips,#cells,#overlays){opacity:0!important}`;
+		+ `\nhtml body.pixiBoard #board>:is(#strips,#cells,#overlays){opacity:0!important}`
+		// fix8: the free-spins bar is drawn in the board stage's banners layer (board/banners.ts); its DOM box only places it
+		+ `\nhtml body.pixiBoard #fsBar{visibility:hidden!important}`;
 	const st = document.createElement('style'); st.id = 'layerMap'; st.textContent = css; document.head.appendChild(st);
 }

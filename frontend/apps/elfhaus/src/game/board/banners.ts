@@ -64,3 +64,50 @@ export function pulseDot(i: number) {
 	const d = dots[i]; if (!d) return; const t = performance.now();
 	animate(() => { const u = Math.min(1, (performance.now() - t) / 260); d.scale.set(1 + 0.35 * Math.sin(Math.PI * u)); return u < 1; });
 }
+
+// ---------- fix8: the free-spins bar ("<TIER>  FREE SPIN n / N") in the banners layer ----------
+// The DOM #fsBar stays the state model (bookEventHandlerMap writes its text and toggles .hidden; mkboard places it on
+// the sill); body.pixiBoard hides its paint and this pill is drawn at its box: cranberry fill, ink border + drop,
+// gold tier, cream count (the chalet.css look).
+const FS_CRAN = 0xa61c34, GOLD = 0xf5c542;
+let fsRoot: Container | null = null, fsBg: Graphics, fsTier: Text, fsCnt: Text, fsOn = false;
+function fsBuild() {
+	fsRoot = new Container(); fsRoot.label = 'fsBar'; fsRoot.alpha = 0; fsRoot.visible = false;
+	fsBg = new Graphics();
+	fsTier = new Text({ text: '', style: { fontFamily: 'Lilita One', fill: GOLD, fontSize: 16, letterSpacing: 0.6, stroke: { color: INK, width: 3 } } });
+	fsCnt = new Text({ text: '', style: { fontFamily: 'Lilita One', fill: CREAM, fontSize: 16, letterSpacing: 0.6, stroke: { color: INK, width: 3 } } });
+	fsRoot.addChild(fsBg, fsTier, fsCnt); layer.banners.addChild(fsRoot);
+}
+function fsPaint() {
+	const el = document.getElementById('fsBar'), fr = document.getElementById('frame');
+	if (!fsRoot || !el || !fr) return;
+	const fb = fr.getBoundingClientRect(), r = el.getBoundingClientRect(), k = fb.width / (fr.offsetWidth || 1) || 1;
+	const tier = (document.getElementById('fsTier')?.textContent || '').trim(), cnt = (document.getElementById('fsCount')?.textContent || '').trim();
+	const h = Math.max(22, r.height / k || 30), fs = h * 0.5, padX = h * 0.6, gap = h * 0.45, res = resolution();
+	for (const t of [fsTier, fsCnt]) { t.resolution = res; t.style.fontSize = fs; t.style.stroke = { color: INK, width: Math.max(2, fs * 0.16) }; t.anchor.set(0, 0.5); }
+	fsTier.text = tier; fsCnt.text = cnt;
+	const w = padX * 2 + fsTier.width + (tier ? gap : 0) + fsCnt.width, bw = Math.max(2, h * 0.09);
+	fsBg.clear().roundRect(-w / 2, -h / 2 + h * 0.08, w, h, h / 2).fill(INK)
+		.roundRect(-w / 2, -h / 2, w, h, h / 2).fill(FS_CRAN).stroke({ width: bw, color: INK, alignment: 1 });
+	fsTier.position.set(-w / 2 + padX, h * 0.02); fsCnt.position.set(-w / 2 + padX + fsTier.width + (tier ? gap : 0), h * 0.02);
+	fsRoot.position.set(Math.round((r.left + r.width / 2 - fb.left) / k), Math.round((r.top + r.height / 2 - fb.top) / k));
+	kick();
+}
+function fsSync() {
+	const el = document.getElementById('fsBar'); if (!el) return;
+	if (!fsRoot) fsBuild();
+	const on = !el.classList.contains('hidden');
+	fsPaint();
+	if (on !== fsOn) {
+		fsOn = on; const r = fsRoot!, a0 = r.alpha, to = on ? 1 : 0, t0 = performance.now(), D = rm() ? 150 : 220; r.visible = true;
+		animate(() => { const u = Math.min(1, (performance.now() - t0) / D); r.alpha = a0 + (to - a0) * u; if (u >= 1 && !to) r.visible = false; return u < 1; });
+	}
+}
+/** Start drawing the free-spins bar in the board stage (once). */
+export async function startFsBanner() {
+	const el = document.getElementById('fsBar'); if (!el || !(await boardStage())) return;
+	new MutationObserver(fsSync).observe(el, { attributes: true, attributeFilter: ['class', 'style'], childList: true, subtree: true, characterData: true });
+	onLayout(fsSync); window.addEventListener('resize', () => requestAnimationFrame(fsSync));
+	void document.fonts?.ready.then(fsSync);
+	fsSync();
+}
