@@ -66,6 +66,12 @@ export async function dbPlay(ov: HTMLElement, anim: 'idle' | 'win'): Promise<boo
 	const W = arms[0].armature.armatureData.aabb.width, H = arms[0].armature.armatureData.aabb.height;
 	const fit = () => { const w = ov.clientWidth || 1, h = ov.clientHeight || 1; app.renderer.resize(w, h); const k = h / H; root.scale.set(k); root.position.set((w - W * k) / 2, 0); };
 	ov.prepend(cv);
+	// review #18: single-reel wilds get their calm breathing neon outline (WF_Rn_glow, same frame as the rig aabb),
+	// with one gentle brighten as they land, then the breathe loop (CSS .stk_glow in notile.css)
+	if (name.startsWith('WF_') && !ov.querySelector(':scope > img.stk_glow')) {
+		const gl = document.createElement('img'); gl.className = 'stk stk_glow land'; gl.alt = ''; gl.setAttribute('aria-hidden', 'true');
+		gl.src = DIR + name + '_glow.webp'; ov.prepend(gl); setTimeout(() => gl.classList.remove('land'), 260);
+	}
 	const L: Live = { app, arms, anim, raf: 0, t: 0, blinkAt: 1 + Math.random() * 3, ro: new ResizeObserver(fit) };
 	L.ro.observe(ov); fit(); lives.set(ov, L); fade(L, anim, 0);
 	let last = performance.now();
@@ -92,7 +98,7 @@ function face(L: Live, kind: 'blink' | 'laugh') {
 export function dbHas(ov: HTMLElement) { return lives.has(ov); }
 export function dbStop(ov: HTMLElement) {
 	const L = lives.get(ov); if (!L) return; lives.delete(ov);
-	cancelAnimationFrame(L.raf); L.ro.disconnect(); L.app.canvas.remove();
+	cancelAnimationFrame(L.raf); L.ro.disconnect(); L.app.canvas.remove(); ov.querySelector(':scope > img.stk_glow')?.remove();
 	// Pixi 8 keeps one global batch pool shared by every renderer: destroying a renderer leaves destroyed batches in it
 	// and the next render of any other app (the room, Roxy) throws "reading 'clear'". So renderers are pooled, never destroyed.
 	L.app.stage.removeChildren().forEach((o) => o.destroy({ children: true })); pool.push(L.app);
