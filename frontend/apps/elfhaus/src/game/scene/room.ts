@@ -82,6 +82,9 @@ type Item = { o: Container; x: number; y: number; d: number };
 let wallItems: Item[] = [];
 const owned: Container[] = [];   // sprites buildRoom created (the only ones it may destroy on a rebuild)
 const tinted: Container[] = [];
+// tree headroom: px the tree plane is lowered so its top (the star) never crops under a cover fit that trims the
+// painting's top (wide landscape stages) plus the camera's largest upward drift at the tree's depth
+let treeDy = 0;
 let shadows: { board: NineSliceSprite; hud: NineSliceSprite; buy: NineSliceSprite } | null = null;
 export const roomOn = () => !!mesh;
 
@@ -114,6 +117,10 @@ export function buildRoom(k: Key, fit: { c: number; ox: number; oy: number }, W:
 	}
 	const ch = at('chim'); P.chim.addChild(ch); tinted.push(ch);
 	const tr = at('tree'); P.tree.addChild(tr); tinted.push(tr);
+	{	// cam.y peaks at (2.2 + 0.6 + 4) * A (camTick); A ~ fit.c here. Keep the star >= 10 painting px below the stage top.
+		const lift = Math.abs(DEPTH[k].tree) * 6.8 * fit.c, top = tr.position.y - lift;
+		treeDy = Math.max(0, 10 * fit.c - top);
+	}
 	// key light falloff: white on the fire side, darker / cooler away from it (multiply, screen space)
 	const gr = new Sprite(F.ramp); owned.push(gr); gr.blendMode = 'multiply'; gr.width = W; gr.height = H; P.grade.addChild(gr);
 	for (const n of Object.keys(R.at)) if (n.startsWith('near')) { const s = at(n); P.near.addChild(s); tinted.push(s); }
@@ -145,7 +152,7 @@ export function tickRoom(k: Key, fit: { c: number }, night: number) {
 	const D = DEPTH[k], cx = cam.x, cy = cam.y;
 	P.out.position.set(cx * D.out, cy * D.out); P.glass.position.set(cx * D.glass, cy * D.glass);
 	P.chim.position.set(cx * D.chim, cy * D.chim); P.chimFx.position.copyFrom(P.chim.position);
-	P.tree.position.set(cx * D.tree, cy * D.tree); P.shadow.position.set(cx * D.room, cy * D.room);
+	P.tree.position.set(cx * D.tree, cy * D.tree + treeDy); P.shadow.position.set(cx * D.room, cy * D.room);
 	P.near.position.set(cx * D.near, cy * D.near);
 	for (const it of wallItems) if (!it.o.destroyed) it.o.position.set(it.x + cx * it.d, it.y + cy * it.d);
 	if (mesh && meshBase) {
