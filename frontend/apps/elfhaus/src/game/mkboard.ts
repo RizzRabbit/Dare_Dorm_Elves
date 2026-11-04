@@ -10,6 +10,7 @@
 // Game-only pieces the mockup never had: the menu button (top-left corner, same square style), the armed-mode tag
 // (over SPIN), the free-spins bar (on the sill), and 48 px tap floors (controls grow when the mockup size is smaller).
 import { ST } from './stage';
+import { setLip } from './board/stage';
 import ART_G from './art.generated.json';
 // Chrome floors border widths to whole device px, so a 2.9px stroke would draw at 2; round in screen space instead.
 const BUY_K = 0.78;
@@ -233,7 +234,7 @@ function drawFrame(u: number) {
 	if (drawn === key) return; drawn = key;
 	const sc = u * dpr;
 	fc.width = Math.ceil(cw * dpr); fc.height = Math.ceil(ch * dpr);
-	const g = fc.getContext('2d')!; g.setTransform(sc, 0, 0, sc, M * sc, M * sc); g.imageSmoothingQuality = 'high';
+	let g = fc.getContext('2d')!; g.setTransform(sc, 0, 0, sc, M * sc, M * sc); g.imageSmoothingQuality = 'high';
 	const F = fxJson.frames, B = fxJson.meta.board, S = +fxJson.meta.scale || 2, im = fxImg;
 	const part = (k: string, x: number, y: number, w?: number, h?: number) => { const f = F[k].frame; g.drawImage(im, f.x, f.y, f.w, f.h, x, y, w ?? f.w / S, h ?? f.h / S); };
 	// 9-slice: corners at 1:1 (design px), edges stretched along their length, centre stretched
@@ -259,6 +260,12 @@ function drawFrame(u: number) {
 	// 4 the timber frame (its window is punched in the sprite)   5 the gold trim over the seam
 	part('frame', 0, -B.frameTop);
 	nine('trim9', 0, 0, FW, BH + 2 * FT);
+	// fix7 frame-front lip (board/stage.ts layer `lip`): the timber frame + gold trim drawn again, above the symbols and
+	// their FX in the board stage, so oversize art (a wild's bust, a swell, a flake) tucks behind the frame
+	const lc = document.createElement('canvas'); lc.width = fc.width; lc.height = fc.height;
+	const lg = lc.getContext('2d')!; lg.setTransform(sc, 0, 0, sc, M * sc, M * sc); lg.imageSmoothingQuality = 'high';
+	const g0 = g; g = lg; part('frame', 0, -B.frameTop); nine('trim9', 0, 0, FW, BH + 2 * FT); g = g0;
+	setLip(lc, -M * u, -M * u, cw, ch);
 }
 /** Painted garland across the frame top (behind the logo), sized to the frame; never reaches the reels (FT band only). */
 function garland(u: number) {
