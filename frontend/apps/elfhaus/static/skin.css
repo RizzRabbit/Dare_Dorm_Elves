@@ -154,3 +154,18 @@ html body.skin.mk #app #hud #buyBtn.plate{background:none!important;border-color
 html body.skin.mk #app #hud #mkBuyGlow{display:none!important}
 /* meters: labels are painted gold title words, values painted cream; don't force CSS font sizes over mkboard --ls/--vs */
 html body.skin.mk #app #strip label,html body.skin.mk #app #strip span{color:transparent!important;text-shadow:none!important;-webkit-text-stroke:0!important}
+
+html body.skin.mk:not(.portrait) #app #strip .m:has(#balance) :is(label,span){text-align:right!important}
+html body.skin.mk:not(.portrait) #app #strip .m:has(#win) :is(label,span){text-align:left!important}
+html body.skin.mk:not(.portrait) #app #strip .m:has(#bet) :is(label,span){text-align:center!important}
+
+/* land: mirror Balance (right) / Win (left) toward the centred Bet; labels shrink so word sprites sit at the rim */
+html body.skin.mk:not(.portrait) #app #strip .m:has(#balance){align-items:flex-end!important}
+html body.skin.mk:not(.portrait) #app #strip .m:has(#win){align-items:flex-start!important}
+html body.skin.mk:not(.portrait) #app #strip .m:has(#bet){align-items:center!important}
+html body.skin.mk:not(.portrait) #app #strip .m:has(#balance) label{width:auto!important;max-width:100%!important;align-self:flex-end!important}
+html body.skin.mk:not(.portrait) #app #strip .m:has(#win) label{width:auto!important;max-width:100%!important;align-self:flex-start!important}
+html body.skin.mk:not(.portrait) #app #strip .m:has(#bet) label{width:auto!important;align-self:center!important}
+html body.skin.mk:not(.portrait) #app #strip .m:has(#balance) :is(#balance){width:100%!important;text-align:right!important}
+html body.skin.mk:not(.portrait) #app #strip .m:has(#win) :is(#win){width:100%!important;text-align:left!important}
+html body.skin.mk:not(.portrait) #app #strip .m:has(#bet) :is(#bet){width:100%!important;text-align:center!important}
