@@ -21,6 +21,6 @@ export default defineConfig(() => {
 			return { relative: true };
 		},
 	},
-	server: { port: Number(/** @type {any} */ (globalThis).process?.env?.PORT) || 3001 },
+	server: { port: Number(/** @type {any} */ (globalThis).process?.env?.PORT) || 3001, fs: { allow: ['/workspace'] } },   // dev: node_modules is a symlink into another checkout
 	};
 });
