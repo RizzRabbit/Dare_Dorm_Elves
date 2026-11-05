@@ -665,8 +665,11 @@ html{background:#2A2533}
 /* anticipation (reels.ts .strip.ant): baked pink/magenta edge glow over the slow-spinning reel; opacity-only pulse */
 .strip .antGlow{position:absolute;inset:0;opacity:0;pointer-events:none;z-index:2;transition:opacity .25s;
  background:linear-gradient(90deg,#E255A0b0,#E255A000 22%,#E255A000 78%,#E255A0b0),linear-gradient(#FFF6FA90,#FFF6FA00 18%,#FFF6FA00 82%,#FFF6FA90)}
-.strip.ant .antGlow{opacity:1;animation:antPulse .55s ease-in-out infinite alternate}
-@keyframes antPulse{from{opacity:.55}to{opacity:1}}
+.strip.ant .antGlow{opacity:1;animation:antPulse .4s ease-out infinite}
+@keyframes antPulse{0%{opacity:1}100%{opacity:.5}}   /* one flare per 150 BPM beat */
+/* tease: the board's other landed cells dim a touch (landed scatters stay lit) */
+#cells .cell{transition:filter .3s}
+body.teasing #cells .cell:not(.spinning):not(:has(.sym.S)){filter:brightness(.72) saturate(.85)}
 /* win lit state (fx.ts litOn): glow BEHIND the symbol; temporary baked radial gradient, swap per symbol via .lit[data-s] */
 .cell .lit{position:absolute;inset:-16%;z-index:0;pointer-events:none;border-radius:50%;opacity:0;transform:scale(.7);
   background:radial-gradient(closest-side,#FFF6FAee 0,#F9B6D9cc 38%,#E255A066 62%,#C42A7800 100%);transition:opacity .2s,transform .25s cubic-bezier(.3,1.5,.5,1)}

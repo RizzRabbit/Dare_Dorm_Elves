@@ -43,6 +43,10 @@ const P0 = () => (S.turbo
 	? { wu: 0, amp: 0, acc: 50, v: 26, D: 70, Ds: 240, ov: 0.12, set: 75, pw: 2, pad: 75, vS: 0.45, dS: 120, stR: 6, stW: 2, dMin: 50, dMax: 140, thd: 120 }
 	: { wu: 0, amp: 0, acc: 100, v: 18, D: 110, Ds: 420, ov: 0.12, set: 140, pw: 2, pad: 140, vS: 0.4, dS: 200, stR: 12, stW: 4, dMin: 80, dMax: 200, thd: 200 });
 type Prm = ReturnType<typeof P0>;
+// anticipation-cell motion (overrides P0 on teasing reels only; base reels unchanged)
+const TEASE = () => (S.turbo
+	? { vS: 0.3, dS: 320, Ds: 600, pw: 3, ov: 0.26, set: 170, pad: 170 }
+	: { vS: 0.2, dS: 650, Ds: 1150, pw: 3, ov: 0.34, set: 300, pad: 300 });
 /** The shortest lead (ms from now) the first reel's stop needs so every cell of it can still brake from the future. */
 export const stopLead = () => { const p = P(); return p.D + p.set + 3 * timing().casc + 40 - p.pad; };
 
@@ -245,12 +249,14 @@ function stopCell(C: Cell, end: number, onLand: () => void) {
  *  onCell(row) renders that row (from the book's board); rows not spinning are rendered with the reel's first stop.
  *  `slow` = anticipation: the reel's cells ease to a tease speed from `glowAt`, the reel glows and they brake long. */
 export function stopReel(r: number, at: number, onCell: (row: number) => void, slow = 0, glowAt = 0) {
+	const tz = TEASE();
 	const mine = [...cells.values()].filter((C) => C.r === r).sort((a, b) => a.row - b.row);
 	const others = Array.from({ length: ROWS }, (_, row) => row).filter((row) => !mine.some((C) => C.row === row));
 	if (!mine.length) { others.forEach(onCell); return Promise.resolve(); }
 	const T = timing();
 	if (slow) {
-		mine.forEach((C) => (C.slowAt = t0 + glowAt));
+		// tease motion: blur -> readable crawl (vS) -> long power-3 creep over the last ~1.5 symbols -> snap with a big overshoot
+		mine.forEach((C) => { C.slowAt = t0 + glowAt; if (!reduced()) C.p = { ...C.p, ...tz }; });
 		const dt = t0 + glowAt - performance.now();
 		const go = () => { if (mine.some((C) => cells.get(`${C.r}${C.row}`) === C)) antOn(r); };
 		dt > 0 ? setTimeout(go, dt) : go();
@@ -298,11 +304,11 @@ function strip(r: number) {
 const antReels = new Set<number>();
 function antOn(r: number) {
 	const el = strip(r); if (!el) return;
-	el.style.cssText = `left:${r * S.cell}px;visibility:visible`; el.classList.add('ant'); antReels.add(r); rigAnt(true);
+	el.style.cssText = `left:${r * S.cell}px;visibility:visible`; el.classList.add('ant'); antReels.add(r); rigAnt(true); document.body.classList.add('teasing');
 	cells.forEach((C) => { if (C.r === r) C.el.classList.add('ant'); });
 }
 function antOff(r?: number) {
 	antReels.forEach((rr) => { if (r !== undefined && rr !== r) return; const el = strips[rr]; if (el) { el.classList.remove('ant'); el.style.visibility = 'hidden'; } antReels.delete(rr); });
-	if (!antReels.size) rigAnt(false);
+	if (!antReels.size) { rigAnt(false); document.body.classList.remove('teasing'); }
 }
 function antCheck(r: number) { if (antReels.has(r) && ![...cells.values()].some((C) => C.r === r)) antOff(r); }

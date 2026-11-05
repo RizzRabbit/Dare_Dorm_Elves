@@ -24,7 +24,7 @@ import { countTo, countMs, setAmount, skipCounts, BIG_TIERS, levelOf, WIN_EDGES 
 import { grab, combineInto } from './combine';
 import { tempo, hold, gtempo } from './tempo';
 import { boardTease, boardPunch } from './boardfx';
-import { sfx, loop, music, musicSting, stingInMs, duck, duckFor, playVoice, type Handle } from './audio';
+import { sfx, loop, music, musicSting, stingInMs, beatSnapMs, duck, duckFor, playVoice, type Handle } from './audio';
 import { voice, voiceSpin, teaseOk } from './voice';
 import { payoutFlow } from './payoutFlow';
 import { bannerLevel } from './bannerLevel';
@@ -141,13 +141,17 @@ export const bookEventHandlerMap: Handlers = {
 		let at = Math.max(T.first, sinceStart() + stopLead()), prev = at; // v3.17: late RGS answer = still staggered (reels.ts stopLead)
 		const stops: Promise<void>[] = [];
 		let riser: Handle | null = null, riserT = 0;
+		// tease (James: longer, more dramatic): each teasing reel holds ~1 bar extra, the last ~2 bars of tease; turbo half.
+		// Every teasing land is snapped onto a 150 BPM beat line of the music grid.
+		const lastAnt = ev.anticipation.reduce((a, v, i) => (v > 0 ? i : a), -1);
+		const hold = (r: number) => (S.turbo ? 0.5 : 1) * (r === lastAnt ? 2800 : 1600);
 		for (let r = 0; r < REELS; r++) {
 			prev = at;
 			if (r > 0) at += T.gap;
 			const slow = ev.anticipation[r] > 0 ? T.antD : 0;
 			// the riser starts with the first slowed reel's glow and fades out on the last land
-			if (slow && !riserT) riserT = window.setTimeout(() => { riser = sfx('anticipation_riser'); boardTease(true); }, Math.max(0, prev - sinceStart()));
-			if (slow) at += T.ant;
+			if (slow && !riserT) riserT = window.setTimeout(() => { riser = loop('anticipation_riser', 0.9); boardTease(true); document.body.classList.add('teasing'); }, Math.max(0, prev - sinceStart()));
+			if (slow) { at += hold(r); at += beatSnapMs(at - sinceStart()); }
 			// each cell is rendered as its own spinner settles (the reel's still cells with its first stop); the
 			// spinner already gave the landing its bounce, the tile its thud + glint, so no extra squash here
 			stops.push(stopReel(r, at, (row) => {
@@ -159,7 +163,7 @@ export const bookEventHandlerMap: Handlers = {
 			}, slow, prev));
 		}
 		await Promise.all(stops);
-		clearTimeout(riserT); (riser as Handle | null)?.stop(150); if (riserT) boardTease(false);
+		clearTimeout(riserT); (riser as Handle | null)?.stop(150); if (riserT) boardTease(false); document.body.classList.remove('teasing');
 		markStopped();
 		await sleep(T.land);
 		// EGW (v3.17, James: "the same flow as normal / ante"): nothing EGW-specific here any more. The EGW reels landed as

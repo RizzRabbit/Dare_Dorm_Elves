@@ -244,6 +244,8 @@ function syncMusic() {
 	grid0 = start; cur = { name: want, ...x }; mstat = { last: (start > t ? 'trigger->' : '') + want, at: start };
 }
 /** boardfx: ms until the last scheduled stinger starts (0 when none / music off): the trigger punch lands with it. */
+/** ms from now until the first 150 BPM beat line at or after now + `afterMs` (music grid); 0 extra when no grid. */
+export const beatSnapMs = (afterMs: number) => safe(() => { if (!ctx || !grid0) return 0; const t = now() + afterMs / 1000, B = BAR / 4; return Math.max(0, (grid0 + Math.ceil((t - grid0) / B - 1e-6) * B - t) * 1000); }) ?? 0;
 export const stingInMs = () => safe(() => (ctx && stingEnd ? Math.max(0, (stingEnd - STING_BARS * BAR - now()) * 1000) : 0)) ?? 0;
 /** v9: 2-bar sung big-win stinger at the next bar line; the running loop is muted under it (keeps its phase) and comes back after. */
 export function musicSting(k: 'bigwin') {
