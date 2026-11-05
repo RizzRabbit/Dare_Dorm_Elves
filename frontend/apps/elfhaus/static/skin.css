@@ -61,6 +61,9 @@ html body.portrait #outro .otHint{font-size:22px!important}
 /* fix5 #1: the hint is drawn once, by its bitmap canvas (skin.ts bmText, scaled to fit); titleType's painted glyph row was a
    second copy under it */
 html body #outro .otHint.bm>.tgRow{display:none!important}
+/* fsfix (James): the hint's own box was zero-wide (its glyph row hidden, its text clipped), so the bitmap line started at the
+   card's centre and ran off to the lower right; the box spans the card and the line is centred in it */
+html body #outro .otHint{align-self:stretch!important;width:auto!important;text-align:center!important;min-height:1.25em;margin-bottom:.1em!important}
 /* fix4 #8: portrait buy menu: both card rows fit (shorter card art) */
 html body.portrait #buyCards .bcard .bArt{aspect-ratio:1.4!important}
 /* fix4 E/G: the painted sprite is the only frame. id-weight (:is with an id argument) so chalet.css #id !important fills,
