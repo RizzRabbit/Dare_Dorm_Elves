@@ -21,6 +21,7 @@ import { boardWin } from './boardfx';
 import { voice } from './voice';
 import { skipCounts, levelOf, WIN_EDGES, BIG_TIERS, maxLevel } from './countup';
 import { presenting, stage } from './winstage';
+import { trailToMeter, clearTrail } from './wintrail';
 
 let skipLine = false, skipAll = false, active = false;
 // fix7: the lines are Pixi sprites (painted fx-atlas line_seg / line_joint / line_head) in the unified board stage
@@ -134,7 +135,9 @@ export async function playWins(wins: LineWin[], base: number, stepTotal?: number
 	if (n) sfx('winline_highlight');
 	clearSymWins(); clearOvWins();
 	wins.forEach((w) => w.positions.forEach((p) => { ovWin(p.reel); const c = cellEl(p.reel, p.row); c.classList.remove('dim');
-		const fresh = !c.classList.contains('win'); c.classList.add('win'); litOn(c); symWin(c); if (fresh && !turbo) burst(c, 'pop'); }));
+		const fresh = !c.classList.contains('win'); c.classList.add('win', 'pulse'); litOn(c); symWin(c); if (fresh && !turbo) burst(c, 'pop'); }));
+	// motion pass: flake trail from winners to the WIN meter (count-up already running); meter punches on arrival
+	trailToMeter(wins);
 	const meter = setWinMeter(tot);
 	let amtA: { remove: () => void } | null = null;
 	const drawOn = turbo ? 160 : TG(420);
@@ -185,5 +188,5 @@ export async function playWins(wins: LineWin[], base: number, stepTotal?: number
 	});
 	clearRace();
 	document.querySelectorAll('.cell.pulse').forEach((c) => c.classList.remove('pulse'));
-	} finally { active = false; skipAll = false; skipLine = false; presenting(false); }
+	} finally { active = false; skipAll = false; skipLine = false; presenting(false); clearTrail(); }
 }
