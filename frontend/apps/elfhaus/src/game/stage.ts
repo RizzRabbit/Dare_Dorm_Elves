@@ -4,7 +4,7 @@
 // render 1:1); the other side follows the window's aspect within a range, so the stage fills the screen and only
 // extreme aspects letterbox. Proportions between board, Roxy, background and UI are therefore identical at every
 // window size. CSS uses var(--vw)/var(--vh) (1% of the stage) instead of vw/vh; JS converts screen rects with toStage().
-export const ST = { w: 1920, h: 1080, s: 1, ox: 0, oy: 0, portrait: false, tb: 1, phl: false, railL: 0, railR: 0, compact: false, tap: 48 };
+export const ST = { w: 1920, h: 1080, s: 1, ox: 0, oy: 0, portrait: false, tablet: false, tb: 1, phl: false, railL: 0, railR: 0, compact: false, tap: 48 };
 // v21 (review #193/#195/#243): COMPACT = small desktop popouts (a landscape window up to 600 px tall with a fine pointer:
 // 400x225, 800x450, 1024x576) and every replay. Tap floor 28 screen px (not 48), text boost capped at 1.6 (not 2.2) and no
 // 1.5x panel zoom, so the controls stop crowding a tiny stage. Touch phones (coarse pointer) are never compact outside a
@@ -35,22 +35,26 @@ export function fitStage() {
 	const pick = (...a: (number | null | undefined)[]) => Math.min(...a.filter((x): x is number => !!x && x > 0)) || 1;
 	const vw = pick(innerWidth, de.clientWidth, vv && vv.width * vv.scale), vh = pick(innerHeight, de.clientHeight, vv && vv.height * vv.scale);
 	const portrait = vh > vw * 1.1, phl = !portrait && vh <= PHL_MAX_H;
+	// tablet (James 2026-11-05): shorter side >= 600 CSS px and aspect between 0.6 and 1.5 (incl. Stake near-square iframe)
+	const side = Math.min(vw, vh), ar = Math.min(vw, vh) / Math.max(vw, vh);
+	const tablet = side >= 600 && ar >= 0.6 && ar <= 1.5;
 	let w: number, h: number;
 	if (portrait) { w = PORT_W; h = Math.round(PORT_W * clamp(vh / vw, PORT_AR)); }
-	else { h = phl ? PHL_H : LAND_H; w = Math.round(h * clamp(vw / vh, LAND_AR)); }
+	else { h = phl ? PHL_H : LAND_H; w = Math.round(h * clamp(vw / vh, tablet ? ([1.0, 2.4] as [number, number]) : LAND_AR)); }
 	const s = Math.min(vw / w, vh / h), ox = (vw - w * s) / 2, oy = (vh - h * s) / 2;
 	const compact = isReplayUrl() || (!portrait && vh <= COMPACT_MAX_H && finePointer()), tap = compact ? TAP_COMPACT : TAP;
 	const tb = portrait || phl ? 1 : Math.min(compact ? TB_MAX_COMPACT : TB_MAX, Math.max(1, TB_MIN / s));
 	// phone landscape side rails (design px): left = menu / BUY plate / readouts, right = turbo / bet / SPIN / autoplay
 	const railL = phl ? 230 : 0, railR = phl ? 190 : 0;
-	Object.assign(ST, { w, h, s, ox, oy, portrait, tb, phl, railL, railR, compact, tap });
+	Object.assign(ST, { w, h, s, ox, oy, portrait, tablet, tb, phl, railL, railR, compact, tap });
 	document.body.classList.toggle('phl', phl);
 	document.body.classList.toggle('compact', compact);
 	document.body.classList.toggle('tb', tb > 1.001);
 	document.body.classList.toggle('portrait', portrait); // same rule for the loader, the game and every CSS layer
+	document.body.classList.toggle('tablet', tablet);
 	// v3.17 (James 02:26): 'phone' = portrait, or a landscape viewport no taller than 500 CSS px (phone landscape); the see-through
 	// board (mkboard.ts drawFrame: inner panel 78%, frame solid) keys on it, so desktop (1280x720 and up) is unchanged
-	document.body.classList.toggle('phone', portrait || Math.min(vw, vh) <= 500);
+	document.body.classList.toggle('phone', !tablet && (portrait || Math.min(vw, vh) <= 500));
 	const r = document.documentElement.style;
 	r.setProperty('--dw', w + 'px'); r.setProperty('--dh', h + 'px'); r.setProperty('--s', String(s));
 	r.setProperty('--tb', tb.toFixed(3)); r.setProperty('--tbs', Math.min(tb, 1.5).toFixed(3)); r.setProperty('--tbm', Math.min(tb, 1.6).toFixed(3));
