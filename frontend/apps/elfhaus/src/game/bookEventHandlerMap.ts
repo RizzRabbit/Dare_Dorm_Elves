@@ -23,7 +23,7 @@ import { featOpen, featPop, featClose } from './featfx';
 import { countTo, countMs, setAmount, skipCounts, BIG_TIERS, levelOf, WIN_EDGES } from './countup';
 import { grab, combineInto } from './combine';
 import { tempo, hold, gtempo } from './tempo';
-import { sfx, loop, music, duck, duckFor, playVoice, type Handle } from './audio';
+import { sfx, loop, music, musicSting, duck, duckFor, playVoice, type Handle } from './audio';
 import { voice, voiceSpin, teaseOk } from './voice';
 import { payoutFlow } from './payoutFlow';
 import { bannerLevel } from './bannerLevel';
@@ -261,7 +261,7 @@ export const bookEventHandlerMap: Handlers = {
 		await cardFlip(ev.result);
 	},
 	async freeSpinTrigger(ev) {
-		hideToast(); roxy('excited'); sfx('scatter_trigger_bell'); sfx('bonus_trigger', { gain: 0.7 }); duckFor(4000); voice('bonus');
+		hideToast(); roxy('excited'); sfx('scatter_trigger_bell'); sfx('bonus_trigger', { gain: 0.7 }); music('bonus'); voice('bonus');   // v9: next bar line -> sung trigger stinger -> bonus loop
 		// the trigger scatters light up on the board, the wilds that stay lock in place (Dare carries nothing);
 		// the board itself is never cleared or re-rendered, so a Mystery bonus continues on the Mystery board
 		await showScatters(ev.scatters, 1100);
@@ -287,7 +287,7 @@ export const bookEventHandlerMap: Handlers = {
 		  Object.assign(a.style, { width: `${100 / cw}%`, height: `${100 / ch}%`, left: `${(-x0 / cw) * 100}%`, top: `${(-y0 / ch) * 100}%` });
 		  if (a.getAttribute('src') !== t.u) a.src = t.u; }
 		I.dataset.tier = ev.tier; I.classList.remove('hidden');
-		sfx('fs_intro'); music('bonus');
+		music('bonus');   // no-op when the trigger already switched it
 		const fx = I.querySelector<HTMLElement>('.bwFx'); featOpen(fx); featPop(I.querySelector('.tierName'));
 		// v3.18 (James 2026-10-30): the player starts every bonus with START (or a tap on the card / Space), in turbo
 		// exactly as without it; the old timer advanced it on its own (turbo: ~0.5 s, which read as "starts by itself").
@@ -338,7 +338,7 @@ export const bookEventHandlerMap: Handlers = {
 		const O = $('#outro'), fx = O.querySelector<HTMLElement>('.bwFx'), amt = O.querySelector<HTMLElement>('.otAmt')!;
 		const total = Math.min(ev.amount / 100, MAX_WIN_X) * bet();
 		titleTypeMirror(amt); titleType(O.querySelector<HTMLElement>('.tierName'), 'TOTAL WIN'); titleType(O.querySelector<HTMLElement>('.otHint'), 'TAP TO CONTINUE'); ninePanel(O.querySelector<HTMLElement>('.card'), CARD);
-		setAmount(amt, 0); O.classList.remove('hidden'); featOpen(fx); sfx('fs_outro'); duck(true); const cu = loop('bigwin_countup_loop');   // no star glints on the total-win screen (round 6)
+		setAmount(amt, 0); O.classList.remove('hidden'); featOpen(fx); musicSting('bigwin'); duck(true); const cu = loop('bigwin_countup_loop');   // no star glints on the total-win screen (round 6)
 		// v3.18b (James): the screen waits for a tap once landed, turbo on or off and in autoplay too (autoplay keeps its count and
 		// resumes right after the tap). Only autoplay with AUTO-PLAY BONUS on closes it by itself after the short hold.
 		// Staged: a tap during the count-up lands it; once landed a tap / Space / Enter closes it (300 ms guard vs leftover taps).

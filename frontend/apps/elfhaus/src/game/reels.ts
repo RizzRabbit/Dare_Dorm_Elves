@@ -172,13 +172,14 @@ function frame(now: number) {
 	}
 	if (cells.size) raf = requestAnimationFrame(frame);
 }
-let scSpin = -1, scN = 0;   // scatters landed this spin (scatter_land_1..3)
+let scSpin = -1, scN = 0;   // scatters landed this spin (scatter_land pitch steps)
 function impact(C: Cell) {
 	C.impacted = true;
 	C.el.classList.add('tLand');
-	const rate = [0.96, 0.98, 1, 1.02, 1.04][C.r] ?? 1;   // one stop sound, pitched per reel (AUDIO_WIRING_RUN3)
-	if (!S.turbo) sfx('reel_stop_new', { throttle: 60, rate }); else if ([...cells.values()].every((x) => x === C || x.impacted)) sfx('reel_stop_new', { gain: 0.7 });
-	if (C.fin === 'S') { if (scSpin !== t0) { scSpin = t0; scN = 0; } scN = Math.min(3, scN + 1); sfx(`scatter_land_${scN}` as 'scatter_land_1', { throttle: 60 }); }
+	const stop = `reel_stop_${Math.min(5, Math.max(1, C.r + 1))}` as 'reel_stop_1';   // v9: one tuned stop per reel (C# set)
+	if (!S.turbo) sfx(stop, { throttle: 60 }); else if ([...cells.values()].every((x) => x === C || x.impacted)) sfx('reel_stop_3', { gain: 0.7 });
+	// v9: one scatter land sound, stepped up the C# major triad per scatter (root, major third, fifth)
+	if (C.fin === 'S') { if (scSpin !== t0) { scSpin = t0; scN = 0; } scN = Math.min(3, scN + 1); sfx('scatter_land', { throttle: 60, rate: [1, 1.2599, 1.4983][scN - 1] }); }
 }
 function finish(C: Cell) {
 	cells.delete(`${C.r}${C.row}`);

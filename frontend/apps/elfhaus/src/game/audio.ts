@@ -12,34 +12,36 @@
 // the current clip's end; otherwise it is dropped too. Nothing ever stops a clip early to start another, so two voice
 // clips can never sound together. The music bus ducks -8 dB under a line, -4 dB under a giggle (80 ms in, 300 ms out).
 // Which elf says what, cooldowns and turbo / autoplay rules live in voice.ts.
+// v9 (James 2026-11-05 "Let's run it"): music = v9 stems cut from James's own track (150 BPM, C#, bar = 1.6 s);
+// slot SFX = the v9 code-made set re-tuned to C# (separate files). Old v3.8 music / stingers removed from the build.
 const FILES = {
 	ui_click: 'assets/audio/ui_click.mp3', ui_bet_up: 'assets/audio/ui_bet_up.mp3', ui_bet_down: 'assets/audio/ui_bet_down.mp3',
 	ui_buy_open: 'assets/audio/ui_buy_open.mp3', ui_buy_close: 'assets/audio/ui_buy_close.mp3', ui_mode_arm: 'assets/audio/ui_mode_arm.mp3',
 	ui_error: 'assets/audio/ui_error.mp3', reel_spin_start: 'assets/audio/reel_spin_start.mp3', reel_spin_loop: 'assets/audio/reel_spin_loop.mp3',
 	reel_stop_1: 'assets/audio/reel_stop_1.mp3', reel_stop_2: 'assets/audio/reel_stop_2.mp3', reel_stop_3: 'assets/audio/reel_stop_3.mp3',
 	reel_stop_4: 'assets/audio/reel_stop_4.mp3', reel_stop_5: 'assets/audio/reel_stop_5.mp3',
-	music_base_loop: 'assets/audio/music_base_loop.mp3', music_bonus_loop: 'assets/audio/music_bonus_loop.mp3',
+	music_intro: 'assets/audio/music_intro.mp3', music_base_loop: 'assets/audio/music_base_loop.mp3', music_bonus_loop: 'assets/audio/music_bonus_loop.mp3',
+	stinger_trigger: 'assets/audio/stinger_trigger.mp3', stinger_bigwin: 'assets/audio/stinger_bigwin.mp3',
 	anticipation_riser: 'assets/audio/anticipation_riser.mp3', winline_highlight: 'assets/audio/winline_highlight.mp3',
 	win_small: 'assets/audio/win_small.mp3', win_medium: 'assets/audio/win_medium.mp3', win_big: 'assets/audio/win_big.mp3',
-	bigwin_sting: 'assets/audio/bigwin_sting.mp3', bigwin_countup_loop: 'assets/audio/bigwin_countup_loop.mp3',
+	bigwin_countup_loop: 'assets/audio/bigwin_countup_loop.mp3',
 	wild_land: 'assets/audio/wild_land.mp3', wild_sticky_lock: 'assets/audio/wild_sticky_lock.mp3', wild_stack_merge: 'assets/audio/wild_stack_merge.mp3',
-	reel_stop_new: 'assets/audio/reel_stop_new.mp3', ui_click_new: 'assets/audio/ui_click_new.mp3', scatter_trigger_bell: 'assets/audio/scatter_trigger_bell.mp3',
-	scatter_land_1: 'assets/audio/scatter_land_1.mp3', scatter_land_2: 'assets/audio/scatter_land_2.mp3', scatter_land_3: 'assets/audio/scatter_land_3.mp3',
+	ui_click_new: 'assets/audio/ui_click_new.mp3', scatter_trigger_bell: 'assets/audio/scatter_trigger_bell.mp3', scatter_land: 'assets/audio/scatter_land.mp3',
 	intro_door_lever: 'assets/audio/intro_door_lever.mp3', intro_doors_open: 'assets/audio/intro_doors_open.mp3',
-	bonus_trigger: 'assets/audio/bonus_trigger.mp3', fs_intro: 'assets/audio/fs_intro.mp3', fs_outro: 'assets/audio/fs_outro.mp3',
-	maxwin_sting: 'assets/audio/maxwin_sting.mp3', respin_transition: 'assets/audio/respin_transition.mp3',
+	bonus_trigger: 'assets/audio/bonus_trigger.mp3', respin_transition: 'assets/audio/respin_transition.mp3',
 } as const;
 export type Snd = keyof typeof FILES;
 const ORDER: Snd[][] = [
-	['ui_click', 'ui_bet_up', 'ui_bet_down', 'ui_buy_open', 'ui_buy_close', 'ui_mode_arm', 'ui_error', 'reel_spin_start', 'reel_spin_loop', 'reel_stop_1', 'reel_stop_2', 'reel_stop_3', 'reel_stop_4', 'reel_stop_5', 'reel_stop_new', 'ui_click_new', 'scatter_land_1', 'scatter_land_2', 'scatter_land_3', 'scatter_trigger_bell', 'intro_door_lever', 'intro_doors_open'],
-	['music_base_loop'],
-	['wild_land', 'winline_highlight', 'win_small', 'win_medium', 'win_big', 'anticipation_riser', 'wild_sticky_lock', 'wild_stack_merge', 'bigwin_sting', 'bigwin_countup_loop', 'bonus_trigger', 'fs_intro', 'fs_outro', 'maxwin_sting', 'respin_transition', 'music_bonus_loop'],
+	['ui_click', 'ui_bet_up', 'ui_bet_down', 'ui_buy_open', 'ui_buy_close', 'ui_mode_arm', 'ui_error', 'reel_spin_start', 'reel_spin_loop', 'reel_stop_1', 'reel_stop_2', 'reel_stop_3', 'reel_stop_4', 'reel_stop_5', 'ui_click_new', 'scatter_land', 'scatter_trigger_bell', 'intro_door_lever', 'intro_doors_open'],
+	['music_intro', 'music_base_loop'],
+	['stinger_trigger', 'stinger_bigwin', 'music_bonus_loop', 'wild_land', 'winline_highlight', 'win_small', 'win_medium', 'win_big', 'anticipation_riser', 'wild_sticky_lock', 'wild_stack_merge', 'bigwin_countup_loop', 'bonus_trigger', 'respin_transition'],
 ];
 // true loop lengths in samples at 44.1 kHz (the encoder adds ~1105 samples of delay + end padding; see loopPoints)
-const LOOP_LEN: Partial<Record<Snd, number>> = { music_base_loop: 2822144, music_bonus_loop: 1653760, reel_spin_loop: 66150, bigwin_countup_loop: 99225 };
+const LOOP_LEN: Partial<Record<Snd, number>> = { music_base_loop: 564480, music_bonus_loop: 1128960, reel_spin_loop: 70560, bigwin_countup_loop: 70560 };
 const SR = 44100, LAME_DELAY = 1105;
 const MUSIC: Record<'base' | 'bonus', Snd> = { base: 'music_base_loop', bonus: 'music_bonus_loop' };
-const XFADE = 0.8, DUCK = 0.5; // 800 ms music crossfade; ~-6 dB duck
+const BAR = 1.6, INTRO_BARS = 4, STING_BARS = 2; // 150 BPM: every music change lands on a bar line
+const XFADE = 0.4, DUCK = 0.5; // loop-to-loop crossfade at the bar line; ~-6 dB duck
 const ELVES = ['roxy', 'jade', 'vi', 'coco', 'delilah'] as const;
 export type Elf = (typeof ELVES)[number];
 // vo_<elf>_<moment>_1 lines (INTEGRATION_PLAN.md section 6) + gig_<elf>_1..3
@@ -60,7 +62,7 @@ type Vol = 'mus' | 'sfx';
 const vol: Record<Vol, number> = { mus: 1, sfx: 1 };
 const gMus = () => (prefs.mus ? vol.mus : 0), gSfx = () => (prefs.sfx ? vol.sfx : 0), gVox = () => (prefs.vox ? vol.sfx : 0);
 let ctx: AudioContext | null = null, master: GainNode | null = null, musicBus: GainNode | null = null, duckG: GainNode | null = null, sfxBus: GainNode | null = null;
-let vduckG: GainNode | null = null, voxBus: GainNode | null = null;
+let stingBus: GainNode | null = null, vduckG: GainNode | null = null, voxBus: GainNode | null = null;
 const buf = new Map<Snd, AudioBuffer>(), vbuf = new Map<string, AudioBuffer>();
 let loading = false, hidden = false, createFails = 0, gaveUp = false;
 let want: 'base' | 'bonus' | null = null;
@@ -138,7 +140,7 @@ function unlock() {
 			try { ctx = new C(); } catch (e) { if (++createFails >= CREATE_TRIES) gaveUp = true; throw e; }
 			master = ctx.createGain(); musicBus = ctx.createGain(); duckG = ctx.createGain(); sfxBus = ctx.createGain();
 			vduckG = ctx.createGain(); voxBus = ctx.createGain();
-			musicBus.connect(duckG); duckG.connect(vduckG); vduckG.connect(master); sfxBus.connect(master); voxBus.connect(master); master.connect(ctx.destination);
+			duckG.connect(vduckG); stingBus = ctx.createGain(); stingBus.connect(vduckG); vduckG.connect(musicBus); musicBus.connect(master); sfxBus.connect(master); voxBus.connect(master); master.connect(ctx.destination);
 			master.gain.value = 1; musicBus.gain.value = gMus(); sfxBus.gain.value = gSfx(); voxBus.gain.value = gVox();
 			// old iOS: a silent one-sample buffer started inside the gesture unlocks output
 			const b = ctx.createBuffer(1, 1, 22050), s = ctx.createBufferSource(); s.buffer = b; s.connect(ctx.destination); s.start(0);
@@ -158,7 +160,7 @@ function load() {
 			const p = ctx!.decodeAudioData(ab, ok, no); if (p && (p as any).catch) (p as Promise<AudioBuffer>).catch(no);
 		}));
 	const one = (n: Snd) => get(FILES[n])
-		.then((b) => { buf.set(n, b); if (n === MUSIC.base || n === MUSIC.bonus) syncMusic(); })
+		.then((b) => { buf.set(n, b); if (n === MUSIC.base || n === MUSIC.bonus || n === 'music_intro') syncMusic(); })
 		.catch(() => { /* this sound stays silent */ });
 	const vone = (n: string) => get(`assets/audio/voice/${n}.mp3`).then((b) => { vbuf.set(n, b); }).catch(() => { /* this line is skipped */ });
 	(async () => { for (const grp of ORDER) await Promise.all(grp.map(one)); await Promise.all(VFILES.map(vone)); })().catch(() => {});
@@ -200,21 +202,64 @@ export function sfx(n: Snd, o: { gain?: number; rate?: number; throttle?: number
 /** Looping sound effect; returns its stop handle. */
 export function loop(n: Snd, gain = 1): Handle { return safe(() => (live() ? handle(src(n, sfxBus!, gain, 1, true)) : NOOP)) ?? NOOP; }
 
-/** Switch the music (800 ms crossfade). Safe to call any time; it starts once unlocked and loaded. */
+/** Switch the music. Safe to call any time; it starts once unlocked and loaded. v9: page load plays the 4-bar intro and then
+ * the base loop sample-accurately; every later change waits for the next bar line (1.6 s grid). base -> bonus plays the
+ * 2-bar trigger stinger first; bonus -> base crossfades at the bar line. Loops are AudioBuffer loops (gapless). */
 export function music(m: 'base' | 'bonus') { want = m; safe(syncMusic); }
+let grid0 = 0, introDone = false, oneShots: { s: AudioBufferSourceNode; g: GainNode }[] = [];
+const nextBar = (lead = 0.06) => { const t = now() + lead; return grid0 ? grid0 + Math.ceil((t - grid0) / BAR - 1e-6) * BAR : t; };
+function loopAt(n: Snd, t: number, g0: number) {
+	const b = buf.get(n); if (!b || !ctx) return null;
+	const s = ctx.createBufferSource(), g = ctx.createGain(); s.buffer = b; g.gain.value = g0;
+	const p = loopPoints(n, b); s.loop = true; s.loopStart = p.a; s.loopEnd = p.e;
+	s.connect(g); g.connect(duckG!); s.start(t, p.a); s.onended = () => safe(() => g.disconnect()); return { s, g };
+}
+function oneAt(n: Snd, t: number) {
+	const b = buf.get(n); if (!b || !ctx) return null;
+	const s = ctx.createBufferSource(), g = ctx.createGain(); s.buffer = b; s.connect(g); g.connect(stingBus!);
+	const a = b.duration > (n === 'music_intro' ? INTRO_BARS : STING_BARS) * BAR + 0.02 ? LAME_DELAY / SR : 0; // decoder kept the encoder delay: skip it so the hit lands on the bar
+	s.start(t, a); const x = { s, g }; oneShots.push(x);
+	s.onended = () => safe(() => { g.disconnect(); oneShots = oneShots.filter((o) => o !== x); }); return x;
+}
+const fadeAt = (p: AudioParam, to: number, t: number, d: number) => safe(() => { p.cancelScheduledValues(t); p.setValueAtTime(p.value, Math.max(now(), t - 0.001)); p.setValueAtTime(p.value, t); p.linearRampToValueAtTime(to, t + d); });
+function stopOneShots(t: number) { for (const o of oneShots) safe(() => { fadeAt(o.g.gain, 0, t, 0.05); o.s.stop(t + 0.08); }); }
+let mstat = { last: '', at: 0 }; // debug / smoke tests: what was scheduled last
 function syncMusic() {
 	if (!ctx || !on() || !gMus() || !want) return;
 	if (cur?.name === want) return;
 	const n = MUSIC[want]; if (!buf.has(n)) return; // the old track keeps playing until the new one has decoded
-	const x = src(n, musicBus!, 0, 1, true); if (!x) return;
-	ramp(x.g.gain, 1, XFADE);
-	stopMusic(XFADE);
-	cur = { name: want, ...x };
+	if (!cur) {
+		// first start (page load) or a restart after the Music slider came back up
+		let t = now() + 0.05, lead = 0;
+		if (!introDone && want === 'base') { if (!buf.has('music_intro')) return; oneAt('music_intro', t); lead = INTRO_BARS * BAR; }
+		introDone = true; grid0 = t;
+		const x = loopAt(n, t + lead, 1); if (!x) return; cur = { name: want, ...x }; mstat = { last: (lead ? 'intro->' : '') + want, at: t + lead }; return;
+	}
+	const t = nextBar(), old = cur;
+	stopOneShots(t); fadeAt(old.g.gain, 0, t, want === 'bonus' ? 0.05 : XFADE); safe(() => old.s.stop(t + XFADE + 0.05));
+	let start = t;
+	if (want === 'bonus' && buf.has('stinger_trigger')) { oneAt('stinger_trigger', t); start = t + STING_BARS * BAR; }
+	const x = loopAt(n, start, want === 'bonus' ? 1 : 0); if (!x) return;
+	if (want === 'base') fadeAt(x.g.gain, 1, t, XFADE);
+	grid0 = start; cur = { name: want, ...x }; mstat = { last: (start > t ? 'trigger->' : '') + want, at: start };
+}
+/** v9: 2-bar sung big-win stinger at the next bar line; the running loop is muted under it (keeps its phase) and comes back after. */
+export function musicSting(k: 'bigwin') {
+	safe(() => {
+		if (!ctx || !on() || !gMus()) return; const n: Snd = k === 'bigwin' ? 'stinger_bigwin' : 'stinger_trigger'; if (!buf.has(n)) return;
+		const t = nextBar(); oneAt(n, t);
+		if (cur) { fadeAt(cur.g.gain, 0, t, 0.05); fadeAt(cur.g.gain, 1, t + STING_BARS * BAR, 0.3); }
+		mstat = { last: 'sting:' + k, at: t };
+	});
 }
 function stopMusic(s: number) {
+	stopOneShots(ctx ? now() : 0);
 	if (!cur) return; const c = cur; cur = null;
 	safe(() => { ramp(c.g.gain, 0, s); c.s.stop(now() + s + 0.05); });
 }
+// smoke tests: bus gains + music state (read-only)
+(globalThis as any).__elfAudioDbg = () => ctx && ({ state: ctx.state, t: ctx.currentTime, master: master!.gain.value, music: musicBus!.gain.value, sfx: sfxBus!.gain.value, vox: voxBus!.gain.value,
+	cur: cur?.name ?? null, curGain: cur?.g.gain.value ?? null, oneShots: oneShots.length, grid0, ...mstat, loaded: [...buf.keys()].length });
 /** Music dips ~6 dB while held (counted, so overlapping big moments nest). */
 export function duck(hold: boolean) {
 	ducks = Math.max(0, ducks + (hold ? 1 : -1));

@@ -1,6 +1,6 @@
 // DOM renderer (ported from prototype/app.js). It only displays what book events say.
 import { bwpStart, bwpTier, bwpEnd } from './bwparticles'; // re-audit M1: code particles on the big-win banner
-import { sfx, loop, duck } from './audio';
+import { sfx, loop, duck, musicSting } from './audio';
 import { voice, VOICE } from './voice';
 import { frameHTML } from './wildframe';
 import ART_JSON from './art.generated.json';
@@ -342,7 +342,7 @@ export async function bigWin(x: number, label?: string, level?: number) {
 	{ const h = T.offsetHeight || 100; rig!.glow.style.top = `${T.offsetTop - h * 0.7}px`; rig!.glow.style.height = `${h * 2.4}px`;
 		const g = rig!.ghost.style; g.position = 'absolute'; g.left = '0'; g.right = '0'; g.top = `${T.offsetTop}px`; g.opacity = '0'; g.pointerEvents = 'none'; }
 	fxHooks.start?.(B, x, lvl); bwpStart(B, x);
-	sfx('bigwin_sting'); duck(true); const cu = loop('bigwin_countup_loop'); setTimeout(() => voice('bigwin'), VOICE.bigWinDelayMs);
+	musicSting('bigwin'); duck(true); const cu = loop('bigwin_countup_loop'); setTimeout(() => voice('bigwin'), VOICE.bigWinDelayMs);
 	let close = () => {}; const closed = new Promise<void>((r) => (close = r));
 	let stIx = 0;
 	// stages (winstage.ts): one per tier checkpoint, then the run to the final amount, then the landed banner
