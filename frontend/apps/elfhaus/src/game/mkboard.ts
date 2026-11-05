@@ -70,6 +70,7 @@ export function mkGeo(): MkGeo {
 			spin: { x: 14 + 1052 - 40 - spSz / 2, y: hudY + HB / 2, s: spSz, ic: 2.6 },
 			auto: { x: 30 + ab / 2, y: rowY, s: ab, ic: 2.5 * kk }, turbo: { x: 30 + ab * 1.5 + 18 * kk, y: rowY, s: ab, ic: 2.5 * kk },
 			bonus: { v: 'p', x: 1066 - 290 * kk, y: rowY, s: kk }, cmp };
+	}
 	if (ST.phl) {
 		const D = { w: 1000, h: 562 }, f = fit(D), tt = t48(f.k), sb = (s: number) => Math.max(s, tt);
 		const bs = 0.56, bx = 52, by = 58;
