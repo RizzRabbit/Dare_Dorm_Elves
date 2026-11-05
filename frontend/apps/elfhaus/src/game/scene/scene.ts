@@ -205,28 +205,32 @@ export function placeScene(portrait: boolean, fr: DOMRect) {
 		let x: number, feet: number, s: number;
 		if (g.mode === 'cmp') { x = X(g.cmp.x); feet = Y(g.cmp.y); s = g.cmp.s * f * k; }
 		else {
-			// v28i: tablet — stand her in the right gutter of the (possibly tall) design; smaller so spin stack clears torso
+			// v28j: tablet — further right + slightly smaller so the bigger play group clears her torso
 			const tab = ST.tablet;
 			const Dw = g.D?.w ?? 1920, Dh = g.D?.h ?? 1080;
-			x = X(tab ? Dw * 0.88 : 1440); feet = Y(tab ? Dh - 200 : 852); s = (tab ? 0.98 : 1.26) * f * k;
+			x = X(tab ? Dw * 0.945 : 1440); feet = Y(tab ? Dh - 180 : 852); s = (tab ? 0.80 : 1.26) * f * k;
 		}   // review #13 / v28i
 		if (!hold) { R.view.position.set(x, feet); R.view.scale.set(s); }
 		roxyL.visible = true; clipRoxy(null); R.shadow(true);
 		Object.assign(roxyAt, { x, y: feet, s, portrait });
 	} else if (portrait && g && g.mode === 'port') {
-		// she peeks over the board: chest up above the frame top, clipped at the reel window's foot
-		const k = g.k, T = (fr.top - g.oy) / k;
-		const T0 = g.T0 ?? T, bs0 = g.bs0 ?? g.bs;
-		const rs0 = g.loose ? 2.4 * f : Math.min(2.4 * f, Math.max(0.6 * f, (T0 - 46) / (cutRow - hopTop)));
-		const rx0 = Math.max(770 + Math.max(0, rs0 / f - 1.85) * 70, 1080 + 8 - (R.srcW / 2) * rs0) - 47;
-		// v28h: board may be off-centre (tablet leftCol for buy) — key Roxy to the real frame right
-		const F = g.bs / bs0, rs = rs0 * F;
-		const R0 = 540 + FW * bs0 / 2;
-		const R1 = g.bx + BW * g.bs + FT * g.bs;   // actual frame right
-		const rx = R1 + (rx0 - R0) * F, hip = Math.max(T + WAIST * rs, 14 + (cutRow - R.rows.headTop) * rs), feet = hip + (R.srcH - cutRow) * rs;
-		if (!hold) { R.view.position.set(g.ox + rx * k, g.oy + feet * k); R.view.scale.set(rs * k); }
-		clipRoxy(hold && free ? null : fr.top + (FT + BH) * u); roxyL.visible = true; R.shadow(false);
-		Object.assign(roxyAt, { x: g.ox + rx * k, y: g.oy + feet * k, s: rs * k, portrait });
+		// v28j: tablet portrait — hide Roxy (peek always overlapped logo/frame). Phones keep the peek.
+		if (ST.tablet) {
+			roxyL.visible = false; clipRoxy(null); R.shadow(false);
+			Object.assign(roxyAt, { x: 0, y: 0, s: 0, portrait });
+		} else {
+			const k = g.k, T = (fr.top - g.oy) / k;
+			const T0 = g.T0 ?? T, bs0 = g.bs0 ?? g.bs;
+			const rs0 = g.loose ? 2.4 * f : Math.min(2.4 * f, Math.max(0.6 * f, (T0 - 46) / (cutRow - hopTop)));
+			const rx0 = Math.max(770 + Math.max(0, rs0 / f - 1.85) * 70, 1080 + 8 - (R.srcW / 2) * rs0) - 47;
+			const F = g.bs / bs0, rs = rs0 * F;
+			const R0 = 540 + FW * bs0 / 2;
+			const R1 = g.bx + BW * g.bs + FT * g.bs;
+			const rx = R1 + (rx0 - R0) * F, hip = Math.max(T + WAIST * rs, 14 + (cutRow - R.rows.headTop) * rs), feet = hip + (R.srcH - cutRow) * rs;
+			if (!hold) { R.view.position.set(g.ox + rx * k, g.oy + feet * k); R.view.scale.set(rs * k); }
+			clipRoxy(hold && free ? null : fr.top + (FT + BH) * u); roxyL.visible = true; R.shadow(false);
+			Object.assign(roxyAt, { x: g.ox + rx * k, y: g.oy + feet * k, s: rs * k, portrait });
+		}
 	} else if (!portrait) {
 		const k = fr.height / 726, gut = W - fr.right - ST.railR, feet = Math.min(H - 6, fr.bottom + 34 * k);
 		const s = Math.min(1.3 * k * f, (gut - 24) / (R.srcW * 0.86), (feet - 4) / (R.srcH - hopTop));
