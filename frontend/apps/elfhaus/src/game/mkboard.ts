@@ -61,9 +61,9 @@ export function mkGeo(): MkGeo {
 			fBal: { x: 14 + 40, y: hudY + 28 * hu, ls: 30 * hu, vs: 56 * hu, w: 400 }, fWin: { x: 14 + 470, y: hudY + 28 * hu, ls: 30 * hu, vs: 56 * hu, w: 300 },
 			// v3.17 (James: the +/- were ~70 px squares): 126 design (~46 px on a 390-wide phone), floor 44 screen px for
 			// touch; the bet row tightens around them: [-] left-aligned with BALANCE, BET between, [+] under WIN
-			fBet: { x: 14 + 190, y: hudY + 204 * hu, ls: 30 * hu, vs: 56 * hu, w: 200 },
-			minus: { x: 14 + 103, y: hudY + 250 * hu, s: Math.max(126 * hu, t44), ic: 2.3 }, plus: { x: 14 + 456 + Math.max(126 * hu, t44) / 2, y: hudY + 250 * hu, s: Math.max(126 * hu, t44), ic: 2.3 },
-			spin: { x: 14 + 904, y: hudY + 172 * hu, s: sb(236 * hu), ic: 2.55 },
+			fBet: { x: 14 + 190, y: hudY + 188 * hu, ls: 32 * hu, vs: 58 * hu, w: 200 },
+			minus: { x: 14 + 103, y: hudY + 268 * hu, s: Math.max(140 * hu, t44), ic: 2.35 }, plus: { x: 14 + 456 + Math.max(140 * hu, t44) / 2, y: hudY + 268 * hu, s: Math.max(140 * hu, t44), ic: 2.35 },
+			spin: { x: 14 + 904, y: hudY + 168 * hu, s: sb(260 * hu), ic: 2.6 },
 			auto: { x: 30 + ab / 2, y: rowY, s: ab, ic: 2.5 * kk }, turbo: { x: 30 + ab * 1.5 + 18 * kk, y: rowY, s: ab, ic: 2.5 * kk },
 			bonus: { v: 'p', x: 1066 - 290 * kk, y: rowY, s: kk }, cmp };
 	}
@@ -84,15 +84,15 @@ export function mkGeo(): MkGeo {
 	const D = { w: 1920, h: 1080 }, f = fit(D), tt = t48(f.k), sb = (s: number) => Math.max(s, tt);
 	// v3.17 phones in landscape (text boost / 48 px floor): the BUY plate grows a little so the boosted label fits it,
 	// autoplay / turbo keep a gap between them, -/+ step out around the boosted BET value. Desktop (ph false) unchanged.
-	const mb = sb(116), ph = ST.tb > 1.001 || mb > 116;
+	const mb = sb(128), ph = ST.tb > 1.001 || mb > 116;
 	const s0 = ph ? 1.2 : 1.05, bw = 216 * s0, bh = 240 * s0, ab = sb(106), gp = 18, top = 500 - (bh + gp + ab) / 2;
 	const ax = Math.max(bw / 2 - ab / 2, (ab + gp) / 2);
 	return { mode: 'land', ...f, D, loose: false, bx: 430, by: 170, bs: 1, T: 136,
-		logo: { x: 430 + BW / 2, y: 150, s: 0.36 }, hud: { x: 40, y: 900, w: 1840, h: 168, r: 22 },
-		fBal: { x: 40 + 60, y: 900 + 44, ls: 22, vs: 42, w: 520 }, fBet: { x: 40 + 780, y: 900 + 44, ls: 22, vs: 42, w: 120 * (ph ? ST.tb : 1) },
-		fWin: { x: 40 + 1240, y: 900 + 44, ls: 22, vs: 42, w: 380 },
-		minus: { x: 40 + (ph ? 780 - 14 - mb / 2 : 700), y: 900 + 84, s: mb, ic: 2.1 }, plus: { x: 40 + (ph ? 780 + 120 * ST.tb + 14 + mb / 2 : 964), y: 900 + 84, s: mb, ic: 2.1 },
-		spin: { x: 40 + 1736, y: 900 + 84, s: sb(152), ic: 1.65 },
+		logo: { x: 430 + BW / 2, y: 150, s: 0.36 }, hud: { x: 40, y: 888, w: 1840, h: 180, r: 22 },
+		fBal: { x: 40 + 60, y: 888 + 48, ls: 24, vs: 46, w: 520 }, fBet: { x: 40 + 780, y: 888 + 48, ls: 24, vs: 46, w: 120 * (ph ? ST.tb : 1) },
+		fWin: { x: 40 + 1240, y: 888 + 48, ls: 24, vs: 46, w: 380 },
+		minus: { x: 40 + (ph ? 780 - 14 - mb / 2 : 690), y: 888 + 92, s: mb, ic: 2.2 }, plus: { x: 40 + (ph ? 780 + 120 * ST.tb + 14 + mb / 2 : 974), y: 888 + 92, s: mb, ic: 2.2 },
+		spin: { x: 40 + 1730, y: 888 + 90, s: sb(168), ic: 1.75 },
 		auto: { x: 236 - ax, y: top + bh + gp + ab / 2, s: ab, ic: 1.62 }, turbo: { x: 236 + ax, y: top + bh + gp + ab / 2, s: ab, ic: 1.62 },
 		bonus: { v: 'v', x: 236, y: top + bh / 2, s: s0 }, cmp };
 }
@@ -219,7 +219,7 @@ function canvasIn(id: string, before: boolean) {
 	if (!c) { c = document.createElement('canvas'); c.id = id; c.setAttribute('aria-hidden', 'true'); const f = $('#frame'); if (before) f.insertBefore(c, f.firstChild); else f.appendChild(c); }
 	return c;
 }
-const BET_VK = 0.82;
+const BET_VK = 0.92;
 let drawn = '';
 function drawFrame(u: number) {
 	// The board is see-through (PANEL_A) so the room / Roxy read faintly behind the reels; frame and sill are solid.
