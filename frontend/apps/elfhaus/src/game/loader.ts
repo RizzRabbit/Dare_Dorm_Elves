@@ -3,6 +3,7 @@
 import { $, ART } from './ui';
 import { initSplash, stingDone, noIntro, preOut } from './intro';
 import { FX_SHEET_COUNT } from './fx';
+import { musicEnterGame } from './audio';
 import { initIntro, introLoaded, introEnter, introSkip, introEatClick } from './introPixi';
 
 // Card titles (checked by the social-mode word scan in scripts/test-books.mjs).
@@ -59,7 +60,7 @@ export function initLoader() {
 /** Waits for everything tracked, then shows the continue button and resolves on the player's press. */
 export async function loaderReady() {
 	const L = document.getElementById('loader');
-	if (!L) return;
+	if (!L) { musicEnterGame(); return; }
 	// Wait for promises tracked so far, including any added while waiting.
 	for (let n = -1; n !== pending.length; ) { n = pending.length; await Promise.all(pending); }
 	done = total; floor = 0; progress();
@@ -77,6 +78,7 @@ export async function loaderReady() {
 	});
 	hideLoader();
 	if (pix) await (noIntro() ? (introSkip(), Promise.resolve()) : introEnter());   // doors -> push -> board + Roxy drop (tap skips)
+	musicEnterGame();   // music only once the board is revealed
 }
 /** Fade the loader out into the game (also used to get it out of the way of an error message). */
 export function hideLoader() {

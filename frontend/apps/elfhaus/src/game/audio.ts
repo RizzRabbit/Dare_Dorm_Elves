@@ -206,6 +206,10 @@ export function loop(n: Snd, gain = 1): Handle { return safe(() => (live() ? han
  * the base loop sample-accurately; every later change waits for the next bar line (1.6 s grid). base -> bonus plays the
  * 2-bar trigger stinger first; bonus -> base crossfades at the bar line. Loops are AudioBuffer loops (gapless). */
 export function music(m: 'base' | 'bonus') { want = m; safe(syncMusic); }
+/** v25 (James): no music on the studio sting / loader / loader cards / doors. The early tap only unlocks (silent);
+ * the 4-bar intro + base loop start when the player is actually in the game (loaderReady resolved). */
+let inGame = false;
+export function musicEnterGame() { if (inGame) return; inGame = true; (window as any).__elfMusicGate = { at: performance.now() }; safe(syncMusic); }
 let grid0 = 0, introDone = false, stingEnd = 0, oneShots: { n: Snd; s: AudioBufferSourceNode; g: GainNode }[] = [];
 const nextBar = (lead = 0.06) => { const t = now() + lead; return grid0 ? grid0 + Math.ceil((t - grid0) / BAR - 1e-6) * BAR : t; };
 function loopAt(n: Snd, t: number, g0: number) {
@@ -225,7 +229,7 @@ const fadeAt = (p: AudioParam, to: number, t: number, d: number) => safe(() => {
 function stopOneShots(t: number, all = false) { for (const o of oneShots) if (all || o.n === 'music_intro') safe(() => { fadeAt(o.g.gain, 0, t, 0.05); o.s.stop(t + 0.08); }); }
 let mstat = { last: '', at: 0 }; // debug / smoke tests: what was scheduled last
 function syncMusic() {
-	if (!ctx || !on() || !gMus() || !want) return;
+	if (!ctx || !on() || !gMus() || !want || !inGame) return;
 	if (cur?.name === want) return;
 	const n = MUSIC[want]; if (!buf.has(n)) return; // the old track keeps playing until the new one has decoded
 	if (!cur) {
