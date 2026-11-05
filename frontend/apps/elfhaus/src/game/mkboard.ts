@@ -101,7 +101,10 @@ export function mkGeo(): MkGeo {
 	const hudW = tab ? 1180 : 1280, hudH = tab ? 200 : 180, hudY = tab ? 900 : 888;
 	const hudX = BC - hudW / 2;
 	const betHalf = tab ? 170 : 150;
-	const zone = (hudW / 2) - betHalf - 40;   // equal Bal / Win zone widths
+	// clear the +/- (centre ± half-size + gap) so Bal / Win never sit under the bet buttons
+	const clear = betHalf + mb / 2 + 28;
+	const balX = hudX + 36, winR = hudX + hudW - 36;
+	const zoneL = Math.max(120, (BC - clear) - balX), zoneR = Math.max(120, winR - (BC + clear));
 	const spinX = tab ? (bx + BW * bs + FT * bs + 40 + spSz / 2) : (hudX + hudW + 18 + spSz / 2);
 	const spinY = tab ? (by + BH * bs / 2 + 40) : (hudY + hudH / 2);
 	// tablet: turbo/auto under the spin; desktop: turbo/auto under the buy plate (left)
@@ -112,11 +115,11 @@ export function mkGeo(): MkGeo {
 	return { mode: 'land', ...f, D, loose: false, bx, by, bs, T: by - FT * bs,
 		logo: { x: BC, y: by - FT * bs - 20, s: tab ? 0.42 : 0.36 },
 		hud: { x: hudX, y: hudY, w: hudW, h: hudH, r: 22 },
-		fBal: { x: hudX + 36, y: hudY + 48, ls: tab ? 28 : 24, vs: tab ? 52 : 46, w: zone },
-		fBet: { x: BC - 70 * (ph ? ST.tb : 1), y: hudY + 48, ls: tab ? 28 : 24, vs: tab ? 52 : 46, w: 140 * (ph ? ST.tb : 1) },
-		fWin: { x: hudX + hudW - 36 - zone, y: hudY + 48, ls: tab ? 28 : 24, vs: tab ? 52 : 46, w: zone },
-		minus: { x: BC - betHalf, y: hudY + hudH / 2 + 8, s: mb, ic: 2.2 },
-		plus: { x: BC + betHalf, y: hudY + hudH / 2 + 8, s: mb, ic: 2.2 },
+		fBal: { x: balX, y: hudY + 40, ls: tab ? 28 : 24, vs: tab ? 52 : 46, w: zoneL },
+		fBet: { x: BC - 70 * (ph ? ST.tb : 1), y: hudY + 40, ls: tab ? 28 : 24, vs: tab ? 52 : 46, w: 140 * (ph ? ST.tb : 1) },
+		fWin: { x: BC + clear, y: hudY + 40, ls: tab ? 28 : 24, vs: tab ? 52 : 46, w: zoneR },
+		minus: { x: BC - betHalf, y: hudY + hudH / 2 + 10, s: mb, ic: 2.2 },
+		plus: { x: BC + betHalf, y: hudY + hudH / 2 + 10, s: mb, ic: 2.2 },
 		spin: { x: spinX, y: spinY, s: spSz, ic: tab ? 2.0 : 1.75 },
 		auto: { x: autoX, y: pairY, s: ab, ic: tab ? 2.0 : 1.62 }, turbo: { x: turboX, y: pairY, s: ab, ic: tab ? 2.0 : 1.62 },
 		bonus: { v: 'v', x: buyX, y: buyY, s: s0 }, cmp };
