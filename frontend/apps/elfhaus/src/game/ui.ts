@@ -1,6 +1,7 @@
 // DOM renderer (ported from prototype/app.js). It only displays what book events say.
 import { bwpStart, bwpTier, bwpEnd } from './bwparticles'; // re-audit M1: code particles on the big-win banner
 import { sfx, loop, duck, musicSting } from './audio';
+import { boardPulse, boardBigTier } from './boardfx';
 import { voice, VOICE } from './voice';
 import { frameHTML } from './wildframe';
 import ART_JSON from './art.generated.json';
@@ -342,7 +343,7 @@ export async function bigWin(x: number, label?: string, level?: number) {
 	{ const h = T.offsetHeight || 100; rig!.glow.style.top = `${T.offsetTop - h * 0.7}px`; rig!.glow.style.height = `${h * 2.4}px`;
 		const g = rig!.ghost.style; g.position = 'absolute'; g.left = '0'; g.right = '0'; g.top = `${T.offsetTop}px`; g.opacity = '0'; g.pointerEvents = 'none'; }
 	fxHooks.start?.(B, x, lvl); bwpStart(B, x);
-	musicSting('bigwin'); duck(true); const cu = loop('bigwin_countup_loop'); setTimeout(() => voice('bigwin'), VOICE.bigWinDelayMs);
+	musicSting('bigwin'); duck(true); boardPulse(true); boardBigTier(Math.max(0, idx[0] ?? 0)); const cu = loop('bigwin_countup_loop'); setTimeout(() => voice('bigwin'), VOICE.bigWinDelayMs);
 	let close = () => {}; const closed = new Promise<void>((r) => (close = r));
 	let stIx = 0;
 	// stages (winstage.ts): one per tier checkpoint, then the run to the final amount, then the landed banner
@@ -351,7 +352,7 @@ export async function bigWin(x: number, label?: string, level?: number) {
 		turbo: S.turbo, level: lvl,
 		onTier: (i) => {
 			endStage(names[stIx]); stIx++; beginStage(names[stIx] ?? 'bw:final', () => counted.next());
-			if (label) return; tierHit(T, amt, BIG_TIERS[i].name, i === idx[0], at); fxHooks.tier?.(B, i); bwpTier(i);
+			if (label) return; if (i !== idx[0]) boardBigTier(i); tierHit(T, amt, BIG_TIERS[i].name, i === idx[0], at); fxHooks.tier?.(B, i); bwpTier(i);
 			if (top && elvesLevel(BIG_TIERS[i].level)) { B.classList.add('chars'); fxHooks.chars?.(B, BIG_TIERS[i].level); } // EPIC: 3 elves, LEGENDARY: 4
 		},
 	});
@@ -362,7 +363,7 @@ export async function bigWin(x: number, label?: string, level?: number) {
 	endStage(names[stIx] ?? 'bw:final');
 	// the end: the amount lands on the exact value with a confident pop, then holds
 	amt.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.12)', offset: 0.4 }, { transform: 'scale(1)' }], { duration: 280 * at, easing: EASE_BACK });
-	cu.stop(200);
+	cu.stop(200); boardPulse(false);
 	beginStage('bw:landed', () => close());
 	await Promise.race([waitRaw(S.turbo ? 700 * 0.35 : top ? 2200 : 1500), closed]);
 	endStage('bw:landed');

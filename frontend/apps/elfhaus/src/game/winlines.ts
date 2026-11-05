@@ -177,7 +177,7 @@ export async function playWins(wins: LineWin[], base: number, stepTotal?: number
 		// v3.19: by the round's math win level (standard edges): up to the level below 2x small, the next medium, the one
 		// below the first banner level big; banner levels get the big-win sting instead; turbo = small only
 		const lv = levelOf(tot, WIN_EDGES), bl = BIG_TIERS[0]?.level ?? maxLevel(), medL = bl - 2;
-		if (n && lv < bl) sfx(turbo || lv < medL ? 'win_small' : lv === medL ? 'win_medium' : 'win_big');
+		if (n && lv < bl) { const kd = turbo || lv < medL ? 'small' : lv === medL ? 'medium' : 'big'; sfx(`win_${kd}`); boardWin(kd); }
 		if (n && !turbo && lv >= medL && lv < bl) voice('win');
 		wins.forEach((w) => w.positions.forEach((p) => { ovWin(p.reel); const c = cellEl(p.reel, p.row); c.classList.remove('dim'); c.classList.add('win'); litOn(c); symWin(c); }));
 		if (!skipC) { const t0 = performance.now(), ms = turbo ? 120 : TG(small ? 150 : 300); while (performance.now() - t0 < ms && !skipC) await frame(); }

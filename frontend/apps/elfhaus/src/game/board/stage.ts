@@ -18,6 +18,11 @@ export type BLayer = keyof typeof BL;
 let app: Application | null = null, appP: Promise<Application | null> | null = null, fr: HTMLElement | null = null;
 export let pad = 0;
 export const layer = {} as Record<BLayer, Container>;
+// boardfx: every layer sits in one fx root, pivoted on the frame centre; base transform = identity (boardfx.ts)
+let fxRoot: Container | null = null, fxX = 0, fxY = 0, fxS = 1, cx = 0, cy = 0;
+const applyFx = () => { if (!fxRoot) return; fxRoot.pivot.set(cx, cy); fxRoot.position.set(cx + fxX, cy + fxY); fxRoot.scale.set(fxS); };
+/** boardfx: board offset (layout px) + scale about the frame centre; (0, 0, 1) is the exact base. */
+export function setBoardFx(x: number, y: number, s: number) { fxX = x; fxY = y; fxS = s; applyFx(); kick(); }
 const tickers = new Set<() => boolean>();   // each returns true while it still needs frames
 let dirty = false;
 
@@ -30,6 +35,7 @@ function place() {
 	if (app.renderer.resolution !== r) app.renderer.resolution = r;
 	if (app.renderer.width !== w + 2 * pad || app.renderer.height !== h + 2 * pad) app.renderer.resize(w + 2 * pad, h + 2 * pad);
 	for (const c of Object.values(layer)) c.position.set(pad, pad);   // layers draw in frame-local px
+	cx = pad + w / 2; cy = pad + h / 2; applyFx();
 	relayout.forEach((f) => f()); kick();
 }
 const relayout = new Set<() => void>();
@@ -42,8 +48,8 @@ export function boardStage() {
 		try { await a.init({ backgroundAlpha: 0, antialias: true, preference: 'webgl', autoDensity: false, hello: false, sharedTicker: false, autoStart: false, width: 8, height: 8 }); }
 		catch (e) { console.warn('board stage', e); return null; }
 		const cv = a.canvas as HTMLCanvasElement; cv.id = 'boardStage'; cv.setAttribute('aria-hidden', 'true'); fr.appendChild(cv);
-		a.stage.sortableChildren = true;
-		for (const n of Object.keys(BL) as BLayer[]) { const c = new Container(); c.label = n; c.zIndex = BL[n]; c.sortableChildren = true; layer[n] = c; a.stage.addChild(c); }
+		a.stage.sortableChildren = true; fxRoot = new Container(); fxRoot.label = 'boardFx'; fxRoot.sortableChildren = true; a.stage.addChild(fxRoot);
+		for (const n of Object.keys(BL) as BLayer[]) { const c = new Container(); c.label = n; c.zIndex = BL[n]; c.sortableChildren = true; layer[n] = c; fxRoot.addChild(c); }
 		app = a; place();
 		// resize + the frame's own ResizeObserver both fire on one resize: coalesced into one place() per frame
 		let q = 0; const later = () => { if (!q) q = requestAnimationFrame(() => { q = 0; place(); }); };

@@ -23,7 +23,8 @@ import { featOpen, featPop, featClose } from './featfx';
 import { countTo, countMs, setAmount, skipCounts, BIG_TIERS, levelOf, WIN_EDGES } from './countup';
 import { grab, combineInto } from './combine';
 import { tempo, hold, gtempo } from './tempo';
-import { sfx, loop, music, musicSting, duck, duckFor, playVoice, type Handle } from './audio';
+import { boardTease, boardPunch } from './boardfx';
+import { sfx, loop, music, musicSting, stingInMs, duck, duckFor, playVoice, type Handle } from './audio';
 import { voice, voiceSpin, teaseOk } from './voice';
 import { payoutFlow } from './payoutFlow';
 import { bannerLevel } from './bannerLevel';
@@ -145,7 +146,7 @@ export const bookEventHandlerMap: Handlers = {
 			if (r > 0) at += T.gap;
 			const slow = ev.anticipation[r] > 0 ? T.antD : 0;
 			// the riser starts with the first slowed reel's glow and fades out on the last land
-			if (slow && !riserT) riserT = window.setTimeout(() => { riser = sfx('anticipation_riser'); }, Math.max(0, prev - sinceStart()));
+			if (slow && !riserT) riserT = window.setTimeout(() => { riser = sfx('anticipation_riser'); boardTease(true); }, Math.max(0, prev - sinceStart()));
 			if (slow) at += T.ant;
 			// each cell is rendered as its own spinner settles (the reel's still cells with its first stop); the
 			// spinner already gave the landing its bounce, the tile its thud + glint, so no extra squash here
@@ -158,7 +159,7 @@ export const bookEventHandlerMap: Handlers = {
 			}, slow, prev));
 		}
 		await Promise.all(stops);
-		clearTimeout(riserT); (riser as Handle | null)?.stop(150);
+		clearTimeout(riserT); (riser as Handle | null)?.stop(150); if (riserT) boardTease(false);
 		markStopped();
 		await sleep(T.land);
 		// EGW (v3.17, James: "the same flow as normal / ante"): nothing EGW-specific here any more. The EGW reels landed as
@@ -261,7 +262,7 @@ export const bookEventHandlerMap: Handlers = {
 		await cardFlip(ev.result);
 	},
 	async freeSpinTrigger(ev) {
-		hideToast(); roxy('excited'); sfx('scatter_trigger_bell'); sfx('bonus_trigger', { gain: 0.7 }); music('bonus'); voice('bonus');   // v9: next bar line -> sung trigger stinger -> bonus loop
+		hideToast(); roxy('excited'); sfx('scatter_trigger_bell'); sfx('bonus_trigger', { gain: 0.7 }); music('bonus'); boardPunch(stingInMs()); voice('bonus');   // v9: next bar line -> sung trigger stinger -> bonus loop
 		// the trigger scatters light up on the board, the wilds that stay lock in place (Dare carries nothing);
 		// the board itself is never cleared or re-rendered, so a Mystery bonus continues on the Mystery board
 		await showScatters(ev.scatters, 1100);

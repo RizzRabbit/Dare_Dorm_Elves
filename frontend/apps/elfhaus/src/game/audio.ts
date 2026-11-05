@@ -243,6 +243,8 @@ function syncMusic() {
 	if (want === 'base') fadeAt(x.g.gain, 1, t, XFADE);
 	grid0 = start; cur = { name: want, ...x }; mstat = { last: (start > t ? 'trigger->' : '') + want, at: start };
 }
+/** boardfx: ms until the last scheduled stinger starts (0 when none / music off): the trigger punch lands with it. */
+export const stingInMs = () => safe(() => (ctx && stingEnd ? Math.max(0, (stingEnd - STING_BARS * BAR - now()) * 1000) : 0)) ?? 0;
 /** v9: 2-bar sung big-win stinger at the next bar line; the running loop is muted under it (keeps its phase) and comes back after. */
 export function musicSting(k: 'bigwin') {
 	safe(() => {

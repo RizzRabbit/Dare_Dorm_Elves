@@ -11,6 +11,7 @@
 //                      frame (so each wild shimmers every few seconds), at most 2 at once, paused while the reels
 //                      spin, during win lines, or when the tab is hidden
 import { sfx } from './audio';
+import { reelBump } from './boardfx';
 import { play, hasSheet } from './sprite';
 import { S, $ } from './ui';
 import { isSpinning } from './reels';
@@ -20,6 +21,7 @@ const ok = () => hasSheet(ID);
 
 export function wildLand(cell: HTMLElement) {
 	sfx('wild_land', { throttle: 60 });
+	const r = Number(cell.id.match(/^c(\d)/)?.[1]); if (Number.isFinite(r)) reelBump(r);
 	// aifix (audit 18): a calm landing: the symbol's own squash-pop (.wLand, transform only). The pink neon ring flare
 	// (wflash) and the ring + star crown (wland) are gone; the glow budget goes to the merged / stacked wild frames.
 	cell.classList.remove('wLand'); void cell.offsetWidth; cell.classList.add('wLand');
