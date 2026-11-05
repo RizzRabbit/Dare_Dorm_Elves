@@ -2,3 +2,4 @@ static/art/
 src/game/art.generated.json
 src/game/modes.generated.json
 release/
+.vite-cache/

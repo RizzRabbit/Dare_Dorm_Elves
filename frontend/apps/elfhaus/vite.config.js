@@ -12,6 +12,9 @@ export default defineConfig(() => {
 	return {
 	plugins: [sveltekit()],
 	build: { sourcemap: false },
+	// each checkout / worktree keeps its own dep cache (node_modules is a shared symlink: two dev servers on one
+	// node_modules/.vite double-loaded pixi.js, 'Extension type application already has a handler')
+	cacheDir: '.vite-cache',
 	experimental: {
 		renderBuiltUrl(filename, { hostType }) {
 			if (hostType === 'js') return { runtime: `new URL(${JSON.stringify(filename)}, document.baseURI).href` };
