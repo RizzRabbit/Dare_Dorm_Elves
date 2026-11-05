@@ -9,7 +9,7 @@
 		<link rel="preload" href="%sveltekit.assets%/fonts/Montserrat-VF.woff2" as="font" type="font/woff2" crossorigin />
 		<meta name="theme-color" content="#2A1810" />
 		<style>html,body{background:#2A1810;margin:0}
-			/* L1: branded first paint (inline, before any JS): the ELFHAUS logo + a flat gold progress bar; hidden under the studio sting, back until the intro is up */
+			/* L1: inline loader: starts hidden (.hold) so the studio sting is the first screen; intro.ts reveals it after the sting until the intro is up */
 			#preL{position:fixed;inset:0;z-index:1000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(14px,3vh,28px);
 				background:#2A1810;pointer-events:none;opacity:0;animation:preIn .3s ease-out .12s forwards}
 			#preL img{width:min(62vw,460px);height:auto}
@@ -33,7 +33,7 @@
 		%sveltekit.head%
 	</head>
 	<body>
-		<div id="preL" aria-hidden="true"><img src="%sveltekit.assets%/art/logo.webp" alt="" /><div class="pb"><i></i></div></div>
+		<div id="preL" class="hold" aria-hidden="true"><img src="%sveltekit.assets%/art/logo.webp" alt="" /><div class="pb"><i></i></div></div>
 		<div style="display: contents">%sveltekit.body%</div>
 	</body>
 </html>

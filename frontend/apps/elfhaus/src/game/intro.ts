@@ -74,7 +74,7 @@ const preHold = (on: boolean) => document.getElementById('preL')?.classList.togg
 export const preOut = () => { const p = document.getElementById('preL'); if (p) { p.classList.add('out'); setTimeout(() => p.remove(), 220); } };
 
 function runSting() {
-	const S = document.getElementById('sting'); if (!S) { stingRes(); return; }
+	const S = document.getElementById('sting'); if (!S) { preHold(false); stingRes(); return; }
 	const logo = S.querySelector<HTMLImageElement>('.stLogo')!, glow = S.querySelector<HTMLImageElement>('.stGlow')!, gl = S.querySelector<HTMLElement>('.stGlint')!, box = S.querySelector<HTMLElement>('.stBox')!;
 	logo.src = url('sting_logo.webp'); glow.src = url('sting_glow.webp');
 	const sheet = loadSheet('sting_glint', url('sting_glint.webp'), GLINT_ATLAS as unknown as Atlas).catch(() => {});
