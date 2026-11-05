@@ -155,19 +155,23 @@ const ICON: Record<string, (el: HTMLElement) => string> = {
 	spinBtn: (el) => (el.classList.contains('auto') || el.classList.contains('stop') || (el.classList.contains('busy') && !!document.querySelector('#cells .cell.spinning, #strips .cspin')) ? 'ico_stop' : 'ico_spin'),
 };
 function apply() {
-	skin(document.getElementById('bar'), () => ({ pkg: 'ui', frame: 'hud_bar', k: 2.4, out: 6 }));                       // 3
-	for (const id of ['menuBtn', 'betDown', 'betUp', 'autoBtn', 'turboBtn', 'bmDown', 'bmUp']) {                         // 4, 8
+	skin(document.getElementById('hud'), () => ({ pkg: 'ui', frame: 'hud_bar', k: 2.2, out: 10 }));                     // 3: carved wood + gold trim panel
+	for (const id of ['menuBtn', 'autoBtn', 'turboBtn', 'bmDown', 'bmUp']) {                                                  // 4, 8
 		const el = document.getElementById(id); skin(el, btn('btn_pine')); icon(el, (e) => ({ pkg: 'ui', frame: ICON[id](e), size: 0.62 }));
 	}
+	// Bet is the focus of the bar: larger gold +/- plates (distinct from the pine side buttons)
+	for (const id of ['betDown', 'betUp']) {
+		const el = document.getElementById(id); skin(el, btn('btn_gold')); icon(el, (e) => ({ pkg: 'ui', frame: ICON[id](e) + '_ink', size: 0.55 }));
+	}
 	const sp = document.getElementById('spinBtn');                                                                            // 5
-	skin(sp, (el) => ({ pkg: 'ui', frame: dis(el) ? 'spin_plate_busy' : 'spin_plate', fit: 'contain', size: 1.06 }));
-	icon(sp, (e) => ({ pkg: 'ui', frame: ICON.spinBtn(e), size: 0.5 }));
+	skin(sp, (el) => ({ pkg: 'ui', frame: dis(el) ? 'spin_plate_busy' : 'spin_plate', fit: 'contain', size: 1.12 }));
+	icon(sp, (e) => ({ pkg: 'ui', frame: ICON.spinBtn(e) + '_ink', size: 0.48 }));
 	{ const cells = document.getElementById('cells')?.parentElement || document.getElementById('board'); let q = 0;   // fix6: redraw the icon when reels start / stop
 		if (cells && sp) new MutationObserver(() => { if (!q) q = requestAnimationFrame(() => { q = 0; const i = sp.querySelector<HTMLElement>(':scope > .skI'); if (i) looks.get(i)?.(); }); }).observe(cells, { subtree: true, childList: true, attributes: true, attributeFilter: ['class'] }); }
 	// fix6: portrait BUY BONUS on the same pine plate as the other HUD buttons; disabled keeps its plate and is dimmed (skin.css), never a grey box
 	skin(document.getElementById('buyBtn'), (el) => (el.classList.contains('mkP') ? { pkg: 'ui', frame: 'btn_pine', k: 2 } : { pkg: 'ui', frame: 'buy_plate', k: 2 }));   // fix2: the wide portrait plate keeps slim corners (k = sprite px per canvas px)   // 9
 	{ const bl = document.getElementById('buyLbl'); if (bl) bl.dataset.fit = 'box'; word(bl); }   // fix6: always fits its plate                                                                                  // 44
-	$$('#strip label').forEach((e) => word(e, 'font_cream', true)); $$('#strip span').forEach((e) => { e.dataset.fit = 'parent'; bmText(e, 'font_cream'); });   // fix6: values up to $99,999.99 shrink to fit, never clip   // 36
+	$$('#strip label').forEach((e) => word(e, 'font_gold', true)); $$('#strip span').forEach((e) => { e.dataset.fit = 'parent'; bmText(e, 'font_cream'); });   // labels gold title words; values cream, shrink-to-fit   // 36
 	skin(document.getElementById('fsBar'), () => ({ pkg: 'ui', frame: 'pill_cran', k: 2 })); bmText(document.getElementById('fsTier'), 'font_gold'); bmText(document.getElementById('fsCount'), 'font_cream');   // 33
 	for (const id of ['banner', 'stepToast']) { const el = document.getElementById(id); skin(el, () => ({ pkg: 'ui', frame: 'toast', k: 2 })); bmText(el, 'font_ink'); }   // 50
 	const arm = document.getElementById('armTag'); skin(arm, () => ({ pkg: 'ui', frame: 'pill_gold', k: 2 })); bmText(arm?.querySelector('.t') as HTMLElement, 'font_ink');   // 49
