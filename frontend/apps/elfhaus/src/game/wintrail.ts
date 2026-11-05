@@ -2,7 +2,7 @@
 // cell to the HUD WIN field; on arrival the meter punches (scale). DOM host over #app so the trail can leave the
 // board. Timings on real elapsed time (WAAPI + rAF). Reduced motion: fewer, shorter flakes, still a trail. Turbo: 60%.
 import { S } from './ui';
-import type { LineWin } from './typesBookEvent';
+import type { Pos } from './typesBookEvent';
 
 const FX1 = 'assets/sprites/fx/fx-1.webp';
 // page-1 frames from static/assets/sprites/fx/fx.json (painted parts; never code-drawn)
@@ -84,7 +84,7 @@ function spawn(x0: number, y0: number, x1: number, y1: number, delay: number, am
 }
 
 /** Fire a trail from every unique winning cell to the WIN meter; punches the meter when the first wave arrives. */
-export function trailToMeter(wins: LineWin[]) {
+export function trailToMeter(wins: { positions: Pos[] }[]) {
 	const dest = meterEl(); if (!dest || !wins.length) return;
 	const amp = (reduced() ? 0.5 : 1) * (S.turbo ? 0.6 : 1);
 	if (amp < 0.15) { meterPunch(); return; }

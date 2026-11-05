@@ -11,6 +11,7 @@ import { cardFlip } from './cardflip';
 import { timing, isSpinning, startSpin, markStopped, sinceStart, sleep, spinMini, stopMini, stopReel, stopLead } from './reels';
 import { $, S, k, bet, wait, titleHTML, banner, hideToast, bigWin, roundMinX, setWinMeter, clearLines, renderCell, renderOverlays, cellEl, setGem, ovMx, ovArt } from './ui';
 import { playWins } from './winlines';
+import { trailToMeter } from './wintrail';
 import { puffWith } from './puff';
 import { wildLand, wfExpand } from './wildfx';
 import { setBg } from './bg';
@@ -41,7 +42,9 @@ async function showScatters(ps: Pos[], ms: number) {
 	if (!ps.length) return;
 	const on = new Set(ps.map((p) => k(p.reel, p.row)));
 	for (let r = 0; r < REELS; r++) for (let row = 0; row < ROWS; row++) cellEl(r, row).classList.toggle('dim', !on.has(k(r, row)));
-	ps.forEach((p) => { const c = cellEl(p.reel, p.row); c.classList.add('win'); symWin(c); });
+	ps.forEach((p) => { const c = cellEl(p.reel, p.row); c.classList.add('win', 'pulse'); symWin(c); });
+	// motion pass: same flake trail to the WIN meter on a scatter trigger as on a line win
+	trailToMeter([{ positions: ps }]);
 	await wait(S.turbo ? ms / 2 : ms);
 }
 /** v3.14 retrigger card: big "+X" over "FREE SPINS" ("MAX 20" when the cap swallows the whole retrigger). Small and
