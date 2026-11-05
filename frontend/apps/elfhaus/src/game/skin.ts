@@ -221,9 +221,11 @@ function apply() {
 	bmText(document.querySelector<HTMLElement>('#maxwin .mwHint'), 'font_cream');
 	skin(document.getElementById('replayBar'), () => ({ pkg: 'ui', frame: 'toast', k: 2 }));                                 // 73
 	$$('#intro .card, #outro .card, #fsMore .card').forEach((e) => skin(e, () => ({ pkg: 'ui', frame: 'sign_plate', k: 2 })));   // 24, 25
-	$$('#intro .cont').forEach((e) => { skin(e, go); word(e); });
-	$$('#outro .tierName, #fsMore .fmSub, #outro .otHint').forEach((e) => word(e, 'font_cream'));
-	$$('#intro .spins, #outro .otAmt, #fsMore .fmBig, #bigwin .bwAmt, #bigwin .bwX, #maxwin .mwAmt, #maxwin .mwX').forEach((e) => bmText(e, 'font_gold'));   // 13, 43
+	// fsfix (James): the bonus start card's spin count and START are drawn once, by titleType + ninePanel (bookEventHandlerMap
+	// freeSpinTrigger); the old gold bitmap count, the gold go plate and the painted START word here were a second, yellow copy on top;
+	// the retrigger card's +X / FREE SPINS likewise (titleType in fsMoreCard only)
+	$$('#outro .tierName, #outro .otHint').forEach((e) => word(e, 'font_cream'));
+	$$('#outro .otAmt, #bigwin .bwAmt, #bigwin .bwX, #maxwin .mwAmt, #maxwin .mwX').forEach((e) => bmText(e, 'font_gold'));   // 13, 43
 	$$('#bigwin .bwFx, #intro .bwFx, #outro .bwFx').forEach((e) => skin(e, () => ({ pkg: 'fx', frame: 'sunburst', fit: 'cover', size: 1.2 })));   // 23
 	$$('.overlay').forEach((e) => skin(e, () => ({ pkg: 'ui', frame: 'dim', fit: 'fill' })));                              // 71 (30% dim baked in the frame alpha)
 	const lgo = document.getElementById('lGo'); skin(lgo, go); word(lgo);                                                   // 74
