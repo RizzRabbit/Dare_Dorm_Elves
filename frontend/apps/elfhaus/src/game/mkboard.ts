@@ -61,34 +61,36 @@ export function mkGeo(): MkGeo {
 		const BC = 540, tab = ST.tablet;
 		const hu2 = hu;
 		if (tab) {
-			// v28e: portrait tablet is width-tight for spin-beside, so spin sits BELOW-RIGHT of the board
-			// (thumb zone, same family as landscape's beside-board). Board fills the width; HUD ~1.5x.
-			const HBp = 330;   // clears hud_bar bottom cap with centered bet buttons
+			// v28g: left column for buy (no hang), right breath for Roxy, spin below-right of board.
+			const HBp = 330;
 			const hudYp = DH - HBp - 16;
 			const spSz = sb(240), abT = Math.max(128, t44);
-			const spinRow = spSz + 18;   // spin sits in the gap above the bar
+			const spinRow = spSz + 18;
+			const buyS = 0.85, buyW = 216 * buyS;
+			const leftCol = buyW + 28;    // buy fully left of frame
+			const rightBreath = 56;       // Roxy breathing room
 			const maxBsH = (hudYp - 20 - spinRow - TOP_MIN) / (BH + FB + FT);
-			bs = Math.min(BS_W, Math.max(0.95, maxBsH));
-			const fw = (BW + 2 * FT) * bs, fh = (BH + FT + FB) * bs;
-			bx = 540 - BW * bs / 2;
-			// pin board so its foot + spin row land just above the HUD (use the vertical space)
+			const maxBsW = (1080 - leftCol - rightBreath) / (BW + 2 * FT);
+			bs = Math.min(BS_W, maxBsW, Math.max(0.88, maxBsH));
+			const fw = (BW + 2 * FT) * bs;
+			bx = leftCol + FT * bs;
 			by = hudYp - 16 - spinRow - (BH + FB) * bs;
 			if (by - FT * bs < TOP_MIN) by = TOP_MIN + FT * bs;
 			T = by - FT * bs;
 			const BC2 = bx + BW * bs / 2;
-			const spX = Math.min(540 + BW * bs / 2 + FT * bs - spSz / 2 - 8, 1080 - 20 - spSz / 2);
+			const spX = Math.min(bx + BW * bs + FT * bs - spSz / 2 - 4, 1080 - rightBreath / 2 - spSz / 2);
 			const spY = Math.min(by + (BH + FB) * bs + 10 + spSz / 2, hudYp - 14 - spSz / 2);
-			// turbo/auto to the LEFT of spin (same row), clear of buy
 			const autoX = spX - spSz / 2 - 14 - abT / 2;
 			const turboX = autoX - abT - 12;
 			const pairY = spY;
 			const mb = Math.max(148, t44), betHalf = 150, clear = betHalf + mb / 2 + 22;
-			const hudW = Math.min(1040, Math.max(fw + 24, 960)), hudX = BC2 - hudW / 2;
+			const hudW = Math.min(1040, Math.max(fw + 40, 900)), hudX = BC2 - hudW / 2;
 			const balX = hudX + 36, winR = hudX + hudW - 36;
 			const zoneL = Math.max(200, (BC2 - clear) - balX), zoneR = Math.max(200, winR - (BC2 + clear));
-			const buyX = Math.max(100, bx - FT * bs - 80);
+			const buyX = leftCol / 2;
+			const buyY = by + BH * bs / 2;   // mid-board, left column — never intersects frame
 			return { mode: 'port', ...f, D, loose, bx, by, bs, bs0, T, T0: hudY0 - below0 - (BH + FB + FT) * bs0,
-				logo: { x: BC2, y: T - 56, s: 0.5 },
+				logo: { x: BC2, y: T - 56, s: 0.48 },
 				hud: { x: hudX, y: hudYp, w: hudW, h: HBp, r: 22 },
 				fBal: { x: balX, y: hudYp + 48, ls: 28, vs: 52, w: zoneL },
 				fBet: { x: BC2 - 84, y: hudYp + 48, ls: 28, vs: 52, w: 168 },
@@ -98,18 +100,28 @@ export function mkGeo(): MkGeo {
 				spin: { x: spX, y: spY, s: spSz, ic: 2.5 },
 				auto: { x: autoX, y: pairY, s: abT, ic: 2.1 },
 				turbo: { x: turboX, y: pairY, s: abT, ic: 2.1 },
-				bonus: { v: 'v', x: buyX, y: by + BH * bs / 2, s: 1.05 }, cmp };
+				bonus: { v: 'v', x: buyX, y: buyY, s: buyS }, cmp };
 		}
 		// phone portrait
 		const HBp = HB + 110;   // taller plate so bet clears painted gold trim (hud_bar slice9 bottom)
 		const hudYp = hudY - (HBp - HB);
+		// v28g: button row centred in the board↔HUD gap so turbo/auto/buy never kiss the bar
+		const gapRow = Math.max(GAPB, 96);   // min clear air above the painted hud canvas
+		const belowP0 = 2 * gapRow + RH;
+		bs = Math.max(Math.min(bs0, BS_W), Math.min(BS_W, (hudYp - belowP0 - TOP_MIN) / (BH + FB + FT)));
+		by = hudYp - belowP0 - (BH + FB) * bs;
+		bx = 540 - BW * bs / 2;
+		T = by - FT * bs;
+		const boardFoot = by + (BH + FB) * bs;
+		const rowYp = (boardFoot + hudYp) / 2;   // dead-centre of the gap
+		const belowP = hudYp - boardFoot;
 		const bSz = Math.max(124 * hu2, t44);
-		// hud_bar atlas: slice9 bottom=80 / sourceH=313 → ~25.5% is the non-stretch gold cap; keep buttons above it
 		const padB = Math.max(72 * hu2, HBp * (80 / 313) + 18);
 		const betY = hudYp + HBp - padB - bSz / 2;
 		const topY = hudYp + 20 * hu2;
 		const zone = 360;
 		const spSz = sb(250 * hu2);
+		const abP = Math.max(120, t44);   // slightly smaller so the row clears the bar with air
 		return { mode: 'port', ...f, D, loose, bx, by, bs, bs0, T, T0: hudY0 - below0 - (BH + FB + FT) * bs0,
 			logo: { x: BC, y: T - 64, s: 0.4 },
 			hud: { x: 14, y: hudYp, w: 1052, h: HBp, r: 22 },
@@ -118,9 +130,9 @@ export function mkGeo(): MkGeo {
 			fBet: { x: BC - 110, y: betY - bSz * 0.9, ls: 26 * hu2, vs: 48 * hu2, w: 220 },
 			minus: { x: BC - 170, y: betY, s: bSz, ic: 2.35 }, plus: { x: BC + 170, y: betY, s: bSz, ic: 2.35 },
 			spin: { x: 14 + 1052 - 36 - spSz / 2, y: hudYp + HBp / 2, s: spSz, ic: 2.6 },
-			auto: { x: 30 + ab / 2, y: rowY, s: ab, ic: 2.5 * kk },
-			turbo: { x: 30 + ab * 1.5 + 18 * kk, y: rowY, s: ab, ic: 2.5 * kk },
-			bonus: { v: 'p', x: 1066 - 290 * kk, y: rowY, s: kk }, cmp };
+			auto: { x: 30 + abP / 2, y: rowYp, s: abP, ic: 2.3 },
+			turbo: { x: 30 + abP * 1.5 + 16, y: rowYp, s: abP, ic: 2.3 },
+			bonus: { v: 'p', x: 1066 - 260, y: rowYp, s: Math.min(kk, 0.72) }, cmp };
 	}
 	if (ST.phl)if (ST.phl) {
 		const D = { w: 1000, h: 562 }, f = fit(D), tt = t48(f.k), sb = (s: number) => Math.max(s, tt);
@@ -140,34 +152,37 @@ export function mkGeo(): MkGeo {
 	// v28 (James): HUD + Bet centred on the BOARD centre line (not the screen). Spin sits outside the bar to the right
 	// so it never pulls Bet off-centre. Tablet landscape / near-square: bigger UI, spin beside the board (thumb zone),
 	// turbo/auto grouped under it, buy stays opposite Roxy (left).
-	const tab = ST.tablet, mb = sb(tab ? 160 : 128), ph = ST.tb > 1.001 || mb > 116;
-	const s0 = tab ? 1.45 : ph ? 1.2 : 1.05, bw = 216 * s0, bh = 240 * s0;
+	const tab = ST.tablet, mb = sb(tab ? 200 : 128), ph = ST.tb > 1.001 || mb > 116;
+	const s0 = tab ? 1.35 : ph ? 1.2 : 1.05, bw = 216 * s0, bh = 240 * s0;
 	const ab = sb(tab ? 140 : 106), gp = tab ? 22 : 18;
-	const bx = tab ? 400 : 430, by = tab ? 140 : 170, bs = tab ? 1.08 : 1;
+	// v28g: tablet board a touch smaller/higher so a taller HUD can carry ~1.5x desk SCREEN text
+	const bx = tab ? 420 : 430, by = tab ? 70 : 170, bs = tab ? 0.88 : 1;
 	const BC = bx + BW * bs / 2;   // board centre (design)
-	const top = (tab ? 520 : 500) - (bh + gp + ab) / 2;
+	const top = (tab ? 480 : 500) - (bh + gp + ab) / 2;
 	const ax = Math.max(bw / 2 - ab / 2, (ab + gp) / 2);
 	const spSz = sb(tab ? 200 : 168);
-	// wider bar so Bal/Win zones fit $1,234,567.89; bar centre = BC; spin outside (desktop) or beside board (tablet)
-	const hudW = tab ? 1320 : 1520, hudH = tab ? 210 : 200, hudY = tab ? 890 : 868;
+	// desk screen bal ~47px; tablet view scale ~0.76 → need design vs ~98 for ~1.5x desk on screen
+	const hudW = tab ? 1480 : 1520, hudH = tab ? 360 : 200, hudY = tab ? 700 : 868;
 	const hudX = BC - hudW / 2;
-	const betHalf = tab ? 150 : 130;
-	const clear = betHalf + mb / 2 + 24;
-	const balX = hudX + 40, winR = hudX + hudW - 40;
-	const zoneL = Math.max(200, (BC - clear) - balX), zoneR = Math.max(200, winR - (BC + clear));
+	const betHalf = tab ? 190 : 130;
+	const clear = betHalf + mb / 2 + 32;
+	const balX = hudX + 48, winR = hudX + hudW - 48;
+	const zoneL = Math.max(280, (BC - clear) - balX), zoneR = Math.max(280, winR - (BC + clear));
 	const spinX = tab ? (bx + BW * bs + FT * bs + 36 + spSz / 2) : (hudX + hudW + 16 + spSz / 2);
-	// tablet: spin at mid-board height; turbo/auto to the RIGHT of spin (not under boots/log)
 	const spinY = tab ? (by + BH * bs * 0.55) : (hudY + hudH / 2);
 	const autoX = tab ? spinX + spSz / 2 + 14 + ab / 2 : 236 - ax;
 	const turboX = tab ? autoX + ab + 14 : 236 + ax;
 	const pairY = tab ? spinY : top + bh + gp + ab / 2;
-	const buyX = tab ? 190 : 236, buyY = tab ? by + BH * bs / 2 : top + bh / 2;
+	// buy fully left of frame (no hang)
+	const buyX = tab ? Math.min(170, bx - FT * bs - (216 * s0) / 2 - 16) : 236;
+	const buyY = tab ? by + BH * bs / 2 : top + bh / 2;
+	const tls = tab ? 48 : 20, tvs = tab ? 96 : 40;
 	return { mode: 'land', ...f, D, loose: false, bx, by, bs, T: by - FT * bs,
-		logo: { x: BC, y: by - FT * bs - 20, s: tab ? 0.42 : 0.36 },
+		logo: { x: BC, y: by - FT * bs - 20, s: tab ? 0.4 : 0.36 },
 		hud: { x: hudX, y: hudY, w: hudW, h: hudH, r: 22 },
-		fBal: { x: balX, y: hudY + 32, ls: tab ? 24 : 20, vs: tab ? 44 : 40, w: zoneL },
-		fBet: { x: BC - 80 * (ph ? ST.tb : 1), y: hudY + 32, ls: tab ? 24 : 20, vs: tab ? 44 : 40, w: 160 * (ph ? ST.tb : 1) },
-		fWin: { x: BC + clear, y: hudY + 32, ls: tab ? 24 : 20, vs: tab ? 44 : 40, w: zoneR },
+		fBal: { x: balX, y: hudY + (tab ? 56 : 32), ls: tls, vs: tvs, w: zoneL },
+		fBet: { x: BC - 100 * (ph ? ST.tb : 1), y: hudY + (tab ? 56 : 32), ls: tls, vs: tvs, w: 200 * (ph ? ST.tb : 1) },
+		fWin: { x: BC + clear, y: hudY + (tab ? 56 : 32), ls: tls, vs: tvs, w: zoneR },
 		minus: { x: BC - betHalf, y: hudY + hudH / 2 - 4, s: mb, ic: 2.2 },
 		plus: { x: BC + betHalf, y: hudY + hudH / 2 - 4, s: mb, ic: 2.2 },
 		spin: { x: spinX, y: spinY, s: spSz, ic: tab ? 2.0 : 1.75 },
