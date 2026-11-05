@@ -215,7 +215,7 @@ export function placeScene(portrait: boolean, fr: DOMRect) {
 		Object.assign(roxyAt, { x, y: feet, s, portrait });
 	} else if (portrait && g && g.mode === 'port') {
 		// v28j: tablet portrait — hide Roxy (peek always overlapped logo/frame). Phones keep the peek.
-		if (ST.tablet) {
+		if (false) {   // v28m: tablet portrait uses the phone peek again
 			roxyL.visible = false; clipRoxy(null); R.shadow(false);
 			Object.assign(roxyAt, { x: 0, y: 0, s: 0, portrait });
 		} else {
@@ -223,12 +223,13 @@ export function placeScene(portrait: boolean, fr: DOMRect) {
 			const T0 = g.T0 ?? T, bs0 = g.bs0 ?? g.bs;
 			const rs0 = g.loose ? 2.4 * f : Math.min(2.4 * f, Math.max(0.6 * f, (T0 - 46) / (cutRow - hopTop)));
 			const rx0 = Math.max(770 + Math.max(0, rs0 / f - 1.85) * 70, 1080 + 8 - (R.srcW / 2) * rs0) - 47;
-			const F = g.bs / bs0, rs = rs0 * F;
+			const F = g.bs / bs0, rs = rs0 * F * (ST.tablet ? 1.4 : 1);   // v28m: bigger tabP peek
 			const R0 = 540 + FW * bs0 / 2;
 			const R1 = g.bx + BW * g.bs + FT * g.bs;
-			const rx = R1 + (rx0 - R0) * F, hip = Math.max(T + WAIST * rs, 14 + (cutRow - R.rows.headTop) * rs), feet = hip + (R.srcH - cutRow) * rs;
+			const rx = ST.tablet ? g.bx + BW * g.bs * 0.62 : R1 + (rx0 - R0) * F,   /* v28m: tabP peek centred behind the logo */
+			hip = Math.max(T + WAIST * rs, 14 + (cutRow - R.rows.headTop) * rs), feet = hip + (R.srcH - cutRow) * rs;
 			if (!hold) { R.view.position.set(g.ox + rx * k, g.oy + feet * k); R.view.scale.set(rs * k); }
-			clipRoxy(hold && free ? null : fr.top + (FT + BH) * u); roxyL.visible = true; R.shadow(false);
+			clipRoxy(hold && free ? null : fr.top + (ST.tablet ? FT * 2 : FT + BH) * u); roxyL.visible = true; R.shadow(false);
 			Object.assign(roxyAt, { x: g.ox + rx * k, y: g.oy + feet * k, s: rs * k, portrait });
 		}
 	} else if (!portrait) {

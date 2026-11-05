@@ -67,13 +67,14 @@ export function mkGeo(): MkGeo {
 			const spSz = sb(240), abT = Math.max(132, t44);
 			const spinRow = spSz + 16;
 			const buyS = 0.92, buyW = 216 * buyS * 0.92, buyH = 240 * buyS * 0.92;
-			const maxBsH = (hudYp - 18 - spinRow - TOP_MIN) / (BH + FB + FT);
+			const TOPT = TOP_MIN + 110;   // v28m: room above the logo for Roxy's head+shoulders peek
+			const maxBsH = (hudYp - 18 - spinRow - TOPT) / (BH + FB + FT);
 			const maxBsW = (1080 - 40) / (BW + 2 * FT);
 			bs = Math.min(maxBsW, maxBsH);
 			const fw = (BW + 2 * FT) * bs;
 			bx = 540 - fw / 2 + FT * bs;
 			by = hudYp - 14 - spinRow - (BH + FB) * bs;
-			if (by - FT * bs < TOP_MIN) by = TOP_MIN + FT * bs;
+			if (by - FT * bs < TOPT) by = TOPT + FT * bs;
 			T = by - FT * bs;
 			const BC2 = bx + BW * bs / 2;
 			const spX = Math.min(BC2 + fw / 2 - spSz / 2, 1080 - 24 - spSz / 2);
@@ -114,7 +115,8 @@ export function mkGeo(): MkGeo {
 		const belowP = hudYp - boardFoot;
 		const bSz = Math.max(124 * hu2, t44);
 		const padB = Math.max(72 * hu2, HBp * (80 / 313) + 18);
-		const betY = hudYp + HBp - padB - bSz / 2;
+		const betY = hudYp + HBp - padB - bSz / 2 + 12;   // v28m: a little lower
+		const BX = BC - 70;   // v28m: bet group nudged left, away from spin
 		const topY = hudYp + 20 * hu2;
 		const zone = 360;
 		const spSz = sb(250 * hu2);
@@ -124,8 +126,8 @@ export function mkGeo(): MkGeo {
 			hud: { x: 14, y: hudYp, w: 1052, h: HBp, r: 22 },
 			fBal: { x: BC - zone - 16, y: topY - 4, ls: 28 * hu2, vs: 66 * hu2, w: zone - 56 },   // v28l: ink ends clear of the Bet label
 			fWin: { x: BC + 16, y: topY - 4, ls: 28 * hu2, vs: 66 * hu2, w: Math.min(zone, (14 + 1052 - 36 - spSz) - 20 - (BC + 16)) },
-			fBet: { x: BC - 110, y: betY - bSz * 0.95, ls: 26 * hu2, vs: 60 * hu2, w: 220 },
-			minus: { x: BC - 170, y: betY, s: bSz, ic: 2.35 }, plus: { x: BC + 170, y: betY, s: bSz, ic: 2.35 },
+			fBet: { x: BX - 110, y: betY - bSz * 0.95, ls: 26 * hu2, vs: 60 * hu2, w: 220 },
+			minus: { x: BX - 170, y: betY, s: bSz, ic: 2.35 }, plus: { x: BX + 170, y: betY, s: bSz, ic: 2.35 },
 			spin: { x: 14 + 1052 - 36 - spSz / 2, y: hudYp + HBp / 2, s: spSz, ic: 2.6 },
 			auto: { x: 30 + abP / 2, y: rowYp, s: abP, ic: 2.3 },
 			turbo: { x: 30 + abP * 1.5 + 20, y: rowYp, s: abP, ic: 2.3 },
@@ -184,7 +186,7 @@ export function mkGeo(): MkGeo {
 		const turboY = autoY + ab + 12;
 		const hudW = Math.min(1400, 2 * (BC - 44), 2 * (ROXY_CLEAR - 16 - BC));
 		const hudX = BC - hudW / 2;
-		const betHalf = 170, clear = betHalf + mb / 2 + 28;
+		const mbT = sb(Math.round(hudH * 0.45)), betHalf = 156, clear = betHalf + mbT / 2 + 52;   // v28m: tabP-sized +/-
 		const balX = hudX + 44, winR = hudX + hudW - 44;
 		const zoneL = Math.max(240, (BC - clear) - balX), zoneR = Math.max(240, winR - (BC + clear));
 				const tls = 42, tvs = 80;
@@ -194,8 +196,8 @@ export function mkGeo(): MkGeo {
 			fBal: { x: balX, y: hudY + 50, ls: tls, vs: tvs, w: zoneL },
 			fBet: { x: BC - 96, y: hudY + 50, ls: tls, vs: tvs, w: 192 },
 			fWin: { x: BC + clear, y: hudY + 50, ls: tls, vs: tvs, w: zoneR },
-			minus: { x: BC - betHalf, y: hudY + hudH / 2 - 4, s: mb, ic: 2.2 },
-			plus: { x: BC + betHalf, y: hudY + hudH / 2 - 4, s: mb, ic: 2.2 },
+			minus: { x: BC - betHalf, y: hudY + hudH / 2 - 4, s: mbT, ic: 2.2 },
+			plus: { x: BC + betHalf, y: hudY + hudH / 2 - 4, s: mbT, ic: 2.2 },
 			spin: { x: spinX, y: spinY, s: spSz, ic: 2.05 },
 			auto: { x: autoX, y: autoY, s: ab, ic: 1.95 }, turbo: { x: turboX, y: turboY, s: ab, ic: 1.95 },
 			bonus: { v: 'v', x: buyX, y: buyY, s: buyS }, cmp };
