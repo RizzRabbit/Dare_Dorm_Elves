@@ -206,7 +206,7 @@ export function loop(n: Snd, gain = 1): Handle { return safe(() => (live() ? han
  * the base loop sample-accurately; every later change waits for the next bar line (1.6 s grid). base -> bonus plays the
  * 2-bar trigger stinger first; bonus -> base crossfades at the bar line. Loops are AudioBuffer loops (gapless). */
 export function music(m: 'base' | 'bonus') { want = m; safe(syncMusic); }
-let grid0 = 0, introDone = false, oneShots: { s: AudioBufferSourceNode; g: GainNode }[] = [];
+let grid0 = 0, introDone = false, stingEnd = 0, oneShots: { n: Snd; s: AudioBufferSourceNode; g: GainNode }[] = [];
 const nextBar = (lead = 0.06) => { const t = now() + lead; return grid0 ? grid0 + Math.ceil((t - grid0) / BAR - 1e-6) * BAR : t; };
 function loopAt(n: Snd, t: number, g0: number) {
 	const b = buf.get(n); if (!b || !ctx) return null;
@@ -218,11 +218,11 @@ function oneAt(n: Snd, t: number) {
 	const b = buf.get(n); if (!b || !ctx) return null;
 	const s = ctx.createBufferSource(), g = ctx.createGain(); s.buffer = b; s.connect(g); g.connect(stingBus!);
 	const a = b.duration > (n === 'music_intro' ? INTRO_BARS : STING_BARS) * BAR + 0.02 ? LAME_DELAY / SR : 0; // decoder kept the encoder delay: skip it so the hit lands on the bar
-	s.start(t, a); const x = { s, g }; oneShots.push(x);
+	s.start(t, a); const x = { n, s, g }; oneShots.push(x);
 	s.onended = () => safe(() => { g.disconnect(); oneShots = oneShots.filter((o) => o !== x); }); return x;
 }
 const fadeAt = (p: AudioParam, to: number, t: number, d: number) => safe(() => { p.cancelScheduledValues(t); p.setValueAtTime(p.value, Math.max(now(), t - 0.001)); p.setValueAtTime(p.value, t); p.linearRampToValueAtTime(to, t + d); });
-function stopOneShots(t: number) { for (const o of oneShots) safe(() => { fadeAt(o.g.gain, 0, t, 0.05); o.s.stop(t + 0.08); }); }
+function stopOneShots(t: number, all = false) { for (const o of oneShots) if (all || o.n === 'music_intro') safe(() => { fadeAt(o.g.gain, 0, t, 0.05); o.s.stop(t + 0.08); }); }
 let mstat = { last: '', at: 0 }; // debug / smoke tests: what was scheduled last
 function syncMusic() {
 	if (!ctx || !on() || !gMus() || !want) return;
@@ -235,10 +235,10 @@ function syncMusic() {
 		introDone = true; grid0 = t;
 		const x = loopAt(n, t + lead, 1); if (!x) return; cur = { name: want, ...x }; mstat = { last: (lead ? 'intro->' : '') + want, at: t + lead }; return;
 	}
-	const t = nextBar(), old = cur;
+	const t = Math.max(nextBar(), stingEnd), old = cur;   // a stinger that is still sounding finishes first (it ends on a bar line)
 	stopOneShots(t); fadeAt(old.g.gain, 0, t, want === 'bonus' ? 0.05 : XFADE); safe(() => old.s.stop(t + XFADE + 0.05));
 	let start = t;
-	if (want === 'bonus' && buf.has('stinger_trigger')) { oneAt('stinger_trigger', t); start = t + STING_BARS * BAR; }
+	if (want === 'bonus' && buf.has('stinger_trigger')) { oneAt('stinger_trigger', t); start = stingEnd = t + STING_BARS * BAR; }
 	const x = loopAt(n, start, want === 'bonus' ? 1 : 0); if (!x) return;
 	if (want === 'base') fadeAt(x.g.gain, 1, t, XFADE);
 	grid0 = start; cur = { name: want, ...x }; mstat = { last: (start > t ? 'trigger->' : '') + want, at: start };
@@ -247,13 +247,13 @@ function syncMusic() {
 export function musicSting(k: 'bigwin') {
 	safe(() => {
 		if (!ctx || !on() || !gMus()) return; const n: Snd = k === 'bigwin' ? 'stinger_bigwin' : 'stinger_trigger'; if (!buf.has(n)) return;
-		const t = nextBar(); oneAt(n, t);
+		const t = Math.max(nextBar(), stingEnd); oneAt(n, t); stingEnd = t + STING_BARS * BAR;
 		if (cur) { fadeAt(cur.g.gain, 0, t, 0.05); fadeAt(cur.g.gain, 1, t + STING_BARS * BAR, 0.3); }
 		mstat = { last: 'sting:' + k, at: t };
 	});
 }
 function stopMusic(s: number) {
-	stopOneShots(ctx ? now() : 0);
+	stopOneShots(ctx ? now() : 0, true); stingEnd = 0;
 	if (!cur) return; const c = cur; cur = null;
 	safe(() => { ramp(c.g.gain, 0, s); c.s.stop(now() + s + 0.05); });
 }
