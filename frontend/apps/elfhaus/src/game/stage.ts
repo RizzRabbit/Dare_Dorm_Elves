@@ -39,7 +39,7 @@ export function fitStage() {
 	const side = Math.min(vw, vh), ar = Math.min(vw, vh) / Math.max(vw, vh);
 	const tablet = side >= 600 && ar >= 0.6 && ar <= 1.5;
 	let w: number, h: number;
-	if (portrait) { w = PORT_W; h = Math.round(PORT_W * clamp(vh / vw, PORT_AR)); }
+	if (portrait) { w = PORT_W; h = Math.round(PORT_W * clamp(vh / vw, tablet ? ([1.3, 2.4] as [number, number]) : PORT_AR)); }
 	else { h = phl ? PHL_H : LAND_H; w = Math.round(h * clamp(vw / vh, tablet ? ([1.0, 2.4] as [number, number]) : LAND_AR)); }
 	const s = Math.min(vw / w, vh / h), ox = (vw - w * s) / 2, oy = (vh - h * s) / 2;
 	const compact = isReplayUrl() || (!portrait && vh <= COMPACT_MAX_H && finePointer()), tap = compact ? TAP_COMPACT : TAP;

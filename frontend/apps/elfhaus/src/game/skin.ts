@@ -118,7 +118,7 @@ export function bmText(el: HTMLElement | null, font: string | ((el: HTMLElement)
 		cv.style.cssText = `position:absolute;left:0;top:0;width:${w}px;height:${h}px;pointer-events:none;z-index:2`;
 		if (cv.width !== W) cv.width = W; if (cv.height !== H) cv.height = H;
 		const g = cv.getContext('2d')!; g.clearRect(0, 0, W, H); g.imageSmoothingQuality = 'high';
-		const al = el.dataset.fit === 'pad' ? 'center' : cs.textAlign, x0 = al === 'left' || al === 'start' ? 0 : al === 'right' || al === 'end' ? w - adv : (w - adv) / 2;
+		const al = el.dataset.fit === 'pad' ? 'center' : cs.textAlign, x0 = al === 'left' || al === 'start' ? 0 : al === 'right' || al === 'end' ? w - ink : (w - ink) / 2;  // align by inked edge so overhanging glyphs (e.g. '9') never clip
 		let x = x0 * k; const y = ((h - m.lh * sc) / 2) * k, s = sc * k;
 		for (const f of gl) { if (!f) { x += m.space * s; continue; } blit(g, P, f, x, y, f.sw * s, f.sh * s, false, 1); x += (f.adv ?? f.sw) * s; }
 	};
@@ -171,7 +171,7 @@ function apply() {
 	// fix6: portrait BUY BONUS on the same pine plate as the other HUD buttons; disabled keeps its plate and is dimmed (skin.css), never a grey box
 	skin(document.getElementById('buyBtn'), (el) => (el.classList.contains('mkP') ? { pkg: 'ui', frame: 'btn_pine', k: 2 } : { pkg: 'ui', frame: 'buy_plate', k: 2 }));   // fix2: the wide portrait plate keeps slim corners (k = sprite px per canvas px)   // 9
 	{ const bl = document.getElementById('buyLbl'); if (bl) bl.dataset.fit = 'box'; word(bl); }   // fix6: always fits its plate                                                                                  // 44
-	$$('#strip label').forEach((e) => word(e, 'font_gold', true)); $$('#strip span').forEach((e) => { e.dataset.fit = 'parent'; bmText(e, 'font_cream'); });   // labels gold title words; values cream, shrink-to-fit   // 36
+	$$('#strip label').forEach((e) => word(e, 'font_gold', true)); $$('#strip span').forEach((e) => { e.dataset.fit = 'box'; bmText(e, 'font_cream'); });   // labels gold; values shrink-to-fit the zone (never clip)   // 36
 	skin(document.getElementById('fsBar'), () => ({ pkg: 'ui', frame: 'pill_cran', k: 2 })); bmText(document.getElementById('fsTier'), 'font_gold'); bmText(document.getElementById('fsCount'), 'font_cream');   // 33
 	for (const id of ['banner', 'stepToast']) { const el = document.getElementById(id); skin(el, () => ({ pkg: 'ui', frame: 'toast', k: 2 })); bmText(el, 'font_ink'); }   // 50
 	const arm = document.getElementById('armTag'); skin(arm, () => ({ pkg: 'ui', frame: 'pill_gold', k: 2 })); bmText(arm?.querySelector('.t') as HTMLElement, 'font_ink');   // 49

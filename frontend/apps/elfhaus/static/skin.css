@@ -169,3 +169,7 @@ html body.skin.mk:not(.portrait) #app #strip .m:has(#bet) label{width:auto!impor
 html body.skin.mk:not(.portrait) #app #strip .m:has(#balance) :is(#balance){width:100%!important;text-align:right!important}
 html body.skin.mk:not(.portrait) #app #strip .m:has(#win) :is(#win){width:100%!important;text-align:left!important}
 html body.skin.mk:not(.portrait) #app #strip .m:has(#bet) :is(#bet){width:100%!important;text-align:center!important}
+
+/* meters: never clip long balances / wins; bitmap shrink-to-fit inside the zone */
+html body.skin.mk #app #strip .m :is(#balance,#win,#bet){overflow:visible!important;max-width:100%!important;text-overflow:clip!important}
+html body.mk #app #strip .m span{overflow:visible!important;text-overflow:clip!important}
