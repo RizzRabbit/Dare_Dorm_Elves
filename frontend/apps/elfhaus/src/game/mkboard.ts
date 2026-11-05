@@ -171,7 +171,7 @@ export function mkGeo(): MkGeo {
 		const btnCol = spSz + 16;
 		const hudH = 300;
 		const hudY = D.h - hudH - 16;
-		const topMin = 56;
+		const topMin = 215;   // v28k: full logo (≈135 above frame) + top margin clear of menu
 		const maxBsH = (hudY - 24 - topMin) / (BH + FB + FT);
 		const playL = buyRight, playR = ROXY_CLEAR - 8;
 		const maxBsW = (playR - playL - btnCol - 12) / (BW + 2 * FT);

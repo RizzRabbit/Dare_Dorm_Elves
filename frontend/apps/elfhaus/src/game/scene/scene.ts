@@ -208,7 +208,7 @@ export function placeScene(portrait: boolean, fr: DOMRect) {
 			// v28j: tablet — further right + slightly smaller so the bigger play group clears her torso
 			const tab = ST.tablet;
 			const Dw = g.D?.w ?? 1920, Dh = g.D?.h ?? 1080;
-			x = X(tab ? Dw * 0.945 : 1440); feet = Y(tab ? Dh - 180 : 852); s = (tab ? 0.80 : 1.26) * f * k;
+			x = X(tab ? Dw * 0.93 : 1440)   /* v28k: arm margin from right edge */; feet = Y(tab ? Dh - 180 : 852); s = (tab ? 0.80 : 1.26) * f * k;
 		}   // review #13 / v28i
 		if (!hold) { R.view.position.set(x, feet); R.view.scale.set(s); }
 		roxyL.visible = true; clipRoxy(null); R.shadow(true);
