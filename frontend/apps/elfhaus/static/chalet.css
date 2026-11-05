@@ -51,8 +51,9 @@ html body #app #fsBar #fsTier{color:var(--c-gold)!important}
 html body #app #banner,html body #app #stepToast{background:var(--c-cream)!important;color:var(--c-ink)!important;border:3px solid var(--c-ink)!important;border-radius:14px!important;
   font-family:var(--ui)!important;font-weight:400!important;box-shadow:0 4px 0 var(--c-ink)!important;text-shadow:none!important}
 html body #app #stepToast small{color:var(--c-cran)!important}
-/* win line + dim: darken (never fade) non-winners */
-html body .cell.dim{opacity:1!important;filter:brightness(.55) saturate(.8)!important}
+/* win line + dim: darken+desaturate immediately (never opacity fade) */
+html body .cell.dim{opacity:1!important;filter:brightness(.48) saturate(.7)!important;transition:filter 0s,opacity 0s!important}
+html body .cell:not(.dim){transition:filter .12s ease-out}
 /* bust wilds: the painted frame carries the look, no extra card border */
 html body .sym.W.art{background:none!important;border:0!important;box-shadow:none!important}
 
@@ -522,8 +523,9 @@ html body .cell.puffed>.tile{opacity:1!important}
 #strips .cspin>.cwin{position:absolute;inset:0;z-index:1;clip-path:inset(-2.5% round 16%);--tr:0}
 body.mk #app #strips .cspin>.cwin{inset:3.75%}
 /* a unit = the symbol's own tile + the symbol, one container: they move as one, centred on each other */
-#strips .cspin>.cwin>.sl{position:absolute;left:0;top:0;width:100%;height:100%;display:block;will-change:transform;
-  scale:1 calc(1 + .06*var(--tr));transform-origin:50% 50%}
+#strips .cspin>.cwin>.sl{position:absolute;left:0;top:0;width:100%;height:100%;display:block;will-change:transform,filter;
+  scale:1 calc(1 + .22*var(--tr));transform-origin:50% 50%;
+  filter:blur(calc(var(--tr)*2.6px)) brightness(calc(1 + .1*var(--tr))) contrast(calc(1 + .06*var(--tr)))}
 #strips .cspin>.cwin>.sl>i{position:absolute;inset:0;display:block;background:no-repeat 0 0/100% 100%}
 #strips .cspin>.cwin>.sl>.slS{z-index:1}
 /* landings come out of the spinner's own settle bounce, so the symbol's follow-through starts from rest (no pop) */
@@ -623,3 +625,31 @@ html body.portrait #outro .otHint{font-size:30px!important}
    packing bleed, sheets/symbols.webp, no padding); cut that corner out of the letters frame only */
 html body .rp.f__wild{clip-path:polygon(0 0,100% 0,100% 100%,19% 100%,19% 78%,0 78%)}
 html body.mk #app #strip .m #bet{overflow:visible!important}
+
+/* ===== motion pass: winners pulse ~1.2x with glow, then pop (puff.ts) ===== */
+html body .cell.win>.sym{
+  transform:perspective(calc(var(--cell)*5)) scale(1.2) rotateX(var(--tX,6deg)) rotateY(var(--tY,0deg))!important;
+  transition:transform .18s cubic-bezier(.3,1.5,.5,1)!important}
+html body .cell.win.pulse>.sym{
+  animation:chaletWinPulse calc(.34s*var(--gt,1)) cubic-bezier(.3,1.55,.45,1) both!important}
+@keyframes chaletWinPulse{
+  0%{transform:perspective(calc(var(--cell)*5)) scale(1) rotateX(var(--tX,6deg)) rotateY(var(--tY,0deg))}
+  42%{transform:perspective(calc(var(--cell)*5)) scale(1.22) rotateX(var(--tX,6deg)) rotateY(var(--tY,0deg))}
+  100%{transform:perspective(calc(var(--cell)*5)) scale(1.14) rotateX(var(--tX,6deg)) rotateY(var(--tY,0deg))}}
+/* glow sprite pulse with the winner (existing .symGlow art; opacity/transform only) */
+html body .cell.win .symGlow{opacity:1!important;animation:chaletGlowPulse calc(.7s*var(--gt,1)) ease-in-out infinite alternate}
+@keyframes chaletGlowPulse{from{opacity:.85;transform:scale(1)}to{opacity:1;transform:scale(1.06)}}
+/* meter punch on trail arrival (wintrail.ts adds .meterPunch) */
+html body #win.meterPunch,html body #strip .m:nth-child(3).meterPunch{
+  animation:meterPunch .28s cubic-bezier(.3,1.7,.45,1)}
+@keyframes meterPunch{0%{transform:scale(1)}35%{transform:scale(1.18)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){
+  html body .cell.win.pulse>.sym{animation:none!important}
+  html body .cell.win .symGlow{animation:none!important}
+  html body #win.meterPunch,html body #strip .m:nth-child(3).meterPunch{animation:none!important}
+  #strips .cspin>.cwin>.sl{filter:none!important}
+}
+
+/* motion pass: spin button press squash (existing ico_stop swap stays in skin.ts) */
+html body #spinBtn.pressed{animation:btnPressMotion .2s cubic-bezier(.3,1.55,.45,1)!important}
+@keyframes btnPressMotion{0%{transform:scale(.84)}60%{transform:scale(1.04)}100%{transform:none}}
