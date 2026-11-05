@@ -27,7 +27,7 @@ import { initVoiceIdle, voice } from './voice';
 import { setSocial, isSocial, t } from './strings';
 import { $, S, ART, bet, titleHTML, buildCells, renderAll, renderOverlays, setOverlayHook, resetWinMeter, setRoundMode, banner, waitRaw, preloadStacks } from './ui';
 import { skipHolds, syncTempo } from './tempo';
-import { playBookEvents, endBonusUi } from './bookEventHandlerMap';
+import { playBookEvents, endBonusUi, feError } from './bookEventHandlerMap';
 import { initRoxy, placeRoxy } from './roxy';
 import { initStacks, stackIdle } from './stacks';
 import { initSkin } from './skin';
@@ -128,8 +128,9 @@ function message(title: string, body: string, opts: { reload?: boolean } = {}) {
 }
 const FATAL = new Set(['ERR_RGS_URL', 'ERR_IS', 'ERR_ATE', 'ERR_BET_LEVELS', 'ERR_REPLAY']);
 function showError(error: any) {
-	console.warn('RGS error', error); sfx('ui_error');
 	const code = error?.error || 'ERR_UE';
+	if (code === 'ERR_UE') feError('unexpected (ERR_UE)', error); else console.warn('RGS error', error);
+	try { sfx('ui_error'); } catch {}
 	// v3.16 (#77): fixed, social-safe text per RGS code; raw server messages only go to the console
 	const text = code === 'ERR_IPB' ? t('noFunds') : errorText(code);
 	// re-audit M9: any error before the session exists (authenticate / network) is fatal too: OK would leave a dead $0.00 board
@@ -246,7 +247,7 @@ async function round(mode: ModeKey) {
 		const rd = data?.round;
 		const evs = (rd?.state || []) as BookEvent[];
 		featHit = evs.some((e: any) => e.type === 'freeSpinTrigger' && e.source !== 'buy') || evs.some((e: any) => e.type === 'mysteryResult' && e.outcome !== 'none');
-		await playBookEvents(evs);
+		try { await playBookEvents(evs); } catch (e) { feError('presentation', e); }   // FE only: the round is still ended and credited
 		await finishRound(rd);
 		if (S.auto > 0 && autoStopReason(S.meterX * bet())) stopAuto();
 	} catch (e) {
@@ -290,7 +291,7 @@ async function resume(rd: any) {
 	// places kept: $0.975, $0.001, ¥0.075); only a 0x win uses the no-amount line (v3.16d)
 	const pick = await askResume(X != null && X > 0 && amt > 0 ? moneyWin(X * amt) : null);
 	try {
-		if (pick === 'resume') { banner('RESUMING YOUR LAST ROUND', 1600); await waitRaw(600); await playBookEvents(rd.state); await finishRound(rd); }
+		if (pick === 'resume') { banner('RESUMING YOUR LAST ROUND', 1600); await waitRaw(600); try { await playBookEvents(rd.state); } catch (e) { feError('presentation (resume)', e); } await finishRound(rd); }
 		else { // SKIP: no animation; end-round credits the win, the HUD win shows the final payout at the round's stake
 			await finishRound(rd);
 			if (X != null) { S.meterX = X; setAmount($('#win'), X * bet()); }

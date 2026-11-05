@@ -413,8 +413,16 @@ export async function playBookEvents(events: BookEvent[]) {
 		boardNext = events.slice(i + 1).find((e) => BOARD_EVENTS.has(e.type));
 		const h = (bookEventHandlerMap as any)[ev.type];
 		if (!h) { if (import.meta.env.DEV) throw new Error(`Unknown book event: ${ev.type}`); console.warn('skipped unknown book event', ev.type); continue; }
-		await h(ev);
+		// v26 (James on Stake: ERR_UE after a win): a front-end presentation failure (animation / audio / banner) is logged
+		// and the round carries on with the next event; it never reaches the RGS error screen
+		try { await h(ev); } catch (e) { feError('book event ' + ev.type, e); }
 	}
 	// a tease that never turned into a bonus
-	if (roxyState() === 'anticipation') { roxy('disappointed'); if (teaseOk(events, S.roundBase)) { if (!playVoice(Math.random() < 0.5 ? 'vo_roxy_miss_1' : 'vo_roxy_miss_2')) voice('tease'); } }
+	try { if (roxyState() === 'anticipation') { roxy('disappointed'); if (teaseOk(events, S.roundBase)) { if (!playVoice(Math.random() < 0.5 ? 'vo_roxy_miss_1' : 'vo_roxy_miss_2')) voice('tease'); } } } catch (e) { feError('round end fx', e); }
+}
+/** Front-end (non-RGS) failure: console.error + kept in window.__elfErr (last 20) for a Stake test to read. */
+export function feError(where: string, e: unknown) {
+	console.error('[elfhaus] ' + where, e);
+	const g = globalThis as any, l = (g.__elfErr ||= []);
+	l.push({ where, at: new Date().toISOString(), msg: String((e as any)?.message ?? e), stack: String((e as any)?.stack ?? '').slice(0, 1500), raw: e }); if (l.length > 20) l.shift();
 }

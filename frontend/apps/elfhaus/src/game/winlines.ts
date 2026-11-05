@@ -17,6 +17,7 @@ import { moneyWin } from './format';
 import type { LineWin } from './typesBookEvent';
 import { TG } from './tempo'; // anim-v4: win lines run at gameplay pace (not ANIM_TEMPO)
 import { sfx } from './audio';
+import { boardWin } from './boardfx';
 import { voice } from './voice';
 import { skipCounts, levelOf, WIN_EDGES, BIG_TIERS, maxLevel } from './countup';
 import { presenting, stage } from './winstage';
