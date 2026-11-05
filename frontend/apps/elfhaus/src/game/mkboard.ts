@@ -52,22 +52,88 @@ export function mkGeo(): MkGeo {
 		const bs0 = Math.max(0.92, Math.min(1.28, (hudY0 - below0 - 690) / (BH + FB)));
 		const menuB = (12 + Math.max(144 * f.k, Math.ceil(ST.tap / ST.s) + 2)) / f.k - f.oy / f.k;   // menu button bottom (design units)
 		const TOP_MIN = menuB + 12 + 64 + 412 * 0.4 * 0.62;   // logo top under the menu; v3.17: logo always clear of the frame top (y = T - 64)
-		const bs = Math.max(Math.min(bs0, BS_W), Math.min(BS_W, (hudY - below - TOP_MIN) / (BH + FB + FT)));
-		const by = hudY - below - (BH + FB) * bs, bx = 540 - BW * bs / 2, T = by - FT * bs;
+		let bs = Math.max(Math.min(bs0, BS_W), Math.min(BS_W, (hudY - below - TOP_MIN) / (BH + FB + FT)));
+		// tablet portrait: bs recomputed inside the tab block to leave a right column for spin
+		let by = (ST.tablet ? (DH - 300 - 24) : hudY) - (ST.tablet ? 20 : below) - (BH + FB) * bs, bx = 540 - BW * bs / 2, T = by - FT * bs;
 		const sb = (s: number) => Math.max(s, tt);
+		// v28c: phone = 2-row bar (Bal/Win top, Bet bottom) with spin in-bar; tablet portrait = land-style
+		// single-row meters + Bet, spin beside the board (thumb), turbo/auto under spin, buy left of board.
+		const BC = 540, tab = ST.tablet;
+		const hu2 = hu;
+		if (tab) {
+			// v28l: Roxy hidden; buy moves into the row under the board (buy, turbo, auto | spin); board fills width
+			const HBp = 330;
+			const hudYp = DH - HBp - 16;
+			const spSz = sb(240), abT = Math.max(132, t44);
+			const spinRow = spSz + 16;
+			const buyS = 0.92, buyW = 216 * buyS * 0.92, buyH = 240 * buyS * 0.92;
+			const TOPT = TOP_MIN + 110;   // v28m: room above the logo for Roxy's head+shoulders peek
+			const maxBsH = (hudYp - 18 - spinRow - TOPT) / (BH + FB + FT);
+			const maxBsW = (1080 - 40) / (BW + 2 * FT);
+			bs = Math.min(maxBsW, maxBsH);
+			const fw = (BW + 2 * FT) * bs;
+			bx = 540 - fw / 2 + FT * bs;
+			by = hudYp - 14 - spinRow - (BH + FB) * bs;
+			if (by - FT * bs < TOPT) by = TOPT + FT * bs;
+			T = by - FT * bs;
+			const BC2 = bx + BW * bs / 2;
+			const spX = Math.min(BC2 + fw / 2 - spSz / 2, 1080 - 24 - spSz / 2);
+			const spY = Math.min(by + (BH + FB) * bs + 8 + spSz / 2, hudYp - 10 - spSz / 2);
+			const autoX = spX - spSz / 2 - 22 - abT / 2;
+			const turboX = autoX - abT - 18;
+			const buyX = turboX - abT / 2 - 22 - buyW / 2;
+			const pairY = spY, buyY = Math.min(spY, hudYp - 10 - buyH / 2);
+			const mb = Math.max(148, t44), betHalf = 150, clear = betHalf + mb / 2 + 22;
+			const hudW = Math.min(1040, Math.max(fw + 40, 900)), hudX = BC2 - hudW / 2;
+			const balX = hudX + 36, winR = hudX + hudW - 36;
+			const zoneL = Math.max(200, (BC2 - clear) - balX), zoneR = Math.max(200, winR - (BC2 + clear));
+			return { mode: 'port', ...f, D, loose, bx, by, bs, bs0, T, T0: hudY0 - below0 - (BH + FB + FT) * bs0,
+				logo: { x: BC2, y: T - 56, s: 0.5 },
+				hud: { x: hudX, y: hudYp, w: hudW, h: HBp, r: 22 },
+				fBal: { x: balX, y: hudYp + 48, ls: 28, vs: 52, w: zoneL },
+				fBet: { x: BC2 - 84, y: hudYp + 48, ls: 28, vs: 52, w: 168 },
+				fWin: { x: BC2 + clear, y: hudYp + 48, ls: 28, vs: 52, w: zoneR },
+				minus: { x: BC2 - betHalf, y: hudYp + HBp / 2, s: mb, ic: 2.3 },
+				plus: { x: BC2 + betHalf, y: hudYp + HBp / 2, s: mb, ic: 2.3 },
+				spin: { x: spX, y: spY, s: spSz, ic: 2.5 },
+				auto: { x: autoX, y: pairY, s: abT, ic: 2.1 },
+				turbo: { x: turboX, y: pairY, s: abT, ic: 2.1 },
+				bonus: { v: 'v', x: buyX, y: buyY, s: buyS }, cmp };
+		}
+		// phone portrait
+		const HBp = HB + 110;   // taller plate so bet clears painted gold trim (hud_bar slice9 bottom)
+		const hudYp = hudY - (HBp - HB);
+		// v28g: button row centred in the board↔HUD gap so turbo/auto/buy never kiss the bar
+		const gapRow = Math.max(GAPB, 96);   // min clear air above the painted hud canvas
+		const belowP0 = 2 * gapRow + RH;
+		bs = Math.max(Math.min(bs0, BS_W), Math.min(BS_W, (hudYp - belowP0 - TOP_MIN) / (BH + FB + FT)));
+		by = hudYp - belowP0 - (BH + FB) * bs;
+		bx = 540 - BW * bs / 2;
+		T = by - FT * bs;
+		const boardFoot = by + (BH + FB) * bs;
+		const rowYp = (boardFoot + hudYp) / 2;   // dead-centre of the gap
+		const belowP = hudYp - boardFoot;
+		const bSz = Math.max(124 * hu2, t44);
+		const padB = Math.max(72 * hu2, HBp * (80 / 313) + 18);
+		const betY = hudYp + HBp - padB - bSz / 2 + 12;   // v28m: a little lower
+		const BX = BC - 70;   // v28m: bet group nudged left, away from spin
+		const topY = hudYp + 20 * hu2;
+		const zone = 360;
+		const spSz = sb(250 * hu2);
+		const abP = Math.max(156, t44);   // v28l: thumb-friendly row
 		return { mode: 'port', ...f, D, loose, bx, by, bs, bs0, T, T0: hudY0 - below0 - (BH + FB + FT) * bs0,
-			logo: { x: Math.max(272, 540 - BW * bs / 2 + 220), y: T - 64, s: 0.4 },
-			hud: { x: 14, y: hudY, w: 1052, h: HB, r: 22 },
-			fBal: { x: 14 + 40, y: hudY + 28 * hu, ls: 30 * hu, vs: 56 * hu, w: 400 }, fWin: { x: 14 + 470, y: hudY + 28 * hu, ls: 30 * hu, vs: 56 * hu, w: 300 },
-			// v3.17 (James: the +/- were ~70 px squares): 126 design (~46 px on a 390-wide phone), floor 44 screen px for
-			// touch; the bet row tightens around them: [-] left-aligned with BALANCE, BET between, [+] under WIN
-			fBet: { x: 14 + 190, y: hudY + 204 * hu, ls: 30 * hu, vs: 56 * hu, w: 200 },
-			minus: { x: 14 + 103, y: hudY + 250 * hu, s: Math.max(126 * hu, t44), ic: 2.3 }, plus: { x: 14 + 456 + Math.max(126 * hu, t44) / 2, y: hudY + 250 * hu, s: Math.max(126 * hu, t44), ic: 2.3 },
-			spin: { x: 14 + 904, y: hudY + 172 * hu, s: sb(236 * hu), ic: 2.55 },
-			auto: { x: 30 + ab / 2, y: rowY, s: ab, ic: 2.5 * kk }, turbo: { x: 30 + ab * 1.5 + 18 * kk, y: rowY, s: ab, ic: 2.5 * kk },
-			bonus: { v: 'p', x: 1066 - 290 * kk, y: rowY, s: kk }, cmp };
+			logo: { x: BC, y: T - 64, s: 0.4 },
+			hud: { x: 14, y: hudYp, w: 1052, h: HBp, r: 22 },
+			fBal: { x: BC - zone - 16, y: topY - 4, ls: 28 * hu2, vs: 66 * hu2, w: zone - 56 },   // v28l: ink ends clear of the Bet label
+			fWin: { x: BC + 16, y: topY - 4, ls: 28 * hu2, vs: 66 * hu2, w: Math.min(zone, (14 + 1052 - 36 - spSz) - 20 - (BC + 16)) },
+			fBet: { x: BX - 110, y: betY - bSz * 0.95, ls: 26 * hu2, vs: 60 * hu2, w: 220 },
+			minus: { x: BX - 170, y: betY, s: bSz, ic: 2.35 }, plus: { x: BX + 170, y: betY, s: bSz, ic: 2.35 },
+			spin: { x: 14 + 1052 - 36 - spSz / 2, y: hudYp + HBp / 2, s: spSz, ic: 2.6 },
+			auto: { x: 30 + abP / 2, y: rowYp, s: abP, ic: 2.3 },
+			turbo: { x: 30 + abP * 1.5 + 20, y: rowYp, s: abP, ic: 2.3 },
+			bonus: { v: 'p', x: 1066 - 290, y: rowYp, s: 0.95 }, cmp };
 	}
-	if (ST.phl) {
+	if (ST.phl)if (ST.phl) {
 		const D = { w: 1000, h: 562 }, f = fit(D), tt = t48(f.k), sb = (s: number) => Math.max(s, tt);
 		const bs = 0.56, bx = 52, by = 58;
 		const s0 = 0.64, bw = 216 * s0, bh = 240 * s0, ab = sb(64), gp = 12, top = 251 - (bh + gp + ab) / 2, pair = Math.max(bw, 2 * ab + 8);
@@ -81,19 +147,84 @@ export function mkGeo(): MkGeo {
 			turbo: { x: 606 + pair / 2 - ab / 2, y: top + bh + gp + ab / 2, s: ab, ic: 0.98 * ab / 64 },
 			bonus: { v: 'v', x: 606, y: top + bh / 2, s: s0 }, cmp };
 	}
-	const D = { w: 1920, h: 1080 }, f = fit(D), tt = t48(f.k), sb = (s: number) => Math.max(s, tt);
-	// v3.17 phones in landscape (text boost / 48 px floor): the BUY plate grows a little so the boosted label fits it,
-	// autoplay / turbo keep a gap between them, -/+ step out around the boosted BET value. Desktop (ph false) unchanged.
-	const mb = sb(116), ph = ST.tb > 1.001 || mb > 116;
-	const s0 = ph ? 1.2 : 1.05, bw = 216 * s0, bh = 240 * s0, ab = sb(106), gp = 18, top = 500 - (bh + gp + ab) / 2;
+	// v28i: tablet near-square gets a TALLER design so fit() doesn't letterbox 16:9 into a square
+	// window (that empty floor under the HUD). Desktop stays 1920×1080.
+	const tab = ST.tablet;
+	const tabAR = ST.w / Math.max(1, ST.h);
+	const D = tab
+		? { w: 1920, h: Math.max(1080, Math.round(1920 / Math.min(1.78, Math.max(1.05, tabAR)))) }
+		: { w: 1920, h: 1080 };
+	const f = fit(D), tt = t48(f.k), sb = (s: number) => Math.max(s, tt);
+	const mb = sb(tab ? 180 : 128), ph = ST.tb > 1.001 || mb > 116;
+	const s0 = tab ? 1.25 : ph ? 1.2 : 1.05, bw = 216 * s0, bh = 240 * s0;
+	const ab = sb(tab ? 120 : 106), gp = tab ? 22 : 18;
+	if (tab) {
+		// v28l: buy joins the right stack (buy, spin, auto, turbo); group shifts left; Roxy bigger at right
+		const buyS = 0.85, buyW = 216 * buyS * 0.92, buyH = 240 * buyS * 0.92;
+		const ROXY_CLEAR = Math.round(D.w * 0.80);
+		const spSz = sb(200);
+		const btnCol = Math.max(spSz, buyW) + 16;
+		const hudH = 300;
+		const hudY = D.h - hudH - 16;
+		const topMin = 215;
+		const maxBsH = (hudY - 24 - topMin) / (BH + FB + FT);
+		const playL = 64, playR = ROXY_CLEAR - 8;
+		const maxBsW = (playR - playL - btnCol - 14) / (BW + 2 * FT);
+		const bs = Math.min(1.32, maxBsH, maxBsW);
+		const fw = (BW + 2 * FT) * bs;
+		const playW = fw + 14 + btnCol;
+		const playX0 = playL + Math.max(0, (playR - playL - playW) / 2);
+		const bx = playX0 + FT * bs;
+		let by = hudY - 22 - (BH + FB) * bs;
+		if (by - FT * bs < topMin) by = topMin + FT * bs;
+		const BC = bx + BW * bs / 2;
+		const spinX = playX0 + fw + 14 + btnCol / 2 - 8;
+		const buyX = spinX, buyY = by - FT * bs + buyH / 2;
+		const spinY = buyY + buyH / 2 + 16 + spSz / 2;
+		const autoX = spinX, turboX = spinX;
+		const autoY = spinY + spSz / 2 + 14 + ab / 2;
+		const turboY = autoY + ab + 12;
+		const hudW = Math.min(1400, 2 * (BC - 44), 2 * (ROXY_CLEAR - 16 - BC));
+		const hudX = BC - hudW / 2;
+		const mbT = sb(Math.round(hudH * 0.45)), betHalf = 156, clear = betHalf + mbT / 2 + 52;   // v28m: tabP-sized +/-
+		const balX = hudX + 44, winR = hudX + hudW - 44;
+		const zoneL = Math.max(240, (BC - clear) - balX), zoneR = Math.max(240, winR - (BC + clear));
+				const tls = 42, tvs = 80;
+		return { mode: 'land', ...f, D, loose: false, bx, by, bs, T: by - FT * bs,
+			logo: { x: BC, y: by - FT * bs - 18, s: 0.44 },
+			hud: { x: hudX, y: hudY, w: hudW, h: hudH, r: 22 },
+			fBal: { x: balX, y: hudY + 50, ls: tls, vs: tvs, w: zoneL },
+			fBet: { x: BC - 96, y: hudY + 50, ls: tls, vs: tvs, w: 192 },
+			fWin: { x: BC + clear, y: hudY + 50, ls: tls, vs: tvs, w: zoneR },
+			minus: { x: BC - betHalf, y: hudY + hudH / 2 - 4, s: mbT, ic: 2.2 },
+			plus: { x: BC + betHalf, y: hudY + hudH / 2 - 4, s: mbT, ic: 2.2 },
+			spin: { x: spinX, y: spinY, s: spSz, ic: 2.05 },
+			auto: { x: autoX, y: autoY, s: ab, ic: 1.95 }, turbo: { x: turboX, y: turboY, s: ab, ic: 1.95 },
+			bonus: { v: 'v', x: buyX, y: buyY, s: buyS }, cmp };
+	}
+	const bx = 430, by = 170, bs = 1;
+	const BC = bx + BW * bs / 2;
+	const top = 500 - (bh + gp + ab) / 2;
 	const ax = Math.max(bw / 2 - ab / 2, (ab + gp) / 2);
-	return { mode: 'land', ...f, D, loose: false, bx: 430, by: 170, bs: 1, T: 136,
-		logo: { x: 430 + BW / 2, y: 150, s: 0.36 }, hud: { x: 40, y: 900, w: 1840, h: 168, r: 22 },
-		fBal: { x: 40 + 60, y: 900 + 44, ls: 22, vs: 42, w: 520 }, fBet: { x: 40 + 780, y: 900 + 44, ls: 22, vs: 42, w: 120 * (ph ? ST.tb : 1) },
-		fWin: { x: 40 + 1240, y: 900 + 44, ls: 22, vs: 42, w: 380 },
-		minus: { x: 40 + (ph ? 780 - 14 - mb / 2 : 700), y: 900 + 84, s: mb, ic: 2.1 }, plus: { x: 40 + (ph ? 780 + 120 * ST.tb + 14 + mb / 2 : 964), y: 900 + 84, s: mb, ic: 2.1 },
-		spin: { x: 40 + 1736, y: 900 + 84, s: sb(152), ic: 1.65 },
-		auto: { x: 236 - ax, y: top + bh + gp + ab / 2, s: ab, ic: 1.62 }, turbo: { x: 236 + ax, y: top + bh + gp + ab / 2, s: ab, ic: 1.62 },
+	const spSz = sb(168);
+	const hudW = 1520, hudH = 200, hudY = 868;
+	const hudX = BC - hudW / 2;
+	const betHalf = 130, clear = betHalf + mb / 2 + 24;
+	const balX = hudX + 40, winR = hudX + hudW - 40;
+	const zoneL = Math.max(200, (BC - clear) - balX), zoneR = Math.max(200, winR - (BC + clear));
+	const spinX = hudX + hudW + 16 + spSz / 2;
+	const spinY = hudY + hudH / 2;
+	const autoX = 236 - ax, turboX = 236 + ax, pairY = top + bh + gp + ab / 2;
+	return { mode: 'land', ...f, D, loose: false, bx, by, bs, T: by - FT * bs,
+		logo: { x: BC, y: by - FT * bs - 20, s: 0.36 },
+		hud: { x: hudX, y: hudY, w: hudW, h: hudH, r: 22 },
+		fBal: { x: balX, y: hudY + 32, ls: 20, vs: 40, w: zoneL },
+		fBet: { x: BC - 80 * (ph ? ST.tb : 1), y: hudY + 32, ls: 20, vs: 40, w: 160 * (ph ? ST.tb : 1) },
+		fWin: { x: BC + clear, y: hudY + 32, ls: 20, vs: 40, w: zoneR },
+		minus: { x: BC - betHalf, y: hudY + hudH / 2 - 4, s: mb, ic: 2.2 },
+		plus: { x: BC + betHalf, y: hudY + hudH / 2 - 4, s: mb, ic: 2.2 },
+		spin: { x: spinX, y: spinY, s: spSz, ic: 1.75 },
+		auto: { x: autoX, y: pairY, s: ab, ic: 1.62 }, turbo: { x: turboX, y: pairY, s: ab, ic: 1.62 },
 		bonus: { v: 'v', x: 236, y: top + bh / 2, s: s0 }, cmp };
 }
 
@@ -219,7 +350,7 @@ function canvasIn(id: string, before: boolean) {
 	if (!c) { c = document.createElement('canvas'); c.id = id; c.setAttribute('aria-hidden', 'true'); const f = $('#frame'); if (before) f.insertBefore(c, f.firstChild); else f.appendChild(c); }
 	return c;
 }
-const BET_VK = 0.82;
+const BET_VK = 0.92;
 let drawn = '';
 function drawFrame(u: number) {
 	// The board is see-through (PANEL_A) so the room / Roxy read faintly behind the reels; frame and sill are solid.

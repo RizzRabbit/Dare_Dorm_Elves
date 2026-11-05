@@ -134,3 +134,42 @@ html body.skin #rulesBody h3{padding:.3em 1.1em!important;text-align:center}
 /* uifix: info panel keeps a margin in short landscape so the painted rim + close X are clear of the screen edge */
 @media (max-height:500px){html body.skin .rules{inset:10px 18px!important;max-height:calc(100% - 20px)!important}}
 html body.skin .rules .rulesX,html body.skin #rulesClose{margin:6px!important}
+
+/* ---- UI overhaul (James 2026-11-05): painted hud_bar on #hud (mk layout)
+   Layout v2 and the mk mockup both set #bar/#strip to display:contents, so the old hud_bar skin on #bar never
+   painted and Stake showed the thin CSS pine/glass bar. The carved-wood plate now skins #hud itself. Sizes stay
+   with mkboard.ts (absolute). */
+html body.skin.mk #app #hud{background:none!important;border:0!important;box-shadow:none!important;
+  /* keep the mockup's own radius; the sprite paints over it */
+  overflow:visible!important}
+html body.skin.mk #app #hud::before{display:none!important}   /* chalet/board gold hairline: the plate paints its own trim */
+html body.skin.mk #app #hud::after{display:none!important}
+/* Bet +/-: gold plates already from skin.ts; keep the mk visual size, pad tap to >=44 via existing --hitPad */
+html body.skin.mk #app #hud :is(#betDown,#betUp){background:none!important;border-color:transparent!important;box-shadow:none!important}
+/* Spin: distinctive painted plate; drop the CSS gold square / pink rim from board.css + chalet.css */
+html body.skin.mk #app #hud #spinBtn{background:none!important;border-color:transparent!important;box-shadow:none!important;border-radius:0!important}
+/* Side buttons (menu/turbo/auto) and buy: drop CSS fills so only the painted pine/buy plates show */
+html body.skin.mk #app #hud :is(#menuBtn,#turboBtn,#autoBtn){background:none!important;border-color:transparent!important;box-shadow:none!important}
+html body.skin.mk #app #hud #buyBtn.plate{background:none!important;border-color:transparent!important;box-shadow:none!important;color:transparent!important}
+html body.skin.mk #app #hud #mkBuyGlow{display:none!important}
+/* meters: labels are painted gold title words, values painted cream; don't force CSS font sizes over mkboard --ls/--vs */
+html body.skin.mk #app #strip label,html body.skin.mk #app #strip span{color:transparent!important;text-shadow:none!important;-webkit-text-stroke:0!important}
+
+html body.skin.mk:not(.portrait) #app #strip .m:has(#balance) :is(label,span){text-align:right!important}
+html body.skin.mk:not(.portrait) #app #strip .m:has(#win) :is(label,span){text-align:left!important}
+html body.skin.mk:not(.portrait) #app #strip .m:has(#bet) :is(label,span){text-align:center!important}
+
+/* land: mirror Balance (right) / Win (left) toward the centred Bet; labels shrink so word sprites sit at the rim */
+html body.skin.mk:not(.portrait) #app #strip .m:has(#balance){align-items:flex-end!important}
+html body.skin.mk:not(.portrait) #app #strip .m:has(#win){align-items:flex-start!important}
+html body.skin.mk:not(.portrait) #app #strip .m:has(#bet){align-items:center!important}
+html body.skin.mk:not(.portrait) #app #strip .m:has(#balance) label{width:auto!important;max-width:100%!important;align-self:flex-end!important}
+html body.skin.mk:not(.portrait) #app #strip .m:has(#win) label{width:auto!important;max-width:100%!important;align-self:flex-start!important}
+html body.skin.mk:not(.portrait) #app #strip .m:has(#bet) label{width:auto!important;align-self:center!important}
+html body.skin.mk:not(.portrait) #app #strip .m:has(#balance) :is(#balance){width:100%!important;text-align:right!important}
+html body.skin.mk:not(.portrait) #app #strip .m:has(#win) :is(#win){width:100%!important;text-align:left!important}
+html body.skin.mk:not(.portrait) #app #strip .m:has(#bet) :is(#bet){width:100%!important;text-align:center!important}
+
+/* meters: never clip long balances / wins; bitmap shrink-to-fit inside the zone */
+html body.skin.mk #app #strip .m :is(#balance,#win,#bet){overflow:visible!important;max-width:100%!important;text-overflow:clip!important}
+html body.mk #app #strip .m span{overflow:visible!important;text-overflow:clip!important}
