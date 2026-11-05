@@ -37,7 +37,11 @@ export const EGW_STACK_X: number = G.egwStackX;        // EGW full-reel wild val
 /** Math win_level edges (x bet): standard (setWin) and endFeature (freeSpinEnd); the big-win stages map onto these. */
 export const WIN_LEVELS: { standard: number[]; endFeature: number[]; byMode?: Record<string, number[]> } = G.winLevels;
 /** math WIN_LEVEL_EDGES_BY_MODE (James 2026-10-30 19:28 CDT): the bonus buys DD / TD / Mystery / EGW size every banner tier x10. */
-export const winEdgesFor = (mode?: string): number[] => (mode && WIN_LEVELS.byMode?.[mode]) || WIN_LEVELS.standard;
+/** 2026-11-05 (James: MEGA in Wild Winter Spins on the real Stake test): the RGS mode string normalised (case, spaces,
+ *  UI names) so a bought round never falls back to the standard edges by a spelling. */
+const MODE_ALIAS: Record<string, string> = { wild_winter: 'egw', wildwinter: 'egw', wild_winter_spins: 'egw', bunny_slope: 'dare', black_diamond: 'double_dare', double_black: 'triple_dare', secret_santa: 'mystery' };
+export const normMode = (mode?: string) => { const m = String(mode ?? '').trim().toLowerCase().replace(/[\s-]+/g, '_'); return MODE_ALIAS[m] || m; };
+export const winEdgesFor = (mode?: string): number[] => { const m = normMode(mode); return (m && WIN_LEVELS.byMode?.[m]) || WIN_LEVELS.standard; };
 export const MYSTERY_ODDS: { none: number; double_dare: number; triple_dare: number; hidden: number } = G.mysteryOdds;
 export type Tier = 'dare' | 'double_dare' | 'triple_dare' | 'hidden';
 export const TIER_LABEL: Record<Tier, string> = { dare: 'Bunny Slope', double_dare: 'Black Diamond', triple_dare: 'Double Black', hidden: 'Powder Day' }; // math tier ids unchanged; Winter Chalet UI names (math 'hidden' = Powder Day)

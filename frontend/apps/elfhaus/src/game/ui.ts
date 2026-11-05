@@ -5,7 +5,7 @@ import { boardPulse, boardBigTier } from './boardfx';
 import { voice, VOICE } from './voice';
 import { frameHTML } from './wildframe';
 import ART_JSON from './art.generated.json';
-import { MAX_WIN_X, ROWS, REELS, SYMBOL_NAMES, WIN_LEVELS, winEdgesFor, TITLE_ART } from './config';
+import { MAX_WIN_X, ROWS, REELS, SYMBOL_NAMES, WIN_LEVELS, winEdgesFor, normMode, MODES, type ModeKey, TITLE_ART } from './config';
 import { elvesLevel } from './bigwinElves';
 import type { Group } from './typesBookEvent';
 import { DOTS } from './respin';
@@ -16,7 +16,12 @@ import { hasRig, ovEdgeHTML, rigGlowHTML, rigHTML, tileHTML, tileTopHTML, wildLe
 import { countTo, countMs, setAmount, countTiers, BIG_TIERS, tierPlan, isCounting, setWinLevels, levelOf, WIN_EDGES } from './countup';
 setWinLevels(WIN_LEVELS.standard); // v3.19: banner stages from the math's standard win levels
 /** v20: the round's win-level edges by its mode (math WIN_LEVEL_EDGES_BY_MODE; base / ante / Dare = standard). Called at every round start. */
-export function setRoundMode(mode?: string) { setWinLevels(winEdgesFor(mode)); }
+export let roundMinX = 0;
+export function setRoundMode(mode?: string) {
+	const m = normMode(mode), e = winEdgesFor(mode);
+	setWinLevels(e); roundMinX = m === 'egw' ? (MODES[m as ModeKey]?.cost ?? 0) : 0;   // EGW pays one setWin per round (the round total): no banner below the buy price
+	(globalThis as any).__elfWin = { mode, norm: m, edges: e, minX: roundMinX, wins: [] as unknown[] };   // read-only diagnostics
+}
 import { presenting, beginStage, endStage, skipStage } from './winstage';
 import { hold, tempo, gtempo } from './tempo';
 import { clearRace } from './winlines';

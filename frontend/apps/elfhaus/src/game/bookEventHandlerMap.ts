@@ -9,7 +9,7 @@ import { showRespin, endRespin, hideRespin } from './respin';
 import { lockFx, clearSymWins, symLand, symWin } from './fx';
 import { cardFlip } from './cardflip';
 import { timing, isSpinning, startSpin, markStopped, sinceStart, sleep, spinMini, stopMini, stopReel, stopLead } from './reels';
-import { $, S, k, bet, wait, titleHTML, banner, hideToast, bigWin, setWinMeter, clearLines, renderCell, renderOverlays, cellEl, setGem, ovMx, ovArt } from './ui';
+import { $, S, k, bet, wait, titleHTML, banner, hideToast, bigWin, roundMinX, setWinMeter, clearLines, renderCell, renderOverlays, cellEl, setGem, ovMx, ovArt } from './ui';
 import { playWins } from './winlines';
 import { puffWith } from './puff';
 import { wildLand, wfExpand } from './wildfx';
@@ -257,7 +257,9 @@ export const bookEventHandlerMap: Handlers = {
 	// is cross-checked, winLevel()); below the first banner level is a normal win, the max level is the wincap screen
 	async setWin(ev) {
 		const x = ev.amount / 100, lvl = winLevel(ev);
-		if (BIG_TIERS.length && bannerLevel(ev.amount, WIN_EDGES, BIG_TIERS[0].level, MAX_WIN_X)) { roxy('win'); await bigWin(x, undefined, lvl); }
+		const bl = BIG_TIERS.length ? bannerLevel(ev.amount, WIN_EDGES, BIG_TIERS[0].level, MAX_WIN_X, roundMinX) : 0;
+		(globalThis as any).__elfWin?.wins.push({ amount: ev.amount, x, lvl, book: ev.winLevel, banner: bl });
+		if (bl) { roxy('win'); await bigWin(x, undefined, lvl); }
 	},
 	async setTotalWin(ev) { const x = Math.min(ev.amount / 100, MAX_WIN_X); setWinMeter(x, !!(ev as { payout?: boolean }).payout); S.roundBase = x; },
 	async cardFlip(ev) {
