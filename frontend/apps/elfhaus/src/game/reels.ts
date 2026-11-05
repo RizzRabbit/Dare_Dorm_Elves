@@ -27,12 +27,12 @@ const bedOff = () => { bed?.stop(150); bed = null; };
 
 const sp = (ms: number) => Math.round(ms * SPIN_TEMPO);
 void STOP_TEMPO;
-// Stop schedule (bookEventHandlerMap): first reel ~0.80 s after the press, reels 0.32 s apart; within a reel the cells
-// stop top to bottom `casc` ms apart; a reel's last cell impacts ~`at` (+ pad - set) and has settled at at + pad.
-// Normal: last reel's impact ~2.04 s after the press (was 2.08 s + a 0.24 s drop-in). Turbo: the same motion, faster.
+// Stop schedule (bookEventHandlerMap): first reel ~0.55 s after the press, reels ~120 ms apart (even L->R stagger);
+// within a reel the cells stop top to bottom `casc` ms apart; a reel's last cell impacts ~`at` (+ pad - set) and has settled at at + pad.
+// Normal: last reel's impact ~0.90 s after the press (motion pass: shorter spin + stronger overshoot). Turbo: the same motion, faster.
 export const timing = () => (S.turbo
-	? { first: 300, gap: 100, ant: 220, antD: 240, resp: 240, land: 0, cell: 35, casc: 8 }
-	: { first: 600, gap: 200, ant: sp(420), antD: sp(440), resp: sp(360), land: 0, cell: sp(60), casc: 15 });
+	? { first: 240, gap: 80, ant: 180, antD: 200, resp: 200, land: 0, cell: 28, casc: 6 }
+	: { first: 420, gap: 120, ant: sp(420), antD: sp(440), resp: sp(360), land: 0, cell: sp(50), casc: 12 });
 // wu/amp: wind-up ms / pitches; acc: spin-up ms; v: pitches/s; D: nominal brake ms (Ds: anticipation); ov: overshoot
 // (pitches); set: settle ms; pw: brake power; pad: settle end after the scheduled stop; vS/dS: tease speed / ease ms;
 // st: start stagger per reel / per row ms; thd: tile thud ms
@@ -40,8 +40,8 @@ const reduced = () => typeof matchMedia !== 'undefined' && matchMedia('(prefers-
 // reduced motion: no wind-up tug, no overshoot / rebound (the trail, thud and glint are off in CSS)
 const P = () => { const p = P0(); return reduced() ? { ...p, amp: 0, ov: 0, wu: 0 } : p; };
 const P0 = () => (S.turbo
-	? { wu: 0, amp: 0, acc: 50, v: 26, D: 70, Ds: 240, ov: 0.12, set: 75, pw: 2, pad: 75, vS: 0.45, dS: 120, stR: 6, stW: 2, dMin: 50, dMax: 140, thd: 120 }
-	: { wu: 0, amp: 0, acc: 100, v: 18, D: 110, Ds: 420, ov: 0.12, set: 140, pw: 2, pad: 140, vS: 0.4, dS: 200, stR: 12, stW: 4, dMin: 80, dMax: 200, thd: 200 });
+	? { wu: 0, amp: 0, acc: 40, v: 30, D: 60, Ds: 200, ov: 0.22, set: 60, pw: 2.4, pad: 60, vS: 0.45, dS: 100, stR: 4, stW: 2, dMin: 40, dMax: 120, thd: 100 }
+	: { wu: 0, amp: 0, acc: 80, v: 22, D: 95, Ds: 420, ov: 0.30, set: 110, pw: 2.6, pad: 110, vS: 0.4, dS: 200, stR: 8, stW: 3, dMin: 70, dMax: 180, thd: 160 });
 type Prm = ReturnType<typeof P0>;
 // anticipation-cell motion (overrides P0 on teasing reels only; base reels unchanged)
 const TEASE = () => (S.turbo
@@ -171,7 +171,7 @@ function frame(now: number) {
 		if (m.ph === 3) { finish(C); continue; }
 		paint(C, m.s, pitch);
 		// light trail + stretch only at full speed
-		const k = Math.round(Math.max(0, Math.min(1, (Math.abs(m.v) / C.p.v - 0.8) / 0.2)) * 20) / 20;
+		const k = Math.round(Math.max(0, Math.min(1, (Math.abs(m.v) / C.p.v - 0.55) / 0.45)) * 20) / 20;
 		if (k !== C.tr) { C.tr = k; C.win.style.setProperty('--tr', String(k)); }
 	}
 	if (cells.size) raf = requestAnimationFrame(frame);
