@@ -61,34 +61,31 @@ export function mkGeo(): MkGeo {
 		const BC = 540, tab = ST.tablet;
 		const hu2 = hu;
 		if (tab) {
-			// v28j: Roxy hidden on tablet portrait — use full width; buy left column; spin below-right
+			// v28l: Roxy hidden; buy moves into the row under the board (buy, turbo, auto | spin); board fills width
 			const HBp = 330;
 			const hudYp = DH - HBp - 16;
-			const spSz = sb(240), abT = Math.max(128, t44);
-			const spinRow = spSz + 18;
-			const buyS = 0.9, buyW = 216 * buyS;
-			const leftCol = buyW + 36;
-			const maxBsH = (hudYp - 20 - spinRow - TOP_MIN) / (BH + FB + FT);
-			const maxBsW = (1080 - leftCol - 24) / (BW + 2 * FT);
-			bs = Math.min(BS_W, maxBsW, Math.max(0.95, maxBsH));
+			const spSz = sb(240), abT = Math.max(132, t44);
+			const spinRow = spSz + 16;
+			const buyS = 0.92, buyW = 216 * buyS * 0.92, buyH = 240 * buyS * 0.92;
+			const maxBsH = (hudYp - 18 - spinRow - TOP_MIN) / (BH + FB + FT);
+			const maxBsW = (1080 - 40) / (BW + 2 * FT);
+			bs = Math.min(maxBsW, maxBsH);
 			const fw = (BW + 2 * FT) * bs;
-			// centre board in remaining width right of buy column
-			bx = leftCol + (1080 - leftCol - 24 - fw) / 2 + FT * bs;
-			by = hudYp - 16 - spinRow - (BH + FB) * bs;
+			bx = 540 - fw / 2 + FT * bs;
+			by = hudYp - 14 - spinRow - (BH + FB) * bs;
 			if (by - FT * bs < TOP_MIN) by = TOP_MIN + FT * bs;
 			T = by - FT * bs;
 			const BC2 = bx + BW * bs / 2;
-			const spX = Math.min(bx + BW * bs + FT * bs - spSz / 2 - 4, 1080 - 20 - spSz / 2);
-			const spY = Math.min(by + (BH + FB) * bs + 10 + spSz / 2, hudYp - 14 - spSz / 2);
-			const autoX = spX - spSz / 2 - 14 - abT / 2;
-			const turboX = autoX - abT - 12;
-			const pairY = spY;
+			const spX = Math.min(BC2 + fw / 2 - spSz / 2, 1080 - 24 - spSz / 2);
+			const spY = Math.min(by + (BH + FB) * bs + 8 + spSz / 2, hudYp - 10 - spSz / 2);
+			const autoX = spX - spSz / 2 - 22 - abT / 2;
+			const turboX = autoX - abT - 18;
+			const buyX = turboX - abT / 2 - 22 - buyW / 2;
+			const pairY = spY, buyY = Math.min(spY, hudYp - 10 - buyH / 2);
 			const mb = Math.max(148, t44), betHalf = 150, clear = betHalf + mb / 2 + 22;
 			const hudW = Math.min(1040, Math.max(fw + 40, 900)), hudX = BC2 - hudW / 2;
 			const balX = hudX + 36, winR = hudX + hudW - 36;
 			const zoneL = Math.max(200, (BC2 - clear) - balX), zoneR = Math.max(200, winR - (BC2 + clear));
-			const buyX = leftCol / 2;
-			const buyY = by + BH * bs / 2;
 			return { mode: 'port', ...f, D, loose, bx, by, bs, bs0, T, T0: hudY0 - below0 - (BH + FB + FT) * bs0,
 				logo: { x: BC2, y: T - 56, s: 0.5 },
 				hud: { x: hudX, y: hudYp, w: hudW, h: HBp, r: 22 },
@@ -121,18 +118,18 @@ export function mkGeo(): MkGeo {
 		const topY = hudYp + 20 * hu2;
 		const zone = 360;
 		const spSz = sb(250 * hu2);
-		const abP = Math.max(120, t44);   // slightly smaller so the row clears the bar with air
+		const abP = Math.max(156, t44);   // v28l: thumb-friendly row
 		return { mode: 'port', ...f, D, loose, bx, by, bs, bs0, T, T0: hudY0 - below0 - (BH + FB + FT) * bs0,
 			logo: { x: BC, y: T - 64, s: 0.4 },
 			hud: { x: 14, y: hudYp, w: 1052, h: HBp, r: 22 },
-			fBal: { x: BC - zone - 16, y: topY, ls: 28 * hu2, vs: 50 * hu2, w: zone },
-			fWin: { x: BC + 16, y: topY, ls: 28 * hu2, vs: 50 * hu2, w: zone },
-			fBet: { x: BC - 110, y: betY - bSz * 0.9, ls: 26 * hu2, vs: 48 * hu2, w: 220 },
+			fBal: { x: BC - zone - 16, y: topY - 4, ls: 28 * hu2, vs: 66 * hu2, w: zone - 56 },   // v28l: ink ends clear of the Bet label
+			fWin: { x: BC + 16, y: topY - 4, ls: 28 * hu2, vs: 66 * hu2, w: Math.min(zone, (14 + 1052 - 36 - spSz) - 20 - (BC + 16)) },
+			fBet: { x: BC - 110, y: betY - bSz * 0.95, ls: 26 * hu2, vs: 60 * hu2, w: 220 },
 			minus: { x: BC - 170, y: betY, s: bSz, ic: 2.35 }, plus: { x: BC + 170, y: betY, s: bSz, ic: 2.35 },
 			spin: { x: 14 + 1052 - 36 - spSz / 2, y: hudYp + HBp / 2, s: spSz, ic: 2.6 },
 			auto: { x: 30 + abP / 2, y: rowYp, s: abP, ic: 2.3 },
-			turbo: { x: 30 + abP * 1.5 + 16, y: rowYp, s: abP, ic: 2.3 },
-			bonus: { v: 'p', x: 1066 - 260, y: rowYp, s: Math.min(kk, 0.72) }, cmp };
+			turbo: { x: 30 + abP * 1.5 + 20, y: rowYp, s: abP, ic: 2.3 },
+			bonus: { v: 'p', x: 1066 - 290, y: rowYp, s: 0.95 }, cmp };
 	}
 	if (ST.phl)if (ST.phl) {
 		const D = { w: 1000, h: 562 }, f = fit(D), tt = t48(f.k), sb = (s: number) => Math.max(s, tt);
@@ -160,41 +157,37 @@ export function mkGeo(): MkGeo {
 	const s0 = tab ? 1.25 : ph ? 1.2 : 1.05, bw = 216 * s0, bh = 240 * s0;
 	const ab = sb(tab ? 120 : 106), gp = tab ? 22 : 18;
 	if (tab) {
-		// v28j: buy fully on-screen; bigger board+spin+HUD centred in the band left of Roxy
-		const buyS = 1.05;                     // plate scale (mkPlace also *0.92)
-		const buyW = 216 * buyS * 0.92;
-		const buyPad = 32;                      // margin from stage left (keep Buy fully on-screen)
-		const buyX = buyW / 2 + buyPad;         // never clipped
-		const buyRight = buyX + buyW / 2 + 16;
-		const ROXY_CLEAR = Math.round(D.w * 0.875); // end UI before her torso; she stands ~0.94 Dw
+		// v28l: buy joins the right stack (buy, spin, auto, turbo); group shifts left; Roxy bigger at right
+		const buyS = 0.85, buyW = 216 * buyS * 0.92, buyH = 240 * buyS * 0.92;
+		const ROXY_CLEAR = Math.round(D.w * 0.80);
 		const spSz = sb(200);
-		const btnCol = spSz + 16;
+		const btnCol = Math.max(spSz, buyW) + 16;
 		const hudH = 300;
 		const hudY = D.h - hudH - 16;
-		const topMin = 215;   // v28k: full logo (≈135 above frame) + top margin clear of menu
+		const topMin = 215;
 		const maxBsH = (hudY - 24 - topMin) / (BH + FB + FT);
-		const playL = buyRight, playR = ROXY_CLEAR - 8;
-		const maxBsW = (playR - playL - btnCol - 12) / (BW + 2 * FT);
-		const bs = Math.min(1.32, maxBsH, Math.max(1.05, maxBsW));
+		const playL = 64, playR = ROXY_CLEAR - 8;
+		const maxBsW = (playR - playL - btnCol - 14) / (BW + 2 * FT);
+		const bs = Math.min(1.32, maxBsH, maxBsW);
 		const fw = (BW + 2 * FT) * bs;
-		const playW = fw + 12 + btnCol;
-		const playX0 = playL + Math.max(0, (playR - playL - playW) / 2); // centre group in free band
+		const playW = fw + 14 + btnCol;
+		const playX0 = playL + Math.max(0, (playR - playL - playW) / 2);
 		const bx = playX0 + FT * bs;
 		let by = hudY - 22 - (BH + FB) * bs;
 		if (by - FT * bs < topMin) by = topMin + FT * bs;
 		const BC = bx + BW * bs / 2;
-		const spinX = playX0 + fw + 12 + spSz / 2;
-		const spinY = by + BH * bs * 0.38;
+		const spinX = playX0 + fw + 14 + btnCol / 2 - 8;
+		const buyX = spinX, buyY = by - FT * bs + buyH / 2;
+		const spinY = buyY + buyH / 2 + 16 + spSz / 2;
 		const autoX = spinX, turboX = spinX;
-		const autoY = spinY + spSz / 2 + 12 + ab / 2;
-		const turboY = autoY + ab + 10;
-		const hudW = Math.max(800, Math.min(1400, 2 * (BC - 24), 2 * (ROXY_CLEAR - 16 - BC)));
+		const autoY = spinY + spSz / 2 + 14 + ab / 2;
+		const turboY = autoY + ab + 12;
+		const hudW = Math.min(1400, 2 * (BC - 44), 2 * (ROXY_CLEAR - 16 - BC));
 		const hudX = BC - hudW / 2;
 		const betHalf = 170, clear = betHalf + mb / 2 + 28;
 		const balX = hudX + 44, winR = hudX + hudW - 44;
 		const zoneL = Math.max(240, (BC - clear) - balX), zoneR = Math.max(240, winR - (BC + clear));
-		const buyY = by + BH * bs * 0.28; // upper board — clear fireplace stocking
-		const tls = 42, tvs = 80;
+				const tls = 42, tvs = 80;
 		return { mode: 'land', ...f, D, loose: false, bx, by, bs, T: by - FT * bs,
 			logo: { x: BC, y: by - FT * bs - 18, s: 0.44 },
 			hud: { x: hudX, y: hudY, w: hudW, h: hudH, r: 22 },
