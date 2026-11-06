@@ -145,13 +145,20 @@ function style(el: HTMLElement, force: boolean): St {
 }
 
 // ---------- display pool (one per DOM leaf, reused across frames) ----------
-type Out = { d: Container; used: number; kind: string };
+type Out = { d: Container; used: number; kind: string; cv?: HTMLCanvasElement };
 const outs = new WeakMap<Element, Out>();
 const live = new Set<Out>();
 let frameNo = 0;
+function releaseOut(o: Out) {
+	o.d.removeFromParent();
+	if (o.kind !== 'db' && !o.d.destroyed) o.d.destroy({ children: true });
+	// merge lean snapshots are uploaded once; dropping the sprite must free the GPU copy too
+	if (o.cv) { const t = cvTex.get(o.cv); if (t) { cvTex.delete(o.cv); try { t.destroy(true); } catch { /* already destroyed */ } } o.cv = undefined; }
+	live.delete(o);
+}
 function out(el: Element, kind: string, make: () => Container): Out {
 	let o = outs.get(el);
-	if (!o || o.kind !== kind || (o.d.destroyed && kind !== 'db') || !live.has(o)) { if (o) { o.d.removeFromParent(); if (o.kind !== 'db' && !o.d.destroyed) o.d.destroy({ children: true }); live.delete(o); } o = { d: make(), used: 0, kind }; outs.set(el, o); live.add(o); }
+	if (!o || o.kind !== kind || (o.d.destroyed && kind !== 'db') || !live.has(o)) { if (o) releaseOut(o); o = { d: make(), used: 0, kind }; outs.set(el, o); live.add(o); }
 	o.used = frameNo; return o;
 }
 const SKIP = /\b(tGl|tGw|rgShine|wFrame|ovWinO|ovGlow|lock|nm|plate|mfRays|mfCore)\b/;
@@ -392,8 +399,10 @@ function walk(el: HTMLElement, parent: Af, pc: Ctx, isRoot: boolean) {
 			const cv = el as unknown as HTMLCanvasElement;
 			if (base.f & F_DB) { const d = dbDisplay(cv); if (d) { const o = out(el, 'db', () => d.root); if (o.d !== d.root) o.d = d.root; if (d.root.destroyed) return; if (d.root.parent !== c.host) c.host.addChild(d.root); { const k = h / d.H; place(d.root, M, (w - d.W * k) / 2, 0, k, k); } d.root.alpha = c.op; d.root.zIndex = order++; d.root.visible = true; } return; }
 			if (!cv.width) return;
-			let t = cvTex.get(cv); if (!t) { t = Texture.from(cv); cvTex.set(cv, t); }
-			sprite(el, t, c, 0, 0, w, h, s); return;
+			let t = cvTex.get(cv); if (!t || (t as Texture & { destroyed?: boolean }).destroyed) { t = Texture.from(cv); cvTex.set(cv, t); }
+			sprite(el, t, c, 0, 0, w, h, s);
+			const held = outs.get(el); if (held) held.cv = cv;
+			return;
 		}
 		if (tag === 'IMG') {
 			const im = el as HTMLImageElement, t = im.currentSrc || im.src ? source(im.currentSrc || im.src) : null; if (!t) return;
@@ -456,7 +465,7 @@ function tick() {
 	// the frame's fire light and glint, over the frame back (they were DOM over #mkFrame)
 	const fb: Ctx = { M: [1, 0, 0, 1, 0, 0], op: 1, br: 1, host: layer.frameBack, glow: false };
 	for (const e of extras) { if (!e.isConnected) { geoDirty = true; continue; } for (const a of e.getAnimations({ subtree: true })) { const t = (a.effect as KeyframeEffect | null)?.target as Element | null; if (t) { const l = running.get(t); if (l) l.push(a); else running.set(t, [a]); } } walk(e, fb.M, fb, false); }
-	for (const x of live) if (x.d.destroyed) live.delete(x); else if (x.used !== frameNo) { if (x.d.visible) x.d.visible = false; if (!x.d.parent || x.used < frameNo - 120) { x.d.removeFromParent(); if (x.kind !== 'db') x.d.destroy({ children: true }); live.delete(x); } }
+	for (const x of live) if (x.d.destroyed) live.delete(x); else if (x.used !== frameNo) { if (x.d.visible) x.d.visible = false; if (!x.d.parent || x.used < frameNo - 120) releaseOut(x); }
 	for (const k of liveClips) if (k.used !== frameNo) { k.c.visible = false; if (k.used < frameNo - 120) { k.c.removeFromParent(); liveClips.delete(k); } } else k.c.visible = true;
 	if (import.meta.env.DEV) { msLog.push(performance.now() - t0); if (msLog.length > 600) msLog.shift(); }
 	return true;

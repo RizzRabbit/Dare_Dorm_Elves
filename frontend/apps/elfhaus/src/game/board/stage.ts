@@ -12,6 +12,7 @@
 // Rendered once per frame at device px (stage CSS scale x devicePixelRatio, capped 3), only while something is live.
 import { Application, Container, Sprite, Texture } from 'pixi.js';
 import { FRZ } from '../layers';
+import { watchCanvas } from '../diag';
 
 export const BL = { frameBack: 0, winGlow: 5, reels: 10, symFx: 30, lines: 40, winAmt: 50, lip: 60, banners: 70 } as const;
 export type BLayer = keyof typeof BL;
@@ -47,7 +48,7 @@ export function boardStage() {
 		const a = new Application();
 		try { await a.init({ backgroundAlpha: 0, antialias: true, preference: 'webgl', autoDensity: false, hello: false, sharedTicker: false, autoStart: false, width: 8, height: 8 }); }
 		catch (e) { console.warn('board stage', e); return null; }
-		const cv = a.canvas as HTMLCanvasElement; cv.id = 'boardStage'; cv.setAttribute('aria-hidden', 'true'); fr.appendChild(cv);
+		const cv = a.canvas as HTMLCanvasElement; cv.id = 'boardStage'; cv.setAttribute('aria-hidden', 'true'); fr.appendChild(cv); watchCanvas(cv, 'board');
 		a.stage.sortableChildren = true; fxRoot = new Container(); fxRoot.label = 'boardFx'; fxRoot.sortableChildren = true; a.stage.addChild(fxRoot);
 		for (const n of Object.keys(BL) as BLayer[]) { const c = new Container(); c.label = n; c.zIndex = BL[n]; c.sortableChildren = true; layer[n] = c; fxRoot.addChild(c); }
 		app = a; place();

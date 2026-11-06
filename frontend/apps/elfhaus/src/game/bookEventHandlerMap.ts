@@ -28,6 +28,7 @@ import { boardTease, boardPunch } from './boardfx';
 import { sfx, loop, music, musicSting, stingInMs, beatSnapMs, duck, duckFor, playVoice, type Handle } from './audio';
 import { voice, voiceSpin, teaseOk } from './voice';
 import { payoutFlow } from './payoutFlow';
+import { crumb, scrub, setPhase } from './diag';
 import { bannerLevel } from './bannerLevel';
 import { titleType, titleTypeMirror } from './titletype';
 import { ninePanel, CARD, BTN, WINDOW } from './ninepanel';
@@ -36,7 +37,7 @@ import { ninePanel, CARD, BTN, WINDOW } from './ninepanel';
 const scattersOnBoard = (): Pos[] => S.sym.flatMap((col, reel) => col.map((n, row) => ({ reel, row, n }))).filter((c) => c.n === 'S').map(({ reel, row }) => ({ reel, row }));
 const TL = (t: Tier) => TIER_LABEL[t].toUpperCase();
 const setFsTotal = (n: number) => { const el = $('#fsCount'); el.textContent = el.textContent!.replace(/\/ \d+/, '/ ' + n); };
-const showFsBar = () => { setBg(true); S.inBonus = true; document.body.classList.add('inBonus'); $('#fsBar').classList.remove('hidden'); };
+const showFsBar = () => { setBg(true); S.inBonus = true; document.body.classList.add('inBonus'); $('#fsBar').classList.remove('hidden'); setPhase('bonus'); };
 /** Scatter highlight: the Ski Passes play their win loop, everything else dims. */
 async function showScatters(ps: Pos[], ms: number) {
 	if (!ps.length) return;
@@ -87,7 +88,7 @@ export function startGate(I: HTMLElement, autoMs = 0): Promise<void> {
 /** v3.18b: autoplay with the AUTO-PLAY BONUS toggle on plays bonuses hands-free; otherwise every bonus waits for taps. */
 const handsFree = () => S.auto > 0 && S.autoBonus;
 
-export const endBonusUi = () => { music('base'); setBg(false); document.body.classList.remove('inBonus'); $('#fsBar').classList.add('hidden'); $('#intro').classList.add('hidden'); $('#fsMore').classList.add('hidden'); S.inBonus = false; };
+export const endBonusUi = () => { music('base'); setBg(false); document.body.classList.remove('inBonus'); $('#fsBar').classList.add('hidden'); $('#intro').classList.add('hidden'); $('#fsMore').classList.add('hidden'); S.inBonus = false; setPhase('base'); };
 
 /** EGW: the reels named by egwStart (reel -> stack value). The math sends them as already-locked full reels in the
  * next reveal; that reveal spins them like any other reel instead (they stop left to right with the normal settle and
@@ -427,5 +428,7 @@ export async function playBookEvents(events: BookEvent[]) {
 export function feError(where: string, e: unknown) {
 	console.error('[elfhaus] ' + where, e);
 	const g = globalThis as any, l = (g.__elfErr ||= []);
-	l.push({ where, at: new Date().toISOString(), msg: String((e as any)?.message ?? e), stack: String((e as any)?.stack ?? '').slice(0, 1500), raw: e }); if (l.length > 20) l.shift();
+	const msg = String((e as any)?.message ?? e);
+	l.push({ where, at: new Date().toISOString(), msg, stack: String((e as any)?.stack ?? '').slice(0, 1500), raw: e }); if (l.length > 20) l.shift();
+	crumb('fe', { where: scrub(where), msg: scrub(msg) });
 }

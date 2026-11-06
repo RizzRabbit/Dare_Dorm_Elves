@@ -17,6 +17,7 @@ import LIGHTS from '../chalet/bglights.json';
 import { toStage } from '../stage';
 import { P as PL, ROOMS, buildRoom, camTick, dAt, listenCam, loadFx, loadRoom, placeShadows, reduced, roomOn, tex, tickRoom, wallItem, type Key } from './room';
 import { frameFire, frameGlint, placeDepth } from './depth';
+import { watchCanvas } from '../diag';
 
 export let app: Application | null = null;
 export let rig: RoxyAdapter | null = null;
@@ -148,6 +149,7 @@ export async function initScene(): Promise<boolean> {
 		const a = new Application();
 		await a.init({ canvas: cv, width: ST.w, height: ST.h, resolution: res(), autoDensity: false, backgroundAlpha: 0, antialias: true,
 			preference: 'webgl', autoStart: true, sharedTicker: false, hello: false, powerPreference: 'high-performance' });
+		watchCanvas(cv, 'scene');
 		const [r] = await Promise.all([createRoxy(), loadFx(), loadRoom(ST.portrait ? 'port' : 'land')]);
 		rig = r; app = a;
 		roxyL.addChild(r.view, roxyMask); clipRoxy(null);

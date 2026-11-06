@@ -28,6 +28,8 @@ import { setSocial, isSocial, t } from './strings';
 import { $, S, ART, bet, titleHTML, buildCells, renderAll, renderOverlays, setOverlayHook, resetWinMeter, setRoundMode, banner, waitRaw, preloadStacks } from './ui';
 import { skipHolds, syncTempo } from './tempo';
 import { playBookEvents, endBonusUi, feError } from './bookEventHandlerMap';
+import { crumb, diagPhase, installDiag, setPhase } from './diag';
+import { dbStats } from './dbstacks';
 import { initRoxy, placeRoxy } from './roxy';
 import { initStacks, stackIdle } from './stacks';
 import { initSkin } from './skin';
@@ -122,7 +124,7 @@ function setStrip() {
 function message(title: string, body: string, opts: { reload?: boolean } = {}) {
 	$('#msgTitle').textContent = title; $('#msgBody').textContent = body;
 	const b = $('#msgOk'); b.textContent = opts.reload ? 'RELOAD' : 'OK';
-	b.onclick = () => (opts.reload ? location.reload() : closePanel('#msg'));
+	b.onclick = () => { if (!opts.reload) { closePanel('#msg'); return; } crumb('explicit-reload', { phase: diagPhase() }); location.reload(); };
 	setClosable('#msg', !opts.reload); $('#msg').classList.toggle('fatal', !!opts.reload);
 	openPanel('#msg');
 }
@@ -239,6 +241,7 @@ async function round(mode: ModeKey) {
 	// so its reel would "land" instantly at reveal: the bonus-buy reel-5-first bug)
 	document.querySelectorAll<HTMLElement>('#cells .cell').forEach((c) => { c.classList.remove('locked'); c.style.visibility = ''; });
 	startSpin();
+	setPhase('spin');
 	try {
 		const data: any = await requestBet({ sessionID: url.sessionID, rgsUrl: url.rgsUrl, currency: S.currency, amount: bet(), mode });
 		if (data?.error) throw data;
@@ -252,7 +255,7 @@ async function round(mode: ModeKey) {
 		if (S.auto > 0 && autoStopReason(S.meterX * bet())) stopAuto();
 	} catch (e) {
 		stopAuto(); endBonusUi(); abortSpin(); renderAll(); showError(e);
-	} finally { setBusy(false); }
+	} finally { setBusy(false); setPhase('idle'); }
 	if (S.auto > 0) { S.auto--; setAuto(); if (S.auto) setTimeout(() => { if (S.auto) round(spinMode()); }, 300); }
 	// v3.17 LOCKED James rule (overrides re-audit M5's 'disarm after the round'): a confirmed mode (dare, double_dare,
 	// triple_dare, mystery, egw, ante) stays armed for every spin press and autoplay until the player turns it off (active
@@ -658,6 +661,7 @@ function applyJurisdiction() {
 const IDLE = [['H1', 'L2', 'L4', 'H3'], ['L1', 'H2', 'L5', 'L3'], ['H4', 'L3', 'W', 'L1'], ['L5', 'H1', 'L2', 'H2'], ['L4', 'L1', 'H3', 'L5']];
 
 export async function initGame() {
+	installDiag(() => dbStats());
 	applyLayers();   // fix6 #25: the one layer map (layers.ts)
 	setLocale(url.lang);
 	initAudio(); initVoiceIdle(); // reads the sound switches; audio itself starts on the first tap

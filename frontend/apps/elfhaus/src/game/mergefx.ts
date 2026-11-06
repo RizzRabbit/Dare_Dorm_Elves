@@ -24,7 +24,8 @@ import { mergeFx, wfExpand } from './wildfx';
 import { grab } from './combine';
 import { toStage } from './stage';
 import { hasStack, stackOnce, stackLetters, stackWin, stackWinOff, stackPrepare, stackRelease, stackWarm, stackReact, stackReactSkip } from './stacks';
-import { dbSnapshot } from './dbstacks';
+import { dbSnapshot, dbStats } from './dbstacks';
+import { setPhase } from './diag';
 import { T } from './tempo';
 
 let skipping = false, running = 0;
@@ -147,6 +148,7 @@ async function stackFromSingles(reel: number, render: (frameDelay?: number) => v
 export async function mergeIn(reels: number[], values: number[], product: number, apply: () => void) {
 	stackReactSkip(); // the lean snapshots idle art
 	begin();
+	setPhase('merge', dbStats());
 	const B = $('#board'), n = reels.length, big = n >= 4, lo = reels[0], step = n > 1 ? pos(lo + 1, 0).x - pos(lo, 0).x : S.cell, x0 = pos(lo, 0).x;
 	const made: HTMLElement[] = [];
 	let stage: ReturnType<typeof leanStage> | null = null;
@@ -214,6 +216,7 @@ export async function mergeIn(reels: number[], values: number[], product: number
 		const ov = ovOf(lo), mx = ov?.querySelector<HTMLElement>('.mx'); if (mx) { mx.style.opacity = ''; setGem(mx, product, false); }
 		document.querySelectorAll('#flyLayer .fly').forEach((f) => f.remove());
 		end();
+		setPhase(S.inBonus ? 'bonus' : 'board', dbStats());
 	}
 }
 

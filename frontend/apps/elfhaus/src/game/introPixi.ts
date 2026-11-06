@@ -16,6 +16,7 @@ import { rig, roxyAt, sceneHold } from './scene/scene';
 import ARTG from './art.generated.json';
 import { symArtReady } from './symrig';
 import { dbStill } from './dbstacks';
+import { releaseIntroGpu, watchCanvas } from './diag';
 const TITLE = ARTG.logo || 'art/logo.webp';
 import { EGW_STACK_X } from './config';
 import { sfx } from './audio';
@@ -334,7 +335,7 @@ function finish() {   // end state (also the skip)
   if (state === 'done') return; state = 'done';
   applyCam(1); for (const id of [...BOARD, 'top', 'hud']) setEl(id, 0, 1);
   release(); for (const e of camEls()) e.style.transformOrigin = '';
-  if (app) { app.ticker.stop(); const c = app.canvas; app.stage.removeChildren().forEach((o) => o.destroy({ children: true })); c?.remove?.(); app = null; /* never destroy a Pixi 8 renderer while others live (shared batch pool) */ }
+  if (app) { app.ticker.stop(); const c = app.canvas; app.stage.removeChildren().forEach((o) => o.destroy({ children: true })); releaseIntroGpu(app); c?.remove?.(); app = null; /* never destroy a Pixi 8 renderer while others live (shared batch pool): resize to 1x1 frees the framebuffer instead */ }
   document.body.classList.remove('introOn'); (window as any).ELFHAUS_INTRO_DONE = true; doneRes();
 }
 // L2: a user skip is no longer a hard cut: the game snaps to its end state underneath and the frozen vestibule frame
@@ -397,7 +398,7 @@ export async function initIntro(progress: () => number): Promise<boolean> {
   const L = $id('loader'); if (!L) return false;
   try {
     fitStage();
-    const cv = document.createElement('canvas'); cv.id = 'introCv'; cv.setAttribute('aria-hidden', 'true'); L.before(cv);
+    const cv = document.createElement('canvas'); cv.id = 'introCv'; cv.setAttribute('aria-hidden', 'true'); L.before(cv); watchCanvas(cv, 'intro');
     const a = new Application();
     await a.init({ canvas: cv, width: ST.w, height: ST.h, resolution: Math.min(2, Math.max(0.5, ST.s * (window.devicePixelRatio || 1))), autoDensity: false,
       backgroundAlpha: 0, antialias: true, preference: 'webgl', sharedTicker: false, hello: false, autoStart: false });
