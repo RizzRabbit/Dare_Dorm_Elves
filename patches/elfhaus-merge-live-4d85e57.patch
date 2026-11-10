@@ -1,0 +1,1097 @@
+diff -ruN a/frontend/apps/elfhaus/package.json b/frontend/apps/elfhaus/package.json
+--- a/frontend/apps/elfhaus/package.json	2026-11-10 03:22:56.800218583 +0000
++++ b/frontend/apps/elfhaus/package.json	2026-11-10 03:43:03.042139259 +0000
+@@ -8,7 +8,7 @@
+ 		"sync": "node scripts/sync-art.mjs && node scripts/sync-config.mjs",
+ 		"dev": "node scripts/sync-art.mjs && node scripts/sync-config.mjs && vite dev --host",
+ 		"build": "node scripts/sync-art.mjs && node scripts/sync-config.mjs && node scripts-build.mjs",
+-		"test": "node scripts/sync-config.mjs && node scripts/test-format.mjs && node scripts/test-books.mjs && node scripts/test-voice.mjs && node scripts/test-egw.mjs && node scripts/test-arm.mjs && node scripts/test-winstages.mjs && node scripts/test-payout.mjs && node scripts/test-banner.mjs && node scripts/test-balance.mjs && node --experimental-strip-types scripts/test-reload.mjs && node --experimental-strip-types scripts/test-winsharp.mjs",
++		"test": "node scripts/sync-config.mjs && node scripts/test-format.mjs && node scripts/test-books.mjs && node scripts/test-voice.mjs && node scripts/test-egw.mjs && node scripts/test-arm.mjs && node scripts/test-winstages.mjs && node scripts/test-payout.mjs && node scripts/test-banner.mjs && node scripts/test-balance.mjs && node --experimental-strip-types scripts/test-reload.mjs && node --experimental-strip-types scripts/test-winsharp.mjs && node --experimental-strip-types scripts/test-mergeflash.mjs && node --experimental-strip-types scripts/test-mergebeat.mjs",
+ 		"package": "node scripts/package-release.mjs",
+ 		"preview": "vite preview"
+ 	},
+diff -ruN a/frontend/apps/elfhaus/scripts/test-mergebeat.mjs b/frontend/apps/elfhaus/scripts/test-mergebeat.mjs
+--- a/frontend/apps/elfhaus/scripts/test-mergebeat.mjs	1970-01-01 00:00:00.000000000 +0000
++++ b/frontend/apps/elfhaus/scripts/test-mergebeat.mjs	2026-11-10 03:50:55.445723272 +0000
+@@ -0,0 +1,272 @@
++// Merge clock and choreography. Durations are real milliseconds (turbo × 0.6). A tap advances one stage.
++// The joining overlays stay on screen through the wind-up; their atlases drop only at the hit, before the group loads.
++import { readFileSync } from 'node:fs';
++import { mkdtemp, writeFile, rm } from 'node:fs/promises';
++import { tmpdir } from 'node:os';
++import { join } from 'node:path';
++import { spawn } from 'node:child_process';
++import { createRequire } from 'node:module';
++import { fileURLToPath } from 'node:url';
++import { mergeAmp, mergeMs, MERGE_BEAT, MERGE_HIT } from '../src/game/mergeclock.ts';
++
++const require = createRequire(import.meta.url);
++const app = fileURLToPath(new URL('..', import.meta.url));
++let fail = 0;
++const ok = (c, m) => { if (c) console.log('  OK ' + m); else { fail++; console.error('  FAIL ' + m); } };
++const src = (p) => readFileSync(new URL(p, import.meta.url), 'utf8');
++
++console.log('\n=== merge clock (same ms at any refresh rate) ===');
++ok(MERGE_BEAT === 400 && MERGE_HIT === 50, 'beat is 400 ms and the hit pause is 50 ms');
++ok(mergeMs(400, false) === 400 && mergeMs(50, false) === 50, 'normal pace keeps the written milliseconds');
++ok(mergeMs(400, true) === 240 && mergeMs(50, true) === 30, 'turbo is 60% (240 ms and 30 ms)');
++ok(mergeMs(0, false) === 0 && mergeMs(0, true) === 0, 'a zero delay stays zero');
++ok(mergeAmp(false) === 1 && mergeAmp(true) === 0.5, 'reduced motion halves amplitude and does not change the clock');
++
++console.log('\n=== merge source guards ===');
++{
++	const mf = src('../src/game/mergefx.ts');
++	const db = src('../src/game/dbstacks.ts');
++	const body = mf.slice(mf.indexOf('export async function mergeIn'));
++	const rel = body.indexOf('stackRelease(olds)');
++	const prep = body.indexOf('stackPrepare(reels)');
++	ok(rel > 0 && prep > rel, 'singles are released before the group atlas is prepared');
++	ok(body.indexOf('leanStage(olds)') > body.indexOf('await beat(MERGE_BEAT)'), 'the snapshot is taken after the live wind-up, not at the start');
++	ok(body.includes('skipping = false'), 'turbo does not snap the merge');
++	ok(body.includes('cut()') && body.includes("crumb('merge'"), 'an animation error still applies the merge and does not reject');
++	ok(!/createLinearGradient|box-shadow|linear-gradient|radial-gradient/.test(mf), 'no drawn gradients or shadows');
++	ok(mf.includes("play('fx_wild'") && mf.includes("play('fx_feat', 'burst'"), 'flash and snow reuse the existing fx sheets');
++	ok(mf.includes('trailBetween'), 'gem flights reuse the snowflake trail');
++	ok(db.includes('offset.rotation') && db.includes('dbNudge'), 'the settle nudges hat and hair bones');
++	ok(db.includes('resolution: r') && /resolution:\s*'inherit'/.test(src('../src/game/board/glowFilter.ts')), 'snapshot cap and win-glow inherit stay');
++	ok(src('../src/game/wintrail.ts').includes('export function trailBetween'), 'trail helper is exported');
++}
++
++console.log('\n=== merge play (groups, turbo, skip, bonus) ===');
++let chrome = '';
++try { chrome = require('node:child_process').execSync('command -v google-chrome || command -v google-chrome-stable', { encoding: 'utf8' }).trim().split('\n').pop(); } catch { /* none */ }
++let esbuild = null;
++try { esbuild = await import('esbuild'); } catch { /* optional */ }
++if (!chrome || !esbuild) {
++	console.log(`  SKIP play probe (chrome=${chrome || 'missing'}, esbuild=${esbuild ? 'yes' : 'missing'})`);
++} else {
++	const dir = await mkdtemp(join(tmpdir(), 'mergebeat-'));
++	const stub = join(dir, 'stub.mjs');
++	const entry = join(dir, 'entry.mjs');
++	const bundle = join(dir, 'bundle.js');
++	const html = join(dir, 'page.html');
++	await writeFile(stub, `
++export const S = globalThis.__S;
++export const $ = (s) => document.querySelector(s);
++export function setGem(el, v) { el.dataset.v = String(v); el.textContent = 'x' + v; }
++export function gemHTML() { return '<b class="mx"></b>'; }
++export function ovMx(r) { return document.querySelector('[data-gem="' + r + '"]'); }
++export function cellEl() { return document.createElement('div'); }
++export function pos(r) { return { x: 20 + r * 100, y: 0 }; }
++export function ovArt(ov) { return [...ov.children]; }
++export function preloadStacks() { return Promise.resolve(); }
++export const T = (ms) => ms * 2;
++export function grab(mxs) {
++  return mxs.filter(Boolean).map((m) => {
++    const c = m.cloneNode(true); c.className += ' fly'; c.style.cssText = 'position:absolute;left:0;top:0;width:40px;height:20px';
++    document.getElementById('flyLayer').appendChild(c); return c;
++  });
++}
++export function toStage(r) { return r; }
++export function wfExpand() {}
++export function hasStack() { return false; }
++export function stackOnce() { return Promise.resolve(); }
++export function stackLetters() { return true; }
++export function stackWin() {}
++export function stackWinOff() {}
++export function stackPrepare(reels) { globalThis.__log.push('prepare:' + reels.join(',')); return Promise.resolve(); }
++export function stackRelease(olds) { globalThis.__log.push('release:' + olds.length); }
++export function stackWarm() { return Promise.resolve(); }
++export function stackReact() {}
++export function stackReactSkip() {}
++export function dbDisplay(cv) { return cv.dataset.live === '1' ? {} : null; }
++export function dbKnown() { return false; }
++export function dbNudge() { globalThis.__nudges++; }
++export function dbPlay() { return Promise.resolve(false); }
++export function dbSnapshot() { return null; }
++export function dbStats() { return { live: 0 }; }
++export function canvasRev(cv) { return Number(cv.dataset.rev || 0); }
++export function hasSheet() { return false; }
++export function play() { return null; }
++export function boardShake(px) { globalThis.__shake = px; }
++export function boardWin(k) { globalThis.__cam = k; }
++export function trailBetween() { globalThis.__trails++; }
++export function crumb(k) { globalThis.__crumbs.push(k); }
++export function scrub(s) { return String(s || ''); }
++export function setPhase(p) { globalThis.__phase = p; }
++`);
++	await writeFile(entry, `
++import { mergeIn, skipMerge } from ${JSON.stringify(join(app, 'src/game/mergefx.ts'))};
++import { mergeMs } from ${JSON.stringify(join(app, 'src/game/mergeclock.ts'))};
++const S = globalThis.__S;
++function layout(n) {
++  let stage = document.getElementById('stage');
++  if (!stage) { stage = document.createElement('div'); stage.id = 'stage'; document.body.appendChild(stage); }
++  stage.innerHTML = '<div id="board" style="position:relative;width:640px;height:520px"><div id="cells" style="position:absolute;inset:0"></div><div id="overlays"></div></div><div id="flyLayer"></div>';
++  const host = document.getElementById('overlays');
++  host.style.cssText = 'position:absolute;left:0;top:40px;width:640px;height:440px';
++  const reels = [];
++  for (let i = 0; i < n; i++) {
++    reels.push(i);
++    const o = document.createElement('div');
++    o.className = 'ov full'; o.dataset.reel = String(i);
++    o.style.cssText = 'position:absolute;top:0;width:90px;height:400px;left:' + (20 + i * 100) + 'px';
++    const img = document.createElement('img'); img.className = 'wart'; o.appendChild(img);
++    const g = document.createElement('b'); g.className = 'mx'; g.dataset.gem = String(i); g.textContent = 'x2'; g.style.cssText = 'position:absolute;left:4px;top:4px;width:36px;height:16px';
++    o.appendChild(g); host.appendChild(o);
++  }
++  return reels;
++}
++function applyMerged(reels) {
++  const host = document.getElementById('overlays');
++  const o = document.createElement('div');
++  o.className = 'ov merge'; o.dataset.reels = reels.join(',');
++  o.style.cssText = 'position:absolute;top:0;left:' + (20 + reels[0] * 100) + 'px;width:' + (90 + (reels.length - 1) * 100) + 'px;height:400px';
++  const cv = document.createElement('canvas'); cv.className = 'stk stk_body'; cv.width = 8; cv.height = 8; cv.dataset.rev = '1';
++  cv.getContext('2d').fillRect(0, 0, 8, 8);
++  const mx = document.createElement('b'); mx.className = 'mx'; mx.textContent = 'x'; mx.style.cssText = 'position:absolute;right:4px;top:4px;width:36px;height:16px';
++  o.appendChild(cv); o.appendChild(mx); host.replaceChildren(o);
++}
++async function play(n, opts) {
++  globalThis.__log = []; globalThis.__trails = 0; globalThis.__nudges = 0; globalThis.__shake = 0; globalThis.__cam = ''; globalThis.__crumbs = [];
++  S.turbo = !!opts.turbo; S.inBonus = !!opts.bonus; S.cell = 96;
++  window.matchMedia = (q) => ({ matches: !!opts.reduced && String(q).includes('reduce'), media: String(q), addEventListener() {}, removeEventListener() {} });
++  const reels = layout(n);
++  const values = reels.map(() => 2);
++  const t0 = performance.now();
++  let applied = 0, applyAt = 0, crouch = '';
++  const live = [];
++  const timer = setInterval(() => {
++    const ov = document.querySelector('.ov.full');
++    if (ov && !crouch && ov.getAnimations()[0] && ov.getAnimations()[0].effect) {
++      const kfs = ov.getAnimations()[0].effect.getKeyframes();
++      crouch = String((kfs[kfs.length - 1] && kfs[kfs.length - 1].transform) || '');
++    }
++    live.push({ t: Math.round(performance.now() - t0), up: !!ov && ov.style.visibility !== 'hidden', anim: ov ? ov.getAnimations().length : 0 });
++  }, 80);
++  mark('play ' + n + (opts.turbo ? ' turbo' : '') + (opts.bonus ? ' bonus' : '') + (opts.skipAt != null ? ' skip' : '') + (opts.explode ? ' boom' : ''));
++  if (opts.skipAt != null) setTimeout(() => skipMerge(), opts.skipAt);
++  let threw = false;
++  try {
++    await mergeIn(reels, values, 2 ** n, () => {
++      if (opts.explode) { opts.explode = false; throw new Error('apply failed'); }
++      applied++; applyAt = performance.now() - t0; applyMerged(reels);
++    });
++  } catch (e) { threw = true; }
++  clearInterval(timer);
++  const rel = globalThis.__log.findIndex((s) => s.startsWith('release'));
++  const prep = globalThis.__log.findIndex((s) => s.startsWith('prepare'));
++  return { ms: Math.round(performance.now() - t0), applied, applyAt: Math.round(applyAt), threw, phase: globalThis.__phase, log: globalThis.__log, rel, prep, shake: globalThis.__shake, cam: globalThis.__cam, trails: globalThis.__trails, nudges: globalThis.__nudges, crumbs: globalThis.__crumbs, live, crouch };
++}
++async function wait(ms) {
++  mark('wait ' + ms);
++  const t0 = performance.now();
++  await new Promise((r) => setTimeout(() => { mark('fired ' + ms); r(); }, ms));
++  return { ms: Math.round(performance.now() - t0), frames: 0 };
++}
++const out = {};
++function mark(s) { const el = document.getElementById('result'); if (el && el.textContent.indexOf('{') !== 0) el.textContent = 'MARK ' + s; }
++async function main() {
++mark('start');
++try {
++  out.hit = await wait(mergeMs(50, false));
++  out.beat = await wait(mergeMs(400, false));
++  out.g2 = await play(2, {});
++  out.half = await play(2, { reduced: true });
++  out.g3 = await play(3, {});
++  out.g4 = await play(4, {});
++  out.g5 = await play(5, {});
++  out.turbo = await play(2, { turbo: true });
++  out.bonus = await play(2, { bonus: true });
++  out.again = await play(5, {});
++  out.skip = await play(2, { skipAt: 80 });
++  out.boom = await play(2, { explode: true });
++} catch (e) { out.error = String(e && e.stack || e); }
++document.getElementById('result').textContent = JSON.stringify(out);
++}
++main();
++`);
++	await esbuild.build({
++		entryPoints: [entry], bundle: true, format: 'iife', outfile: bundle, absWorkingDir: dir, logLevel: 'silent',
++		plugins: [{
++			name: 'stub',
++			setup(b) {
++				b.onResolve({ filter: /^\./ }, (args) => {
++					if (args.path.includes('mergeclock') || args.path.includes('mergefx')) return null;
++					if (args.importer.endsWith('mergefx.ts') || args.importer.endsWith('mergeclock.ts')) return { path: stub };
++					return null;
++				});
++			},
++		}],
++	});
++	await writeFile(html, `<!doctype html><script>globalThis.__S={turbo:false,cell:96,inBonus:false,full:new Set()};window.onerror=function(m){document.getElementById('result').textContent='ERR '+m}</script><pre id="result">PENDING</pre><script src="./bundle.js"></script>`);
++	const userDir = join(dir, 'profile');
++	const port = 9700 + (process.pid % 300);
++	const child = spawn(chrome, [
++		'--headless=new', '--no-sandbox', '--disable-dev-shm-usage', `--user-data-dir=${userDir}`,
++		'--use-angle=swiftshader', '--enable-unsafe-swiftshader', `--remote-debugging-port=${port}`, html,
++	], { stdio: 'ignore' });
++	let raw = '';
++	let last = '';
++	const deadline = Date.now() + 40000;
++	while (Date.now() < deadline && !raw) {
++		await new Promise((r) => setTimeout(r, 250));
++		try {
++			const list = await fetch(`http://127.0.0.1:${port}/json/list`).then((r) => r.json());
++			const page = list.find((t) => t.type === 'page' && t.webSocketDebuggerUrl);
++			if (!page) continue;
++			const text = await new Promise((resolve, reject) => {
++				const ws = new WebSocket(page.webSocketDebuggerUrl);
++				const timer = setTimeout(() => { ws.close(); reject(new Error('cdp')); }, 2500);
++				ws.addEventListener('open', () => ws.send(JSON.stringify({ id: 1, method: 'Runtime.evaluate', params: { expression: "document.getElementById('result').textContent", returnByValue: true } })));
++				ws.addEventListener('message', (ev) => {
++					const msg = JSON.parse(ev.data);
++					if (msg.id !== 1) return;
++					clearTimeout(timer); ws.close();
++					resolve(msg.result && msg.result.result ? msg.result.result.value : '');
++				});
++				ws.addEventListener('error', () => { clearTimeout(timer); reject(new Error('socket')); });
++			});
++			if (text && text !== 'PENDING' && text !== last) { last = String(text).trim(); console.log('  page', last.slice(0, 240)); }
++			if (text && text.startsWith('{')) raw = String(text).trim();
++		} catch { /* debugger not up yet */ }
++	}
++	child.kill('SIGKILL');
++	await new Promise((r) => { const t = setTimeout(r, 400); child.once('close', () => { clearTimeout(t); r(); }); });
++	if (!raw) { fail++; console.error('  FAIL play probe produced no result'); }
++	else {
++		const r = JSON.parse(raw);
++		if (r.error) { fail++; console.error('  FAIL play threw', r.error.slice(0, 900)); }
++		else {
++			const early = (p) => (p.live || []).find((s) => s.t >= 160 && s.t <= 320);
++			ok(r.hit.ms >= 45 && r.hit.ms < 150, `50 ms wait measured ${r.hit.ms} ms (${r.hit.frames} rafs)`);
++			ok(r.beat.ms >= 380 && r.beat.ms < 600, `400 ms wait measured ${r.beat.ms} ms (${r.beat.frames} rafs)`);
++			for (const [k, n] of [['g2', 2], ['g3', 3], ['g4', 4], ['g5', 5]]) {
++				const p = r[k];
++				ok(p && !p.threw && p.applied === 1 && p.rel >= 0 && p.rel < p.prep, `${n}-reel applied once, release before prepare (${p && p.ms} ms, shake ${p && p.shake})`);
++				const e = early(p);
++				ok(!!e && e.up && e.anim > 0, `${n}-reel still live at ${e && e.t} ms (anim ${e && e.anim})`);
++			}
++			ok(r.g2.applyAt > 700 && r.g2.applyAt < 1200, `2-reel cut at ${r.g2.applyAt} ms (after the wind-up and pull, not at frame 0)`);
++			ok(/translateY\(7(\.0)?px\)/.test(r.g2.crouch), `full wind-up crouch is ${r.g2.crouch}`);
++			ok(r.half && r.half.applied === 1 && r.half.crouch.includes('translateY(3.5px)'), `reduced motion crouch is half (${r.half && r.half.crouch})`);
++			ok(r.half && r.half.ms > r.g2.ms * 0.8 && r.half.ms < r.g2.ms * 1.25, `reduced motion keeps the duration (${r.half && r.half.ms} vs ${r.g2.ms})`);
++			ok(r.g5.shake === 7 && r.g2.shake === 4, `camera scales with the group (${r.g2.shake} vs ${r.g5.shake})`);
++			ok(r.g5.cam === 'big' && r.g2.cam === 'small', `push-in is ${r.g2.cam} for 2 and ${r.g5.cam} for 5`);
++			ok(r.turbo.applied === 1 && r.turbo.ms < r.g2.ms * 0.8 && r.turbo.ms > r.g2.ms * 0.45, `turbo ${r.turbo.ms} ms vs normal ${r.g2.ms} ms`);
++			ok(r.bonus.phase === 'bonus' && r.g2.phase === 'board', `phase returns to ${r.g2.phase} and to ${r.bonus.phase} in the bonus`);
++			ok(r.again.applied === 1 && r.again.rel < r.again.prep, `a second 5-reel merge also released before prepare`);
++			ok(r.skip.applied === 1 && r.skip.ms < r.g2.ms - 150 && r.skip.ms > 700, `one tap shortens the merge (${r.skip.ms} vs ${r.g2.ms}) and does not skip the rest`);
++			ok(r.boom && !r.boom.threw && r.boom.applied === 0 && r.boom.crumbs.includes('merge-apply'), 'a throwing apply is contained');
++			console.log('  times', JSON.stringify({ g2: r.g2.ms, g3: r.g3.ms, g4: r.g4.ms, g5: r.g5.ms, turbo: r.turbo.ms, skip: r.skip.ms, bonus: r.bonus.ms, again: r.again.ms, hit: r.hit, beat: r.beat }));
++		}
++	}
++	await rm(dir, { recursive: true, force: true });
++}
++
++console.log(fail ? `\nmergebeat tests: ${fail} FAILED` : '\nmergebeat tests: all passed');
++process.exit(fail ? 1 : 0);
+diff -ruN a/frontend/apps/elfhaus/scripts/test-mergeflash.mjs b/frontend/apps/elfhaus/scripts/test-mergeflash.mjs
+--- a/frontend/apps/elfhaus/scripts/test-mergeflash.mjs	1970-01-01 00:00:00.000000000 +0000
++++ b/frontend/apps/elfhaus/scripts/test-mergeflash.mjs	2026-11-10 03:35:22.270752181 +0000
+@@ -0,0 +1,158 @@
++// Stale frame at merge start. A pooled sheet canvas keeps its pixels, and the board uploads a canvas once.
++// Repainting that canvas used to leave the previous animation on screen. This checks the pool is cleared and
++// drawn before it is inserted, and that a revision change reuploads before the next present.
++import { readFileSync } from 'node:fs';
++import { mkdtemp, writeFile, rm } from 'node:fs/promises';
++import { tmpdir } from 'node:os';
++import { join } from 'node:path';
++import { spawn } from 'node:child_process';
++import { createRequire } from 'node:module';
++import { fileURLToPath } from 'node:url';
++
++const require = createRequire(import.meta.url);
++const app = fileURLToPath(new URL('..', import.meta.url));
++let fail = 0;
++const ok = (c, m) => { if (c) console.log('  OK ' + m); else { fail++; console.error('  FAIL ' + m); } };
++const src = (p) => readFileSync(new URL(p, import.meta.url), 'utf8');
++
++console.log('\n=== merge flash: source guards ===');
++{
++	const sp = src('../src/game/sprite.ts');
++	const mi = src('../src/game/board/mirror.ts');
++	const mf = src('../src/game/mergefx.ts');
++	const db = src('../src/game/dbstacks.ts');
++	ok(sp.includes('clearRect(0, 0, w, h)'), 'a same-size pooled canvas is cleared');
++	ok(sp.indexOf('draw(a, 0)') < sp.indexOf('host.appendChild(cv)'), 'the first frame is drawn before the canvas is inserted');
++	ok(sp.includes('export const canvasRev'), 'canvas revisions are visible to the board');
++	ok(mi.includes('source.update()') && mi.includes('canvasRev'), 'the board reuploads a canvas when its pixels change');
++	ok(mi.includes('t.destroy(true)') && mi.includes('releaseOut(x)'), 'dropping a snapshot still destroys its GPU texture');
++	ok(mf.includes("!x.classList.contains('stk_db')"), 'a rig placeholder is never copied as the snapshot');
++	ok(mf.includes("o.style.visibility = 'hidden'") && mf.indexOf("o.style.visibility = 'hidden'") < mf.indexOf('host.appendChild(el)'), 'live overlays hide before the snapshot stage is shown');
++	ok(mf.includes('performance.now() - t0 > 120'), 'the snapshot stays up until the new body has been drawn, on a time cap');
++	ok(db.includes('removeFromParent()'), 'a rig snapshot is taken off the board stage');
++	ok(db.includes('resolution: r') || db.includes('snapshotPixels'), 'snapshot cap stays');
++	ok(/resolution:\s*'inherit'/.test(src('../src/game/board/glowFilter.ts')), "win glow stays at resolution 'inherit'");
++}
++
++console.log('\n=== merge flash: pooled canvas vs upload ===');
++let chrome = '';
++try { chrome = require('node:child_process').execSync('command -v google-chrome || command -v google-chrome-stable', { encoding: 'utf8' }).trim().split('\n').pop(); } catch { /* none */ }
++let esbuild = null;
++try { esbuild = await import('esbuild'); } catch { /* optional */ }
++if (!chrome || !esbuild) {
++	console.log(`  SKIP pixel probe (chrome=${chrome || 'missing'}, esbuild=${esbuild ? 'yes' : 'missing'})`);
++} else {
++	const dir = await mkdtemp(join(tmpdir(), 'mergeflash-'));
++	const entry = join(dir, 'entry.mjs');
++	const bundle = join(dir, 'bundle.js');
++	const html = join(dir, 'page.html');
++	const stub = join(dir, 'tempo.mjs');
++	await writeFile(stub, 'export const spriteRate = () => 1;\n');
++	await writeFile(entry, `
++import { Application, Sprite, Texture } from 'pixi.js';
++import { loadSheet, play, stop, canvasRev } from ${JSON.stringify(join(app, 'src/game/sprite.ts'))};
++
++function px(cv) {
++	const g = cv.getContext('2d').getImageData(0, 0, 1, 1).data;
++	return [g[0], g[1], g[2], g[3]];
++}
++async function sheet(id, rgb) {
++	const c = document.createElement('canvas'); c.width = 8; c.height = 8;
++	const g = c.getContext('2d'); g.fillStyle = rgb; g.fillRect(0, 0, 8, 8);
++	const blob = await new Promise((res) => c.toBlob(res));
++	const url = URL.createObjectURL(blob);
++	await loadSheet(id, url, { size: [8, 8], anims: { play: { fps: 8, loop: true, frames: [[0, 0, 8, 8]] } } });
++}
++async function main() {
++	const out = {};
++	try {
++		await sheet('red', '#ff0000');
++		await sheet('blue', '#0000ff');
++		const host = document.createElement('div'); document.body.appendChild(host);
++		const a = play('red', 'play', host, { cls: 'stk stk_body' });
++		out.afterRed = px(a.cv);
++		out.revRed = canvasRev(a.cv);
++		const app = new Application();
++		await app.init({ width: 8, height: 8, backgroundAlpha: 1, preference: 'webgl', hello: false, sharedTicker: false, autoStart: false });
++		const tex = Texture.from(a.cv);
++		const spr = new Sprite(tex); spr.width = 8; spr.height = 8; app.stage.addChild(spr);
++		const read = () => {
++			app.render();
++			const p = app.renderer.extract.pixels({ target: app.stage });
++			const d = p.pixels;
++			return [d[0], d[1], d[2], d[3]];
++		};
++		out.gpuRed = read();
++		stop(a);
++		const b = play('blue', 'play', host, { cls: 'stk stk_body' });
++		out.sameCanvas = a.cv === b.cv;
++		out.afterBlue = px(b.cv);
++		out.revBlue = canvasRev(b.cv);
++		out.gpuStale = read();
++		if (canvasRev(b.cv) !== tex._rev) { tex.source.update(); tex._rev = canvasRev(b.cv); }
++		out.gpuFresh = read();
++		spr.destroy(); tex.destroy(true);
++	} catch (e) { out.error = String(e && e.stack || e); }
++	document.getElementById('result').textContent = JSON.stringify(out);
++}
++main();
++`);
++	await esbuild.build({
++		entryPoints: [entry], bundle: true, format: 'iife', outfile: bundle, absWorkingDir: dir, logLevel: 'silent',
++		alias: { 'pixi.js': require.resolve('pixi.js') },
++		plugins: [{ name: 'tempo', setup(b) { b.onResolve({ filter: /\/tempo$/ }, () => ({ path: stub })); } }],
++	});
++	await writeFile(html, `<!doctype html><pre id="result">PENDING</pre><script src="./bundle.js"></script>`);
++	const userDir = join(dir, 'profile');
++	const port = 9600 + (process.pid % 400);
++	const child = spawn(chrome, [
++		'--headless=new', '--no-sandbox', '--disable-dev-shm-usage', `--user-data-dir=${userDir}`,
++		'--use-angle=swiftshader', '--enable-unsafe-swiftshader', `--remote-debugging-port=${port}`, html,
++	], { stdio: 'ignore' });
++	let raw = '';
++	const deadline = Date.now() + 20000;
++	while (Date.now() < deadline && !raw) {
++		await new Promise((r) => setTimeout(r, 200));
++		try {
++			const list = await fetch(`http://127.0.0.1:${port}/json/list`).then((r) => r.json());
++			const page = list.find((t) => t.type === 'page' && t.webSocketDebuggerUrl);
++			if (!page) continue;
++			const text = await new Promise((resolve, reject) => {
++				const ws = new WebSocket(page.webSocketDebuggerUrl);
++				const timer = setTimeout(() => { ws.close(); reject(new Error('cdp')); }, 2000);
++				ws.addEventListener('open', () => ws.send(JSON.stringify({ id: 1, method: 'Runtime.evaluate', params: { expression: "document.getElementById('result').textContent", returnByValue: true } })));
++				ws.addEventListener('message', (ev) => {
++					const msg = JSON.parse(ev.data);
++					if (msg.id !== 1) return;
++					clearTimeout(timer); ws.close();
++					resolve(msg.result && msg.result.result ? msg.result.result.value : '');
++				});
++				ws.addEventListener('error', () => { clearTimeout(timer); reject(new Error('socket')); });
++			});
++			if (text && text !== 'PENDING') raw = String(text).trim();
++		} catch { /* debugger not up yet */ }
++	}
++	child.kill('SIGKILL');
++	await new Promise((r) => { const t = setTimeout(r, 500); child.once('close', () => { clearTimeout(t); r(); }); });
++	if (!raw) { fail++; console.error('  FAIL pixel probe produced no result'); }
++	else {
++		const r = JSON.parse(raw);
++		if (r.error) { fail++; console.error('  FAIL probe threw', r.error.slice(0, 800)); }
++		else {
++			console.log('  pixels', JSON.stringify(r));
++			const red = (p) => p && p[0] > 200 && p[2] < 40;
++			const blue = (p) => p && p[2] > 200 && p[0] < 40;
++			ok(red(r.afterRed), `first play's canvas is red (${r.afterRed})`);
++			ok(r.sameCanvas, 'the next play reused the pooled canvas');
++			ok(blue(r.afterBlue), `reused canvas is blue before it is shown (${r.afterBlue})`);
++			ok(r.revBlue > r.revRed, `revision advanced (${r.revRed} -> ${r.revBlue})`);
++			ok(red(r.gpuRed), `first upload is red (${r.gpuRed})`);
++			ok(red(r.gpuStale), `without a reupload the board still shows red (${r.gpuStale})`);
++			ok(blue(r.gpuFresh), `reupload on the new revision shows blue (${r.gpuFresh})`);
++		}
++	}
++	await rm(dir, { recursive: true, force: true });
++}
++
++console.log(fail ? `\nmergeflash tests: ${fail} FAILED` : '\nmergeflash tests: all passed');
++process.exit(fail ? 1 : 0);
+diff -ruN a/frontend/apps/elfhaus/src/game/board/mirror.ts b/frontend/apps/elfhaus/src/game/board/mirror.ts
+--- a/frontend/apps/elfhaus/src/game/board/mirror.ts	2026-11-06 15:47:12.000000000 +0000
++++ b/frontend/apps/elfhaus/src/game/board/mirror.ts	2026-11-10 03:34:26.623122178 +0000
+@@ -7,7 +7,7 @@
+ //   sheet frames (.rp f_*, .sd depth, letters: any background-image region)  -> Sprite on the shared texture
+ //   tile recess / border / frost (.tRec / .tBd / .tFr, CSS border-image)       -> NineSliceSprite (52 px corners)
+ //   <img> (stack panels, elf cut-outs, stills)                                   -> Sprite
+-//   <canvas> snapshots (merge lean stage)                                        -> Sprite (uploaded once)
++//   <canvas> snapshots (merge lean stage)                                        -> Sprite (reuploaded when its pixels change)
+ //   canvas.stk_db (DragonBones placeholder)                                      -> the rig's own container (dbstacks.ts)
+ //   .symGlow / img.stk_glow                                                      -> layer.winGlow, recoloured teal glow
+ //   .mx multiplier                                                               -> layer.symFx, gold bitmap font glyphs
+@@ -20,6 +20,7 @@
+ import DEPTH_JSON from '../chalet/symdepth.json';
+ import { boardStage, layer, kick, animate, onLayout } from './stage';
+ import { dbDisplay } from '../dbstacks';
++import { canvasRev } from '../sprite';
+ import { mxFont } from '../ui';
+ 
+ type Fr = { frame: { x: number; y: number; w: number; h: number } };
+@@ -399,8 +400,13 @@
+ 			const cv = el as unknown as HTMLCanvasElement;
+ 			if (base.f & F_DB) { const d = dbDisplay(cv); if (d) { const o = out(el, 'db', () => d.root); if (o.d !== d.root) o.d = d.root; if (d.root.destroyed) return; if (d.root.parent !== c.host) c.host.addChild(d.root); { const k = h / d.H; place(d.root, M, (w - d.W * k) / 2, 0, k, k); } d.root.alpha = c.op; d.root.zIndex = order++; d.root.visible = true; } return; }
+ 			if (!cv.width) return;
+-			let t = cvTex.get(cv); if (!t || (t as Texture & { destroyed?: boolean }).destroyed) { t = Texture.from(cv); cvTex.set(cv, t); }
+-			sprite(el, t, c, 0, 0, w, h, s);
++			// Texture.from reads the canvas once. A pooled sheet canvas is redrawn in place (and a merge snapshot can
++			// be the same element as an earlier upload). Without source.update the board keeps the previous frame.
++			let t = cvTex.get(cv); const dead = !t || (t as Texture & { destroyed?: boolean }).destroyed;
++			const revNow = canvasRev(cv);
++			if (dead) { t = Texture.from(cv); cvTex.set(cv, t); (t as Texture & { _rev?: number })._rev = revNow; }
++			else if ((t as Texture & { _rev?: number })._rev !== revNow) { t!.source.update(); (t as Texture & { _rev?: number })._rev = revNow; }
++			sprite(el, t!, c, 0, 0, w, h, s);
+ 			const held = outs.get(el); if (held) held.cv = cv;
+ 			return;
+ 		}
+diff -ruN a/frontend/apps/elfhaus/src/game/dbstacks.ts b/frontend/apps/elfhaus/src/game/dbstacks.ts
+--- a/frontend/apps/elfhaus/src/game/dbstacks.ts	2026-11-06 15:47:12.000000000 +0000
++++ b/frontend/apps/elfhaus/src/game/dbstacks.ts	2026-11-10 03:40:14.068212825 +0000
+@@ -29,6 +29,9 @@
+ type Live = { name: string; arms: PixiArmatureDisplay[]; root: Container; anim: string; t: number; blinkAt: number; cv: HTMLCanvasElement; W: number; H: number; gf: Filter | null; ga: number };
+ const lives = new Map<HTMLElement, Live>();
+ const byCv = new WeakMap<HTMLCanvasElement, Live>();
++// One decaying tilt on hat / hair bones after a merge settles. Offset, not the root: the board mirror
++// rewrites the rig root's matrix every frame, so a root rotation would be thrown away.
++const nudges = new Map<HTMLElement, { amp: number; until: number }>();
+ const starting = new Map<HTMLElement, Promise<boolean>>();
+ const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+ const flushDb = (dt: number) => { try { PixiFactory.advanceTime(dt); } catch (e) { crumb('db-flush', { msg: scrub((e as Error)?.message || String(e)) }); } };
+@@ -43,6 +46,13 @@
+ 		L.t += dt;
+ 		if (L.t > L.blinkAt) { L.blinkAt = L.t + 2.4 + Math.random() * 2.6; face(L, 'blink'); }
+ 		for (const d of L.arms) d.armature.advanceTime(reduced() ? 0 : dt);
++		const nudge = nudges.get(ov);
++		if (nudge) {
++			const left = nudge.until - now;
++			try { settleBones(L, left > 0 ? Math.sin(left / 90) * nudge.amp * Math.min(1, left / 400) : 0); }
++			catch { /* a rig without those bones still settles on the overlay */ }
++			if (left <= 0) nudges.delete(ov);
++		}
+ 		// win glow (silhouette filter) eases in / out with the overlay's .win
+ 		const want = ov.classList.contains('win') ? 1 : 0;
+ 		L.ga += (want - L.ga) * Math.min(1, dt * 10);
+@@ -165,13 +175,16 @@
+ 	const L = lives.get(ov); const a = stageApp(); if (!L || !a) return null;
+ 	const keep = { p: L.root.parent, f: L.root.filters, x: L.root.x, y: L.root.y, sx: L.root.scale.x, sy: L.root.scale.y, r: L.root.rotation, v: L.root.visible };
+ 	L.root.filters = []; L.root.position.set(0, 0); L.root.scale.set(1); L.root.rotation = 0; L.root.visible = true;
++	// Off the board stage while extracting. An on-stage rig shares the stage render group; detaching makes the
++	// read a picture of this rig now, not whatever the stage presented last.
++	if (keep.p) L.root.removeFromParent();
+ 	// height budget matches the old `min(2, 1024 / H)`; width is capped too (riglife.snapshotPixels)
+ 	const { r } = snapshotPixels(L.W, L.H);
+ 	let c: HTMLCanvasElement | null = null;
+ 	try { c = a.renderer.extract.canvas({ target: L.root, frame: new Rectangle(0, 0, L.W, L.H), resolution: r }) as HTMLCanvasElement; }
+ 	catch (e) { c = null; crumb('snapshot', { msg: scrub((e as Error)?.message || String(e)) }); }
+ 	L.root.filters = keep.f; L.root.position.set(keep.x, keep.y); L.root.scale.set(keep.sx, keep.sy); L.root.rotation = keep.r; L.root.visible = keep.v;
+-	if (keep.p && L.root.parent !== keep.p) keep.p.addChild(L.root);
++	if (keep.p) keep.p.addChild(L.root);
+ 	return c;
+ }
+ function fade(L: Live, anim: string, t = 0.25) {
+@@ -185,8 +198,25 @@
+ 	}
+ }
+ export function dbHas(ov: HTMLElement) { return lives.has(ov); }
++/** Brief secondary bounce on hat and hair bones, then back to whatever the body animation is doing. */
++export function dbNudge(ov: HTMLElement, amp: number, sec = 0.4) {
++	if (!lives.has(ov)) return;
++	nudges.set(ov, { amp, until: performance.now() + sec * 1000 });
++}
++function settleBones(L: Live, wave: number) {
++	type BoneLike = { name?: string; offset?: { rotation: number }; invalidUpdate?: () => void };
++	for (const d of L.arms) {
++		const bones = d.armature.getBones() as BoneLike[];
++		for (const b of bones) {
++			const name = String(b.name || '').toLowerCase();
++			if (!/hair|hat|bun|pony|bang|tuft|bow/.test(name) || !b.offset) continue;
++			b.offset.rotation = wave;
++			b.invalidUpdate?.();
++		}
++	}
++}
+ export function dbStop(ov: HTMLElement) {
+-	const L = lives.get(ov); if (!L) return; lives.delete(ov);
++	const L = lives.get(ov); if (!L) return; lives.delete(ov); nudges.delete(ov);
+ 	byCv.delete(L.cv); L.cv.remove(); ov.querySelector(':scope > img.stk_glow')?.remove();
+ 	L.root.removeFromParent();
+ 	if (L.gf) { try { L.root.filters = []; L.gf.destroy(); } catch { /* already destroyed */ } L.gf = null; }
+diff -ruN a/frontend/apps/elfhaus/src/game/mergeclock.ts b/frontend/apps/elfhaus/src/game/mergeclock.ts
+--- a/frontend/apps/elfhaus/src/game/mergeclock.ts	1970-01-01 00:00:00.000000000 +0000
++++ b/frontend/apps/elfhaus/src/game/mergeclock.ts	2026-11-10 03:40:11.784244524 +0000
+@@ -0,0 +1,14 @@
++// Merge timing on the 150 BPM grid (beat = 400 ms, bar = 1.6 s). Durations are real milliseconds,
++// so a 50 ms hit pause is the same wall time at 60 Hz and at 120 Hz. Turbo shortens the merge.
++// Reduced motion is an amplitude, applied by the caller, not a shorter clock.
++export const MERGE_BEAT = 400;
++export const MERGE_HIT = 50;
++
++export function mergeMs(ms: number, turbo: boolean): number {
++	const n = Math.round(ms * (turbo ? 0.6 : 1));
++	return ms > 0 ? Math.max(16, n) : 0;
++}
++
++export function mergeAmp(reduced: boolean): number {
++	return reduced ? 0.5 : 1;
++}
+diff -ruN a/frontend/apps/elfhaus/src/game/mergefx.ts b/frontend/apps/elfhaus/src/game/mergefx.ts
+--- a/frontend/apps/elfhaus/src/game/mergefx.ts	2026-11-06 15:47:12.000000000 +0000
++++ b/frontend/apps/elfhaus/src/game/mergefx.ts	2026-11-10 03:45:08.424839664 +0000
+@@ -1,46 +1,74 @@
+ // Stack + merge choreography (display only; the math is already decided by the book).
+ //   stackIn(reel)        : normal: the 4 single wilds ease together and crossfade into the full-reel elf (calm, no flash);
+ //                          turbo: the 4 wild cells squash toward the reel centre, flash, and the elf pops in elastically.
+-//   mergeIn(reels, vals) : anticipation (board dims, the adjacent stacks glow) → the stacks physically lean / slide
+-//                          together on one stage (their letters and the inner borders go) → squash at contact under a
+-//                          rising bloom → HARD cut to the merged group at the bloom's peak, which scales up from about the
+-//                          singles' size with an elastic settle (merge_join sheet) + magenta shockwave + lock burst per seam,
+-//                          2-4 px micro shake → WILD letters ignite left to right after the settle → each reel's corner gem flies into the merged wild's
+-//                          one corner gem, which shows the running product as they land (x7, then x42) and pops.
+-//                          4-5 wide: bigger burst, stronger shake, longer hold. ~1.3-1.8 s.
++//   mergeIn(reels, vals) : on the 150 BPM grid (mergeclock.ts). The joining rigs stay live through the wind-up and the
++//                          pull-in. At the hit they are snapshotted, released, and the group rig loads (singles are not
++//                          held beside the group). Reveal, gem product, one settle. Turbo shortens (~60%). A tap advances
++//                          one stage. ~1.6-2 s plus the gem flights.
+ //   growIn(ov, ...)      : a merged group grows (connecting respin): the total splits back into one gem per reel corner,
+ //                          each changed reel ticks +1 with a pop, then they fly back and recombine into the new total,
+ //                          which counts up (x5, x30). ~1.3 s.
+ //   ovWin(reel)          : a merged / full-reel wild that is part of a winning line bounces and shows its win outline.
+-// Tap or turbo snaps to the end state (skipMerge finishes every running animation). Transform/opacity only.
+-// Tempo (tempo.ts): every duration / delay / pause below is written at the old pace and stretched by ANIM_TEMPO in A() and
+-// sw() (turbo = 1); the stacks sheets slow with it (sprite.ts), so the sheet beats and these beats stay in step.
++// Tap during stackIn snaps that stack. Tap during mergeIn advances exactly one merge stage (the merge does not snap
++// just because turbo is on). Transform/opacity only, plus the existing board camera.
++// Tempo (tempo.ts): stackIn durations below are written at the old pace and stretched by ANIM_TEMPO in A() and
++// sw() (turbo = 1). mergeIn uses mergeclock.ts (real milliseconds, turbo × 0.6) and does not go through T().
+ // Art swap (stacks.ts): when the stacks_v1 sheets (MERGE_ANIM.md) are imported, stack_form / merge_join /
+ // letters_ignite / merge_win play at these same beats and merge_idle loops; any sheet not there keeps its placeholder.
+ import { preloadStacks } from './ui';
+ import { S, $, setGem, gemHTML, ovMx, cellEl, pos, ovArt } from './ui';
+-import { burst } from './fx';
+-import { mergeFx, wfExpand } from './wildfx';
++import { wfExpand } from './wildfx';
+ import { grab } from './combine';
+ import { toStage } from './stage';
+ import { hasStack, stackOnce, stackLetters, stackWin, stackWinOff, stackPrepare, stackRelease, stackWarm, stackReact, stackReactSkip } from './stacks';
+-import { dbSnapshot, dbStats } from './dbstacks';
+-import { setPhase } from './diag';
++import { dbDisplay, dbKnown, dbNudge, dbPlay, dbSnapshot, dbStats } from './dbstacks';
++import { canvasRev, hasSheet, play } from './sprite';
++import { boardShake, boardWin } from './boardfx';
++import { trailBetween } from './wintrail';
++import { MERGE_BEAT, MERGE_HIT, mergeAmp, mergeMs } from './mergeclock';
++import { crumb, scrub, setPhase } from './diag';
+ import { T } from './tempo';
+ 
+ let skipping = false, running = 0;
+ const anims = new Set<Animation>();
++const stageAnims = new Set<Animation>();
++let beatRes: (() => void) | null = null;
++let pendingSkip = false;
++let mergeHold: { skip: () => void } | null = null;
++const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+ function A(el: Element, kf: Keyframe[], o: KeyframeAnimationOptions) {
+ 	const a = el.animate(kf, { ...o, duration: T(Number(o.duration) || 0), delay: T(o.delay || 0) }); anims.add(a); a.finished.catch(() => {}).finally(() => anims.delete(a));
+ 	if (skipping) a.finish();
+ 	return a;
+ }
++/** A merge-stage animation. Real milliseconds, not the stack tempo. A tap finishes these and only these. */
++function M(el: Element, kf: Keyframe[], o: KeyframeAnimationOptions) {
++	const a = el.animate(kf, o); stageAnims.add(a); a.finished.catch(() => {}).finally(() => stageAnims.delete(a));
++	return a;
++}
++function finishStage() {
++	for (const a of stageAnims) { try { a.finish(); } catch { a.cancel(); } }
++	stageAnims.clear();
++}
++function armSkip() {
++	mergeHold = { skip() { if (beatRes) { const r = beatRes; beatRes = null; r(); } else pendingSkip = true; } };
++}
++/** Wait real milliseconds. Resolves true when a tap ended this stage early. */
++function beat(ms: number): Promise<boolean> {
++	if (pendingSkip) { pendingSkip = false; finishStage(); return Promise.resolve(true); }
++	const wait = mergeMs(ms, !!S.turbo);
++	return new Promise<boolean>((res) => {
++		const t = setTimeout(() => { beatRes = null; res(false); }, wait);
++		beatRes = () => { clearTimeout(t); beatRes = null; finishStage(); res(true); };
++	});
++}
+ /** A pause at the old pace, stretched by the tempo (`raw`: a plain cap, e.g. a decode wait, not stretched). */
+ const sw = (ms: number, raw = false) => (skipping ? Promise.resolve() : new Promise<void>((r) => { const t = setTimeout(r, raw ? ms : T(ms)); waiters.add(() => { clearTimeout(t); r(); }); }));
+ const waiters = new Set<() => void>();
+-/** Tap: snap whatever merge/stack is playing to its end state. */
++/** Tap: during a merge, advance one stage. Otherwise snap the stack that's playing. */
+ export function skipMerge() {
+ 	stackReactSkip(); // a face reaction snaps to the idle loop
++	if (mergeHold) { mergeHold.skip(); return; }
+ 	if (!running) return;
+ 	skipping = true; anims.forEach((a) => { try { a.finish(); } catch { a.cancel(); } }); waiters.forEach((w) => w()); waiters.clear();
+ }
+@@ -51,17 +79,6 @@
+ 	[...document.querySelectorAll<HTMLElement>('.ov.merge')].find((o) => o.dataset.reels?.split(',').includes(String(r))) || null;
+ const cellsOf = (r: number) => [0, 1, 2, 3].map((row) => cellEl(r, row));
+ 
+-function shake(px: number, ms: number) {
+-	const b = $('#board');
+-	A(b, [{ transform: 'none' }, { transform: `translate(${px}px,${-px / 2}px)` }, { transform: `translate(${-px}px,${px / 2}px)` }, { transform: `translate(${px / 2}px,0)` }, { transform: 'none' }], { duration: ms });
+-}
+-function ring(x: number, big: boolean) {
+-	const r = document.createElement('div'); r.className = 'mRing' + (big ? ' big' : ''); r.style.left = x + 'px';
+-	$('#board').appendChild(r);
+-	A(r, [{ transform: 'translate(-50%,-50%) scale(.15)', opacity: 1 }, { transform: `translate(-50%,-50%) scale(${big ? 3 : 2.1})`, opacity: 0 }], { duration: 480, easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'forwards' }).finished.finally(() => r.remove());
+-}
+-const col = (x: number, w: number) => { const d = document.createElement('div'); d.className = 'wfxCol burstCol'; d.style.left = x + 'px'; d.style.width = w + 'px'; $('#board').appendChild(d); return d; };
+-
+ /** stackComplete. Normal pace (spinfix, user: "the single stacked Wild reel should appear from the merging of the individually
+  * stacked wilds"): a vertical version of the reel merge, calm: short hold on the full reel → the 4 singles ease together
+  * toward the reel centre (gentle slide + a hair of vertical squeeze, ease-in-out, no hard squash) → at contact they
+@@ -144,73 +161,165 @@
+ 	if (react && ov && !tapped && !S.turbo && ov.classList.contains('full')) void stackReact(ov, reel);
+ }
+ 
+-/** mergeGroups (a fresh group): the full choreography. `apply` swaps the overlays to the merged one at the hit. */
++function held(el: HTMLElement): string {
++	const list = el.getAnimations();
++	for (let i = list.length - 1; i >= 0; i--) {
++		const effect = list[i].effect;
++		if (!effect || !('getKeyframes' in effect)) continue;
++		const last = (effect as KeyframeEffect).getKeyframes().at(-1);
++		if (last && last.transform != null) return String(last.transform);
++	}
++	return 'none';
++}
++/** mergeGroups (a fresh group). `apply` swaps the overlays to the merged one at the hit. */
+ export async function mergeIn(reels: number[], values: number[], product: number, apply: () => void) {
+-	stackReactSkip(); // the lean snapshots idle art
++	stackReactSkip();
+ 	begin();
++	skipping = false; // turbo shortens this merge; it does not snap it. stackIn still snaps.
++	armSkip();
+ 	setPhase('merge', dbStats());
+ 	const B = $('#board'), n = reels.length, big = n >= 4, lo = reels[0], step = n > 1 ? pos(lo + 1, 0).x - pos(lo, 0).x : S.cell, x0 = pos(lo, 0).x;
++	const amp = mergeAmp(reducedMotion());
+ 	const made: HTMLElement[] = [];
++	const dimmed: HTMLElement[] = [];
+ 	let stage: ReturnType<typeof leanStage> | null = null;
++	let applied = false;
++	const cut = () => {
++		if (applied) return; applied = true;
++		try { apply(); } catch (e) { crumb('merge-apply', { msg: scrub((e as Error)?.message || String(e)) }); }
++	};
+ 	try {
+-		// 1) anticipation: board dims, the stacks about to join glow
+-		B.classList.add('mAnt');
+ 		const olds = [...new Set(reels.map(ovOf))].filter((o): o is HTMLElement => !!o);
+-		olds.forEach((o) => { const g = document.createElement('i'); g.className = 'ovGlow'; o.appendChild(g); A(g, [{ opacity: 0 }, { opacity: 1 }], { duration: 220, fill: 'forwards' }); });
+-		// the singles' badges: fly clones made now (positions) but kept hidden until recombine; the originals stay until the
+-		// lean hides their overlays. So exactly one badge per reel shows before the lean, none during it, one gem after.
++		const mid = lo + (n - 1) / 2;
++		// 1) wind-up. The board dims. The joining stacks glow with a sheet sprite. The rigs keep playing.
++		B.classList.add('mAnt');
++		const cells = document.getElementById('cells');
++		const dim = (1 - 0.4 * amp).toFixed(3);
++		if (cells) { cells.style.filter = `brightness(${dim})`; dimmed.push(cells); }
++		document.querySelectorAll<HTMLElement>('#overlays .ov').forEach((o) => {
++			if (!olds.includes(o)) { o.style.filter = `brightness(${dim})`; dimmed.push(o); }
++		});
++		olds.forEach((o) => { if (hasSheet('fx_wild')) play('fx_wild', 'wshineT', o, { cls: 'wfx wfxIn wfxTop', loop: false }); });
+ 		const badges = grab(reels.map((r) => ovMx(r)));
+ 		badges.forEach((g) => (g.style.opacity = '0'));
+-		await sw(260);
+-		// 2) the singles physically move: snapshots of their bodies on ONE stage over the merged area (no inner borders; their
+-		//    own letters fade as the lean starts), elastic lean / slide toward the centre, then a squash at contact
+-		const mid = lo + (n - 1) / 2;
+-		stage = leanStage(olds);
+-		stackRelease(olds); // the stage holds snapshots: the singles' sheets close before the group's decode (memory peak)
+-		const warm = Promise.all([stackPrepare(reels), preloadStacks()]); // fix4 B: + the chalet panel / elf cut-outs; the group's join (usually prefetched already) / idle / letters decode during the lean
+-		const parts = stage.parts.map((pt) => {
+-			const d = (mid - pt.rc) * step, L = d * (n >= 4 ? 0.2 : 0.26), dir = Math.sign(d);
+-			pt.lets.forEach((l) => A(l, [{ opacity: 1 }, { opacity: 0 }], { duration: 110, fill: 'forwards' }));
+-			A(pt.el, [
+-				{ transform: 'none', easing: 'cubic-bezier(.4,0,.6,1)' },
+-				{ transform: `translateX(${-d * 0.035}px) rotate(${-dir}deg) scale(.99,1.012)`, offset: 0.26, easing: 'cubic-bezier(.55,0,.75,.5)' },
+-				{ transform: `translateX(${L * 1.1}px) rotate(${dir * 3.6}deg) scale(1.01,.995)`, offset: 0.76, easing: 'cubic-bezier(.3,.6,.4,1)' },
+-				{ transform: `translateX(${L}px) rotate(${dir * 2.6}deg)` }], { duration: LEAN, fill: 'forwards' });
+-			return { ...pt, L, dir };
++		const pose = new Map<HTMLElement, { crouch: string; pull: string; over: string }>();
++		olds.forEach((o) => {
++			const rs = (o.dataset.reels ?? o.dataset.reel ?? '0').split(',').map(Number);
++			const rc = (rs[0] + rs[rs.length - 1]) / 2;
++			const d = (mid - rc) * step, dir = Math.sign(d) || (rc < mid ? 1 : -1);
++			const L = d * (n >= 4 ? 0.18 : 0.24) * (0.65 + 0.35 * amp);
++			const crouch = `translateY(${(7 * amp).toFixed(1)}px) rotate(${(dir * 1.6 * amp).toFixed(2)}deg) scale(1.03,${(1 - 0.045 * amp).toFixed(3)})`;
++			const over = `translateX(${(L * 1.08).toFixed(1)}px) translateY(${(2 * amp).toFixed(1)}px) rotate(${(dir * 4.2 * amp).toFixed(2)}deg) scale(${(1 + 0.05 * amp).toFixed(3)},${(1 - 0.07 * amp).toFixed(3)})`;
++			const pull = `translateX(${L.toFixed(1)}px) rotate(${(dir * 2.4 * amp).toFixed(2)}deg) scale(${(1 + 0.02 * amp).toFixed(3)},${(1 - 0.03 * amp).toFixed(3)})`;
++			pose.set(o, { crouch, pull, over });
++			o.style.transformOrigin = '50% 100%';
++			M(o, [{ transform: 'none' }, { transform: crouch }], { duration: mergeMs(MERGE_BEAT, !!S.turbo), easing: 'cubic-bezier(.4,0,.6,1)', fill: 'forwards' });
++		});
++		await beat(MERGE_BEAT);
++		// 2) pull-in. The same live overlays lean toward the centre. No snapshot yet, so the rigs keep advancing.
++		olds.forEach((o) => {
++			const p = pose.get(o)!;
++			o.querySelectorAll<HTMLElement>('.mLets, canvas.stk_letters').forEach((l) => M(l, [{ opacity: 1 }, { opacity: 0 }], { duration: mergeMs(160, !!S.turbo), fill: 'forwards' }));
++			M(o, [
++				{ transform: p.crouch },
++				{ transform: p.over, offset: 0.72 },
++				{ transform: p.pull },
++			], { duration: mergeMs(MERGE_BEAT, !!S.turbo), easing: 'cubic-bezier(.3,.6,.4,1)', fill: 'forwards' });
++		});
++		await beat(MERGE_BEAT);
++		// 3) impact. One fresh still of the pose they just reached, then the singles' atlases drop before the group decodes.
++		if (olds.length) {
++			const poses = olds.map((o) => held(o));
++			stage = leanStage(olds);
++			stage.parts.forEach((pt, i) => { pt.el.style.transform = poses[i] || 'none'; });
++			stackRelease(olds);
++		}
++		const warm = Promise.all([stackPrepare(reels), preloadStacks()]);
++		const seams: number[] = [];
++		for (let i = 1; i < n; i++) seams.push(x0 + i * step - (step - S.cell) / 2);
++		const flash = document.createElement('div');
++		flash.style.cssText = `position:absolute;left:${x0 + ((n - 1) * step) / 2}px;top:42%;width:1px;height:1px;pointer-events:none;z-index:7`;
++		B.appendChild(flash); made.push(flash);
++		if (hasSheet('fx_wild')) play('fx_wild', 'wflash', flash, { cls: 'wfx', loop: false, style: `position:absolute;width:${Math.round(n * S.cell * 0.95)}px;height:${Math.round(S.cell * 2.4)}px;translate:-50% -50%` });
++		seams.forEach((x) => {
++			const h = document.createElement('div'); h.className = 'mRing' + (big ? ' big' : '');
++			h.style.cssText = `left:${x}px;width:${Math.round(64 * (0.8 + amp))}px;height:${Math.round(64 * (0.8 + amp))}px`;
++			B.appendChild(h); made.push(h);
++			if (hasSheet('fx_feat')) play('fx_feat', 'burst', h, { cls: 'wfx', loop: false, style: 'position:absolute;left:50%;top:50%;width:160%;height:160%;translate:-50% -50%' });
++			M(h, [{ transform: 'translate(-50%,-50%) scale(.25)', opacity: 0.95 }, { transform: 'translate(-50%,-50%) scale(1.4)', opacity: 0 }], { duration: mergeMs(280, !!S.turbo), easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'forwards' });
++		});
++		try {
++			boardWin(n >= 4 ? 'big' : n >= 3 ? 'medium' : 'small');
++			boardShake(2 + n, 0.16);
++		} catch { /* the camera is optional; the cut still happens */ }
++		await new Promise<void>((res) => {
++			const hit = mergeMs(MERGE_HIT, !!S.turbo), cap = mergeMs(MERGE_BEAT, !!S.turbo);
++			let t = setTimeout(afterHit, hit);
++			const finish = () => { clearTimeout(t); beatRes = null; finishStage(); res(); };
++			beatRes = finish;
++			function afterHit() {
++				let open = true;
++				beatRes = finish;
++				t = setTimeout(() => { open = false; beatRes = null; res(); }, cap);
++				warm.then(() => { if (!open) return; open = false; clearTimeout(t); if (beatRes === finish) beatRes = null; res(); });
++			}
+ 		});
+-		await sw(LEAN);
+-		parts.forEach((pt) => A(pt.el, [{ transform: `translateX(${pt.L}px) rotate(${pt.dir * 2.6}deg)` }, { transform: `translateX(${pt.L * 1.04}px) rotate(${pt.dir * 1.6}deg) scale(1.075,.915)` }], { duration: SQUASH, easing: 'cubic-bezier(.3,0,.7,1)', fill: 'forwards' }));
+-		const bloom = bloomOver(stage.el);
+-		A(bloom, [{ opacity: 0 }, { opacity: 1 }], { duration: SQUASH, easing: 'cubic-bezier(.5,0,.9,.6)', fill: 'forwards' });
+-		await sw(SQUASH);
+-		await Promise.race([warm, sw(400, true)]); // (rarely waits: the bloom just holds a moment longer)
+-		// 3) HARD cut under the opaque bloom: the merged overlay replaces the stage in the same frame, the group scales up
+-		//    from about the singles' size (merge_join sheet, or a transform on the placeholder art); shockwave + burst per seam
+-		// fix4 proof B: the merged overlay's first frame is empty (its sheet / canvas paints a frame later): hold the lean
+-		// stage over it for two frames instead of cutting to a blank panel
+-		{ const st = stage.el, host = st.parentElement; stage = null; apply(); if (!st.isConnected) ((host?.id && document.getElementById(host.id)) || host)?.appendChild(st); requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(() => st.remove()))); made.push(st); }
++		// 4) reveal. The snapshot stays up until the new body has been drawn.
++		{ const st = stage?.el, host = st?.parentElement || null; stage = null; cut();
++			if (st) { if (!st.isConnected) ((host?.id && document.getElementById(host.id)) || host)?.appendChild(st);
++				const t0 = performance.now();
++				const uncover = () => {
++					const ov = ovOf(lo);
++					ov?.querySelectorAll<HTMLElement>(':scope > .wart').forEach((w) => { w.style.visibility = 'hidden'; });
++					const cvs = ov ? [...ov.querySelectorAll<HTMLCanvasElement>(':scope > canvas.stk_body')] : [];
++					const ready = cvs.some((cv) => cv.classList.contains('stk_db') ? !!dbDisplay(cv) : canvasRev(cv) > 0);
++					if (!st.isConnected) return;
++					if (ready || performance.now() - t0 > 120) st.remove();
++					else requestAnimationFrame(uncover);
++				};
++				requestAnimationFrame(uncover);
++				made.push(st); } }
+ 		const ov = ovOf(lo);
+ 		if (ov) {
+-			ov.style.animation = 'none';
++			ov.style.animation = 'none'; ov.style.transformOrigin = '50% 100%';
+ 			{ const m = ov.querySelector<HTMLElement>('.mx'); if (m) m.style.opacity = '0'; }
+-			if (hasStack('merge_join', ov)) void stackOnce('merge_join', ov);
+-			else growFromSingles(ov, n);
++			const pop = 1 + 0.07 * amp * (big ? 1.35 : 1);
++			M(ov, [
++				{ transform: `scale(${(0.9 - 0.03 * Math.min(n, 5)).toFixed(3)},0.84)` },
++				{ transform: `scale(${pop.toFixed(3)},${(pop * 0.98).toFixed(3)})`, offset: 0.55 },
++				{ transform: 'scale(0.99,1.012)', offset: 0.8 },
++				{ transform: 'none' },
++			], { duration: mergeMs(MERGE_BEAT, !!S.turbo), easing: 'ease-out', fill: 'forwards' });
++			try {
++				if (dbKnown(ov)) void dbPlay(ov, 'win').catch(() => {});
++				else if (hasStack('merge_join', ov)) void stackOnce('merge_join', ov);
++				else if (!ov.querySelector('canvas.stk_db')) growFromSingles(ov, n);
++			} catch { /* the scale above is the reveal either way */ }
+ 		}
+-		A(bloom, [{ opacity: 1 }, { opacity: 0 }], { duration: 210, easing: 'cubic-bezier(.37,0,.63,1)', fill: 'forwards' }).finished.catch(() => {}).finally(() => bloom.remove());
+-		made.push(bloom);
+-		mergeFx(reels, false); // no seam beams: the merged wild reads as one piece
+-		for (let i = 1; i < n; i++) ring(x0 + i * step - (step - S.cell) / 2, big);
+-		if (big) { const h = col(x0, n * step); burst(h, 'big', 60); made.push(h); }
+-		shake(big ? 4 : 2.5, big ? 170 : 120);
+-		// 4) letters ignite left to right after the scale settle (the letters sheet's blank lead-in waits for it)
+-		const lets = ov && !stackLetters(ov) ? [...ov.querySelectorAll<HTMLElement>('.mLets')] : []; // sheet not decoded yet: the r8d letters still
+-		lets.forEach((l) => A(l, [{ opacity: 0 }, { opacity: 1 }], { duration: 280, delay: 600, easing: 'ease-out', fill: 'backwards' }));
+-		await sw(140);
+-		// 5) each reel's corner gem flies into the merged wild's one corner gem; it shows the running product as they land
++		const lets = ov && !stackLetters(ov) ? [...ov.querySelectorAll<HTMLElement>('.mLets')] : [];
++		lets.forEach((l, i) => M(l, [{ opacity: 0 }, { opacity: 1 }], { duration: mergeMs(220, !!S.turbo), delay: mergeMs(40 * i, !!S.turbo), easing: 'ease-out', fill: 'backwards' }));
++		await beat(MERGE_BEAT);
++		// 5) each reel's gem flies into the merged gem. The product punches on each landing.
+ 		const mx = ov?.querySelector<HTMLElement>('.mx') || null;
+-		await recombine(badges, mx, values, product, big);
+-		await sw(big ? 420 : 240);
++		await new Promise<void>((res) => {
++			const run = recombine(badges, mx, values, product, big, true);
++			const finish = () => { skipping = true; beatRes = null; finishStage(); anims.forEach((a) => { try { a.finish(); } catch { a.cancel(); } }); waiters.forEach((w) => w()); waiters.clear(); res(); };
++			beatRes = finish;
++			run.then(() => { if (beatRes === finish) beatRes = null; res(); }, () => { if (beatRes === finish) beatRes = null; res(); });
++		});
++		// 6) one secondary bounce, then idle.
++		if (ov) {
++			try { dbNudge(ov, 0.22 * amp, 0.36); } catch { /* overlay scale below still settles */ }
++			M(ov, [{ transform: 'none' }, { transform: `scale(${(1 + 0.025 * amp).toFixed(3)},${(1 - 0.02 * amp).toFixed(3)})`, offset: 0.4 }, { transform: 'none' }], { duration: mergeMs(200, !!S.turbo), easing: 'ease-out' });
++			if (dbKnown(ov)) void dbPlay(ov, 'idle').catch(() => {});
++		}
++		await beat(200);
++	} catch (e) {
++		crumb('merge', { msg: scrub((e as Error)?.message || String(e)) });
++		cut();
+ 	} finally {
++		mergeHold = null; beatRes = null; pendingSkip = false;
++		dimmed.forEach((e) => { e.style.filter = ''; });
+ 		made.forEach((m) => m.remove()); B.classList.remove('mAnt');
+ 		if (stage) { stage.el.remove(); stage.olds.forEach((o) => (o.style.visibility = '')); }
+ 		const ov = ovOf(lo), mx = ov?.querySelector<HTMLElement>('.mx'); if (mx) { mx.style.opacity = ''; setGem(mx, product, false); }
+@@ -220,7 +329,6 @@
+ 	}
+ }
+ 
+-const LEAN = 340, SQUASH = 110;
+ /** One stage over the merging overlays (same look as an overlay, but one piece: no inner borders / gaps), holding a
+  *  snapshot of each overlay's body (its stack canvas, or a copy of its placeholder image) and, separately, its letters.
+  *  The overlays themselves are hidden under it; mergeIn's apply() re-renders them at the cut. */
+@@ -232,8 +340,11 @@
+ 		const p = document.createElement('div');
+ 		p.style.cssText = `position:absolute;top:0;height:100%;left:${o.offsetLeft - x0}px;width:${o.offsetWidth}px;transform-origin:50% 100%;will-change:transform`;
+ 		const snap = (sel: string) => {
+-			const cvs = [...o.querySelectorAll<HTMLCanvasElement>(sel)]; if (!cvs.length) return null;
++			// stk_db is a 1x1 placeholder for the rig. Copying it (or stretching it) is a garbage pixel, not the elf.
++			const cvs = [...o.querySelectorAll<HTMLCanvasElement>(sel)].filter((x) => !x.classList.contains('stk_db') && x.width > 1 && x.height > 1);
++			if (!cvs.length) return null;
+ 			const c = document.createElement('canvas'); c.width = cvs[0].width; c.height = cvs[0].height; const g = c.getContext('2d')!;
++			g.clearRect(0, 0, c.width, c.height);
+ 			cvs.forEach((x) => { try { g.drawImage(x, 0, 0, c.width, c.height); } catch { /* empty canvas */ } });
+ 			c.style.cssText = 'position:absolute;inset:0;width:100%;height:100%'; p.appendChild(c); return c;
+ 		};
+@@ -248,29 +359,14 @@
+ 		return { el: p, lets, rc: (rs[0] + rs[rs.length - 1]) / 2 };
+ 	});
+ 	parts.slice().sort((a, b) => Math.abs(b.rc - (parts[0].rc + parts[parts.length - 1].rc) / 2) - Math.abs(a.rc - (parts[0].rc + parts[parts.length - 1].rc) / 2)).forEach((pt) => el.appendChild(pt.el)); // centre on top
++	// Hide the live overlays before the stage is inserted, in the same turn, so a paint cannot show a leftover
++	// sheet canvas or the static still between the rig stopping and the snapshot appearing.
++	olds.forEach((o) => { o.style.visibility = 'hidden'; });
+ 	host.appendChild(el);
+-	// fix4 proof B: cloned <img> cut-outs decode asynchronously (several blank frames); keep the singles showing under the
+-	// stage until the clones have decoded, then hide them
+-	const imgs = [...el.querySelectorAll('img')];
+-	const hide = () => { if (el.isConnected) olds.forEach((o) => (o.style.visibility = 'hidden')); };
+-	void Promise.all(imgs.map((i) => i.decode().catch(() => {}))).then(hide);
++	// Cloned <img> cut-outs decode asynchronously. The overlays stay hidden; the stage simply has no pixels there
++	// until the clone decodes, which is blank rather than a previous merge's frame.
+ 	return { el, parts, olds };
+ }
+-/** White-pink bloom over `over`'s box, opaque edge to edge at full opacity (so the cut under it is never seen). */
+-function bloomOver(over: HTMLElement) {
+-	const b = document.createElement('div'), host = $('#board'); // outside #overlays: the cut re-renders that
+-	let x = 0, y = 0; for (let e: HTMLElement | null = over; e && e !== host; e = e.offsetParent as HTMLElement | null) { x += e.offsetLeft; y += e.offsetTop; }
+-	b.style.cssText = `position:absolute;left:${x}px;top:${y}px;width:${over.offsetWidth}px;height:${over.offsetHeight}px;z-index:40;pointer-events:none;opacity:0;` +
+-		'border-radius:6px;overflow:hidden;will-change:opacity';
+-	// re-audit M3: no flat filled rect. A radial flash (hot white core, warm falloff, transparent edges) over slowly
+-	// turning light rays, clipped to the merged reels' window; the core is opaque where the cut happens.
+-	b.innerHTML = '<i class="mfRays"></i><i class="mfCore"></i>';
+-	host.appendChild(b);
+-	const [rays, core] = [...b.children] as HTMLElement[];
+-	A(rays, [{ transform: 'scale(.8) rotate(0deg)' }, { transform: 'scale(1.25) rotate(24deg)' }], { duration: 900, easing: 'ease-out', fill: 'forwards' });
+-	A(core, [{ transform: 'scale(.55)' }, { transform: 'scale(1.18)' }], { duration: 420, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'forwards' });
+-	return b;
+-}
+ /** No merge_join sheet: the placeholder group art scales up from about a single's size (bottom anchored) with an elastic settle. */
+ function growFromSingles(ov: HTMLElement, n: number) {
+ 	const body = ov.querySelector<HTMLElement>(':scope>canvas.stk_body') || ov.querySelector<HTMLElement>(':scope>.wart'); if (!body) return;
+@@ -284,7 +380,12 @@
+ const prodTo = (v: number[], i: number) => v.slice(0, i + 1).reduce((a, b) => a * b, 1);
+ /** Fly gems (fixed-position clones, or gems inside the overlay) into `target`, one after another; as each lands the
+  *  target shows the running product of `values` (honest math: adjacent reels multiply), the last one counting up. */
+-async function recombine(gems: HTMLElement[], target: HTMLElement | null, values: number[], product: number, big = false) {
++async function recombine(gems: HTMLElement[], target: HTMLElement | null, values: number[], product: number, big = false, paced = false) {
++	const go = (el: Element, kf: Keyframe[], o: KeyframeAnimationOptions) => {
++		if (!paced) return A(el, kf, o);
++		const dur = Number(o.duration) || 0, delay = Number(o.delay) || 0;
++		return M(el, kf, { ...o, duration: dur ? mergeMs(dur, !!S.turbo) : 0, delay: delay ? mergeMs(delay, !!S.turbo) : 0 });
++	};
+ 	if (!target) { gems.forEach((g) => g.remove()); return; }
+ 	target.style.opacity = '0';
+ 	const tr = target.getBoundingClientRect();
+@@ -293,24 +394,29 @@
+ 		const sc = toStage(r).width / (r.width || 1), dx = (tr.left - r.left) * sc, dy = (tr.top - r.top) * sc, lift = g.closest('.ov') ? S.cell * 0.14 : -S.cell * 0.3; // inside an overlay (overflow hidden) it dips instead
+ 		const hid = g.style.opacity === '0'; g.style.opacity = ''; // mergeIn's clones were hidden through the lean: they fade in at their corner, then fly
+ 		const here = Math.hypot(dx, dy) < 6; // the clone already sits on the group's gem (first reel): it simply becomes the gem
+-		return A(g, here ? [{ opacity: 0 }, { opacity: 0 }] : [{ transform: `translate(0,0) scale(${hid ? 0.8 : 1})`, opacity: hid ? 0 : 1 }, { transform: 'translate(0,0) scale(1)', opacity: 1, offset: .18 }, { opacity: 1, offset: .5 }, { transform: `translate(${dx * 0.5}px,${dy * 0.5 + lift}px) scale(1.12)`, offset: .58 }, { opacity: 0, offset: .78 }, { transform: `translate(${dx}px,${dy}px) scale(${k})`, opacity: 0 }], // fades into the gem: never two badges on one corner
++		if (paced && !here) trailBetween(g, target, Math.min(1.5, 0.75 + Math.log2(Math.max(2, values[i] || 2)) * 0.12));
++		return go(g, here ? [{ opacity: 0 }, { opacity: 0 }] : [{ transform: `translate(0,0) scale(${hid ? 0.8 : 1})`, opacity: hid ? 0 : 1 }, { transform: 'translate(0,0) scale(1)', opacity: 1, offset: .18 }, { opacity: 1, offset: .5 }, { transform: `translate(${dx * 0.5}px,${dy * 0.5 + lift}px) scale(1.12)`, offset: .58 }, { opacity: 0, offset: .78 }, { transform: `translate(${dx}px,${dy}px) scale(${k})`, opacity: 0 }], // fades into the gem: never two badges on one corner
+ 			{ duration: here ? 1 : 340, delay: i * 80, easing: 'cubic-bezier(.45,0,.35,1)', fill: 'both' }).finished.catch(() => {}).then(async () => {
+ 			g.style.opacity = '0';
+ 			const last = i === gems.length - 1, v = last ? product : prodTo(values, i);
+-			if (!last) { target.style.opacity = ''; setGem(target, v, false); A(target, [{ transform: 'scale(1)' }, { transform: 'scale(1.18)', offset: .4 }, { transform: 'scale(1)' }], { duration: 200 }); return; }
+-			// the last one lands: count up from the running product to the total, then pop
+-			const from = gems.length > 1 ? prodTo(values, i - 1) : values[0], dur = T(260), t0 = performance.now();
++			const pop = paced
++				? 1 + Math.min(0.42, Math.log2(Math.max(2, v)) * 0.07) * (big ? 1.2 : 1) * mergeAmp(reducedMotion())
++				: (last ? (big ? 1.4 : 1.3) : 1.18);
++			if (!last) { target.style.opacity = ''; setGem(target, v, false); go(target, [{ transform: 'scale(1)' }, { transform: `scale(${pop.toFixed(3)})`, offset: .4 }, { transform: 'scale(1)' }], { duration: 200 }); return; }
++			// the last one lands: count up from the running product to the total, then pop. Elapsed time, not a frame count.
++			const from = gems.length > 1 ? prodTo(values, i - 1) : values[0], dur = paced ? mergeMs(220, !!S.turbo) : T(260), t0 = performance.now();
+ 			target.style.opacity = '';
+ 			await new Promise<void>((res) => {
+-				const tick = (t: number) => {
+-					const u = skipping ? 1 : Math.min(1, (t - t0) / dur);
++				// Sample on a short timer. The shown value follows elapsed time, so 60 Hz and 120 Hz land on the same number.
++				const tick = () => {
++					const u = skipping || dur <= 0 ? 1 : Math.min(1, (performance.now() - t0) / dur);
+ 					setGem(target, Math.round(from + (v - from) * (1 - (1 - u) ** 3)), false);
+-					u < 1 ? requestAnimationFrame(tick) : res();
++					u < 1 ? setTimeout(tick, 16) : res();
+ 				};
+-				requestAnimationFrame(tick);
++				tick();
+ 			});
+ 			setGem(target, v);
+-			A(target, [{ transform: 'scale(1)' }, { transform: `scale(${big ? 1.4 : 1.3})`, offset: .4 }, { transform: 'scale(1)' }], { duration: 300, easing: 'ease-out' });
++			go(target, [{ transform: 'scale(1)' }, { transform: `scale(${pop.toFixed(3)})`, offset: .4 }, { transform: 'scale(1)' }], { duration: 300, easing: 'ease-out' });
+ 		});
+ 	}));
+ 	gems.forEach((g) => g.remove()); target.style.opacity = '';
+diff -ruN a/frontend/apps/elfhaus/src/game/sprite.ts b/frontend/apps/elfhaus/src/game/sprite.ts
+--- a/frontend/apps/elfhaus/src/game/sprite.ts	2026-11-06 15:47:12.000000000 +0000
++++ b/frontend/apps/elfhaus/src/game/sprite.ts	2026-11-10 03:34:17.763180215 +0000
+@@ -23,7 +23,11 @@
+ const sheets = new Map<string, Sheet>();
+ const pool: HTMLCanvasElement[] = [];
+ const live = new Set<Anim>();
++const rev = new WeakMap<HTMLCanvasElement, number>();
+ let raf = 0;
++/** How many times this canvas's pixels have been replaced. The board mirror reuploads when this changes, so a pooled canvas cannot keep showing the previous animation. */
++export const canvasRev = (cv: HTMLCanvasElement) => rev.get(cv) || 0;
++function bump(cv: HTMLCanvasElement) { rev.set(cv, (rev.get(cv) || 0) + 1); }
+ 
+ export function loadSheet(id: string, src: string, atlas: Atlas) {
+ 	const done = (bm: CanvasImageSource) => { warm(bm); sheets.set(id, { img: bm, atlas, src }); };
+@@ -66,7 +70,10 @@
+ 
+ function take(w: number, h: number) {
+ 	const cv = pool.pop() || document.createElement('canvas');
++	const resized = cv.width !== w || cv.height !== h;
+ 	if (cv.width !== w) cv.width = w; if (cv.height !== h) cv.height = h;
++	// A same-size reuse keeps the previous animation's pixels. Resize clears; a matching size does not.
++	if (!resized) { const g = cv.getContext('2d'); if (g) g.clearRect(0, 0, w, h); }
+ 	cv.className = 'spr'; cv.removeAttribute('style'); cv.setAttribute('aria-hidden', 'true');
+ 	return cv;
+ }
+@@ -82,10 +89,13 @@
+ function draw(a: Anim, i: number, j = -1, f = 0) {
+ 	const ctx = a.cv.getContext('2d')!, W = a.cv.width, H = a.cv.height;
+ 	ctx.clearRect(0, 0, W, H);
+-	if (j < 0 || f <= 0) { frame(ctx, a.sheet.img, a.frames[i], W, H); return; }
+-	ctx.globalAlpha = 1 - f; frame(ctx, a.sheet.img, a.frames[i], W, H);
+-	ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = f; frame(ctx, a.sheet.img, a.frames[j], W, H);
+-	ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
++	if (j < 0 || f <= 0) frame(ctx, a.sheet.img, a.frames[i], W, H);
++	else {
++		ctx.globalAlpha = 1 - f; frame(ctx, a.sheet.img, a.frames[i], W, H);
++		ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = f; frame(ctx, a.sheet.img, a.frames[j], W, H);
++		ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
++	}
++	bump(a.cv);
+ }
+ // ---- crossfade plan, per frame pair i -> i+1: c = share of (opaque) thumbnail pixels changing by > 25 %; from it the
+ // blend window w (share of the interval that dissolves; 0 = straight cut) and the frame's hold d (in slowed intervals).
+@@ -161,12 +171,14 @@
+ 	const cv = def.canvas ? take(def.canvas[0], def.canvas[1]) : take(frames[0][2], frames[0][3]);
+ 	if (o.cls) cv.className += ' ' + o.cls;
+ 	if (o.style) cv.setAttribute('style', o.style);
+-	o.prepend ? host.prepend(cv) : host.appendChild(cv);
+ 	const rate = o.rate ?? spriteRate(host);
+ 	const a: Anim = { cv, sheet, frames, fps: (o.fps || def.fps) / rate, loop: o.loop ?? def.loop, hold: !!o.hold, t0: performance.now() + (o.delay || 0) * rate, last: -1, done: false, onEnd: o.onEnd };
+ 	if (o.blend && rate > 1 && frames.length > 1) a.plan = planOf(sheet, frames, cv.width, cv.height); // slowed only: turbo / own pace keep the plain step
+-	if (o.delay) cv.getContext('2d')!.clearRect(0, 0, cv.width, cv.height);
+-	else { a.last = 0; draw(a, 0); } // first frame now: a hand-off (one-shot -> loop) never shows an empty canvas for a frame
++	// Draw before the canvas is in the document. A pooled canvas still holds the previous animation until this draw,
++	// and appending it first let that frame present (and let the board upload it) for one paint.
++	if (o.delay) { cv.getContext('2d')!.clearRect(0, 0, cv.width, cv.height); bump(cv); }
++	else { a.last = 0; draw(a, 0); }
++	o.prepend ? host.prepend(cv) : host.appendChild(cv);
+ 	live.add(a);
+ 	if (!raf) raf = requestAnimationFrame(tick);
+ 	return a;
+diff -ruN a/frontend/apps/elfhaus/src/game/wintrail.ts b/frontend/apps/elfhaus/src/game/wintrail.ts
+--- a/frontend/apps/elfhaus/src/game/wintrail.ts	2026-11-06 15:47:12.000000000 +0000
++++ b/frontend/apps/elfhaus/src/game/wintrail.ts	2026-11-10 03:40:18.240155233 +0000
+@@ -106,6 +106,19 @@
+ 	return delayMs + dur * 1000 * 0.72;
+ }
+ 
++/** Snowflakes from one element to another (the merge's gems flying into the group gem). Same atlas sprites as the win trail. */
++export function trailBetween(from: HTMLElement, to: HTMLElement, scale = 1) {
++	const amp = (reduced() ? 0.5 : 1) * (S.turbo ? 0.6 : 1) * scale;
++	if (amp < 0.1 || !from.isConnected || !to.isConnected) return;
++	void ensure().then((R) => {
++		if (!R) return;
++		const A = centreOf(from), B = centreOf(to);
++		const n = Math.max(2, Math.round(4 * Math.min(amp, 1.4)));
++		for (let i = 0; i < n; i++) spawn(R, A.x, A.y, B.x, B.y, i * 28, amp);
++		kick();
++	});
++}
++
+ /** Fire a trail from every unique winning cell toward the WIN meter; punches the meter when the first wave arrives. */
+ export function trailToMeter(wins: { positions: Pos[] }[]) {
+ 	const dest = meterEl(); if (!dest || !wins.length) return;
