@@ -179,6 +179,12 @@ export function layoutStyle(el: HTMLElement): HostStyle | null {
 	}
 
 	if (cl.contains('sym')) { s.overflow = 'hidden'; s.zIndex = '1'; s.translate = wildTranslate(el); }
+	// Wild outline glow is a sibling .sym.symBack; WILD lettering is .sym.symTop.
+	// CSS stacked them at z-index 0/-1 and 3 so the gold silhouette sat behind the
+	// colour bust. With every .sym at z-index 1, DOM order painted .symBack last and
+	// hid the fig (and its baked eye whites) under the glow.
+	if (cl.contains('sym') && cl.contains('symBack')) s.zIndex = '0';
+	if (cl.contains('sym') && cl.contains('symTop')) s.zIndex = '3';
 	if (cl.contains('ov')) { s.overflow = 'hidden'; s.zIndex = '2'; }
 	if (cl.contains('mx')) {
 		s.zIndex = '3';
@@ -195,6 +201,11 @@ export function layoutStyle(el: HTMLElement): HostStyle | null {
 	else if (cl.contains('cell')) s.filter = 'none';
 	if (cl.contains('m_lid')) s.scale = (el.style.scale && el.style.scale !== 'none') ? el.style.scale : '1 0';
 	if (cell?.classList.contains('puffed') && (cl.contains('sym') || cl.contains('symGlow') || cl.contains('symSh'))) s.opacity = '0';
+	else if (cl.contains('symGlow')) {
+		s.zIndex = '0';
+		const show = !!cell && (cell.classList.contains('win') || (cell.classList.contains('wild') && !!el.closest('.sym.W')));
+		s.opacity = show ? '1' : '0';
+	}
 
 	const ov = el.closest('.ov') as HTMLElement | null;
 	if (ov && (ov.classList.contains('merge') || (ov.getAttribute('data-reels') || '').includes(',')) && ov.querySelector(':scope > canvas.stk_db')) {
@@ -230,6 +241,9 @@ export function boardRuleProps(el: HTMLElement): Record<string, string> {
 	if (id === 'reelLines') p.display = 'none';
 	if (cl.contains('cell')) abs();
 	if (cl.contains('sym')) { abs(); inset0(); p['z-index'] = '1'; p.overflow = 'hidden'; }
+	if (cl.contains('sym') && cl.contains('symBack')) p['z-index'] = '0';
+	if (cl.contains('sym') && cl.contains('symTop')) p['z-index'] = '3';
+	if (cl.contains('symGlow')) { abs(); inset0(); p['z-index'] = '0'; p['pointer-events'] = 'none'; }
 	if (cl.contains('sym') && cl.contains('art')) { p.top = p.right = p.bottom = p.left = '3.75%'; }
 	const rigdKid = cl.contains('rig') && !!par?.classList.contains('sym') && par.classList.contains('rigd');
 	const rigdBody = cl.contains('rgBody') && !!el.closest('.sym.rigd');
@@ -264,6 +278,11 @@ export function boardRuleProps(el: HTMLElement): Record<string, string> {
 	if (cl.contains('cell') && cl.contains('dim')) { p.opacity = '1'; p.filter = 'brightness(0.48) saturate(0.7)'; }
 	if (cl.contains('m_lid')) { p.scale = p.scale && p.scale !== 'none' ? p.scale : '1 0'; }
 	if ((cl.contains('sym') || cl.contains('symGlow') || cl.contains('symSh')) && el.closest('.cell.puffed')) p.opacity = '0';
+	else if (cl.contains('symGlow')) {
+		const cell = el.closest('.cell');
+		const show = !!cell && (cell.classList.contains('win') || (cell.classList.contains('wild') && !!el.closest('.sym.W')));
+		p.opacity = show ? '1' : '0';
+	}
 	if (cl.contains('sym') && pc?.contains('cell')) { const t = wildTranslate(el); if (t !== 'none') p.translate = t; }
 	const ov = el.closest('.ov') as HTMLElement | null;
 	if (ov && (cl.contains('mLets') || (el.tagName === 'CANVAS' && cl.contains('stk_letters')))
