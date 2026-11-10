@@ -251,3 +251,7 @@ Programmatic: `scale.x === scale.y` on every layout container; board fully in vi
 Report **board size as a percentage of the viewport, before and after, per view.** “Before” is `311ef87` as measured on the unzipped zip in the same harness.
 
 Never touch the Stake dev instance, audio, math, or books. Pixi only, existing assets only, no new packages.
+
+## 6. Archive of hidden / replaced systems
+
+The rebuild does not just delete retired DOM, CSS, and camera code. Snapshots and the full hidden-UI audit live in `archive/legacy-dom-ui/` (README is the audit list). That folder is excluded from the Svelte build and from the release zip, and nothing in it may be imported by the game. The pre-rebuild baseline is git tag `pre-layout-rebuild` (`311ef87`). Hidden hosts that still carry live state (`#uiHostTree`, board/HUD mirrors, overlays) are replaced with plain TypeScript state objects before their DOM copies leave the game. `#srHud` stays as the intentional screen-reader live region.

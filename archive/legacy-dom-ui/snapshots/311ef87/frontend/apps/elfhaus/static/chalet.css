@@ -1,0 +1,12 @@
+/* Chalet fonts and boot styles. Game chrome is drawn in Pixi. */
+@font-face{font-family:"Lilita One";src:url(fonts/LilitaOne.woff2) format("woff2");font-weight:400;font-display:block}
+:root{--c-ink:#26140f;--c-cream:#fbf3e4;--c-paper:#f1e2c6;--c-cran:#a61c34;--c-cran2:#7d1226;--c-gold:#f2b935;--c-gold2:#c98a1c;--c-goldhi:#ffe08a;
+  --c-pine:#1f4b38;--c-pine2:#163a2b;--c-wood:#7a4526;--c-snow:#fbf5ea;--c-ice:#b9cfe0;--ui:"Lilita One","Nunito",system-ui,sans-serif;
+  --tt-ink:#26140f;--tt-fill:#fbf3e4;--tt-neon:transparent}
+html,body{background:#2a1810!important}
+html body #bg.art{background-position:center}
+html body.inBonus #bg:not(.fs){filter:brightness(.66) saturate(.92) contrast(1.06)!important}
+html body #loader #lGo{background:var(--c-cran)!important;color:var(--c-cream)!important;font-family:'Lilita One',sans-serif!important;font-weight:400!important;
+  border:4px solid var(--c-ink)!important;border-radius:16px!important;letter-spacing:.06em!important;box-shadow:inset 0 5px 0 #c7344c,0 5px 0 var(--c-ink)!important;text-shadow:0 2px 0 var(--c-ink)!important}
+html body #loader .spCard h3{color:var(--c-cran)!important;font-family:'Lilita One',sans-serif!important;font-weight:400!important;text-shadow:none!important}
+html body #loader .spSkip{font-family:var(--ui)!important;color:var(--c-cream)!important}

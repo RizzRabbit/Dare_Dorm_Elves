@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>Elfhaus</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+		<link rel="preload" href="%sveltekit.assets%/fonts/Cinzel-VF.woff2" as="font" type="font/woff2" crossorigin />
+		<link rel="preload" href="%sveltekit.assets%/fonts/Nunito-VF.woff2" as="font" type="font/woff2" crossorigin />
+		<link rel="preload" href="%sveltekit.assets%/fonts/Montserrat-VF.woff2" as="font" type="font/woff2" crossorigin />
+		<meta name="theme-color" content="#2A1810" />
+		<style>html,body{background:#2A1810;margin:0}
+			/* L1: inline loader: starts hidden (.hold) so the studio sting is the first screen; intro.ts reveals it after the sting until the intro is up */
+			#preL{position:fixed;inset:0;z-index:1000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(14px,3vh,28px);
+				background:#2A1810;pointer-events:none;opacity:0;animation:preIn .3s ease-out .12s forwards}
+			#preL img{width:min(62vw,460px);height:auto}
+			/* SPRITE_MAP 69: the track and fill are the ui atlas frames bar_track / bar_fill (painted), shown at sprite size */
+			#preL .pb{width:200px;height:60px;overflow:hidden;background:url(%sveltekit.assets%/assets/sprites/ui/ui.webp) -10px -1422px/2048px 2048px no-repeat;position:relative}
+			#preL .pb i{display:block;position:absolute;left:40px;top:10px;width:120px;height:40px;background:url(%sveltekit.assets%/assets/sprites/ui/ui.webp) -1166px -1422px/2048px 2048px no-repeat;transform-origin:0 50%;transform:scaleX(max(.06,var(--p,0)));transition:transform .2s ease-out} /* determinate: loader.ts sets --p (0..1) from real load progress */
+			#preL.out{animation:preOut .2s ease-in forwards}
+			#preL.hold{animation:none;opacity:0} body:has(#loader.pxOn) #preL,body:has(#loader.ready) #preL,body:has(#loader.out) #preL{display:none}
+			@keyframes preIn{to{opacity:1}} @keyframes preOut{from{opacity:1}to{opacity:0}}
+			@media (prefers-reduced-motion:reduce){#preL .pb i{transition:none}}
+		</style>
+		<link rel="icon" type="image/png" href="%sveltekit.assets%/favicon.png" />
+		<link rel="stylesheet" href="%sveltekit.assets%/elfhaus.css" />
+		<link rel="stylesheet" href="%sveltekit.assets%/resub-fix.css" />
+		<link rel="stylesheet" href="%sveltekit.assets%/board.css" />
+		<link rel="stylesheet" href="%sveltekit.assets%/symrig.css" />
+		<link rel="stylesheet" href="%sveltekit.assets%/symdepth.css" />
+		<link rel="stylesheet" href="%sveltekit.assets%/chalet.css" />
+		<link rel="stylesheet" href="%sveltekit.assets%/skin.css" />
+		<link rel="stylesheet" href="%sveltekit.assets%/notile.css" />
+		%sveltekit.head%
+	</head>
+	<body>
+		<div id="preL" class="hold" aria-hidden="true"><img src="%sveltekit.assets%/art/logo.webp" alt="" /><div class="pb"><i></i></div></div>
+		<div style="display: contents">%sveltekit.body%</div>
+	</body>
+</html>

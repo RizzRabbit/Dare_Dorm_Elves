@@ -1,0 +1,115 @@
+{
+ "copy": {
+  "modes_title": "4 BONUS MODES",
+  "modes_cards": [
+   "BUNNY SLOPE",
+   "BLACK DIAMOND",
+   "DOUBLE BLACK",
+   "???"
+  ],
+  "modes_tag": "Three runs… and one Secret Santa.",
+  "egw_title": "WILD WINTER SPINS",
+  "egw_badge": "FEATURE SPINS",
+  "egw_merge": "x4 × x5 = x20",
+  "egw_tag": "Whole reels go WILD. Side by side? They multiply.",
+  "tap": "TAP TO START",
+  "sticky_title": "STICKY WILDS",
+  "sticky_ticks": [
+   "x1",
+   "x2",
+   "x3"
+  ],
+  "sticky_tag": "Once she's in, she stays… and gets hotter every respin."
+ },
+ "order": [
+  "modes",
+  "sticky",
+  "egw"
+ ],
+ "land": {
+  "size": [
+   1920,
+   1080
+  ],
+  "bg": "splash_bg_land.webp",
+  "title": {
+   "img": "splash_title.webp",
+   "cx": 960,
+   "cy": 170,
+   "w": 520
+  },
+  "panels": [
+   {
+    "img": "panel_modes_land.webp",
+    "cx": 359,
+    "cy": 600,
+    "w": 585,
+    "delayMs": 250
+   },
+   {
+    "img": "panel_sticky_land.webp",
+    "cx": 960,
+    "cy": 600,
+    "w": 585,
+    "delayMs": 430
+   },
+   {
+    "img": "panel_egw_land.webp",
+    "cx": 1561,
+    "cy": 600,
+    "w": 585,
+    "delayMs": 610
+   }
+  ],
+  "tap": {
+   "img": "splash_tap.webp",
+   "cx": 960,
+   "cy": 1000,
+   "w": 377,
+   "pulse": "opacity .6→1, scale .97→1.03, 1.1s ease-in-out infinite alternate"
+  }
+ },
+ "port": {
+  "size": [
+   1080,
+   1920
+  ],
+  "bg": "splash_bg_port.webp",
+  "title": {
+   "img": "splash_title.webp",
+   "cx": 540,
+   "cy": 205,
+   "w": 600
+  },
+  "panels": [
+   {
+    "img": "panel_modes_port.webp",
+    "cx": 540,
+    "cy": 640,
+    "w": 752,
+    "delayMs": 250
+   },
+   {
+    "img": "panel_sticky_port.webp",
+    "cx": 540,
+    "cy": 1107,
+    "w": 752,
+    "delayMs": 430
+   },
+   {
+    "img": "panel_egw_port.webp",
+    "cx": 540,
+    "cy": 1573,
+    "w": 752,
+    "delayMs": 610
+   }
+  ],
+  "tap": {
+   "img": "splash_tap.webp",
+   "cx": 540,
+   "cy": 1835,
+   "w": 444,
+   "pulse": "opacity .6→1, scale .97→1.03, 1.1s ease-in-out infinite alternate"
+  }
+ }
+}

@@ -35,6 +35,12 @@ if (/\s(src|href)="\/(?!\/)/.test(html)) fail('index.html has root-absolute path
 if (/mock_round|forcedBook|mockBet/.test(code)) fail('mock RGS code found in the production bundle');
 if (!existsSync(join(OUT, 'favicon.png'))) fail('favicon.png missing');
 
+// The legacy-dom-ui archive lives at the repo root and is not part of the Svelte
+// build, but never let a snapshot or README from it slip into a Stake zip.
+if (walk(OUT).some((f) => /(^|\/)(archive|legacy-dom-ui)(\/|$)/i.test(relative(OUT, f).replaceAll('\\', '/')))) {
+	fail('archive/legacy-dom-ui content found in the package');
+}
+
 // Every asset the game references must be in the package (live v3 loader showed broken images: the inlined bundle
 // resolved Vite-imported assets against the page, <game>/assets/x.webp, instead of <game>/_app/immutable/assets/).
 // 1) no chunk-relative Vite asset URLs (they break when the bundle is inlined into index.html; see vite.config.js)
