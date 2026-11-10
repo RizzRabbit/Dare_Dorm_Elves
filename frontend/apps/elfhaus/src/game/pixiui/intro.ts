@@ -6,7 +6,7 @@ import { gsap } from 'gsap';
 import { nineUi, startBtn, hit, modalDimTex } from './widgets';
 import { artWindow } from './elves';
 import { bmFit, centerSpr, fitSpr, typeRow, wordSpr } from './text';
-import { designH, designW, fillScreen, isPortrait, kickUi, onUiLayout, uiInteractive, uiKind, uiLayer } from './stage';
+import { designH, designW, fillScreen, isPortrait, kickUi, onUiLayout, setUiTier, uiInteractive, uiKind, uiLayer } from './stage';
 import { confirmVisible, buyVisible } from './buy';
 
 export type IntroState = { mode: string; spins: string };
@@ -132,6 +132,7 @@ export function showFeatureIntro(s: IntroState, start: () => void) {
 	layout();
 	root.visible = true;
 	if (dim) dim.visible = true;
+	setUiTier('modal');
 	uiInteractive(true);
 	if (card) {
 		gsap.killTweensOf(card);
@@ -155,7 +156,7 @@ export function hideFeatureIntro() {
 	const done = () => {
 		root.visible = false;
 		if (dim) dim.visible = false;
-		if (!buyVisible() && !confirmVisible()) uiInteractive(false);
+		if (!buyVisible() && !confirmVisible()) { uiInteractive(false); setUiTier('hud'); }
 		kickUi();
 	};
 	if (card) {

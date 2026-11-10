@@ -48,7 +48,7 @@ import { applyLayers } from './layers';
 import { startMirror } from './board/mirror';
 import { startFsBanner } from './board/banners';
 import { loadAllFx } from './fx';
-import { initUiPixi, uiPixiOn, setBuyHooks, paintBuyMenu, showBuyMenu, hideBuyMenu, showBuyConfirm, hideBuyConfirm } from './pixiui';
+import { initUiPixi, uiPixiOn, setBuyHooks, paintBuyMenu, showBuyMenu, hideBuyMenu, showBuyConfirm, hideBuyConfirm, layoutHud, hudHit } from './pixiui';
 import { startSpin, abortSpin, hurry } from './reels';
 import { hideRespin } from './respin';
 import type { BookEvent } from './typesBookEvent';
@@ -122,6 +122,7 @@ function setStrip() {
 	$('#bet').textContent = money(bet() * (S.replay ? replayCost : modeCost(spinMode())));
 	$('#betLabel').textContent = t('betLabel');
 	if (isOpen('#buyMenu')) paintBuy();
+	if (uiPixiOn()) layoutHud();
 }
 function message(title: string, body: string, opts: { reload?: boolean } = {}) {
 	$('#msgTitle').textContent = title; $('#msgBody').textContent = body;
@@ -145,6 +146,7 @@ function setBusy(b: boolean) {
 	['#buyBtn', '#betUp', '#betDown', '#armTag', '#bmUp', '#bmDown'].forEach((s) => (($(s) as HTMLButtonElement).disabled = b || !sessionReady || S.replay));
 	($('#autoBtn') as HTMLButtonElement).disabled = S.replay || !sessionReady; // v3.16 (#171); stays live mid-round so it can stop autoplay
 	($('#menuBtn') as HTMLButtonElement).disabled = b; if (b) closePop();
+	if (uiPixiOn()) layoutHud();
 }
 // ---------- autoplay (Stake-style panel) ----------
 // Counts only (no infinite: the RGS jurisdiction config has no flag that allows it). Optional stops, in currency:
@@ -161,6 +163,7 @@ const setAuto = () => {
 	$('#autoN').textContent = S.auto > 0 ? String(S.auto) : '';
 	$('#spinBtn').setAttribute('aria-label', S.auto > 0 ? `Stop autoplay (${S.auto} left)` : 'Spin');
 	$('#autoBtn').setAttribute('aria-label', S.auto > 0 ? 'Stop autoplay' : 'Autoplay'); $('#autoBtn').title = S.auto > 0 ? 'Stop autoplay' : 'Autoplay';
+	if (uiPixiOn()) layoutHud();
 };
 const stopAuto = () => { S.auto = 0; setAuto(); };
 const parseAmt = (v: string) => { const x = v.trim().replace(',', '.'); if (!x) return 0; return /^\d*\.?\d+$|^\d+\.$/.test(x) ? Number(x) : NaN; };
@@ -452,6 +455,7 @@ function syncTurbo() {
 	sw.classList.toggle('on', on); sw.setAttribute('aria-checked', String(on));
 	syncTempo();
 	if (uiPixiOn() && isOpen('#buyMenu')) paintBuy();
+	if (uiPixiOn()) layoutHud();
 }
 function setTurbo(on: boolean) { if (S.jur.disabledTurbo) return; S.turbo = on; syncTurbo(); }
 function betStep(d: number) {
@@ -557,6 +561,7 @@ function layoutRaw() {
 		document.documentElement.style.setProperty('--cell', cell + 'px');
 		S.cell = cell; renderAll();
 		mkPlace(cell);
+		if (uiPixiOn()) layoutHud(true);
 		setBg(S.inBonus); warmBg();
 		const fr = toStage($('#frame').getBoundingClientRect());
 		document.documentElement.style.setProperty('--gutR', Math.max(0, W - fr.right) + 'px');
@@ -720,7 +725,7 @@ export async function initGame() {
 		end: (B) => { featClose(B.querySelector('.bwFx')); bigWinElvesEnd(); },
 	});
 	// v3.15d: taps on a menu / panel / confirm card (or that close one) do not count toward the win lines' 2-tap zip
-	document.addEventListener('pointerdown', (e) => { const t = e.target as Element; if (!t?.closest?.('#bigwin,#outro')) { const ui = !!t?.closest?.('#menu,#popMenu,#buyMenu,#bmConfirm,#autoMenu,#msg,#resumeCard'); skipBoard(false, !ui && !t?.closest?.('#menuBtn,#buyBtn,#autoBtn,#turboBtn,#betUp,#betDown') && !anyOpen() && !popOpen()); if (!ui && !winPresenting()) hurry(); } }, { capture: true, passive: true });
+	document.addEventListener('pointerdown', (e) => { const t = e.target as Element; if (!t?.closest?.('#bigwin,#outro')) { const ui = !!t?.closest?.('#menu,#popMenu,#buyMenu,#bmConfirm,#autoMenu,#msg,#resumeCard') || (e instanceof PointerEvent && hudHit(e.clientX, e.clientY)); skipBoard(false, !ui && !t?.closest?.('#menuBtn,#buyBtn,#autoBtn,#turboBtn,#betUp,#betDown') && !anyOpen() && !popOpen()); if (!ui && !winPresenting()) hurry(); } }, { capture: true, passive: true });
 	track(initRoxy(layout));
 	loadAllFx(track).then(() => renderAll());
 	track(preloadPuff());   // fix4 puff_cold: puff textures decoded + drawn before the first spin

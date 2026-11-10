@@ -732,3 +732,9 @@ html body.pixiUi #intro>*{display:none!important}
 html body.pixiUi #buyMenu,
 html body.pixiUi #bmConfirm,
 html body.pixiUi #intro{background:transparent!important;pointer-events:none!important}
+
+/* Pixi HUD (chunk 2): keep the DOM boxes for layout / state, hide their paint and hits. */
+html body.pixiHud #hud,
+html body.pixiHud #fsBar,
+html body.pixiHud #mkBuyGlow{visibility:hidden!important;pointer-events:none!important}
+html body.pixiUi.pixiUiModal #uiStage{z-index:85!important;pointer-events:auto}

@@ -44,10 +44,19 @@ export const uiApp = () => app;
 export function animateUi(t: () => boolean) { tickers.add(t); kickUi(); }
 export function kickUi() { if (!app) return; dirty = true; app.ticker.start(); }
 
+let uiZ = TZ.hud;
+/** HUD lives under popMenu / DOM panels (z 45 / 80). Pixi modals raise the canvas above them. */
+export function setUiTier(tier: 'hud' | 'modal') {
+	uiZ = tier === 'modal' ? 85 : TZ.hud;
+	document.body.classList.toggle('pixiUiModal', tier === 'modal');
+	const cv = app?.canvas as HTMLCanvasElement | undefined;
+	if (cv) cv.style.zIndex = String(uiZ);
+}
 export function uiInteractive(on: boolean) {
 	const cv = app?.canvas as HTMLCanvasElement | undefined;
 	if (cv) cv.style.pointerEvents = on ? 'auto' : 'none';
 }
+
 
 function place() {
 	if (!app) return;
@@ -62,7 +71,7 @@ function place() {
 	const r = Math.min(3, Math.max(1, window.devicePixelRatio || 1));
 	if (app.renderer.resolution !== r) app.renderer.resolution = r;
 	if (app.renderer.width !== vw || app.renderer.height !== vh) app.renderer.resize(vw, vh);
-	cv.style.cssText = `position:fixed;left:0;top:0;width:${vw}px;height:${vh}px;pointer-events:${cv.style.pointerEvents || 'none'};z-index:${TZ.confirm};touch-action:none`;
+	cv.style.cssText = `position:fixed;left:0;top:0;width:${vw}px;height:${vh}px;pointer-events:${cv.style.pointerEvents || 'none'};z-index:${uiZ};touch-action:none`;
 	uiScale = Math.min(vw / D.w, vh / D.h);
 	uiRoot.scale.set(uiScale);
 	uiRoot.position.set((vw - D.w * uiScale) / 2, (vh - D.h * uiScale) / 2);
@@ -82,7 +91,9 @@ export function initUiStage() {
 		const cv = a.canvas as HTMLCanvasElement;
 		cv.id = 'uiStage';
 		cv.setAttribute('aria-hidden', 'true');
-		(document.getElementById('root') || document.body).appendChild(cv);
+		// Must live outside #root: that node is translated + scaled (stage.ts), and a viewport-sized
+		// canvas parented there is itself scaled (it overflowed or shrank on every non-1:1 window).
+		document.body.appendChild(cv);
 		watchCanvas(cv, 'ui');
 		uiScreen.eventMode = 'passive';
 		uiRoot.eventMode = 'passive';

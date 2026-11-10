@@ -7,7 +7,8 @@ import { TITLE_ART } from '../config';
 import { nineUi, icoBtn, makeSwitch, goBtn, hit, modalDimTex } from './widgets';
 import { artWindow } from './elves';
 import { bmFit, buyTitleSpr, centerSpr, fitSpr, wordSpr, typeRow } from './text';
-import { designH, designW, fillScreen, isPortrait, kickUi, onUiLayout, uiInteractive, uiKind, uiLayer } from './stage';
+import { designH, designW, fillScreen, isPortrait, kickUi, onUiLayout, setUiTier, uiInteractive, uiKind, uiLayer } from './stage';
+import { introVisible } from './intro';
 
 export type BuyCardState = { mode: ModeKey; price: string; x: string; off: boolean; armed: boolean };
 export type BuyState = {
@@ -315,6 +316,7 @@ export function paintBuyMenu(s: BuyState) {
 }
 
 export function showBuyMenu() {
+	setUiTier('modal');
 	ensureBuy();
 	if (last) layoutBuy();
 	buyRoot.visible = true;
@@ -345,7 +347,7 @@ export function hideBuyMenu() {
 	const done = () => {
 		buyRoot.visible = false;
 		if (buyDim) buyDim.visible = false;
-		if (!confirmRoot.visible) uiInteractive(false);
+		if (!confirmRoot.visible && !introVisible()) { uiInteractive(false); setUiTier('hud'); }
 		kickUi();
 	};
 	if (panel && buyRoot.visible) {
@@ -451,6 +453,7 @@ function layoutConfirm(s: ConfirmState) {
 }
 
 export function showBuyConfirm(s: ConfirmState) {
+	setUiTier('modal');
 	if (!confirmRoot.parent) {
 		confirmRoot.eventMode = 'passive';
 		if (modalDimTex) {
@@ -497,7 +500,7 @@ export function hideBuyConfirm() {
 	const done = () => {
 		confirmRoot.visible = false;
 		if (confirmDim) confirmDim.visible = false;
-		if (!buyRoot.visible) uiInteractive(false);
+		if (!buyRoot.visible && !introVisible()) { uiInteractive(false); setUiTier('hud'); }
 		kickUi();
 	};
 	if (cfCard) {

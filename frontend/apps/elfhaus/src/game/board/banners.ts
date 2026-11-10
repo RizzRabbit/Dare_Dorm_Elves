@@ -94,6 +94,7 @@ function fsPaint() {
 	kick();
 }
 function fsSync() {
+	if (document.body.classList.contains('pixiHud')) { if (fsRoot) fsRoot.visible = false; return; }
 	const el = document.getElementById('fsBar'); if (!el) return;
 	if (!fsRoot) fsBuild();
 	const on = !el.classList.contains('hidden');
@@ -105,6 +106,7 @@ function fsSync() {
 }
 /** Start drawing the free-spins bar in the board stage (once). */
 export async function startFsBanner() {
+	if (document.body.classList.contains('pixiHud')) return;
 	const el = document.getElementById('fsBar'); if (!el || !(await boardStage())) return;
 	new MutationObserver(fsSync).observe(el, { attributes: true, attributeFilter: ['class', 'style'], childList: true, subtree: true, characterData: true });
 	onLayout(fsSync); window.addEventListener('resize', () => requestAnimationFrame(fsSync));

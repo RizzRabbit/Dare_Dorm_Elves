@@ -24,7 +24,7 @@ export const SZ = { frame: 1, respins: 5, fsBar: 6, toast: 7, banner: 8 } as con
 /** DOM: #app column. */
 export const AZ = { stage: 2, hud: 6, top: 7 } as const;
 /** DOM: full-screen layers (body / #root level). */
-export const TZ = { replayBar: 40, popMenu: 45, modal: 50, confirm: 60, resume: 65, maxwin: 70, msg: 70, introCv: 199, loader: 200 } as const;
+export const TZ = { replayBar: 40, hud: 42, popMenu: 45, modal: 50, confirm: 60, resume: 65, maxwin: 70, msg: 70, introCv: 199, loader: 200 } as const;
 
 const rules: [string, number][] = [
 	['#board>#strips', BZ.strips], ['#board>#reelLines', BZ.reelLines], ['#board>#cells', BZ.cells], ['#cells>.cell.win', BZ.cellWin],
@@ -32,7 +32,7 @@ const rules: [string, number][] = [
 	['#frame>#mkFrame', FRZ.frameBack], ['#frame>#board', FRZ.board], ['#frame>#frameLit', FRZ.frameLit], ['#frame>#frameGlint', FRZ.frameLit], ['#frame>#mkGarland', FRZ.garland],
 	['#stage>#frame', SZ.frame], ['#stage>#fsBar', SZ.fsBar], ['#stage>#stepToast', SZ.toast], ['#stage>#banner', SZ.banner],
 	['#app>#stage', AZ.stage], ['#app>#hud', AZ.hud], ['#app>#top', AZ.top],
-	['#uiStage', TZ.confirm], ['#replayBar', TZ.replayBar], ['#popMenu', TZ.popMenu], ['#buyMenu', TZ.modal], ['#autoMenu', TZ.modal], ['#settings', TZ.modal], ['#menu', TZ.modal],
+	['#uiStage', TZ.hud], ['#replayBar', TZ.replayBar], ['#popMenu', TZ.popMenu], ['#buyMenu', TZ.modal], ['#autoMenu', TZ.modal], ['#settings', TZ.modal], ['#menu', TZ.modal],
 	['#intro', TZ.modal], ['#outro', TZ.modal], ['#fsMore', TZ.modal], ['#bigwin', TZ.modal], ['#cardFlip', TZ.modal], ['#bmConfirm', TZ.confirm],
 	['#resumeCard', TZ.resume], ['#maxwin', TZ.maxwin], ['#msg', TZ.msg], ['#introCv', TZ.introCv], ['#loader', TZ.loader],
 ];

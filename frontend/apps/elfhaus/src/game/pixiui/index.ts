@@ -7,9 +7,11 @@ import { loadElfArt } from './elves';
 import { loadUiWidgets } from './widgets';
 import { buyVisible, confirmVisible, tapBuyCard } from './buy';
 import { introVisible } from './intro';
+import { initHud, layoutHud, syncHud, hudHit, hudRects } from './hud';
 
 export { setBuyHooks, paintBuyMenu, showBuyMenu, hideBuyMenu, showBuyConfirm, hideBuyConfirm, type BuyState, type BuyCardState, type ConfirmState, type BuyHooks } from './buy';
 export { showFeatureIntro, hideFeatureIntro, type IntroState } from './intro';
+export { layoutHud, syncHud, hudHit, hudRects } from './hud';
 export { uiKind, uiScale, designW, designH, isPortrait } from './stage';
 
 let on = false;
@@ -27,6 +29,7 @@ export async function initUiPixi(): Promise<boolean> {
 	}
 	on = true;
 	document.body.classList.add('pixiUi');
+	await initHud();
 	kickUi();
 	installBounds();
 	return true;
@@ -108,5 +111,8 @@ function installBounds() {
 		interactive: uiInteractive,
 		tapCard: (i: number) => tapBuyCard(i),
 		confirmYes: () => { const h = (globalThis as any).__elfBuyConfirmYes; if (typeof h === 'function') h(); },
+		hudHit: (x: number, y: number) => hudHit(x, y),
+		layoutHud,
+		hudRects,
 	};
 }
