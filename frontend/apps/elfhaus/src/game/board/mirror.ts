@@ -7,7 +7,7 @@
 //   sheet frames (.rp f_*, .sd depth, letters: any background-image region)  -> Sprite on the shared texture
 //   tile recess / border / frost (.tRec / .tBd / .tFr, CSS border-image)       -> NineSliceSprite (52 px corners)
 //   <img> (stack panels, elf cut-outs, stills)                                   -> Sprite
-//   <canvas> snapshots (merge lean stage)                                        -> Sprite (uploaded once)
+//   <canvas> snapshots (merge lean stage)                                        -> Sprite (reuploaded when its pixels change)
 //   canvas.stk_db (DragonBones placeholder)                                      -> the rig's own container (dbstacks.ts)
 //   .symGlow / img.stk_glow                                                      -> layer.winGlow, recoloured teal glow
 //   .mx multiplier                                                               -> layer.symFx, gold bitmap font glyphs
@@ -20,6 +20,7 @@ import SHEET_JSON from '../chalet/symbols.sheet.json';
 import DEPTH_JSON from '../chalet/symdepth.json';
 import { boardStage, layer, kick, animate, onLayout } from './stage';
 import { dbDisplay } from '../dbstacks';
+import { canvasRev } from '../sprite';
 import { mxFont } from '../ui';
 
 type Fr = { frame: { x: number; y: number; w: number; h: number } };
@@ -399,8 +400,13 @@ function walk(el: HTMLElement, parent: Af, pc: Ctx, isRoot: boolean) {
 			const cv = el as unknown as HTMLCanvasElement;
 			if (base.f & F_DB) { const d = dbDisplay(cv); if (d) { const o = out(el, 'db', () => d.root); if (o.d !== d.root) o.d = d.root; if (d.root.destroyed) return; if (d.root.parent !== c.host) c.host.addChild(d.root); { const k = h / d.H; place(d.root, M, (w - d.W * k) / 2, 0, k, k); } d.root.alpha = c.op; d.root.zIndex = order++; d.root.visible = true; } return; }
 			if (!cv.width) return;
-			let t = cvTex.get(cv); if (!t || (t as Texture & { destroyed?: boolean }).destroyed) { t = Texture.from(cv); cvTex.set(cv, t); }
-			sprite(el, t, c, 0, 0, w, h, s);
+			// Texture.from reads the canvas once. A pooled sheet canvas is redrawn in place (and a merge snapshot can
+			// be the same element as an earlier upload). Without source.update the board keeps the previous frame.
+			let t = cvTex.get(cv); const dead = !t || (t as Texture & { destroyed?: boolean }).destroyed;
+			const revNow = canvasRev(cv);
+			if (dead) { t = Texture.from(cv); cvTex.set(cv, t); (t as Texture & { _rev?: number })._rev = revNow; }
+			else if ((t as Texture & { _rev?: number })._rev !== revNow) { t!.source.update(); (t as Texture & { _rev?: number })._rev = revNow; }
+			sprite(el, t!, c, 0, 0, w, h, s);
 			const held = outs.get(el); if (held) held.cv = cv;
 			return;
 		}

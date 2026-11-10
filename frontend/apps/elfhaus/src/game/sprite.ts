@@ -23,7 +23,11 @@ export type Anim = { cv: HTMLCanvasElement; sheet: Sheet; frames: number[][]; fp
 const sheets = new Map<string, Sheet>();
 const pool: HTMLCanvasElement[] = [];
 const live = new Set<Anim>();
+const rev = new WeakMap<HTMLCanvasElement, number>();
 let raf = 0;
+/** How many times this canvas's pixels have been replaced. The board mirror reuploads when this changes, so a pooled canvas cannot keep showing the previous animation. */
+export const canvasRev = (cv: HTMLCanvasElement) => rev.get(cv) || 0;
+function bump(cv: HTMLCanvasElement) { rev.set(cv, (rev.get(cv) || 0) + 1); }
 
 export function loadSheet(id: string, src: string, atlas: Atlas) {
 	const done = (bm: CanvasImageSource) => { warm(bm); sheets.set(id, { img: bm, atlas, src }); };
@@ -66,7 +70,10 @@ export function frameCSS(id: string, anim: string, idx: number) {
 
 function take(w: number, h: number) {
 	const cv = pool.pop() || document.createElement('canvas');
+	const resized = cv.width !== w || cv.height !== h;
 	if (cv.width !== w) cv.width = w; if (cv.height !== h) cv.height = h;
+	// A same-size reuse keeps the previous animation's pixels. Resize clears; a matching size does not.
+	if (!resized) { const g = cv.getContext('2d'); if (g) g.clearRect(0, 0, w, h); }
 	cv.className = 'spr'; cv.removeAttribute('style'); cv.setAttribute('aria-hidden', 'true');
 	return cv;
 }
@@ -82,10 +89,13 @@ function frame(ctx: CanvasRenderingContext2D, img: CanvasImageSource, fr: number
 function draw(a: Anim, i: number, j = -1, f = 0) {
 	const ctx = a.cv.getContext('2d')!, W = a.cv.width, H = a.cv.height;
 	ctx.clearRect(0, 0, W, H);
-	if (j < 0 || f <= 0) { frame(ctx, a.sheet.img, a.frames[i], W, H); return; }
-	ctx.globalAlpha = 1 - f; frame(ctx, a.sheet.img, a.frames[i], W, H);
-	ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = f; frame(ctx, a.sheet.img, a.frames[j], W, H);
-	ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+	if (j < 0 || f <= 0) frame(ctx, a.sheet.img, a.frames[i], W, H);
+	else {
+		ctx.globalAlpha = 1 - f; frame(ctx, a.sheet.img, a.frames[i], W, H);
+		ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = f; frame(ctx, a.sheet.img, a.frames[j], W, H);
+		ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+	}
+	bump(a.cv);
 }
 // ---- crossfade plan, per frame pair i -> i+1: c = share of (opaque) thumbnail pixels changing by > 25 %; from it the
 // blend window w (share of the interval that dissolves; 0 = straight cut) and the frame's hold d (in slowed intervals).
@@ -161,12 +171,14 @@ export function play(id: string, name: string, host: Element, o: PlayOpts = {}):
 	const cv = def.canvas ? take(def.canvas[0], def.canvas[1]) : take(frames[0][2], frames[0][3]);
 	if (o.cls) cv.className += ' ' + o.cls;
 	if (o.style) cv.setAttribute('style', o.style);
-	o.prepend ? host.prepend(cv) : host.appendChild(cv);
 	const rate = o.rate ?? spriteRate(host);
 	const a: Anim = { cv, sheet, frames, fps: (o.fps || def.fps) / rate, loop: o.loop ?? def.loop, hold: !!o.hold, t0: performance.now() + (o.delay || 0) * rate, last: -1, done: false, onEnd: o.onEnd };
 	if (o.blend && rate > 1 && frames.length > 1) a.plan = planOf(sheet, frames, cv.width, cv.height); // slowed only: turbo / own pace keep the plain step
-	if (o.delay) cv.getContext('2d')!.clearRect(0, 0, cv.width, cv.height);
-	else { a.last = 0; draw(a, 0); } // first frame now: a hand-off (one-shot -> loop) never shows an empty canvas for a frame
+	// Draw before the canvas is in the document. A pooled canvas still holds the previous animation until this draw,
+	// and appending it first let that frame present (and let the board upload it) for one paint.
+	if (o.delay) { cv.getContext('2d')!.clearRect(0, 0, cv.width, cv.height); bump(cv); }
+	else { a.last = 0; draw(a, 0); }
+	o.prepend ? host.prepend(cv) : host.appendChild(cv);
 	live.add(a);
 	if (!raf) raf = requestAnimationFrame(tick);
 	return a;

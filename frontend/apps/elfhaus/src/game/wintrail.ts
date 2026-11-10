@@ -106,6 +106,19 @@ function spawn(R: Container, x0: number, y0: number, x1: number, y1: number, del
 	return delayMs + dur * 1000 * 0.72;
 }
 
+/** Snowflakes from one element to another (the merge's gems flying into the group gem). Same atlas sprites as the win trail. */
+export function trailBetween(from: HTMLElement, to: HTMLElement, scale = 1) {
+	const amp = (reduced() ? 0.5 : 1) * (S.turbo ? 0.6 : 1) * scale;
+	if (amp < 0.1 || !from.isConnected || !to.isConnected) return;
+	void ensure().then((R) => {
+		if (!R) return;
+		const A = centreOf(from), B = centreOf(to);
+		const n = Math.max(2, Math.round(4 * Math.min(amp, 1.4)));
+		for (let i = 0; i < n; i++) spawn(R, A.x, A.y, B.x, B.y, i * 28, amp);
+		kick();
+	});
+}
+
 /** Fire a trail from every unique winning cell toward the WIN meter; punches the meter when the first wave arrives. */
 export function trailToMeter(wins: { positions: Pos[] }[]) {
 	const dest = meterEl(); if (!dest || !wins.length) return;
