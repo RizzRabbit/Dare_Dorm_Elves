@@ -11,7 +11,8 @@ import { MAX_WIN_X } from './config';
 import { moneyWin, moneyDigits } from './format';
 import { loadSheet, hasSheet, play, stop, unloadSheet, type Anim, type Atlas } from './sprite';
 import { ElfRig, TEMPO, type ElfCfg } from './elfrig';
-import { TRANS, TRANS_RX, FX, BLUSH } from './maxwinCast'; // the cast's in-betweens / fx / blush (shared with the LEGENDARY layer)
+import { TRANS, TRANS_RX, FX, BLUSH } from './maxwinCast';
+import { clearMwElves, mwElfLayer, setMwBackground, setMwCatcher } from './pixiui/winelves';
 
 // atlases live outside ./fx/ on purpose so fx.ts doesn't load them on the loading screen
 const ATL = import.meta.glob('./maxwin/*.json', { eager: true, import: 'default' }) as Record<string, Atlas>;
@@ -80,7 +81,9 @@ export async function maxWinCelebration(capX: number = MAX_WIN_X) {
 	await preloadMaxWin();                                             // fallback: wait for the decode before the entrance (instant if already preloaded)
 	await loadBg();                                                    // (orientation may have changed since the preload)
 	const bgEl = M.querySelector('.mwBg') as HTMLElement | null; if (bgEl) bgEl.style.backgroundImage = `url(${bgUrl()})`;
-	const crowd = document.createElement('div'); crowd.className = 'mwCrowd'; stage.appendChild(crowd);
+	setMwBackground(bgUrl());
+	const crowd = document.createElement('div'); crowd.className = 'mwCrowd';
+	// Detached crowd host; elves are drawn on the UI Pixi stage.
 	// calm screen: no falling paper confetti over the max win (turbo/skip unchanged)
 	const xEl = M.querySelector('.mwX') as HTMLElement, amtEl = M.querySelector('.mwAmt') as HTMLElement, hint = M.querySelector('.mwHint') as HTMLElement;
 	const tier = M.querySelector('.mwTier') as HTMLElement; tier.classList.add('spr');
@@ -91,7 +94,10 @@ export async function maxWinCelebration(capX: number = MAX_WIN_X) {
 	musicSting('bigwin'); duck(true); const cu = loop('bigwin_countup_loop'); setTimeout(() => voice('maxwin'), VOICE.bigWinDelayMs);
 	const landAt = COUNT_AT + COUNT_MS;
 	const g = document.createElement('div'); g.className = 'mwGroup'; crowd.appendChild(g);
-	rig = groupShow(g, landAt).start();                                // one rAF clock for the elves + title cue
+	const layer = mwElfLayer();
+	rig = groupShow(g, landAt);
+	rig.attachPixi(layer, (layer as any)._W, (layer as any)._H);
+	rig.start();
 	rig.at(400, () => {                                                // title: soft scale overshoot as its sprite starts
 		tier.classList.add('pop');
 		const a = run('maxwin_title', 'intro', tier, { hold: true, onEnd: () => { swap(a, 'maxwin_title', 'shine', tier); } });
@@ -99,6 +105,7 @@ export async function maxWinCelebration(capX: number = MAX_WIN_X) {
 	// count-up (live text); a tap during the show skips straight to the final amount
 	const skip = () => { skipped = true; };
 	M.addEventListener('pointerdown', skip, { once: true });
+	setMwCatcher(true, () => M.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })));
 	await new Promise<void>((res) => {
 		const t0 = performance.now() + COUNT_AT;
 		const tick = (now: number) => {
@@ -126,6 +133,7 @@ export async function maxWinCelebration(capX: number = MAX_WIN_X) {
 	timers.splice(0).forEach(clearTimeout); live.forEach((a) => stop(a)); live.clear(); rig?.destroy(); rig = null;
 	crowd.remove(); if (bgEl) bgEl.style.backgroundImage = ''; tier.classList.remove('spr', 'pop');
 	M.classList.add('hidden'); M.classList.remove('on', 'landed', 'held', 'out');
+	clearMwElves();
 	duck(false);
 	releaseMaxWin();
 }

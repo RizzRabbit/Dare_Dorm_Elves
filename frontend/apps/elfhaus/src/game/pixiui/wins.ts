@@ -9,6 +9,7 @@ import { animateUi, kickUi, onUiLayout, setUiTier, uiInteractive, uiScreen, view
 import { bmFit, setBm, typeRow, wordSpr, fitSpr } from './text';
 import { modalDimTex, nineUi } from './widgets';
 import { hudLayer } from './hud';
+import { ensureElfFx } from './winelves';
 
 export const winsLayer = new Container();
 winsLayer.label = 'uiWins';
@@ -16,7 +17,7 @@ winsLayer.eventMode = 'passive';
 winsLayer.sortableChildren = true;
 
 const $ = (sel: string) => document.querySelector<HTMLElement>(sel);
-const shown = (el: HTMLElement | null) => !!el && !el.classList.contains('hidden') && el.isConnected;
+const shown = (el: HTMLElement | null) => !!el && !el.classList.contains('hidden');
 
 function rect(el: Element | null) {
 	if (!el) return null;
@@ -27,11 +28,31 @@ function rect(el: Element | null) {
 
 function opacityOf(el: HTMLElement | null) {
 	if (!el) return 0;
-	const o = parseFloat(getComputedStyle(el).opacity);
-	return Number.isFinite(o) ? o : 1;
+	if (el.classList.contains('hidden')) return 0;
+	const inline = el.style.opacity;
+	if (inline) {
+		const o = parseFloat(inline);
+		if (Number.isFinite(o)) return o;
+	}
+	try {
+		const o = parseFloat(getComputedStyle(el).opacity);
+		if (Number.isFinite(o) && o > 0) return o;
+	} catch { /* detached */ }
+	return 1;
 }
 
 type Box = { x: number; y: number; w: number; h: number };
+function winBoxes() {
+	const cx = viewW / 2;
+	return {
+		title: { x: viewW * 0.08, y: viewH * 0.16, w: viewW * 0.84, h: Math.max(48, viewH * 0.12) },
+		amt: { x: viewW * 0.08, y: viewH * 0.40, w: viewW * 0.84, h: Math.max(52, viewH * 0.14) },
+		x: { x: cx - 60, y: viewH * 0.56, w: 120, h: 32 },
+		hint: { x: viewW * 0.12, y: viewH * 0.86, w: viewW * 0.76, h: 28 },
+		card: { x: viewW * 0.08, y: viewH * 0.22, w: viewW * 0.84, h: Math.min(viewH * 0.56, 420) },
+	};
+}
+
 
 function placeIn(c: Container, r: Box) {
 	c.position.set(r.x, r.y);
@@ -101,7 +122,7 @@ let flipRoot: Container, flipDim: Sprite | null = null, flipCard: Sprite, flipNa
 let lastFlipFront = '', lastFlipBack = '', lastFlipName = '';
 let msgRoot: Container, msgDim: Sprite | null = null, msgCard: Container, msgTitleSpr: Sprite | null = null, msgBodySpr: Sprite | null = null, msgBtn: Container, msgBtnLab: Sprite | null = null;
 
-const WIN_IDS = ['bigwin', 'maxwin', 'outro', 'fsMore', 'cardFlip', 'msg'] as const;
+const WIN_IDS = ['bigwin', 'maxwin', 'outro', 'fsMore', 'cardFlip', 'msg', 'resumeCard'] as const;
 const MODAL_IDS = ['buyMenu', 'bmConfirm', 'intro', ...WIN_IDS] as const;
 
 function idShown(id: string) {
@@ -196,10 +217,26 @@ function ensure() {
 
 	msgRoot = new Container(); msgRoot.label = 'uiMsg'; msgRoot.zIndex = 10; msgRoot.visible = false; msgRoot.eventMode = 'none';
 	msgCard = new Container(); msgCard.label = 'uiPanel'; msgCard.eventMode = 'none';
-	msgBtn = new Container(); msgBtn.eventMode = 'none';
+	msgBtn = new Container(); msgBtn.eventMode = 'static'; msgBtn.cursor = 'pointer';
+	msgBtn.on('pointertap', (e) => { e.stopPropagation(); document.getElementById('msgOk')?.click(); });
 	msgRoot.addChild(msgCard);
 
-	winsLayer.addChild(toastRoot, bannerRoot, fsRoot, outroRoot, flipRoot, bigRoot, maxRoot, msgRoot);
+	resumeRoot = new Container(); resumeRoot.label = 'uiResume'; resumeRoot.zIndex = 11; resumeRoot.visible = false;
+	resumeCardC = new Container(); resumeCardC.label = 'uiPanel'; resumeCardC.eventMode = 'none';
+	resumeBtnR = new Container(); resumeBtnS = new Container();
+	resumeBtnR.eventMode = 'static'; resumeBtnR.cursor = 'pointer';
+	resumeBtnS.eventMode = 'static'; resumeBtnS.cursor = 'pointer';
+	resumeBtnR.on('pointertap', (e) => { e.stopPropagation(); document.getElementById('rcResume')?.click(); });
+	resumeBtnS.on('pointertap', (e) => { e.stopPropagation(); document.getElementById('rcSkip')?.click(); });
+	resumeRoot.addChild(resumeCardC, resumeBtnR, resumeBtnS);
+
+	replayRoot = new Container(); replayRoot.label = 'uiReplay'; replayRoot.zIndex = 4; replayRoot.visible = false;
+	replayBg = new Container(); replayBg.eventMode = 'none';
+	replayBtn = new Container(); replayBtn.eventMode = 'static'; replayBtn.cursor = 'pointer';
+	replayBtn.on('pointertap', (e) => { e.stopPropagation(); document.getElementById('replayPlay')?.click(); });
+	replayRoot.addChild(replayBg, replayBtn);
+
+	winsLayer.addChild(toastRoot, bannerRoot, fsRoot, outroRoot, flipRoot, bigRoot, maxRoot, msgRoot, resumeRoot, replayRoot);
 	uiScreen.addChild(winsLayer);
 	built = true;
 	onUiLayout(() => { syncWins(); kickUi(); });
@@ -208,7 +245,7 @@ function ensure() {
 }
 
 function watchDom() {
-	const ids = ['banner', 'stepToast', 'bigwin', 'maxwin', 'outro', 'fsMore', 'cardFlip', 'msg'];
+	const ids = ['banner', 'stepToast', 'bigwin', 'maxwin', 'outro', 'fsMore', 'cardFlip', 'msg', 'resumeCard', 'replayBar'];
 	const obs = new MutationObserver(() => { syncWins(); kickUi(); });
 	for (const id of ids) {
 		const el = document.getElementById(id);
@@ -222,7 +259,15 @@ function syncToast(el: HTMLElement | null, root: Container, bg: Container, which
 		root.visible = false;
 		return;
 	}
-	const r = rect(el);
+	const boardBox = () => {
+		const raw = Document.prototype.getElementById.call(document, 'board') as HTMLElement | null;
+		if (!raw) return null;
+		const b = HTMLElement.prototype.getBoundingClientRect.call(raw);
+		if (!b.width) return null;
+		if (which === 'banner') return { x: b.x + 16, y: b.y + 8, w: Math.max(80, b.width - 32), h: 36 };
+		return { x: b.x + 16, y: b.y + b.height - 44, w: Math.max(80, b.width - 32), h: 40 };
+	};
+	const r = rect(el) || boardBox();
 	if (!r) { root.visible = false; return; }
 	const small = el.querySelector('small');
 	const main = (el.childNodes.length && small)
@@ -291,7 +336,8 @@ function syncBig() {
 	const G = B.querySelector<HTMLElement>('.bwGhost');
 	const A = B.querySelector<HTMLElement>('.bwAmt');
 	const X = B.querySelector<HTMLElement>('.bwX');
-	const tr = rect(T), gr = rect(G), ar = rect(A), xr = rect(X);
+	const fb = winBoxes();
+	const tr = rect(T) || (T ? fb.title : null), gr = rect(G), ar = rect(A) || (A ? fb.amt : null), xr = rect(X) || (X ? fb.x : null);
 	if (T && tr) {
 		placeIn(bigTitle, tr);
 		bigTitle.alpha = opacityOf(T);
@@ -371,7 +417,8 @@ function syncMax() {
 	const xEl = M.querySelector<HTMLElement>('.mwX');
 	const aEl = M.querySelector<HTMLElement>('.mwAmt');
 	const hint = M.querySelector<HTMLElement>('.mwHint');
-	const tr = rect(tier);
+	const fb = winBoxes();
+	const tr = rect(tier) || (tier ? fb.title : null);
 	const cv = tier?.querySelector('canvas') as HTMLCanvasElement | null;
 	if (tr && cv && cv.width && cv.height) {
 		if (maxTitle.texture.source.resource !== cv) {
@@ -463,12 +510,12 @@ function syncCard(overlay: HTMLElement | null, root: Container, dim: Sprite | nu
 	if (dim) {
 		dim.visible = true;
 		dim.alpha = (kind === 'fsMore' ? 0.35 : 0.88) * opacityOf(overlay);
-		dim.width = overlay.clientWidth || dim.width;
-		dim.height = overlay.clientHeight || dim.height;
+		dim.width = viewW;
+		dim.height = viewH;
 	}
 	root.alpha = 1;
 	const host = overlay.querySelector<HTMLElement>('.card');
-	const r = rect(host);
+	const r = rect(host) || winBoxes().card;
 	if (!host || !r) { card.visible = false; return; }
 	placeIn(card, r);
 	card.alpha = opacityOf(host) * opacityOf(overlay);
@@ -591,7 +638,7 @@ function syncMsg() {
 	msgRoot.visible = true;
 	if (msgDim) { msgDim.visible = true; msgDim.alpha = 0.88; }
 	const modal = M.querySelector<HTMLElement>('.modal') || M;
-	const r = rect(modal);
+	const r = rect(modal) || winBoxes().card;
 	if (!r) { msgCard.visible = false; return; }
 	placeIn(msgCard, r);
 	resetBg(msgCard, 'plate_cream', r.w, r.h, 2);
@@ -625,6 +672,11 @@ function syncMsg() {
 }
 
 let lastMsg = '';
+let resumeRoot: Container, resumeCardC: Container, resumeBtnR: Container, resumeBtnS: Container;
+let resumeTitle: Sprite | null = null, resumeLine: Sprite | null = null, resumeLabR: Sprite | null = null, resumeLabS: Sprite | null = null;
+let replayRoot: Container, replayBg: Container, replayBtn: Container;
+let replayLab: Sprite | null = null, replayPlayLab: Sprite | null = null;
+
 let lastTier = false;
 
 function syncWins() {
@@ -637,11 +689,62 @@ function syncWins() {
 	syncCard($('#fsMore'), fsRoot, fsDim, fsCard, 'fsMore');
 	syncFlip();
 	syncMsg();
+	syncResume();
+	syncReplay();
 	const modal = winsVisible();
 	if (modal !== lastTier) { lastTier = modal; relaxUiTier(); }
 	const cover = idShown('bigwin') || idShown('maxwin') || idShown('outro') || idShown('fsMore') || idShown('cardFlip') || idShown('msg');
 	hudLayer.visible = !cover;
 	return modal || shown($('#banner')) || shown($('#stepToast'));
+}
+
+
+function syncResume() {
+	const R = document.getElementById('resumeCard') as HTMLElement | null;
+	if (!shown(R)) { resumeRoot.visible = false; return; }
+	resumeRoot.visible = true;
+	const r = rect(R.querySelector('.modal')) || winBoxes().card;
+	placeIn(resumeCardC, r);
+	resetBg(resumeCardC, 'plate_cream', r.w, r.h, 2);
+	const title = document.getElementById('rcTitle');
+	const line = document.getElementById('rcLine');
+	const a = document.getElementById('rcResume');
+	const b = document.getElementById('rcSkip');
+	const tw = r.w - 40, th = 32;
+	resumeTitle = setBm(resumeCardC, resumeTitle, bmFit((title?.textContent || '').trim() || 'RESUME', 'font_cream', 22, tw, th));
+	if (resumeTitle) { resumeTitle.anchor.set(0.5, 0.5); resumeTitle.position.set(r.w / 2, 36); }
+	resumeLine = setBm(resumeCardC, resumeLine, bmFit((line?.textContent || '').trim(), 'font_ink', 15, tw, 48));
+	if (resumeLine) { resumeLine.anchor.set(0.5, 0); resumeLine.position.set(r.w / 2, 58); }
+	const bw = Math.min(160, (r.w - 48) / 2), bh = 44, by = r.h - 24 - bh;
+	placeIn(resumeBtnR, { x: r.x + 16, y: r.y + by, w: bw, h: bh });
+	placeIn(resumeBtnS, { x: r.x + r.w - 16 - bw, y: r.y + by, w: bw, h: bh });
+	resetBg(resumeBtnR, 'btn_go', bw, bh, 2);
+	resetBg(resumeBtnS, 'btn_pine', bw, bh, 2);
+	resumeLabR = setBm(resumeBtnR, resumeLabR, bmFit((a?.textContent || 'RESUME').trim(), 'font_cream', 16, bw * 0.9, bh * 0.6));
+	if (resumeLabR) { resumeLabR.anchor.set(0.5, 0.5); resumeLabR.position.set(bw / 2, bh / 2); }
+	resumeLabS = setBm(resumeBtnS, resumeLabS, bmFit((b?.textContent || 'SKIP').trim(), 'font_cream', 16, bw * 0.9, bh * 0.6));
+	if (resumeLabS) { resumeLabS.anchor.set(0.5, 0.5); resumeLabS.position.set(bw / 2, bh / 2); }
+}
+
+function syncReplay() {
+	const R = document.getElementById('replayBar') as HTMLElement | null;
+	if (!shown(R)) { replayRoot.visible = false; return; }
+	const r = rect(R) || { x: 8, y: 8, w: Math.min(viewW - 16, 360), h: 36 };
+	replayRoot.visible = true;
+	placeIn(replayRoot, r);
+	resetBg(replayBg, 'toast', r.w, r.h, 2);
+	const mode = document.getElementById('replayMode');
+	const pre = (R.querySelector('.rpPre')?.textContent || 'REPLAY · ') + (mode?.textContent || '');
+	replayLab = setBm(replayRoot, replayLab, bmFit(pre.trim(), 'font_ink', 14, r.w * 0.62, r.h * 0.7));
+	if (replayLab) { replayLab.anchor.set(0, 0.5); replayLab.position.set(10, r.h / 2); }
+	const btn = document.getElementById('replayPlay');
+	const bw = Math.min(90, r.w * 0.28), bh = r.h - 8;
+	placeIn(replayBtn, { x: r.x + r.w - bw - 6, y: r.y + 4, w: bw, h: bh });
+	// replayBtn is child of replayRoot, so local coords:
+	replayBtn.position.set(r.w - bw - 6, 4);
+	resetBg(replayBtn, 'btn_go', bw, bh, 2);
+	replayPlayLab = setBm(replayBtn, replayPlayLab, bmFit((btn?.textContent || 'PLAY').trim(), 'font_cream', 14, bw * 0.9, bh * 0.7));
+	if (replayPlayLab) { replayPlayLab.anchor.set(0.5, 0.5); replayPlayLab.position.set(bw / 2, bh / 2); }
 }
 
 export async function initWins() {
@@ -651,6 +754,7 @@ export async function initWins() {
 	if (!flipDim) { flipDim = makeDim(); if (flipDim) flipRoot.addChildAt(flipDim, 0); }
 	if (!msgDim) { msgDim = makeDim(); if (msgDim) msgRoot.addChildAt(msgDim, 0); }
 	document.body.classList.add('pixiWins');
+	ensureElfFx();
 	kickUi();
 	return true;
 }

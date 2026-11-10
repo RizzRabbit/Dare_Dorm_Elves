@@ -1,14 +1,15 @@
 // Pixi settings pop-out, settings panel, game-info chrome, and autoplay panel.
 // DOM stays the state / timing / input / a11y model. Rules body HTML is unchanged
 // and stays a live scroll window so touch + wheel keep working (panels.ts Scroller).
-import { Container, Rectangle, Sprite } from 'pixi.js';
+import { Container, Graphics, Rectangle, Sprite } from 'pixi.js';
 import { spr } from '../scene/atlas';
 import { closePanel } from '../panels';
 import { closePop, popOpen } from '../settings';
-import { audioVol } from '../audio';
+import { audioVol, setAudioVol } from '../audio';
 import { animateUi, kickUi, onUiLayout, uiInteractive, uiScreen, viewH, viewW } from './stage';
 import { bmFit, setBm, wordSpr, fitSpr } from './text';
-import { icoBtn, makeSlider, makeSwitch, modalDimTex, nineUi, type UiSlider } from './widgets';
+import { icoBtn, makeSlider, makeStepper, makeSwitch, modalDimTex, nineUi, type UiSlider, type UiStepper } from './widgets';
+import { makeRulesScroll, type RulesScroll } from './rules';
 import { relaxUiTier } from './wins';
 import { hudLayer } from './hud';
 
@@ -22,6 +23,31 @@ const byId = (id: string) => document.getElementById(id);
 
 type Box = { x: number; y: number; w: number; h: number };
 
+function defaultModalBox(): Box {
+	const pad = Math.max(10, Math.min(viewW, viewH) * 0.04);
+	const w = Math.min(viewW - pad * 2, viewW < 520 ? viewW - pad * 2 : 440);
+	const h = Math.min(viewH - pad * 2, viewH < 700 ? viewH - pad * 2 : Math.min(viewH * 0.88, 640));
+	return { x: (viewW - w) / 2, y: (viewH - h) / 2, w, h };
+}
+
+function defaultPopBox(): Box {
+	const btn = byId('menuBtn');
+	const br = rec(btn);
+	const w = Math.min(230, viewW - 16);
+	const rowH = 46;
+	const h = 5 * (rowH + 4) + 20;
+	let x = 8, y = 8;
+	if (br) { x = br.x; y = br.y + br.h + 8; }
+	if (x + w > viewW - 8) x = Math.max(8, viewW - 8 - w);
+	if (y + h > viewH - 120) y = Math.max(8, (br ? br.y + br.h + 8 : 8));
+	return { x, y, w, h };
+}
+
+function phoneView() {
+	return document.body.classList.contains('portrait') || document.body.classList.contains('phone') || viewW < 500;
+}
+
+
 function rec(el: Element | null): Box | null {
 	if (!el) return null;
 	const r = el.getBoundingClientRect();
@@ -31,13 +57,22 @@ function rec(el: Element | null): Box | null {
 
 function opacityOf(el: HTMLElement | null) {
 	if (!el) return 0;
-	const o = parseFloat(getComputedStyle(el).opacity);
-	return Number.isFinite(o) ? o : 1;
+	if (el.classList.contains('hidden')) return 0;
+	const inline = el.style.opacity;
+	if (inline) {
+		const o = parseFloat(inline);
+		if (Number.isFinite(o)) return o;
+	}
+	try {
+		const o = parseFloat(getComputedStyle(el).opacity);
+		if (Number.isFinite(o) && o > 0) return o;
+	} catch { /* detached */ }
+	return 1;
 }
 
 function overlayShown(id: string) {
 	const el = byId(id);
-	return !!el && !el.classList.contains('hidden') && el.isConnected;
+	return !!el && !el.classList.contains('hidden');
 }
 
 function clickEl(el: Element | null) {
@@ -182,8 +217,9 @@ function syncPop() {
 		popSlide.visible = false;
 		return;
 	}
-	const r = rec(el);
-	if (!r) { popRoot.visible = false; popCatch.visible = false; return; }
+	const r0 = rec(el) || defaultPopBox();
+	if (!r0) { popRoot.visible = false; popCatch.visible = false; return; }
+	let r = r0;
 	popCatch.visible = true;
 	popCatch.alpha = 0.001;
 	popCatch.width = viewW;
@@ -198,8 +234,9 @@ function syncPop() {
 	const rows = Array.from(el.querySelectorAll<HTMLElement>('.pmRow'));
 	while (popLabs.length < rows.length) popLabs.push(null as unknown as Sprite);
 	while (popIcos.length < rows.length) popIcos.push(null as unknown as Sprite);
+	const rowH = Math.max(36, (r.h - 16) / Math.max(1, rows.length) - 4);
 	rows.forEach((row, i) => {
-		const rr = rec(row);
+		const rr = rec(row) || { x: r.x + 8, y: r.y + 8 + i * (rowH + 4), w: r.w - 16, h: rowH };
 		if (!rr) return;
 		const plate = popRows.children[i] as Container | undefined;
 		let host = plate;
@@ -232,10 +269,21 @@ function syncPop() {
 	}
 	const openRow = rec(openItem.querySelector('.pmRow')) || rec(openItem) || r;
 	let sr: Box = { x: r.x + r.w + 14, y: openRow.y + (openRow.h - 42) / 2, w: 182, h: 42 };
-	// On a tall phone the pop already fills the left column; drop the slider
-	// under the card instead of flipping it on top of the rows.
-	if (sr.x + sr.w > viewW - 8) sr = { x: r.x, y: r.y + r.h + 8, w: Math.max(r.w, 182), h: 42 };
-	if (sr.y + sr.h > viewH - 6) sr = { ...sr, y: Math.max(6, r.y - 8 - sr.h) };
+	// Phone / narrow: always park the slider under the card so it cannot sit
+	// on the logo. Never flip it above the card on those sizes.
+	const under = { x: r.x, y: r.y + r.h + 8, w: Math.max(r.w, 182), h: 42 };
+	if (phoneView() || sr.x + sr.w > viewW - 8) sr = under;
+	if (sr.y + sr.h > viewH - 6) {
+		if (phoneView()) {
+			const need = sr.y + sr.h - (viewH - 6);
+			r = { ...r, y: Math.max(6, r.y - need) };
+			putAt(popPlate, r);
+			resetBg(popPlate, 'plate_cream', r.w, r.h, 2);
+			sr = { x: r.x, y: r.y + r.h + 8, w: Math.max(r.w, 182), h: 42 };
+		} else {
+			sr = { ...sr, y: Math.max(6, r.y - 8 - sr.h) };
+		}
+	}
 	if (sr.x < 6) sr = { ...sr, x: 6 };
 	putAt(popSlide, sr);
 	popSlide.alpha = 1;
@@ -289,7 +337,7 @@ function syncModalChrome(ui: ModalUi, titleWord: string | null, titleFallback: s
 		return null;
 	}
 	const modal = el.querySelector('.modal') as HTMLElement | null;
-	const r = rec(modal);
+	const r = rec(modal) || defaultModalBox();
 	if (!r) { ui.root.visible = false; return null; }
 	ui.root.visible = true;
 	ui.root.alpha = opacityOf(el);
@@ -328,22 +376,8 @@ function ensureSettings() {
 	setBuilt = true;
 	setSw.snd = makeSwitch(() => clickId('stSnd'));
 	setSw.turbo = makeSwitch(() => clickId('stTurbo'));
-	setSl.mus = makeSlider((v) => {
-		const el = $('#settings .stSl[data-k="mus"]');
-		if (!el) return;
-		const r = el.getBoundingClientRect();
-		const ev = new PointerEvent('pointerdown', { bubbles: true, clientX: r.left + v * r.width, clientY: r.top + r.height / 2 });
-		el.dispatchEvent(ev);
-		el.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, clientX: r.left + v * r.width, clientY: r.top + r.height / 2 }));
-	});
-	setSl.sfx = makeSlider((v) => {
-		const el = $('#settings .stSl[data-k="sfx"]');
-		if (!el) return;
-		const r = el.getBoundingClientRect();
-		const ev = new PointerEvent('pointerdown', { bubbles: true, clientX: r.left + v * r.width, clientY: r.top + r.height / 2 });
-		el.dispatchEvent(ev);
-		el.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, clientX: r.left + v * r.width, clientY: r.top + r.height / 2 }));
-	});
+	setSl.mus = makeSlider((v) => { setAudioVol('mus', v); });
+	setSl.sfx = makeSlider((v) => { setAudioVol('sfx', v); });
 	setUi.body.addChild(setSw.snd, setSw.turbo, setSl.mus, setSl.sfx);
 }
 
@@ -352,10 +386,13 @@ function syncSettings() {
 	const info = syncModalChrome(setUi, 'w_settings', 'SETTINGS');
 	setUi.body.visible = !!info;
 	if (!info) return;
+	const rowH = 48, rowGap = 8, rowX = info.r.x + 16, rowW = info.r.w - 32;
+	let rowY = info.r.y + 56;
 	const placeRow = (sel: string, kind: 'sw' | 'sl', key: 'snd' | 'mus' | 'sfx' | 'turbo') => {
 		const row = $(sel);
-		const rr = rec(row);
-		if (!rr || !row) return;
+		const rr = rec(row) || { x: rowX, y: rowY, w: rowW, h: rowH };
+		rowY += rowH + rowGap;
+		if (!row) return;
 		let plate = setUi.body.children.find((c) => c.label === 'row:' + key) as Container | undefined;
 		if (!plate) {
 			plate = new Container();
@@ -407,35 +444,23 @@ let autoStartLab: Sprite | null = null;
 let autoStartBtn: Container | null = null;
 let autoChips: Container;
 let autoAdv: Container;
-const lifted = new Map<HTMLElement, { parent: Node; next: ChildNode | null; ph: HTMLElement }>();
+let autoScroll: Container;
+let autoScrollMask: Graphics | null = null;
+let autoSteppers: Record<string, UiStepper> = {};
+let autoScrollY = 0;
+let autoDrag: { y: number; s: number } | null = null;
 
-function placeLifted(el: HTMLElement, r: Box) {
-	if (!lifted.has(el)) {
-		const ph = document.createElement('span');
-		ph.className = 'pixiLiftPh';
-		ph.style.cssText = `display:inline-block;flex:none;width:${Math.round(r.w)}px;height:${Math.round(r.h)}px`;
-		el.parentNode!.insertBefore(ph, el);
-		lifted.set(el, { parent: el.parentNode!, next: el.nextSibling, ph });
-		document.body.appendChild(el);
-		el.classList.add('pixiLift');
-	}
-	el.style.left = r.x + 'px';
-	el.style.top = r.y + 'px';
-	el.style.width = r.w + 'px';
-	el.style.height = r.h + 'px';
-}
-
-function unliftOne(el: HTMLElement, home: { parent: Node; next: ChildNode | null; ph: HTMLElement }) {
-	el.classList.remove('pixiLift');
-	el.style.left = el.style.top = el.style.width = el.style.height = '';
-	home.ph.remove();
-	if (home.next && home.next.parentNode === home.parent) home.parent.insertBefore(el, home.next);
-	else home.parent.appendChild(el);
-}
-
-function unliftAll() {
-	for (const [el, home] of lifted) unliftOne(el, home);
-	lifted.clear();
+function stepAmt(id: string, dir: number) {
+	const el = byId(id) as HTMLInputElement | null;
+	if (!el) return;
+	const cur = el.value.trim() === '' ? 0 : Number(el.value.replace(',', '.'));
+	const base = Number.isFinite(cur) ? cur : 0;
+	const step = Math.max(1, Math.round(base ? Math.pow(10, Math.max(0, Math.floor(Math.log10(base)) - 1)) : 1));
+	let next = base + dir * step;
+	if (next <= 0) el.value = '';
+	else el.value = String(next);
+	el.dispatchEvent(new Event('input', { bubbles: true }));
+	el.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
 function ensureAuto() {
@@ -444,21 +469,58 @@ function ensureAuto() {
 	autoSwFeat = makeSwitch(() => clickId('stFeat'));
 	autoChips = new Container();
 	autoAdv = new Container();
+	autoScroll = new Container();
+	autoScroll.eventMode = 'static';
+	autoScroll.on('pointerdown', (e) => { autoDrag = { y: e.global.y, s: autoScrollY }; e.stopPropagation(); });
+	autoScroll.on('pointermove', (e) => {
+		if (!autoDrag) return;
+		autoScrollY = autoDrag.s - (e.global.y - autoDrag.y);
+		kickUi();
+		e.stopPropagation();
+	});
+	const end = () => { autoDrag = null; };
+	autoScroll.on('pointerup', end);
+	autoScroll.on('pointerupoutside', end);
+	autoScroll.on('pointercancel', end);
+	autoScroll.on('wheel', (e: any) => { autoScrollY += (e.deltaY ?? 0); kickUi(); e.stopPropagation?.(); });
 	autoStartBtn = new Container();
 	autoStartBtn.eventMode = 'static';
 	autoStartBtn.cursor = 'pointer';
 	autoStartBtn.on('pointertap', (e) => { e.stopPropagation(); clickId('autoStart'); });
-	autoUi.body.addChild(autoChips, autoAdv, autoSwBonus, autoSwFeat, autoStartBtn);
+	autoSteppers.stLoss = makeStepper(() => stepAmt('stLoss', -1), () => stepAmt('stLoss', 1));
+	autoSteppers.stWin = makeStepper(() => stepAmt('stWin', -1), () => stepAmt('stWin', 1));
+	autoSteppers.stUp = makeStepper(() => stepAmt('stUp', -1), () => stepAmt('stUp', 1));
+	autoScroll.addChild(autoChips, autoAdv, autoSwBonus, autoSwFeat, autoSteppers.stLoss, autoSteppers.stWin, autoSteppers.stUp);
+	autoUi.body.addChild(autoScroll, autoStartBtn);
 }
 
 function syncAuto() {
 	ensureAuto();
 	const info = syncModalChrome(autoUi, 'w_autoplay', 'AUTOPLAY');
 	autoUi.body.visible = !!info;
-	if (!info) {
-		unliftAll();
-		return;
+	if (!info) return;
+	const r = info.r;
+	const pad = 14;
+	const startH = Math.max(44, Math.min(56, r.h * 0.1));
+	const startY = r.y + r.h - pad - startH;
+	const bodyTop = r.y + 52;
+	const bodyH = Math.max(80, startY - 10 - bodyTop);
+	autoScroll.position.set(r.x, bodyTop);
+	autoScroll.hitArea = new Rectangle(0, 0, r.w, bodyH);
+	if (!autoScrollMask) {
+		autoScrollMask = new Graphics();
+		autoScroll.addChildAt(autoScrollMask, 0);
 	}
+	autoScrollMask.clear();
+	autoScrollMask.rect(0, 0, r.w, bodyH).fill(0xffffff);
+	autoScroll.mask = autoScrollMask;
+
+	const placeY = (c: Container, x: number, yy: number) => { c.position.set(x, yy); (c as any)._layY = yy; };
+	placeY(autoChips, 0, 0);
+	placeY(autoAdv, 0, 0);
+
+	const innerW = r.w - pad * 2;
+	let y = 4;
 	const counts = byId('autoCounts');
 	const chips = counts ? Array.from(counts.querySelectorAll<HTMLElement>('button')) : [];
 	while (autoChips.children.length < chips.length) {
@@ -474,62 +536,68 @@ function syncAuto() {
 		autoChips.addChild(c);
 	}
 	while (autoChips.children.length > chips.length) autoChips.removeChild(autoChips.children[autoChips.children.length - 1]);
+	const n = Math.max(1, chips.length);
+	const cols = n > 4 ? 5 : Math.max(1, n);
+	const gap = 6;
+	const cw = (innerW - gap * (cols - 1)) / cols;
+	const ch = 40;
 	chips.forEach((b, i) => {
-		const rr = rec(b);
-		if (!rr) return;
+		const col = i % cols, row = Math.floor(i / cols);
+		const rr = rec(b) || { x: r.x + pad + col * (cw + gap), y: bodyTop + y + row * (ch + gap), w: cw, h: ch };
 		const c = autoChips.children[i] as Container;
-		putAt(c, rr);
-		const on = b.classList.contains('on') || b.getAttribute('aria-checked') === 'true';
-		resetBg(c, on ? 'btn_gold' : 'btn_pine', rr.w, rr.h, 2);
-		c.hitArea = new Rectangle(0, 0, rr.w, rr.h);
-		const lab = (b.textContent || '').trim();
-		autoLabs['chip' + i] = putLabel(c, autoLabs['chip' + i] || null, lab, { x: 0, y: 0, w: rr.w, h: rr.h }, 'font_cream', 'center');
+		// positions inside the scroll container (local)
+		placeY(c, pad + col * (cw + gap), y + row * (ch + gap));
+		resetBg(c, (b.classList.contains('on') || b.getAttribute('aria-checked') === 'true') ? 'btn_gold' : 'btn_pine', cw, ch, 2);
+		c.hitArea = new Rectangle(0, 0, cw, ch);
+		autoLabs['chip' + i] = putLabel(c, autoLabs['chip' + i] || null, (b.textContent || '').trim(), { x: 0, y: 0, w: cw, h: ch }, 'font_cream', 'center');
+		void rr;
 	});
+	y += Math.ceil(n / cols) * (ch + gap) + 6;
 
 	const ab = byId('abRow');
-	const abr = rec(ab);
-	if (ab && abr) {
-		let plate = autoUi.body.children.find((c) => c.label === 'row:bonus') as Container | undefined;
+	const rowH = 44;
+	{
+		let plate = autoScroll.children.find((c) => c.label === 'row:bonus') as Container | undefined;
 		if (!plate) {
 			plate = new Container();
 			plate.label = 'row:bonus';
-			autoUi.body.addChildAt(plate, 0);
+			autoScroll.addChildAt(plate, 0);
 		}
-		putAt(plate, abr);
-		resetBg(plate, 'row_plate', abr.w, abr.h, 2);
-		const labW = Math.max(80, abr.w * 0.62);
-		autoLabs.bonus = putLabel(plate, autoLabs.bonus || null, (ab.querySelector('.lbl')?.textContent || 'AUTO-PLAY BONUS').trim(), { x: 12, y: 0, w: labW, h: abr.h }, 'font_ink', 'left');
+		placeY(plate, pad, y);
+		resetBg(plate, 'row_plate', innerW, rowH, 2);
+		autoLabs.bonus = putLabel(plate, autoLabs.bonus || null, (ab?.querySelector('.lbl')?.textContent || 'AUTO-PLAY BONUS').trim(), { x: 12, y: 0, w: innerW * 0.62, h: rowH }, 'font_ink', 'left');
 		const swEl = byId('stBonus');
-		const sr = rec(swEl) || { x: abr.x + abr.w - 76, y: abr.y + (abr.h - 36) / 2, w: 64, h: 36 };
-		autoSwBonus.position.set(sr.x, sr.y);
-		autoSwBonus.scale.set(sr.h / autoSwBonus.H);
+		placeY(autoSwBonus, pad + innerW - 72, y + (rowH - 36) / 2);
+		autoSwBonus.scale.set(36 / autoSwBonus.H);
 		autoSwBonus.set(!!swEl?.classList.contains('on'));
 	}
+	y += rowH + 8;
 
 	const advBtn = byId('advBtn');
-	const adr = rec(advBtn);
-	if (advBtn && adr) {
-		let btn = autoUi.body.children.find((c) => c.label === 'advBtn') as Container | undefined;
+	{
+		let btn = autoScroll.children.find((c) => c.label === 'advBtn') as Container | undefined;
 		if (!btn) {
 			btn = new Container();
 			btn.label = 'advBtn';
 			btn.eventMode = 'static';
 			btn.cursor = 'pointer';
 			btn.on('pointertap', (e) => { e.stopPropagation(); clickId('advBtn'); });
-			autoUi.body.addChild(btn);
+			autoScroll.addChild(btn);
 		}
-		putAt(btn, adr);
-		btn.hitArea = new Rectangle(0, 0, adr.w, adr.h);
-		const open = advBtn.getAttribute('aria-expanded') === 'true' || !byId('adv')?.classList.contains('hidden');
-		autoLabs.adv = putLabel(btn, autoLabs.adv || null, (advBtn.textContent || 'ADVANCED').trim(), { x: 8, y: 0, w: adr.w - 36, h: adr.h }, 'font_ink', 'left');
-		autoLabs.chev = icoAt(btn, autoLabs.chev || null, 'ico_chev_ink', { x: adr.w - 28, y: (adr.h - 16) / 2, w: 16, h: 16 });
+		placeY(btn, pad, y);
+		btn.hitArea = new Rectangle(0, 0, innerW, 32);
+		const open = advBtn?.getAttribute('aria-expanded') === 'true' || !byId('adv')?.classList.contains('hidden');
+		autoLabs.adv = putLabel(btn, autoLabs.adv || null, (advBtn?.textContent || 'ADVANCED').trim(), { x: 8, y: 0, w: innerW - 36, h: 32 }, 'font_ink', 'left');
+		autoLabs.chev = icoAt(btn, autoLabs.chev || null, 'ico_chev_ink', { x: innerW - 28, y: 8, w: 16, h: 16 });
 		if (autoLabs.chev) autoLabs.chev.scale.y = Math.abs(autoLabs.chev.scale.y) * (open ? -1 : 1);
+		y += 36;
 	}
 
 	const adv = byId('adv');
 	const advOpen = !!adv && !adv.classList.contains('hidden');
 	autoAdv.visible = advOpen;
 	autoSwFeat.visible = advOpen;
+	for (const s of Object.values(autoSteppers)) s.visible = advOpen;
 	if (advOpen && adv) {
 		const rows = Array.from(adv.querySelectorAll<HTMLElement>('.row'));
 		while (autoAdv.children.length < rows.length) {
@@ -538,112 +606,83 @@ function syncAuto() {
 			autoAdv.addChild(c);
 		}
 		while (autoAdv.children.length > rows.length) autoAdv.removeChild(autoAdv.children[autoAdv.children.length - 1]);
-		const keep = new Set<HTMLElement>();
 		rows.forEach((row, i) => {
-			const rr = rec(row);
-			if (!rr) return;
 			const c = autoAdv.children[i] as Container;
-			putAt(c, rr);
-			resetBg(c, 'row_plate', rr.w, rr.h, 2);
-			const lab = { x: rr.x + 12, y: rr.y, w: Math.max(70, rr.w * 0.48), h: rr.h };
-			autoLabs['adv' + i] = putLabel(c, autoLabs['adv' + i] || null, (row.querySelector('.lbl')?.textContent || '').trim(), { x: lab.x - rr.x, y: 0, w: lab.w, h: rr.h }, 'font_ink', 'left');
-			const inp = (row.querySelector('input') || row.querySelector('#stLoss, #stWin, #stUp')) as HTMLElement | null;
+			placeY(c, pad, y);
+			resetBg(c, 'row_plate', innerW, rowH, 2);
+			autoLabs['adv' + i] = putLabel(c, autoLabs['adv' + i] || null, (row.querySelector('.lbl')?.textContent || '').trim(), { x: 12, y: 0, w: innerW * 0.48, h: rowH }, 'font_ink', 'left');
+			const inp = row.querySelector('input') as HTMLInputElement | null;
 			const sw = row.querySelector('.sw') as HTMLElement | null;
 			if (inp) {
-				const ir = { x: rr.x + rr.w * 0.52, y: rr.y + 8, w: rr.w * 0.44, h: Math.max(24, rr.h - 16) };
-				let field = c.children.find((ch) => ch.label === 'field') as Container | undefined;
-				if (!field) {
-					field = new Container();
-					field.label = 'field';
-					c.addChild(field);
+				const st = autoSteppers[inp.id];
+				if (st) {
+					const swd = Math.min(180, innerW * 0.46);
+					st.visible = true;
+					placeY(st, pad + innerW - swd - 8, y + (rowH - 32) / 2);
+					st.layout(swd, 32);
+					const val = inp.value.trim() || inp.placeholder || 'Off';
+					autoLabs['step' + inp.id] = putLabel(st.field, autoLabs['step' + inp.id] || null, val, { x: 0, y: 0, w: st.fieldSize().w, h: st.fieldSize().h }, 'font_ink', 'center');
 				}
-				field.position.set(ir.x - rr.x, ir.y - rr.y);
-				resetBg(field, 'field', ir.w, ir.h, 2);
-				placeLifted(inp, ir);
-				keep.add(inp);
 			} else if (sw) {
-				const sr = rec(sw) || { x: rr.x + rr.w - 76, y: rr.y + (rr.h - 36) / 2, w: 64, h: 36 };
-				autoSwFeat.position.set(sr.x, sr.y);
-				autoSwFeat.scale.set(sr.h / autoSwFeat.H);
+				placeY(autoSwFeat, pad + innerW - 72, y + (rowH - 36) / 2);
+				autoSwFeat.scale.set(36 / autoSwFeat.H);
 				autoSwFeat.set(sw.classList.contains('on'));
 			}
+			y += rowH + 6;
 		});
-		for (const id of ['stLoss', 'stWin', 'stUp']) {
-			const inp = byId(id);
-			if (!inp || keep.has(inp)) continue;
-			const ir = rec(inp);
-			if (ir) { placeLifted(inp, ir); keep.add(inp); }
-		}
-		for (const [el] of [...lifted]) if (!keep.has(el)) {
-			unliftOne(el, lifted.get(el)!);
-			lifted.delete(el);
-		}
-	} else {
-		unliftAll();
 	}
 
 	const err = byId('autoErr');
-	const er = rec(err);
 	const errText = (err?.textContent || '').trim();
-	if (err && er && errText) {
-		autoErrSpr = putLabel(autoUi.body, autoErrSpr, errText, { x: er.x, y: er.y, w: er.w, h: Math.max(16, er.h) }, 'font_ink', 'left');
+	if (errText) {
+		autoErrSpr = putLabel(autoScroll, autoErrSpr, errText, { x: pad, y, w: innerW, h: 28 }, 'font_ink', 'left');
 		if (autoErrSpr) autoErrSpr.visible = true;
+		y += 30;
 	} else if (autoErrSpr) autoErrSpr.visible = false;
 
-	const start = byId('autoStart');
-	const str = rec(start);
-	if (start && str && autoStartBtn) {
-		putAt(autoStartBtn, str);
-		resetBg(autoStartBtn, 'btn_go', str.w, str.h, 2);
-		autoStartBtn.hitArea = new Rectangle(0, 0, str.w, str.h);
-		const wr = { x: str.w * 0.18, y: str.h * 0.18, w: str.w * 0.64, h: str.h * 0.64 };
-		autoStartLab = putWord(autoStartBtn, autoStartLab, 'w_start', wr) || putLabel(autoStartBtn, autoStartLab, (start.textContent || 'START').trim(), { x: 0, y: 0, w: str.w, h: str.h }, 'font_cream', 'center');
+	const contentH = y + 8;
+	const maxS = Math.max(0, contentH - bodyH);
+	autoScrollY = Math.max(0, Math.min(maxS, autoScrollY));
+	for (const ch of autoScroll.children) {
+		if (ch === autoScrollMask) continue;
+		if ((ch as any)._layY == null) (ch as any)._layY = ch.y;
+		ch.y = (ch as any)._layY - autoScrollY;
+	}
+
+	if (autoStartBtn) {
+		putAt(autoStartBtn, { x: r.x + pad, y: startY, w: innerW, h: startH });
+		resetBg(autoStartBtn, 'btn_go', innerW, startH, 2);
+		autoStartBtn.hitArea = new Rectangle(0, 0, innerW, startH);
+		const wr = { x: innerW * 0.18, y: startH * 0.18, w: innerW * 0.64, h: startH * 0.64 };
+		autoStartLab = putWord(autoStartBtn, autoStartLab, 'w_start', wr) || putLabel(autoStartBtn, autoStartLab, (byId('autoStart')?.textContent || 'START').trim(), { x: 0, y: 0, w: innerW, h: startH }, 'font_cream', 'center');
 	}
 }
 
 // ---------- game info (rules + paytable) ----------
 let infoUi: ModalUi;
-
-let rulesHome: { parent: Node; next: ChildNode | null; ph: HTMLElement } | null = null;
-
-function unliftRules() {
-	const view = document.querySelector('.pixiLiftView') as HTMLElement | null || byId('menu')?.querySelector('.mView') as HTMLElement | null;
-	if (!rulesHome || !view) return;
-	view.classList.remove('pixiLiftView');
-	view.style.left = view.style.top = view.style.width = view.style.height = view.style.position = view.style.zIndex = '';
-	if (rulesHome.next && rulesHome.next.parentNode === rulesHome.parent) rulesHome.parent.insertBefore(view, rulesHome.next);
-	else rulesHome.parent.appendChild(view);
-	rulesHome.ph.remove();
-	rulesHome = null;
-}
-
-function liftRules() {
-	const menu = byId('menu');
-	const view = (document.querySelector('.pixiLiftView') as HTMLElement | null) || menu?.querySelector('.mView') as HTMLElement | null;
-	if (!menu || !view || !overlayShown('menu')) { unliftRules(); return; }
-	if (!rulesHome) {
-		const r = rec(view);
-		if (!r) return;
-		const ph = document.createElement('div');
-		ph.className = 'menuViewPh';
-		ph.style.cssText = `flex:1 1 auto;min-height:0;width:${Math.round(r.w)}px;height:${Math.round(r.h)}px`;
-		rulesHome = { parent: view.parentNode!, next: view.nextSibling, ph };
-		view.parentNode!.insertBefore(ph, view);
-		document.body.appendChild(view);
-		view.classList.add('pixiLiftView');
-	}
-	const pr = rec(rulesHome.ph);
-	if (!pr) return;
-	view.style.left = pr.x + 'px';
-	view.style.top = pr.y + 'px';
-	view.style.width = pr.w + 'px';
-	view.style.height = pr.h + 'px';
-}
+let rulesScroll: RulesScroll | null = null;
 
 function syncInfo() {
 	const info = syncModalChrome(infoUi, null, 'GAME INFO', { title: false });
-	if (!info) { unliftRules(); return; }
-	liftRules();
+	if (!info) {
+		if (rulesScroll) rulesScroll.visible = false;
+		return;
+	}
+	if (!rulesScroll) {
+		rulesScroll = makeRulesScroll();
+		infoUi.body.addChild(rulesScroll);
+	}
+	rulesScroll.visible = true;
+	const r = info.r;
+	const title = byId('rulesTitle');
+	const tr = rec(title) || { x: r.x + 20, y: r.y + 10, w: r.w - 80, h: 32 };
+	infoUi.titleSpr = putLabel(infoUi.root, infoUi.titleSpr, (title?.textContent || 'GAME INFO').trim(), tr, 'font_ink', 'left');
+	if (infoUi.titleSpr) infoUi.titleSpr.visible = true;
+	const top = Math.max(tr.y + tr.h, r.y + 44) + 6;
+	rulesScroll.position.set(r.x + 16, top);
+	rulesScroll.layout(r.w - 32, Math.max(80, r.y + r.h - 16 - top));
+	const body = byId('rulesBody');
+	rulesScroll.setHtml(body?.innerHTML || '');
 }
 
 function syncPanels() {

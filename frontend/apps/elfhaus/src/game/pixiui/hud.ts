@@ -7,6 +7,7 @@ import { ST } from '../stage';
 import { kickUi, onUiLayout, uiApp, uiScreen } from './stage';
 import { bmFit, fitSpr, wordSpr } from './text';
 import { hit, nineUi } from './widgets';
+import { syncHostLayout, uiHostTree } from '../uihosts';
 
 export const hudLayer = new Container();
 hudLayer.label = 'uiHud';
@@ -22,6 +23,7 @@ let arm: Container, armBg: Container, armTxt: Sprite | null = null, armX: Sprite
 type Field = { root: Container; lab: Container | null; val: Sprite | null };
 const fields: Record<string, Field> = {};
 let fsRoot: Container, fsBg: Container, fsTierSpr: Sprite | null = null, fsCntSpr: Sprite | null = null;
+let logoSpr: Sprite | null = null, logoTex: Texture | null = null;
 
 type HudBtn = Container & { plate: Container; ico: Sprite; base: 'btn_pine' | 'btn_gold'; icoOn: string; icoOff?: string; icoSize: number };
 
@@ -412,7 +414,32 @@ function paintFs() {
 	}
 }
 
+function paintLogo() {
+	const top = document.getElementById('top');
+	const logo = document.getElementById('logo') || top;
+	const r = rect(logo) || rect(top);
+	if (!r || !logoTex) {
+		if (logoSpr) logoSpr.visible = false;
+		return;
+	}
+	if (!logoSpr) {
+		logoSpr = new Sprite(logoTex);
+		logoSpr.eventMode = 'none';
+		logoSpr.label = 'uiLogo';
+		logoSpr.anchor.set(0.5, 0.5);
+		hudLayer.addChild(logoSpr);
+	}
+	logoSpr.texture = logoTex;
+	logoSpr.visible = true;
+	logoSpr.position.set(r.x + r.w / 2, r.y + r.h / 2);
+	const tw = Math.max(1, logoTex.width), th = Math.max(1, logoTex.height);
+	const k = Math.min(r.w / tw, r.h / th);
+	logoSpr.scale.set(k);
+}
+
 function paintAll() {
+	syncHostLayout();
+	paintLogo();
 	paintBar();
 	for (const id of ['menuBtn', 'turboBtn', 'autoBtn', 'betDown', 'betUp']) {
 		const el = $(id);
@@ -532,12 +559,15 @@ function onHudCancel(e: PointerEvent) {
 export async function initHud() {
 	if (built) return;
 	try { buyIconTex = await Assets.load('art/buy_icon.webp') as Texture; } catch { buyIconTex = null; }
+	try { logoTex = await Assets.load('art/logo.webp') as Texture; } catch { logoTex = null; }
 	build();
 	onUiLayout(() => layoutHud(true));
 	document.body.classList.add('pixiHud');
 	const mo = new MutationObserver(() => layoutHud());
+	const tree = uiHostTree();
+	if (tree) mo.observe(tree, { attributes: true, attributeFilter: ['class', 'disabled', 'aria-pressed', 'aria-checked', 'style'], subtree: true, childList: true, characterData: true });
 	const hud = $('hud'), fs = $('fsBar');
-	if (hud) mo.observe(hud, { attributes: true, attributeFilter: ['class', 'disabled', 'aria-pressed', 'aria-checked', 'style'], subtree: true, childList: true, characterData: true });
+	if (hud && hud !== tree && !tree?.contains(hud)) mo.observe(hud, { attributes: true, attributeFilter: ['class', 'disabled', 'aria-pressed', 'aria-checked', 'style'], subtree: true, childList: true, characterData: true });
 	if (fs) mo.observe(fs, { attributes: true, attributeFilter: ['class', 'style'], subtree: true, childList: true, characterData: true });
 	document.addEventListener('pointerdown', onHudDown, { capture: true });
 	document.addEventListener('pointerup', onHudUp, { capture: true });

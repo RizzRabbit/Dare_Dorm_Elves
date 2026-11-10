@@ -6,6 +6,7 @@
 // - anticipation squint, half-rolled eyes / half-open mouth, half-lids - so nothing ever cross-fades two faces). Motion
 // updates every rAF from one shared clock; nothing is stepped by setTimeout. Each elf sheet carries a bleed band under
 // the elves stacked above her, so the small relative motion never opens a seam.
+import { Container, Sprite, Texture } from 'pixi.js';
 import { sheetOf } from './sprite';
 
 export type Step = [state: string, frames: number];
@@ -51,6 +52,8 @@ class Elf {
 	seq: { f: number; s: string }[] = []; target: { t: number; s: string }[] = []; ev: Ev[] = []; shown = '';
 	blushCv?: HTMLCanvasElement; blushOp = 0; hearts: { cv: HTMLCanvasElement; on: number; t: number; ph: number }[] = []; heartWas = false;
 	lastMs = 0; tilt0 = 0; tilt1 = 0; tiltT = -1e9; sign: number; enterAt = 1e9; nextBlink = 0; ph: number[]; lastTf = '';
+	fx = 0; fy = 0; fw = 1; fh = 1; headA = [0.5, 0.72] as [number, number];
+	pixi?: { root: Container; body: Sprite; blush?: Sprite; hearts: Sprite[]; tex: Texture };
 	constructor(public c: ElfCfg, host: HTMLElement, i: number) {
 		const sh = sheetOf(c.id)!; this.m = sh.atlas as unknown as Meta; this.img = sh.img;
 		const [bw, bh] = [this.m.box[2], this.m.box[3]], [bx, by] = c.at ?? this.m.box, [GW, GH] = c.group ?? this.m.group;
@@ -70,7 +73,70 @@ class Elf {
 		this.sign = i % 2 ? -1 : 1;
 		this.ph = [i * 1.37 + 0.4, i * 2.11 + 1.1, 2.3 + 0.21 * ((i * 7) % 5), 2.9 + 0.27 * ((i * 3) % 4)];   // bob phase, sway phase, bob period, sway period
 		this.draw(c.base, true);
+		this.fx = bx / GW; this.fy = by / GH; this.fw = bw / GW; this.fh = bh / GH;
+		this.headA = [this.m.head[0], 0.72];
 	}
+	attachPixi(parent: Container) {
+		const tex = Texture.from(this.cv);
+		const root = new Container();
+		root.eventMode = 'none';
+		const body = new Sprite(tex);
+		body.eventMode = 'none';
+		root.addChild(body);
+		let blush: Sprite | undefined;
+		if (this.blushCv) {
+			blush = new Sprite(Texture.from(this.blushCv));
+			blush.eventMode = 'none';
+			root.addChild(blush);
+		}
+		const hearts: Sprite[] = [];
+		for (const h of this.hearts) {
+			const s = new Sprite(Texture.from(h.cv));
+			s.eventMode = 'none';
+			root.addChild(s);
+			hearts.push(s);
+		}
+		parent.addChild(root);
+		this.pixi = { root, body, blush, hearts, tex };
+	}
+	syncPixi(yPct: number, rot: number, sx: number, sy: number, op: number) {
+		const P = this.pixi; if (!P) return;
+		const host = P.root.parent as Container & { _W?: number; _H?: number };
+		const W = host?._W || 0, H = host?._H || 0;
+		if (!W || !H) return;
+		const w = this.fw * W, h = this.fh * H;
+		const px = this.headA[0] * w, py = this.headA[1] * h;
+		P.root.pivot.set(px, py);
+		P.root.position.set(this.fx * W + px, this.fy * H + py + (yPct / 100) * h);
+		P.root.rotation = rot * Math.PI / 180;
+		P.root.scale.set(sx, sy);
+		P.root.alpha = op;
+		P.body.texture.source.update?.();
+		P.body.width = w; P.body.height = h;
+		P.body.position.set(0, 0);
+		if (P.blush && this.blushCv) {
+			P.blush.texture.source.update?.();
+			// blush overlay uses % of the elf box (css on the canvas)
+			const st = this.blushCv.style;
+			const l = parseFloat(st.left) || 0, t = parseFloat(st.top) || 0, bw = parseFloat(st.width) || 100, bh = parseFloat(st.height) || 100;
+			P.blush.position.set(w * l / 100, h * t / 100);
+			P.blush.width = w * bw / 100; P.blush.height = h * bh / 100;
+			P.blush.alpha = this.blushOp;
+		}
+		this.hearts.forEach((h, i) => {
+			const s = P.hearts[i]; if (!s) return;
+			s.texture.source.update?.();
+			const st = h.cv.style;
+			const l = parseFloat(st.left) || 0, t0 = parseFloat(st.top) || 0, bw = parseFloat(st.width) || 100, bh0 = parseFloat(st.height) || 100;
+			const sc = (h as any)._sc ?? 1, fl = (h as any)._fl ?? 0, ho = (h as any)._ho ?? (parseFloat(st.opacity || '0') || 0);
+			s.anchor.set(0.5, 0.5);
+			s.position.set(w * (l + bw / 2) / 100, h * (t0 + bh0 / 2) / 100 + (fl / 100) * h);
+			s.width = w * bw / 100 * sc;
+			s.height = h * bh0 / 100 * sc;
+			s.alpha = ho;
+		});
+	}
+
 	canvas(w: number, h: number, cls: string) {
 		const cv = document.createElement('canvas'); cv.width = w; cv.height = h; cv.className = cls; cv.setAttribute('aria-hidden', 'true'); this.el.appendChild(cv); return cv;
 	}
@@ -148,14 +214,30 @@ class Elf {
 			else { const u = clamp(age / T_(100)); sc = 1 - 0.6 * u; ho = 1 - u; if (h.t < 0) ho = 0; }
 			const fl = -6 * Math.sin((T * 3.1) / SLOW + h.ph);
 			h.cv.style.transform = `translate3d(0,${fl.toFixed(2)}%,0) scale(${sc.toFixed(3)})`; h.cv.style.opacity = ho.toFixed(3);
+			(h as any)._sc = sc; (h as any)._fl = fl; (h as any)._ho = ho;
 		}
+		this.syncPixi(y, r, sx, sy, op);
 	}
 	tiltNow(ms: number) { return this.tilt0 + (this.tilt1 - this.tilt0) * easeInOutBack(clamp((ms - this.tiltT) / T_(520))); }
 }
 
 export class ElfRig {
 	elves: Elf[]; t0 = 0; raf = 0; calls: { t: number; f: () => void }[] = []; dead = false;
-	constructor(host: HTMLElement, cfgs: ElfCfg[]) { this.elves = cfgs.map((c, i) => new Elf(c, host, i)); }
+	pixiRoot: Container | null = null;
+	constructor(host: HTMLElement, cfgs: ElfCfg[], pixi?: Container) {
+		this.elves = cfgs.map((c, i) => new Elf(c, host, i));
+		if (pixi) this.attachPixi(pixi);
+	}
+	attachPixi(parent: Container, W?: number, H?: number) {
+		if (this.pixiRoot) return this.pixiRoot;
+		this.pixiRoot = new Container();
+		this.pixiRoot.eventMode = 'none';
+		if (W && H) { (this.pixiRoot as any)._W = W; (this.pixiRoot as any)._H = H; }
+		parent.addChild(this.pixiRoot);
+		for (const e of this.elves) e.attachPixi(this.pixiRoot);
+		return this.pixiRoot;
+	}
+	resizePixi(W: number, H: number) { if (this.pixiRoot) { (this.pixiRoot as any)._W = W; (this.pixiRoot as any)._H = H; } }
 	get ms() { return performance.now() - this.t0; }
 	/** start the shared clock; schedule calls with at(ms) relative to it */
 	start() { this.t0 = performance.now(); const tick = (now: number) => { if (this.dead) return; this.tick(now - this.t0); this.raf = requestAnimationFrame(tick); }; this.tick(0); this.raf = requestAnimationFrame(tick); return this; }
@@ -167,5 +249,17 @@ export class ElfRig {
 	at(t: number, f: () => void) { this.calls.push({ t, f }); this.calls.sort((a, b) => a.t - b.t); }
 	enter(t: number, order: number[], step = 70) { order.forEach((i, k) => { const e = this.elves[i]; e.enterAt = t + k * step * SLOW; e.nextBlink = e.enterAt + 1200 + i * 530; }); }
 	set(i: number, s: string, t: number, fx?: Fx[]) { this.elves[i].set(s, t, fx); }
-	destroy() { this.dead = true; cancelAnimationFrame(this.raf); for (const e of this.elves) e.el.remove(); this.calls = []; }
+	destroy() {
+		this.dead = true; cancelAnimationFrame(this.raf);
+		for (const e of this.elves) {
+			e.el.remove();
+			if (e.pixi) {
+				e.pixi.root.parent?.removeChild(e.pixi.root);
+				e.pixi.root.destroy({ children: true });
+				e.pixi = undefined;
+			}
+		}
+		if (this.pixiRoot) { this.pixiRoot.parent?.removeChild(this.pixiRoot); this.pixiRoot.destroy({ children: true }); this.pixiRoot = null; }
+		this.calls = [];
+	}
 }

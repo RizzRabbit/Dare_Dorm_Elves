@@ -165,7 +165,7 @@ function tick(t: number) {
 /** Play sheet `id` animation `name` inside `host`. Returns null when the sheet is not loaded (effects are optional). */
 export function play(id: string, name: string, host: Element, o: PlayOpts = {}): Anim | null {
 	const sheet = sheets.get(id); const def = sheet?.atlas.anims[name];
-	if (!sheet || !def || !host.isConnected) return null;
+	if (!sheet || !def) return null;
 	// v20: `from` skips a sheet's lead-in frames (the baked light-column / white-silhouette flash of stack_form / merge_join)
 	const all = o.reverse ? [...def.frames].reverse() : def.frames, frames = o.from ? all.slice(Math.min(o.from, all.length - 1)) : all;
 	const cv = def.canvas ? take(def.canvas[0], def.canvas[1]) : take(frames[0][2], frames[0][3]);

@@ -11,6 +11,11 @@ import { ElfRig, TEMPO, type ElfCfg } from './elfrig';
 import { STAGE_OF_LEVEL } from './countup';
 import { TRANS as MW_TRANS, TRANS_RX as MW_TRANS_RX, FX as MW_FX, BLUSH as MW_BLUSH } from './maxwinCast';
 
+type BwPixi = { layer: () => any; clear: () => void; size: () => { w: number; h: number } };
+let bwPixi: BwPixi | null = null;
+/** Registered from the Pixi UI overlay so this file stays importable in tests without Pixi. */
+export function setBwElfPixi(h: BwPixi | null) { bwPixi = h; }
+
 const levelNamed = (name: string) => Number(Object.entries(STAGE_OF_LEVEL).find(([, n]) => n === name)?.[0]);
 /** v3.19: the layers follow the math win level (no x threshold): EPIC WIN = 3 elves, LEGENDARY WIN = 4. */
 export const EPIC_ELVES_LEVEL = levelNamed('EPIC WIN'), LEGEND_ELVES_LEVEL = levelNamed('LEGENDARY WIN');
@@ -88,12 +93,20 @@ export function bigWinElvesStart(B: HTMLElement, level: number) {
 		void preloadBigWinElves(level).then(() => { if (my === show && !B.classList.contains('hidden') && d.ids.every(hasSheet)) bigWinElvesStart(B, level); });
 		return;
 	}
-	if (root) { const old = root, oldRig = rig; old.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 180, easing: 'ease-out', fill: 'forwards' }).finished.catch(() => {}).finally(() => { oldRig?.destroy(); old.remove(); }); }
+	if (root) { const old = root, oldRig = rig; const pix = oldRig?.pixiRoot; const t0 = performance.now();
+		const fade = () => { const u = Math.min(1, (performance.now() - t0) / 180); if (pix) pix.alpha = 1 - u; if (u < 1) requestAnimationFrame(fade); else { oldRig?.destroy(); old.remove(); } };
+		requestAnimationFrame(fade);
+	}
 	show++; cur = g;
 	root = document.createElement('div'); root.className = 'bwElves'; root.dataset.group = g;
 	const host = document.createElement('div'); host.className = d.cls; root.appendChild(host);
-	B.insertBefore(root, B.firstChild);                       // behind .bw (title + amount)
-	rig = new ElfRig(host, d.cfg());
+	// Canvases stay on a detached host; the rig is drawn on the UI Pixi stage.
+	const layer = bwPixi?.layer();
+	rig = layer ? new ElfRig(host, d.cfg(), layer) : new ElfRig(host, d.cfg());
+	if (layer && bwPixi) {
+		const sz = bwPixi.size();
+		rig.resizePixi(sz.w, sz.h);
+	}
 	rig.enter(0, d.order, 80);
 	for (let c = 0; c < 20; c++) for (const [i, s, t, hold] of d.cycle) {
 		const t0 = 600 + Math.round((c * CYCLE_MS + t) * TEMPO) + ((c * 37 + i * 53) % 90);   // a little drift per cycle
@@ -108,4 +121,4 @@ export function bigWinElvesEnd(release = true) {
 	clearLayers();
 	if (release) releaseBigWinElves();
 }
-function clearLayers() { document.querySelectorAll('#bigwin .bwElves').forEach((e) => e.remove()); root = null; }
+function clearLayers() { document.querySelectorAll('#bigwin .bwElves').forEach((e) => e.remove()); bwPixi?.clear(); root = null; }

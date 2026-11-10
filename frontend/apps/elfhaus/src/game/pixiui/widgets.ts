@@ -1,5 +1,5 @@
 // Shared Pixi UI widgets built only from existing atlas / 9-slice sprites.
-import { Container, NineSliceSprite, Rectangle, Sprite, Texture } from 'pixi.js';
+import { Container, Graphics, NineSliceSprite, Rectangle, Sprite, Texture } from 'pixi.js';
 import { Assets } from 'pixi.js';
 import { atlasTex, nine, spr } from '../scene/atlas';
 import { kickUi } from './stage';
@@ -162,3 +162,55 @@ export function makeSlider(onChange: (v: number) => void): UiSlider {
 	return Object.assign(c, { set, layout, value: () => val });
 }
 
+
+
+/** Plus / minus number picker (replaces the autoplay advanced text inputs). */
+export type UiStepper = Container & {
+	layout: (w: number, h: number) => void;
+	field: Container;
+	fieldSize: () => { w: number; h: number };
+};
+export function makeStepper(onMinus: () => void, onPlus: () => void): UiStepper {
+	const c = new Container();
+	c.eventMode = 'static';
+	const minus = new Container();
+	const plus = new Container();
+	const field = new Container();
+	field.label = 'stepField';
+	minus.eventMode = 'static'; minus.cursor = 'pointer';
+	plus.eventMode = 'static'; plus.cursor = 'pointer';
+	minus.on('pointertap', (e) => { e.stopPropagation(); onMinus(); });
+	plus.on('pointertap', (e) => { e.stopPropagation(); onPlus(); });
+	c.addChild(minus, field, plus);
+	let fw = 80, fh = 32;
+
+	const glyph = (host: Container, kind: '-' | '+', btn: number) => {
+		const g = new Graphics();
+		const t = Math.max(2, btn * 0.08);
+		g.rect(btn * 0.28, (btn - t) / 2, btn * 0.44, t).fill(0xfff4de);
+		if (kind === '+') g.rect((btn - t) / 2, btn * 0.28, t, btn * 0.44).fill(0xfff4de);
+		g.eventMode = 'none';
+		host.addChild(g);
+	};
+
+	const layout = (w: number, h: number) => {
+		const H = Math.max(24, h), W = Math.max(80, w), btn = H;
+		fw = Math.max(40, W - btn * 2 - 8); fh = btn;
+		minus.removeChildren(); plus.removeChildren();
+		const keep = field.children.slice();
+		field.removeChildren();
+		try { minus.addChild(nineUi('btn_pine', btn, btn, 2)); } catch { /* */ }
+		try { plus.addChild(nineUi('btn_gold', btn, btn, 2)); } catch { try { plus.addChild(nineUi('btn_pine', btn, btn, 2)); } catch { /* */ } }
+		try { field.addChild(nineUi('field', fw, btn, 2)); } catch { /* */ }
+		for (const ch of keep) if ((ch as Container).label !== 'uiPlate') field.addChild(ch);
+		glyph(minus, '-', btn); glyph(plus, '+', btn);
+		minus.position.set(0, 0);
+		field.position.set(btn + 4, 0);
+		plus.position.set(btn + 8 + fw, 0);
+		minus.hitArea = new Rectangle(0, 0, btn, btn);
+		plus.hitArea = new Rectangle(0, 0, btn, btn);
+		c.hitArea = new Rectangle(0, 0, W, H);
+	};
+	layout(140, 32);
+	return Object.assign(c, { layout, field, fieldSize: () => ({ w: fw, h: fh }) });
+}

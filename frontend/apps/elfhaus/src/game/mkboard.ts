@@ -9,6 +9,7 @@
 // canvas code drawn at device resolution inside #frame (drawFrame), plus the painted garland image.
 // Game-only pieces the mockup never had: the menu button (top-left corner, same square style), the armed-mode tag
 // (over SPIN), the free-spins bar (on the sill), and 48 px tap floors (controls grow when the mockup size is smaller).
+import { syncHostLayout } from './uihosts';
 import { ST } from './stage';
 import { setLip, setFrameBack } from './board/stage';
 import ART_G from './art.generated.json';
@@ -302,9 +303,8 @@ export function mkPlace(cell: number) {
 	const pf = Math.max((bv === 'p' ? 50 : 25) * ps, (ST.compact ? 7 : 12) / ST.s);   // v21: compact popouts let the label shrink so it fits the plate
 	css(b, { ...pr, padding: '0', '--ps': ps + '', '--pf': pf + 'px', '--pl': (bv === 'p' ? 4 : 3) * ps * Math.min(1, (bv === 'p' ? 50 : 25) * ps / pf) + 'px', '--pw': bw0 * ps + 'px', '--ph': bh0 * ps + 'px', '--pS': Math.max(bw0, bh0) * 1.3 * ps + 'px' });
 	// the neon halo breathes on its own layer (opacity only), under the plate
-	let gl = document.getElementById('mkBuyGlow');
-	if (!gl) { gl = document.createElement('div'); gl.id = 'mkBuyGlow'; gl.setAttribute('aria-hidden', 'true'); $('#hud').insertBefore(gl, $('#hud').firstChild); }
-	css(gl, { ...pr, '--ps': ps + '' });
+	// Pixi HUD paints the buy plate; do not insert a DOM glow into the layout shell.
+	void pr;
 	// menu (game-only): the same square button, top-left corner of the stage
 	const ms = Math.max(L(g.mode === 'port' ? 144 : g.mode === 'cmp' ? 64 : 88), Math.ceil(ST.tap / ST.s) + 2), m0 = g.mode === 'port' ? 12 : 16;
 	css($('#menuBtn'), { position: 'absolute', left: m0 - hx, top: m0 - hy, width: ms, height: ms, margin: '0', padding: '0', 'border-radius': (ms * 0.28) + 'px', 'border-width': bwPx(Math.max(2, ms / g.k / 40) * g.k), '--icS': String(ms * 0.0155) });
@@ -329,6 +329,7 @@ export function mkPlace(cell: number) {
 		'display': 'flex', gap: tf * 0.4 + 'px', 'border-radius': hP / 2 + 'px', 'border-width': bwPx(Math.max(1, 1.2 / ST.s)), 'grid-area': 'auto', 'align-items': 'center', 'justify-content': 'center',
 		'--tagPad': Math.max(0, (Math.ceil(Math.min(44, ST.tap) / ST.s) - hP) / 2) + 'px', '--tagMax': maxW + 'px' });
 	fitArmTag();
+	syncHostLayout();
 	// free-spins bar on the frame's sill, banner over the top row, step toast at the board's foot
 	css($('#fsBar'), { position: 'absolute', left: '50%', top: (fh - FB * u / 2) + 'px', translate: '-50% -50%', margin: '0', 'z-index': '6' });
 	css($('#banner'), { position: 'absolute', left: '50%', top: (FT * u + cell * 0.12) + 'px', translate: '-50% 0', transform: 'none', margin: '0' });

@@ -27,7 +27,8 @@ import { hold, tempo, gtempo } from './tempo';
 import { clearRace } from './winlines';
 
 export const ART = ART_JSON as Record<string, string | null>;
-export const $ = <T extends HTMLElement = HTMLElement>(s: string) => document.querySelector(s) as T;
+import { findHost } from './uihosts';
+export const $ = <T extends HTMLElement = HTMLElement>(s: string) => (document.querySelector(s) || findHost(s)) as T;
 
 export const S = {
 	currency: 'USD', balance: 0, levels: [] as number[], betIdx: 0, ante: false, turbo: false, busy: false, auto: 0, autoBonus: false,   /* v3.18b: autoplay plays bonuses hands-free (AUTO-PLAY BONUS toggle, default off) */

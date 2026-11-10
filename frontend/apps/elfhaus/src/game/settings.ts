@@ -55,7 +55,7 @@ export function initSettings(openInfo: () => void) {
 	for (const it of items()) {
 		const k = it.dataset.k as K, r = range(k);
 		it.querySelector<HTMLElement>('.pmRow')!.onclick = () => slide(it.classList.contains('open') ? null : k);
-		r.oninput = () => { setAudioVol(k, Number(r.value) / 100); paint(k); };
+		if (r) r.oninput = () => { setAudioVol(k, Number(r.value) / 100); paint(k); };
 	}
 	// a tap outside closes it (the menu button toggles it itself)
 	document.addEventListener('pointerdown', (e) => { const t = e.target as Element; if (popOpen() && !t.closest?.('#popMenu,#menuBtn,#uiStage')) closePop(); }, true);
