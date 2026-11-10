@@ -22,11 +22,10 @@ export const elvesLevel = (level: number) => elvesFor(level) !== null;
 export function elvesGroupsUpTo(level: number): ElvesGroup[] { return elvesFor(level) ? (['epic', 'legendary'] as const).filter((g) => level >= (g === 'epic' ? EPIC_ELVES_LEVEL : LEGEND_ELVES_LEVEL)) : []; }
 
 const bwAtl = import.meta.glob('./bigwin/*.json', { eager: true, import: 'default' }) as Record<string, any>;
-const bwImg = import.meta.glob('../assets/bigwin/*.webp', { eager: true, query: '?url', import: 'default' }) as Record<string, string>;
 const mwAtl = import.meta.glob('./maxwin/maxwin_elf_*.json', { eager: true, import: 'default' }) as Record<string, any>;
 const mwImg = import.meta.glob('../assets/maxwin/maxwin_elf_*.webp', { eager: true, query: '?url', import: 'default' }) as Record<string, string>;
 const find = (m: Record<string, any>, id: string, ext: string) => Object.entries(m).find(([k]) => k.endsWith(`/${id}.${ext}`))?.[1];
-const url = (id: string): string | undefined => find(bwImg, id, 'webp') ?? find(mwImg, id, 'webp');
+const url = (id: string): string | undefined => find(mwImg, id, 'webp') ?? find(mwImg, id.replace(/^bigwin_elf_/, 'maxwin_elf_'), 'webp');
 const atlas = (id: string) => find(bwAtl, id, 'json') ?? find(mwAtl, id, 'json');
 
 // EPIC: Vi | Roxy | Coco (unchanged from the approved 1000x layer)
