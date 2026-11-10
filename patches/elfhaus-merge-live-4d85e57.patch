@@ -1,0 +1,360 @@
+diff -ruN a/frontend/apps/elfhaus/package.json b/frontend/apps/elfhaus/package.json
+--- a/frontend/apps/elfhaus/package.json	2026-11-10 03:22:56.800218583 +0000
++++ b/frontend/apps/elfhaus/package.json	2026-11-10 03:39:47.680586665 +0000
+@@ -8,7 +8,7 @@
+ 		"sync": "node scripts/sync-art.mjs && node scripts/sync-config.mjs",
+ 		"dev": "node scripts/sync-art.mjs && node scripts/sync-config.mjs && vite dev --host",
+ 		"build": "node scripts/sync-art.mjs && node scripts/sync-config.mjs && node scripts-build.mjs",
+-		"test": "node scripts/sync-config.mjs && node scripts/test-format.mjs && node scripts/test-books.mjs && node scripts/test-voice.mjs && node scripts/test-egw.mjs && node scripts/test-arm.mjs && node scripts/test-winstages.mjs && node scripts/test-payout.mjs && node scripts/test-banner.mjs && node scripts/test-balance.mjs && node --experimental-strip-types scripts/test-reload.mjs && node --experimental-strip-types scripts/test-winsharp.mjs",
++		"test": "node scripts/sync-config.mjs && node scripts/test-format.mjs && node scripts/test-books.mjs && node scripts/test-voice.mjs && node scripts/test-egw.mjs && node scripts/test-arm.mjs && node scripts/test-winstages.mjs && node scripts/test-payout.mjs && node scripts/test-banner.mjs && node scripts/test-balance.mjs && node --experimental-strip-types scripts/test-reload.mjs && node --experimental-strip-types scripts/test-winsharp.mjs && node --experimental-strip-types scripts/test-mergeflash.mjs",
+ 		"package": "node scripts/package-release.mjs",
+ 		"preview": "vite preview"
+ 	},
+diff -ruN a/frontend/apps/elfhaus/scripts/test-mergeflash.mjs b/frontend/apps/elfhaus/scripts/test-mergeflash.mjs
+--- a/frontend/apps/elfhaus/scripts/test-mergeflash.mjs	1970-01-01 00:00:00.000000000 +0000
++++ b/frontend/apps/elfhaus/scripts/test-mergeflash.mjs	2026-11-10 03:35:22.270752181 +0000
+@@ -0,0 +1,158 @@
++// Stale frame at merge start. A pooled sheet canvas keeps its pixels, and the board uploads a canvas once.
++// Repainting that canvas used to leave the previous animation on screen. This checks the pool is cleared and
++// drawn before it is inserted, and that a revision change reuploads before the next present.
++import { readFileSync } from 'node:fs';
++import { mkdtemp, writeFile, rm } from 'node:fs/promises';
++import { tmpdir } from 'node:os';
++import { join } from 'node:path';
++import { spawn } from 'node:child_process';
++import { createRequire } from 'node:module';
++import { fileURLToPath } from 'node:url';
++
++const require = createRequire(import.meta.url);
++const app = fileURLToPath(new URL('..', import.meta.url));
++let fail = 0;
++const ok = (c, m) => { if (c) console.log('  OK ' + m); else { fail++; console.error('  FAIL ' + m); } };
++const src = (p) => readFileSync(new URL(p, import.meta.url), 'utf8');
++
++console.log('\n=== merge flash: source guards ===');
++{
++	const sp = src('../src/game/sprite.ts');
++	const mi = src('../src/game/board/mirror.ts');
++	const mf = src('../src/game/mergefx.ts');
++	const db = src('../src/game/dbstacks.ts');
++	ok(sp.includes('clearRect(0, 0, w, h)'), 'a same-size pooled canvas is cleared');
++	ok(sp.indexOf('draw(a, 0)') < sp.indexOf('host.appendChild(cv)'), 'the first frame is drawn before the canvas is inserted');
++	ok(sp.includes('export const canvasRev'), 'canvas revisions are visible to the board');
++	ok(mi.includes('source.update()') && mi.includes('canvasRev'), 'the board reuploads a canvas when its pixels change');
++	ok(mi.includes('t.destroy(true)') && mi.includes('releaseOut(x)'), 'dropping a snapshot still destroys its GPU texture');
++	ok(mf.includes("!x.classList.contains('stk_db')"), 'a rig placeholder is never copied as the snapshot');
++	ok(mf.includes("o.style.visibility = 'hidden'") && mf.indexOf("o.style.visibility = 'hidden'") < mf.indexOf('host.appendChild(el)'), 'live overlays hide before the snapshot stage is shown');
++	ok(mf.includes('performance.now() - t0 > 120'), 'the snapshot stays up until the new body has been drawn, on a time cap');
++	ok(db.includes('removeFromParent()'), 'a rig snapshot is taken off the board stage');
++	ok(db.includes('resolution: r') || db.includes('snapshotPixels'), 'snapshot cap stays');
++	ok(/resolution:\s*'inherit'/.test(src('../src/game/board/glowFilter.ts')), "win glow stays at resolution 'inherit'");
++}
++
++console.log('\n=== merge flash: pooled canvas vs upload ===');
++let chrome = '';
++try { chrome = require('node:child_process').execSync('command -v google-chrome || command -v google-chrome-stable', { encoding: 'utf8' }).trim().split('\n').pop(); } catch { /* none */ }
++let esbuild = null;
++try { esbuild = await import('esbuild'); } catch { /* optional */ }
++if (!chrome || !esbuild) {
++	console.log(`  SKIP pixel probe (chrome=${chrome || 'missing'}, esbuild=${esbuild ? 'yes' : 'missing'})`);
++} else {
++	const dir = await mkdtemp(join(tmpdir(), 'mergeflash-'));
++	const entry = join(dir, 'entry.mjs');
++	const bundle = join(dir, 'bundle.js');
++	const html = join(dir, 'page.html');
++	const stub = join(dir, 'tempo.mjs');
++	await writeFile(stub, 'export const spriteRate = () => 1;\n');
++	await writeFile(entry, `
++import { Application, Sprite, Texture } from 'pixi.js';
++import { loadSheet, play, stop, canvasRev } from ${JSON.stringify(join(app, 'src/game/sprite.ts'))};
++
++function px(cv) {
++	const g = cv.getContext('2d').getImageData(0, 0, 1, 1).data;
++	return [g[0], g[1], g[2], g[3]];
++}
++async function sheet(id, rgb) {
++	const c = document.createElement('canvas'); c.width = 8; c.height = 8;
++	const g = c.getContext('2d'); g.fillStyle = rgb; g.fillRect(0, 0, 8, 8);
++	const blob = await new Promise((res) => c.toBlob(res));
++	const url = URL.createObjectURL(blob);
++	await loadSheet(id, url, { size: [8, 8], anims: { play: { fps: 8, loop: true, frames: [[0, 0, 8, 8]] } } });
++}
++async function main() {
++	const out = {};
++	try {
++		await sheet('red', '#ff0000');
++		await sheet('blue', '#0000ff');
++		const host = document.createElement('div'); document.body.appendChild(host);
++		const a = play('red', 'play', host, { cls: 'stk stk_body' });
++		out.afterRed = px(a.cv);
++		out.revRed = canvasRev(a.cv);
++		const app = new Application();
++		await app.init({ width: 8, height: 8, backgroundAlpha: 1, preference: 'webgl', hello: false, sharedTicker: false, autoStart: false });
++		const tex = Texture.from(a.cv);
++		const spr = new Sprite(tex); spr.width = 8; spr.height = 8; app.stage.addChild(spr);
++		const read = () => {
++			app.render();
++			const p = app.renderer.extract.pixels({ target: app.stage });
++			const d = p.pixels;
++			return [d[0], d[1], d[2], d[3]];
++		};
++		out.gpuRed = read();
++		stop(a);
++		const b = play('blue', 'play', host, { cls: 'stk stk_body' });
++		out.sameCanvas = a.cv === b.cv;
++		out.afterBlue = px(b.cv);
++		out.revBlue = canvasRev(b.cv);
++		out.gpuStale = read();
++		if (canvasRev(b.cv) !== tex._rev) { tex.source.update(); tex._rev = canvasRev(b.cv); }
++		out.gpuFresh = read();
++		spr.destroy(); tex.destroy(true);
++	} catch (e) { out.error = String(e && e.stack || e); }
++	document.getElementById('result').textContent = JSON.stringify(out);
++}
++main();
++`);
++	await esbuild.build({
++		entryPoints: [entry], bundle: true, format: 'iife', outfile: bundle, absWorkingDir: dir, logLevel: 'silent',
++		alias: { 'pixi.js': require.resolve('pixi.js') },
++		plugins: [{ name: 'tempo', setup(b) { b.onResolve({ filter: /\/tempo$/ }, () => ({ path: stub })); } }],
++	});
++	await writeFile(html, `<!doctype html><pre id="result">PENDING</pre><script src="./bundle.js"></script>`);
++	const userDir = join(dir, 'profile');
++	const port = 9600 + (process.pid % 400);
++	const child = spawn(chrome, [
++		'--headless=new', '--no-sandbox', '--disable-dev-shm-usage', `--user-data-dir=${userDir}`,
++		'--use-angle=swiftshader', '--enable-unsafe-swiftshader', `--remote-debugging-port=${port}`, html,
++	], { stdio: 'ignore' });
++	let raw = '';
++	const deadline = Date.now() + 20000;
++	while (Date.now() < deadline && !raw) {
++		await new Promise((r) => setTimeout(r, 200));
++		try {
++			const list = await fetch(`http://127.0.0.1:${port}/json/list`).then((r) => r.json());
++			const page = list.find((t) => t.type === 'page' && t.webSocketDebuggerUrl);
++			if (!page) continue;
++			const text = await new Promise((resolve, reject) => {
++				const ws = new WebSocket(page.webSocketDebuggerUrl);
++				const timer = setTimeout(() => { ws.close(); reject(new Error('cdp')); }, 2000);
++				ws.addEventListener('open', () => ws.send(JSON.stringify({ id: 1, method: 'Runtime.evaluate', params: { expression: "document.getElementById('result').textContent", returnByValue: true } })));
++				ws.addEventListener('message', (ev) => {
++					const msg = JSON.parse(ev.data);
++					if (msg.id !== 1) return;
++					clearTimeout(timer); ws.close();
++					resolve(msg.result && msg.result.result ? msg.result.result.value : '');
++				});
++				ws.addEventListener('error', () => { clearTimeout(timer); reject(new Error('socket')); });
++			});
++			if (text && text !== 'PENDING') raw = String(text).trim();
++		} catch { /* debugger not up yet */ }
++	}
++	child.kill('SIGKILL');
++	await new Promise((r) => { const t = setTimeout(r, 500); child.once('close', () => { clearTimeout(t); r(); }); });
++	if (!raw) { fail++; console.error('  FAIL pixel probe produced no result'); }
++	else {
++		const r = JSON.parse(raw);
++		if (r.error) { fail++; console.error('  FAIL probe threw', r.error.slice(0, 800)); }
++		else {
++			console.log('  pixels', JSON.stringify(r));
++			const red = (p) => p && p[0] > 200 && p[2] < 40;
++			const blue = (p) => p && p[2] > 200 && p[0] < 40;
++			ok(red(r.afterRed), `first play's canvas is red (${r.afterRed})`);
++			ok(r.sameCanvas, 'the next play reused the pooled canvas');
++			ok(blue(r.afterBlue), `reused canvas is blue before it is shown (${r.afterBlue})`);
++			ok(r.revBlue > r.revRed, `revision advanced (${r.revRed} -> ${r.revBlue})`);
++			ok(red(r.gpuRed), `first upload is red (${r.gpuRed})`);
++			ok(red(r.gpuStale), `without a reupload the board still shows red (${r.gpuStale})`);
++			ok(blue(r.gpuFresh), `reupload on the new revision shows blue (${r.gpuFresh})`);
++		}
++	}
++	await rm(dir, { recursive: true, force: true });
++}
++
++console.log(fail ? `\nmergeflash tests: ${fail} FAILED` : '\nmergeflash tests: all passed');
++process.exit(fail ? 1 : 0);
+diff -ruN a/frontend/apps/elfhaus/src/game/board/mirror.ts b/frontend/apps/elfhaus/src/game/board/mirror.ts
+--- a/frontend/apps/elfhaus/src/game/board/mirror.ts	2026-11-06 15:47:12.000000000 +0000
++++ b/frontend/apps/elfhaus/src/game/board/mirror.ts	2026-11-10 03:34:26.623122178 +0000
+@@ -7,7 +7,7 @@
+ //   sheet frames (.rp f_*, .sd depth, letters: any background-image region)  -> Sprite on the shared texture
+ //   tile recess / border / frost (.tRec / .tBd / .tFr, CSS border-image)       -> NineSliceSprite (52 px corners)
+ //   <img> (stack panels, elf cut-outs, stills)                                   -> Sprite
+-//   <canvas> snapshots (merge lean stage)                                        -> Sprite (uploaded once)
++//   <canvas> snapshots (merge lean stage)                                        -> Sprite (reuploaded when its pixels change)
+ //   canvas.stk_db (DragonBones placeholder)                                      -> the rig's own container (dbstacks.ts)
+ //   .symGlow / img.stk_glow                                                      -> layer.winGlow, recoloured teal glow
+ //   .mx multiplier                                                               -> layer.symFx, gold bitmap font glyphs
+@@ -20,6 +20,7 @@
+ import DEPTH_JSON from '../chalet/symdepth.json';
+ import { boardStage, layer, kick, animate, onLayout } from './stage';
+ import { dbDisplay } from '../dbstacks';
++import { canvasRev } from '../sprite';
+ import { mxFont } from '../ui';
+ 
+ type Fr = { frame: { x: number; y: number; w: number; h: number } };
+@@ -399,8 +400,13 @@
+ 			const cv = el as unknown as HTMLCanvasElement;
+ 			if (base.f & F_DB) { const d = dbDisplay(cv); if (d) { const o = out(el, 'db', () => d.root); if (o.d !== d.root) o.d = d.root; if (d.root.destroyed) return; if (d.root.parent !== c.host) c.host.addChild(d.root); { const k = h / d.H; place(d.root, M, (w - d.W * k) / 2, 0, k, k); } d.root.alpha = c.op; d.root.zIndex = order++; d.root.visible = true; } return; }
+ 			if (!cv.width) return;
+-			let t = cvTex.get(cv); if (!t || (t as Texture & { destroyed?: boolean }).destroyed) { t = Texture.from(cv); cvTex.set(cv, t); }
+-			sprite(el, t, c, 0, 0, w, h, s);
++			// Texture.from reads the canvas once. A pooled sheet canvas is redrawn in place (and a merge snapshot can
++			// be the same element as an earlier upload). Without source.update the board keeps the previous frame.
++			let t = cvTex.get(cv); const dead = !t || (t as Texture & { destroyed?: boolean }).destroyed;
++			const revNow = canvasRev(cv);
++			if (dead) { t = Texture.from(cv); cvTex.set(cv, t); (t as Texture & { _rev?: number })._rev = revNow; }
++			else if ((t as Texture & { _rev?: number })._rev !== revNow) { t!.source.update(); (t as Texture & { _rev?: number })._rev = revNow; }
++			sprite(el, t!, c, 0, 0, w, h, s);
+ 			const held = outs.get(el); if (held) held.cv = cv;
+ 			return;
+ 		}
+diff -ruN a/frontend/apps/elfhaus/src/game/dbstacks.ts b/frontend/apps/elfhaus/src/game/dbstacks.ts
+--- a/frontend/apps/elfhaus/src/game/dbstacks.ts	2026-11-06 15:47:12.000000000 +0000
++++ b/frontend/apps/elfhaus/src/game/dbstacks.ts	2026-11-10 03:34:34.435070781 +0000
+@@ -165,13 +165,16 @@
+ 	const L = lives.get(ov); const a = stageApp(); if (!L || !a) return null;
+ 	const keep = { p: L.root.parent, f: L.root.filters, x: L.root.x, y: L.root.y, sx: L.root.scale.x, sy: L.root.scale.y, r: L.root.rotation, v: L.root.visible };
+ 	L.root.filters = []; L.root.position.set(0, 0); L.root.scale.set(1); L.root.rotation = 0; L.root.visible = true;
++	// Off the board stage while extracting. An on-stage rig shares the stage render group; detaching makes the
++	// read a picture of this rig now, not whatever the stage presented last.
++	if (keep.p) L.root.removeFromParent();
+ 	// height budget matches the old `min(2, 1024 / H)`; width is capped too (riglife.snapshotPixels)
+ 	const { r } = snapshotPixels(L.W, L.H);
+ 	let c: HTMLCanvasElement | null = null;
+ 	try { c = a.renderer.extract.canvas({ target: L.root, frame: new Rectangle(0, 0, L.W, L.H), resolution: r }) as HTMLCanvasElement; }
+ 	catch (e) { c = null; crumb('snapshot', { msg: scrub((e as Error)?.message || String(e)) }); }
+ 	L.root.filters = keep.f; L.root.position.set(keep.x, keep.y); L.root.scale.set(keep.sx, keep.sy); L.root.rotation = keep.r; L.root.visible = keep.v;
+-	if (keep.p && L.root.parent !== keep.p) keep.p.addChild(L.root);
++	if (keep.p) keep.p.addChild(L.root);
+ 	return c;
+ }
+ function fade(L: Live, anim: string, t = 0.25) {
+diff -ruN a/frontend/apps/elfhaus/src/game/mergefx.ts b/frontend/apps/elfhaus/src/game/mergefx.ts
+--- a/frontend/apps/elfhaus/src/game/mergefx.ts	2026-11-06 15:47:12.000000000 +0000
++++ b/frontend/apps/elfhaus/src/game/mergefx.ts	2026-11-10 03:34:41.167026334 +0000
+@@ -24,7 +24,8 @@
+ import { grab } from './combine';
+ import { toStage } from './stage';
+ import { hasStack, stackOnce, stackLetters, stackWin, stackWinOff, stackPrepare, stackRelease, stackWarm, stackReact, stackReactSkip } from './stacks';
+-import { dbSnapshot, dbStats } from './dbstacks';
++import { dbDisplay, dbSnapshot, dbStats } from './dbstacks';
++import { canvasRev } from './sprite';
+ import { setPhase } from './diag';
+ import { T } from './tempo';
+ 
+@@ -188,7 +189,21 @@
+ 		//    from about the singles' size (merge_join sheet, or a transform on the placeholder art); shockwave + burst per seam
+ 		// fix4 proof B: the merged overlay's first frame is empty (its sheet / canvas paints a frame later): hold the lean
+ 		// stage over it for two frames instead of cutting to a blank panel
+-		{ const st = stage.el, host = st.parentElement; stage = null; apply(); if (!st.isConnected) ((host?.id && document.getElementById(host.id)) || host)?.appendChild(st); requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(() => st.remove()))); made.push(st); }
++		{ const st = stage.el, host = st.parentElement; stage = null; apply(); if (!st.isConnected) ((host?.id && document.getElementById(host.id)) || host)?.appendChild(st);
++			// The merged overlay's first paint used to be a pooled sheet canvas (previous animation) or the static still.
++			// Keep this fresh snapshot over it until a body canvas has actually been drawn, and never uncover the still.
++			const t0 = performance.now();
++			const uncover = () => {
++				const ov = ovOf(lo);
++				ov?.querySelectorAll<HTMLElement>(':scope > .wart').forEach((w) => { w.style.visibility = 'hidden'; });
++				const cvs = ov ? [...ov.querySelectorAll<HTMLCanvasElement>(':scope > canvas.stk_body')] : [];
++				const ready = cvs.some((cv) => cv.classList.contains('stk_db') ? !!dbDisplay(cv) : canvasRev(cv) > 0);
++				if (!st.isConnected) return;
++				if (ready || performance.now() - t0 > 120) st.remove();
++				else requestAnimationFrame(uncover);
++			};
++			requestAnimationFrame(uncover);
++			made.push(st); }
+ 		const ov = ovOf(lo);
+ 		if (ov) {
+ 			ov.style.animation = 'none';
+@@ -232,8 +247,11 @@
+ 		const p = document.createElement('div');
+ 		p.style.cssText = `position:absolute;top:0;height:100%;left:${o.offsetLeft - x0}px;width:${o.offsetWidth}px;transform-origin:50% 100%;will-change:transform`;
+ 		const snap = (sel: string) => {
+-			const cvs = [...o.querySelectorAll<HTMLCanvasElement>(sel)]; if (!cvs.length) return null;
++			// stk_db is a 1x1 placeholder for the rig. Copying it (or stretching it) is a garbage pixel, not the elf.
++			const cvs = [...o.querySelectorAll<HTMLCanvasElement>(sel)].filter((x) => !x.classList.contains('stk_db') && x.width > 1 && x.height > 1);
++			if (!cvs.length) return null;
+ 			const c = document.createElement('canvas'); c.width = cvs[0].width; c.height = cvs[0].height; const g = c.getContext('2d')!;
++			g.clearRect(0, 0, c.width, c.height);
+ 			cvs.forEach((x) => { try { g.drawImage(x, 0, 0, c.width, c.height); } catch { /* empty canvas */ } });
+ 			c.style.cssText = 'position:absolute;inset:0;width:100%;height:100%'; p.appendChild(c); return c;
+ 		};
+@@ -248,12 +266,12 @@
+ 		return { el: p, lets, rc: (rs[0] + rs[rs.length - 1]) / 2 };
+ 	});
+ 	parts.slice().sort((a, b) => Math.abs(b.rc - (parts[0].rc + parts[parts.length - 1].rc) / 2) - Math.abs(a.rc - (parts[0].rc + parts[parts.length - 1].rc) / 2)).forEach((pt) => el.appendChild(pt.el)); // centre on top
++	// Hide the live overlays before the stage is inserted, in the same turn, so a paint cannot show a leftover
++	// sheet canvas or the static still between the rig stopping and the snapshot appearing.
++	olds.forEach((o) => { o.style.visibility = 'hidden'; });
+ 	host.appendChild(el);
+-	// fix4 proof B: cloned <img> cut-outs decode asynchronously (several blank frames); keep the singles showing under the
+-	// stage until the clones have decoded, then hide them
+-	const imgs = [...el.querySelectorAll('img')];
+-	const hide = () => { if (el.isConnected) olds.forEach((o) => (o.style.visibility = 'hidden')); };
+-	void Promise.all(imgs.map((i) => i.decode().catch(() => {}))).then(hide);
++	// Cloned <img> cut-outs decode asynchronously. The overlays stay hidden; the stage simply has no pixels there
++	// until the clone decodes, which is blank rather than a previous merge's frame.
+ 	return { el, parts, olds };
+ }
+ /** White-pink bloom over `over`'s box, opaque edge to edge at full opacity (so the cut under it is never seen). */
+diff -ruN a/frontend/apps/elfhaus/src/game/sprite.ts b/frontend/apps/elfhaus/src/game/sprite.ts
+--- a/frontend/apps/elfhaus/src/game/sprite.ts	2026-11-06 15:47:12.000000000 +0000
++++ b/frontend/apps/elfhaus/src/game/sprite.ts	2026-11-10 03:34:17.763180215 +0000
+@@ -23,7 +23,11 @@
+ const sheets = new Map<string, Sheet>();
+ const pool: HTMLCanvasElement[] = [];
+ const live = new Set<Anim>();
++const rev = new WeakMap<HTMLCanvasElement, number>();
+ let raf = 0;
++/** How many times this canvas's pixels have been replaced. The board mirror reuploads when this changes, so a pooled canvas cannot keep showing the previous animation. */
++export const canvasRev = (cv: HTMLCanvasElement) => rev.get(cv) || 0;
++function bump(cv: HTMLCanvasElement) { rev.set(cv, (rev.get(cv) || 0) + 1); }
+ 
+ export function loadSheet(id: string, src: string, atlas: Atlas) {
+ 	const done = (bm: CanvasImageSource) => { warm(bm); sheets.set(id, { img: bm, atlas, src }); };
+@@ -66,7 +70,10 @@
+ 
+ function take(w: number, h: number) {
+ 	const cv = pool.pop() || document.createElement('canvas');
++	const resized = cv.width !== w || cv.height !== h;
+ 	if (cv.width !== w) cv.width = w; if (cv.height !== h) cv.height = h;
++	// A same-size reuse keeps the previous animation's pixels. Resize clears; a matching size does not.
++	if (!resized) { const g = cv.getContext('2d'); if (g) g.clearRect(0, 0, w, h); }
+ 	cv.className = 'spr'; cv.removeAttribute('style'); cv.setAttribute('aria-hidden', 'true');
+ 	return cv;
+ }
+@@ -82,10 +89,13 @@
+ function draw(a: Anim, i: number, j = -1, f = 0) {
+ 	const ctx = a.cv.getContext('2d')!, W = a.cv.width, H = a.cv.height;
+ 	ctx.clearRect(0, 0, W, H);
+-	if (j < 0 || f <= 0) { frame(ctx, a.sheet.img, a.frames[i], W, H); return; }
+-	ctx.globalAlpha = 1 - f; frame(ctx, a.sheet.img, a.frames[i], W, H);
+-	ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = f; frame(ctx, a.sheet.img, a.frames[j], W, H);
+-	ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
++	if (j < 0 || f <= 0) frame(ctx, a.sheet.img, a.frames[i], W, H);
++	else {
++		ctx.globalAlpha = 1 - f; frame(ctx, a.sheet.img, a.frames[i], W, H);
++		ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = f; frame(ctx, a.sheet.img, a.frames[j], W, H);
++		ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
++	}
++	bump(a.cv);
+ }
+ // ---- crossfade plan, per frame pair i -> i+1: c = share of (opaque) thumbnail pixels changing by > 25 %; from it the
+ // blend window w (share of the interval that dissolves; 0 = straight cut) and the frame's hold d (in slowed intervals).
+@@ -161,12 +171,14 @@
+ 	const cv = def.canvas ? take(def.canvas[0], def.canvas[1]) : take(frames[0][2], frames[0][3]);
+ 	if (o.cls) cv.className += ' ' + o.cls;
+ 	if (o.style) cv.setAttribute('style', o.style);
+-	o.prepend ? host.prepend(cv) : host.appendChild(cv);
+ 	const rate = o.rate ?? spriteRate(host);
+ 	const a: Anim = { cv, sheet, frames, fps: (o.fps || def.fps) / rate, loop: o.loop ?? def.loop, hold: !!o.hold, t0: performance.now() + (o.delay || 0) * rate, last: -1, done: false, onEnd: o.onEnd };
+ 	if (o.blend && rate > 1 && frames.length > 1) a.plan = planOf(sheet, frames, cv.width, cv.height); // slowed only: turbo / own pace keep the plain step
+-	if (o.delay) cv.getContext('2d')!.clearRect(0, 0, cv.width, cv.height);
+-	else { a.last = 0; draw(a, 0); } // first frame now: a hand-off (one-shot -> loop) never shows an empty canvas for a frame
++	// Draw before the canvas is in the document. A pooled canvas still holds the previous animation until this draw,
++	// and appending it first let that frame present (and let the board upload it) for one paint.
++	if (o.delay) { cv.getContext('2d')!.clearRect(0, 0, cv.width, cv.height); bump(cv); }
++	else { a.last = 0; draw(a, 0); }
++	o.prepend ? host.prepend(cv) : host.appendChild(cv);
+ 	live.add(a);
+ 	if (!raf) raf = requestAnimationFrame(tick);
+ 	return a;
