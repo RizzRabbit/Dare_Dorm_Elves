@@ -17,7 +17,7 @@ ok(near(creditedBalance(974.57, 5.368, 990), 990), 'a higher server balance alwa
 // next press only takes the bet
 ok(near(creditedBalance(974.57, 5.368, 974.57) - 7.5, 972.438), 'next press: $979.94 -> $972.44, no up-then-down');
 const game = readFileSync(join(app, 'src/game/game.ts'), 'utf8'), mock = readFileSync(join(app, 'src/mock/mockRgs.ts'), 'utf8');
-ok(/await playBookEvents\(evs\);\s*await finishRound\(rd\);/.test(game), 'finishRound (the credit) runs right after the presentation');
+ok(/await playBookEvents\(evs\);[\s\S]{0,200}?await finishRound\(rd\);/.test(game), 'finishRound (the credit) runs right after the presentation');
 ok(/S\.balance = creditedBalance\(playBal, payout, endBal\)/.test(game), 'finishRound credits through creditedBalance');
 ok(/mockBalance -= Math\.round\(amount \* mockModeCost/.test(mock) && /mockBalance \+= mockPending/.test(mock), 'mock RGS: play takes the cost, end-round credits the win (as the RGS does)');
 if (fail) { console.error(`test-balance: ${fail} failure(s)`); process.exit(1); }

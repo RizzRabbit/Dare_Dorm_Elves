@@ -42,7 +42,7 @@ import { initLoader, preloadArt, track, loaderReady, hideLoader } from './loader
 import { preloadPuff } from './puff';
 import { symArtReady } from './symrig';
 import { introLayout } from './introPixi';
-import { fitStage, toStage, ST } from './stage';
+import { fitStage, toStage, ST, startViewportWatch } from './stage';
 import { fitStrip, initStripFit } from './stripfit';
 import { placeRespin } from './respin';
 import { applyLayers } from './layers';
@@ -701,25 +701,28 @@ function wire() {
 		const b = (e.target as Element)?.closest?.('#menuBtn,.mX,#turboBtn,#turboSw,#autoBtn,#autoStart,#advBtn,#msgOk,#replayPlay,.chip,#popMenu .pmRow,#stFeat,#stBonus') as HTMLButtonElement | null;
 		if (b && !b.disabled) sfx('ui_click_new');
 	});
-	addEventListener('resize', layout);
+	let layQ = 0;
+	const kickLayout = () => { layout(); if (!layQ) layQ = requestAnimationFrame(() => { layQ = 0; layout(); }); };
+	addEventListener('resize', kickLayout);
 	initStripFit(); // v3.16f (#194): HUD values shrink to fit on landscape phones
-	// iOS reports the new size late after a rotation: lay out again once it has settled
-	addEventListener('orientationchange', () => { setTimeout(layout, 120); setTimeout(layout, 500); });
-	visualViewport?.addEventListener('resize', layout);
-	addEventListener('visibilitychange', layout);
-	addEventListener('pageshow', layout);
+	// Immediate re-layout plus one next-frame pass (iframe size can settle a frame later).
+	addEventListener('orientationchange', kickLayout);
+	visualViewport?.addEventListener('resize', kickLayout);
+	addEventListener('visibilitychange', kickLayout);
+	addEventListener('pageshow', kickLayout);
 	try {
-		const ro = new ResizeObserver(() => layout());
+		const ro = new ResizeObserver(() => kickLayout());
 		ro.observe(document.documentElement);
 		if (document.body) ro.observe(document.body);
 	} catch { /* older webviews */ }
 	const hookDpr = () => {
 		try {
 			const mq = matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`);
-			mq.addEventListener?.('change', () => { hookDpr(); layout(); }, { once: true });
+			mq.addEventListener?.('change', () => { hookDpr(); kickLayout(); }, { once: true });
 		} catch { /* older webviews */ }
 	};
 	hookDpr();
+	startViewportWatch(kickLayout);
 }
 function applyJurisdiction() {
 	if (S.jur.disabledAutoplay) $('#autoBtn').style.visibility = 'hidden';

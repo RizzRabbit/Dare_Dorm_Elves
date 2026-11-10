@@ -96,7 +96,7 @@ export function initUiStage() {
 		const later = () => { if (!q) q = requestAnimationFrame(() => { q = 0; place(); }); };
 		addEventListener('resize', later);
 		visualViewport?.addEventListener('resize', later);
-		addEventListener('orientationchange', () => { setTimeout(later, 120); setTimeout(later, 500); });
+		addEventListener('orientationchange', later);
 		const hookDpr = () => {
 			try {
 				const mq = matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`);

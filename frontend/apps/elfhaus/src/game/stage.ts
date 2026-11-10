@@ -16,12 +16,27 @@ const finePointer = () => { try { return matchMedia('(pointer: fine)').matches; 
 
 export function viewSize() {
 	// The visible box, not the layout viewport: in an iOS Safari / Stake iframe innerHeight can include area under the
-	// browser bars, which pushed the top of the stage (logo, Roxy's head) off screen. Take the smallest non-zero size.
+	// browser bars, which pushed the top of the stage (logo, Roxy's head) off screen.
+	// Do not Math.min() in visualViewport unconditionally: after a window grow (2560x1440 → 2560x1600)
+	// a stale visualViewport kept the previous height and the layout stayed on the old kind for hundreds of ms.
 	const de = document.documentElement, vv = window.visualViewport;
-	const pick = (...a: (number | null | undefined)[]) => Math.min(...a.filter((x): x is number => !!x && x > 0)) || 1;
-	const vw = pick(innerWidth, de.clientWidth, vv && vv.width * vv.scale);
-	const vh = pick(innerHeight, de.clientHeight, vv && vv.height * vv.scale);
-	return { vw, vh };
+	const iw = innerWidth || 0, ih = innerHeight || 0;
+	const cw = de.clientWidth || 0, ch = de.clientHeight || 0;
+	// Prefer the window size. clientWidth/Height can lag a frame behind a grow,
+	// and min(client, inner) then kept the previous layout after a resize.
+	let vw = iw || cw || 1;
+	let vh = ih || ch || 1;
+	if (vv) {
+		const vvw = (vv.width || 0) * (vv.scale || 1);
+		const vvh = (vv.height || 0) * (vv.scale || 1);
+		// Use visualViewport only when it is a modest inset of the current window (iOS chrome / pinch zoom),
+		// never when it still reports a previous window size.
+		if (vvw > 0 && vvh > 0 && vvw <= vw + 1 && vvh <= vh + 1) {
+			const dW = vw - vvw, dH = vh - vvh;
+			if (dW < 48 && dH < Math.min(120, vh * 0.15)) { vw = vvw; vh = vvh; }
+		}
+	}
+	return { vw: Math.max(1, vw), vh: Math.max(1, vh) };
 }
 
 export function fitStage() {
@@ -58,23 +73,61 @@ export function fitStage() {
 
 /** Hook a layout pass to resize, orientation, visualViewport, and devicePixelRatio changes. */
 export function onStageChange(fn: () => void) {
-	addEventListener('resize', fn);
-	visualViewport?.addEventListener('resize', fn);
-	addEventListener('orientationchange', () => { setTimeout(fn, 120); setTimeout(fn, 500); });
-	addEventListener('visibilitychange', fn);
-	addEventListener('pageshow', fn);
+	// Immediate pass, then one follow-up on the next frame so a size that settles
+	// after the event (iframe client box, iOS rotation) is applied within 1 frame.
+	let q = 0;
+	const kick = () => { fn(); if (!q) q = requestAnimationFrame(() => { q = 0; fn(); }); };
+	addEventListener('resize', kick);
+	visualViewport?.addEventListener('resize', kick);
+	addEventListener('orientationchange', kick);
+	addEventListener('visibilitychange', kick);
+	addEventListener('pageshow', kick);
 	try {
-		const ro = new ResizeObserver(() => fn());
+		const ro = new ResizeObserver(() => kick());
 		ro.observe(document.documentElement);
 		if (document.body) ro.observe(document.body);
 	} catch { /* older webviews */ }
 	const hookDpr = () => {
 		try {
 			const mq = matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`);
-			mq.addEventListener?.('change', () => { hookDpr(); fn(); }, { once: true });
+			mq.addEventListener?.('change', () => { hookDpr(); kick(); }, { once: true });
 		} catch { /* older webviews */ }
 	};
 	hookDpr();
+	startViewportWatch(kick);
+}
+
+// Stake iframes do not always fire window.resize when the parent viewport changes,
+// and requestAnimationFrame in those iframes can stall (headless / swiftshader /
+// hidden-iframe throttling). Compare the live window to the last applied stage and
+// kick layout the same turn the size actually changes. rAF is the same-frame path;
+// a short interval is the fallback when rAF is paused. Not a debounce: both only
+// fire when the size has already changed.
+const watchFns = new Set<() => void>();
+let watching = false;
+export function startViewportWatch(fn?: () => void) {
+	if (typeof window === 'undefined') return;
+	if (fn) watchFns.add(fn);
+	if (watching) return;
+	watching = true;
+	const check = () => {
+		try {
+			const { vw, vh } = viewSize();
+			if (vw < 32 || vh < 32) return;
+			if (Math.abs(vw - ST.vw) <= 0.5 && Math.abs(vh - ST.vh) <= 0.5) return;
+			for (const f of watchFns) {
+				try { f(); } catch { /* keep watching */ }
+			}
+			// If no callback updated ST, notify the rest of the resize listeners.
+			if (Math.abs(vw - ST.vw) > 0.5 || Math.abs(vh - ST.vh) > 0.5) {
+				dispatchEvent(new Event('resize'));
+			}
+		} catch { /* keep watching */ }
+	};
+	const loop = () => { check(); requestAnimationFrame(loop); };
+	requestAnimationFrame(loop);
+	setInterval(check, 16);
+	check();
 }
 
 /** A screen-space DOMRect (getBoundingClientRect) in stage design px. Retired once nothing places from DOM rects. */

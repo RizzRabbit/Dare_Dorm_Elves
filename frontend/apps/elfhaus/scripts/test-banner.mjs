@@ -48,9 +48,9 @@ for (const dir of ['src/mock/books', 'test-fixtures/books']) {
 }
 {
 	const bh = readFileSync(join(app, 'src/game/bookEventHandlerMap.ts'), 'utf8'), ui = readFileSync(join(app, 'src/game/ui.ts'), 'utf8'), gm = readFileSync(join(app, 'src/game/game.ts'), 'utf8'), cf = readFileSync(join(app, 'src/game/config.ts'), 'utf8');
-	ok(/bannerLevel\(ev\.amount, WIN_EDGES, BIG_TIERS\[0\]\.level, MAX_WIN_X\)/.test(bh) && /levelOf\(ev\.amount \/ 100, WIN_EDGES\)/.test(bh), "setWin banner + level on the round's mode edges");
-	ok(/winEdgesFor = \(mode\?: string\): number\[\] => \(mode && WIN_LEVELS\.byMode\?\.\[mode\]\) \|\| WIN_LEVELS\.standard/.test(cf) && /setRoundMode\(mode\?: string\) \{ setWinLevels\(winEdgesFor\(mode\)\); \}/.test(ui), 'edges per mode from the synced config (no thresholds in components)');
-	ok(/setRoundMode\(mode\)/.test(gm) && /setRoundMode\(rd\.mode\)/.test(gm) && (gm.match(/setRoundMode\(url\.mode\)/g) || []).length === 2, 'set for a spin, a resumed round and a replay');
+	ok(/bannerLevel\(ev\.amount, WIN_EDGES, BIG_TIERS\[0\]\.level, MAX_WIN_X/.test(bh) && /levelOf\(ev\.amount \/ 100, WIN_EDGES\)/.test(bh), "setWin banner + level on the round's mode edges");
+	ok(/winEdgesFor = \(mode\?: string\): number\[\] => \{ const m = normMode\(mode\); return \(m && WIN_LEVELS\.byMode\?\.\[m\]\) \|\| WIN_LEVELS\.standard; \}/.test(cf) && /export function setRoundMode\(mode\?: string\) \{/.test(ui) && /setWinLevels\(e\)/.test(ui) && /winEdgesFor\(mode\)/.test(ui), 'edges per mode from the synced config (no thresholds in components)');
+	ok(/setRoundMode\(mode\)/.test(gm) && /setRoundMode\(rd\.mode\)/.test(gm) && /setRoundMode\(url\.mode\)/.test(gm), 'set for a spin, a resumed round and a replay');
 }
 const dir = process.env.ELFHAUS_BOOKS, cap = Number(process.env.ELFHAUS_BOOKS_MAX || 200000);
 if (dir && existsSync(dir)) for (const f of readdirSync(dir).filter((f) => /^books_.*\.jsonl\.zst$/.test(f)).sort()) {

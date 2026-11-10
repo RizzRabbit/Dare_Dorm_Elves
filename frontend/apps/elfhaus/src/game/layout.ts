@@ -200,58 +200,63 @@ function chromeTablet(AW: number, AH: number): Chrome {
 	};
 }
 
-/** Landscape / square / wide: board left, buy above spin above auto/turbo, Roxy right, HUD under the board. */
+/** Landscape / square / wide: board left, buy above spin above auto/turbo, Roxy right, HUD under the board.
+ *  Author in this design's own size (no second fit). The board takes the largest uniform scale that
+ *  keeps square cells, a readable (smaller) HUD, the right-stack, and a Roxy column. */
 function chromeLand(AW: number, AH: number): Chrome {
-	// Author in this design's own size (no second fit). HUD is reserved first, then the board
-	// takes the largest remaining rect that keeps square cells and the right-stack + Roxy column.
-	const ab = Math.min(120, AH * 0.12);
-	const buyS = 0.85, buyW = 216 * buyS * 0.92, buyH = 240 * buyS * 0.92;
-	const ROXY_CLEAR = Math.round(AW * 0.80);
-	const spSz = Math.min(200, AH * 0.20);
-	const btnCol = Math.max(spSz, buyW) + 16;
-	const hudH = Math.min(300, Math.max(160, AH * 0.185));
-	const hudY = AH - hudH - 16;
-	const topMin = Math.min(215, Math.max(140, AH * 0.15));
-	const maxBsH = (hudY - 24 - topMin) / (BH + FB + FT);
-	const playL = 64, playR = ROXY_CLEAR - 8;
-	const maxBsW = (playR - playL - btnCol - 14) / (BW + 2 * FT);
-	const bs = Math.min(1.32, maxBsH, maxBsW);
+	const logoS = Math.min(0.40, Math.max(0.28, AH / 2800));
+	const logoTopNeed = 18 + 412 * logoS * 0.62 + 8; // #top anchors at 0.62 of the 1200x412 logo
+	const menuS = Math.min(96, Math.max(72, AH * 0.09));
+	const topMin = Math.max(logoTopNeed, menuS + 16);
+	const hudH = Math.max(112, Math.min(160, AH * 0.13));
+	const hudY = AH - hudH - 10;
+	const spSz = Math.min(168, AH * 0.16);
+	const buyS = Math.min(0.72, spSz / 220), buyW = 216 * buyS * 0.92, buyH = 240 * buyS * 0.92;
+	const ab = Math.min(96, AH * 0.10);
+	const btnCol = Math.max(spSz, buyW) + 12;
+	const playL = 36;
+	const roxyMin = Math.min(AW * 0.18, Math.max(220, AW * 0.16));
+	const maxBsH = (hudY - 10 - topMin) / (BH + FB + FT);
+	const maxBsW = (AW - playL - btnCol - 16 - roxyMin) / (BW + 2 * FT);
+	const bs = Math.min(maxBsH, maxBsW);
 	const fw = (BW + 2 * FT) * bs;
-	const playW = fw + 14 + btnCol;
-	const playX0 = playL + Math.max(0, (playR - playL - playW) / 2);
+	const playW = fw + 12 + btnCol;
+	const playX0 = playL + Math.max(0, (AW - playL - roxyMin - playW) / 2);
 	const bx = playX0 + FT * bs;
-	let by = hudY - 22 - (BH + FB) * bs;
+	let by = hudY - 16 - (BH + FB) * bs;
 	if (by - FT * bs < topMin) by = topMin + FT * bs;
 	const T = by - FT * bs;
 	const BC = bx + BW * bs / 2;
-	const spinX = playX0 + fw + 14 + btnCol / 2 - 8;
-	const buyX = spinX, buyY = by - FT * bs + buyH / 2;
-	const spinY = buyY + buyH / 2 + 16 + spSz / 2;
+	const spinX = playX0 + fw + 12 + btnCol / 2;
+	const buyX = spinX, buyY = T + buyH / 2;
+	const spinY = buyY + buyH / 2 + 14 + spSz / 2;
 	const autoX = spinX, turboX = spinX;
-	const autoY = spinY + spSz / 2 + 14 + ab / 2;
-	const turboY = autoY + ab + 12;
-	const hudW = Math.min(1400, 2 * (BC - 44), 2 * (ROXY_CLEAR - 16 - BC));
-	const hudX = BC - hudW / 2;
-	const mbT = Math.round(hudH * 0.45), betHalf = 156, clear = betHalf + mbT / 2 + 52;
-	const balX = hudX + 44, winR = hudX + hudW - 44;
-	const zoneL = Math.max(240, (BC - clear) - balX), zoneR = Math.max(240, winR - (BC + clear));
-	const tls = 42 * (hudH / 300), tvs = 80 * (hudH / 300);
-	const gutter = AW - playR;
+	const autoY = spinY + spSz / 2 + 12 + ab / 2;
+	const turboY = autoY + ab + 10;
+	const playR = playX0 + playW;
+	const gutter = Math.max(roxyMin, AW - playR);
 	const roxyS = Math.min(gutter / 700, (T + FH * bs) / 1400) * 1.15;
+	const kHud = hudH / 300;
+	const hudW = Math.min(AW * 0.88, 2 * (BC - 40), 2 * (playR - 12 - BC));
+	const hudX = BC - hudW / 2;
+	const mbT = Math.round(hudH * 0.45), betHalf = Math.min(156, hudW * 0.14), clear = betHalf + mbT / 2 + 36;
+	const balX = hudX + 36, winR = hudX + hudW - 36;
+	const zoneL = Math.max(160, (BC - clear) - balX), zoneR = Math.max(160, winR - (BC + clear));
+	const tls = 42 * kHud, tvs = 80 * kHud;
 	return {
 		board: { x: bx, y: by, w: BW * bs, h: BH * bs, bs, cell: CELL * bs, T },
-		logo: { x: BC, y: T - 18, s: 0.44 },
-		roxy: { x: playR + gutter / 2, y: by + (BH + FB) * bs, s: Math.max(0.35, roxyS), peek: false },
-		hud: { x: hudX, y: hudY, w: hudW, h: hudH, r: 22 },
-		fBal: { x: balX, y: hudY + 50 * (hudH / 300), ls: tls, vs: tvs, w: zoneL },
-		fBet: { x: BC - 96, y: hudY + 50 * (hudH / 300), ls: tls, vs: tvs, w: 192 },
-		fWin: { x: BC + clear, y: hudY + 50 * (hudH / 300), ls: tls, vs: tvs, w: zoneR },
+		logo: { x: BC, y: T - 18, s: logoS },
+		roxy: { x: playR + gutter / 2, y: by + (BH + FB) * bs, s: Math.max(0.28, roxyS), peek: false },
+		hud: { x: hudX, y: hudY, w: hudW, h: hudH, r: 18 },
+		fBal: { x: balX, y: hudY + 50 * kHud, ls: tls, vs: tvs, w: zoneL },
+		fBet: { x: BC - 80, y: hudY + 50 * kHud, ls: tls, vs: tvs, w: 160 },
+		fWin: { x: BC + clear, y: hudY + 50 * kHud, ls: tls, vs: tvs, w: zoneR },
 		minus: { x: BC - betHalf, y: hudY + hudH / 2 - 4, s: mbT, ic: 2.2 },
 		plus: { x: BC + betHalf, y: hudY + hudH / 2 - 4, s: mbT, ic: 2.2 },
 		spin: { x: spinX, y: spinY, s: spSz, ic: 2.05 },
 		auto: { x: autoX, y: autoY, s: ab, ic: 1.95 }, turbo: { x: turboX, y: turboY, s: ab, ic: 1.95 },
 		buy: { v: 'v', x: buyX, y: buyY, s: buyS },
-		menu: { x: 16 + 56, y: 16 + 56, s: 112 },
+		menu: { x: 16 + menuS / 2, y: 16 + menuS / 2, s: menuS },
 		intro: introChrome(AW, AH, false),
 	};
 }
@@ -285,9 +290,9 @@ function chromeFor(kind: LayoutKind, W: number, H: number): Chrome {
 	// Author in a matched-aspect space, then map once into the design (no second letterbox).
 	if (kind === 'phonePort') return kChrome(chromePhone(1080, 1080 * (844 / 390)), W / 1080);
 	if (kind === 'tabletPort') return chromeTablet(W, H);
-	if (kind === 'square') return kChrome(chromeLand(1920, 1440), W / 1920);
-	if (kind === 'land') return kChrome(chromeLand(1920, 1200), W / 1920);
-	return chromeLand(W, H); // wide: authored in 1920×1080
+	// square, land and wide are authored in the design's own size so HUD floors
+	// and the logo scale with that design instead of a scaled-down 1920 table.
+	return chromeLand(W, H);
 }
 
 function readSafe(scale: number, raw?: Partial<Safe>): Safe {
