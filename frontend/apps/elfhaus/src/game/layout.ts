@@ -25,7 +25,7 @@ export function layoutKind(vw: number, vh: number): LayoutKind {
 export const isPortraitKind = (k: LayoutKind) => k === 'phonePort' || k === 'tabletPort';
 
 export const DPR_CAP = 2;
-export const capResolution = (dpr?: number) => Math.min(DPR_CAP, Math.max(1, dpr ?? (typeof window !== 'undefined' ? window.devicePixelRatio : 1) || 1));
+export const capResolution = (dpr?: number) => Math.min(DPR_CAP, Math.max(1, dpr ?? ((typeof window !== 'undefined' ? window.devicePixelRatio : 1) || 1)));
 
 export const CELL = 160, FT = 34, FB = 52, BW = 800, BH = 640, FW = BW + 2 * FT, FH = BH + FT + FB, M = 40;
 
@@ -280,7 +280,7 @@ function readSafe(scale: number, raw?: Partial<Safe>): Safe {
 		return parseFloat(v) || 0;
 	};
 	const scr = {
-		t: raw?.t ?? fromEnv('--sat') || fromEnv('env(safe-area-inset-top)'), // env() not readable this way; callers pass screen px
+		t: raw?.t ?? (fromEnv('--sat') || fromEnv('env(safe-area-inset-top)')), // env() not readable this way; callers pass screen px
 		r: raw?.r ?? 0,
 		b: raw?.b ?? 0,
 		l: raw?.l ?? 0,
