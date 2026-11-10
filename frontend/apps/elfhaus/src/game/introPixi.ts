@@ -286,6 +286,15 @@ const camEls = () => ['bg', 'scene', 'app'].map($id).filter(Boolean);
 const unCam = (x, y, c) => ({ x: PV.x + (x - PV.x) / c, y: PV.y + (y - PV.y) / c });         // intro px -> scene px
 function applyCam(c) { cam = c; for (const e of camEls()) { e.style.transformOrigin = `${PV.x}px ${PV.y}px`; e.style.scale = c === 1 ? '' : String(c); } }
 function setEl(id, dy, a) { const e = $id(id); if (!e) return; e.style.translate = dy ? `0 ${dy.toFixed(1)}px` : ''; e.style.opacity = a >= 1 ? '' : a.toFixed(3); }
+// Pixi HUD / logo / spin / buy live on #uiStage (a body-level canvas, not under #app). The vestibule camera
+// scales only #bg / #scene / #app, so without this those controls sit at full size over the 0.72 cam
+// (no board, floating HUD, fire-glow on the menu, WIN outside the bar).
+function setUiChrome(dy, a) {
+  setEl('hud', dy, a);
+  const cv = $id('uiStage'); if (!cv) return;
+  cv.style.opacity = a >= 1 ? '' : a.toFixed(3);
+  cv.style.translate = dy ? `0 ${dy.toFixed(1)}px` : '';
+}
 // re-audit H3: the alcove / board art are CSS backgrounds that sit at opacity 0 until the drop, so the browser only
 // decoded them on their first visible frame (the board showed bare, then "popped" its frame mid-drop). Decode them up front.
 const keep = [];
@@ -314,7 +323,7 @@ function setGame(tt) {   // all game objects driven from the intro clock (transf
   const kd = seg(tt, ...T.drop), dropY = (1 - ease.outBack(kd, 1.9)) * -dropH, dA = tt >= T.drop[0] ? 1 : 0;   // H3: solid from the first frame (it enters from above the view), no half-alpha ghost
   for (const id of BOARD) setEl(id, dropY, dA);
   const kl = seg(tt, ...T.logo); setEl('top', -40 * (1 - ease.outBack(kl, 2)), seg(tt, T.logo[0], T.logo[0] + 0.1));
-  const kh = seg(tt, ...T.hud, ease.outCubic); setEl('hud', 80 * (1 - kh), kh);
+  const kh = seg(tt, ...T.hud, ease.outCubic); setUiChrome(80 * (1 - kh), kh);
   if (!rig) return;
   const v = rig.view;
   if (tt < T.drop[0]) {   // Roxy standing in the doorway as the doors swing open on their own (wink held in the gap), steps out as the camera pushes
@@ -333,7 +342,7 @@ function setGame(tt) {   // all game objects driven from the intro clock (transf
 function release() { if (roxyFree || !rig) return; roxyFree = true; rig.face('surprised', 0); rig.release(); rig.idle(); rig.view.alpha = 1; sceneHold(false); }
 function finish() {   // end state (also the skip)
   if (state === 'done') return; state = 'done';
-  applyCam(1); for (const id of [...BOARD, 'top', 'hud']) setEl(id, 0, 1);
+  applyCam(1); for (const id of [...BOARD, 'top', 'hud']) setEl(id, 0, 1); setUiChrome(0, 1);
   release(); for (const e of camEls()) e.style.transformOrigin = '';
   if (app) { app.ticker.stop(); const c = app.canvas; app.stage.removeChildren().forEach((o) => o.destroy({ children: true })); releaseIntroGpu(app); c?.remove?.(); app = null; /* never destroy a Pixi 8 renderer while others live (shared batch pool): resize to 1x1 frees the framebuffer instead */ }
   document.body.classList.remove('introOn'); (window as any).ELFHAUS_INTRO_DONE = true; doneRes();
@@ -451,6 +460,6 @@ export function introSkip() { if (!app || state === 'off') { killed = true; retu
 /** Run a layout pass with the intro's camera / drop styles lifted (DOM rects stay true), then re-apply the current pose. */
 export function introLayout(fn: () => void) {
   if (!primed || state === 'done' || state === 'off') { fn(); return; }
-  const c = cam; for (const e of camEls()) e.style.scale = ''; for (const id of [...BOARD, 'top', 'hud']) setEl(id, 0, 1);
+  const c = cam; for (const e of camEls()) e.style.scale = ''; for (const id of [...BOARD, 'top', 'hud']) setEl(id, 0, 1); setUiChrome(0, 1);
   try { fn(); } finally { cam = c; setGame(state === 'trans' ? tt : 0); }
 }

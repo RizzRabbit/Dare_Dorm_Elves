@@ -123,7 +123,10 @@ function setStrip() {
 	$('#bet').textContent = money(bet() * (S.replay ? replayCost : modeCost(spinMode())));
 	$('#betLabel').textContent = t('betLabel');
 	const sr = Document.prototype.getElementById.call(document, 'srHud') as HTMLElement | null;
-	if (sr) sr.textContent = `${$('label[for="balance"]').textContent || 'BALANCE'} ${$('#balance').textContent}. ${$('#betLabel').textContent} ${$('#bet').textContent}. WIN ${$('#win').textContent}.`;
+	if (sr) {
+		sr.style.cssText = 'position:fixed;left:-10000px;top:0;width:1px;height:1px;overflow:hidden;opacity:0;clip:rect(0,0,0,0);clip-path:inset(50%);pointer-events:none;z-index:-1;color:transparent;font-size:1px';
+		sr.textContent = `${$('label[for="balance"]').textContent || 'BALANCE'} ${$('#balance').textContent}. ${$('#betLabel').textContent} ${$('#bet').textContent}. WIN ${$('#win').textContent}.`;
+	}
 	if (isOpen('#buyMenu')) paintBuy();
 	if (uiPixiOn()) layoutHud();
 }
@@ -703,6 +706,13 @@ function wire() {
 	// iOS reports the new size late after a rotation: lay out again once it has settled
 	addEventListener('orientationchange', () => { setTimeout(layout, 120); setTimeout(layout, 500); });
 	visualViewport?.addEventListener('resize', layout);
+	addEventListener('visibilitychange', layout);
+	addEventListener('pageshow', layout);
+	try {
+		const ro = new ResizeObserver(() => layout());
+		ro.observe(document.documentElement);
+		if (document.body) ro.observe(document.body);
+	} catch { /* older webviews */ }
 	const hookDpr = () => {
 		try {
 			const mq = matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`);

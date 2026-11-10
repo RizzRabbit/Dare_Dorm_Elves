@@ -24,4 +24,4 @@
 	<div id="sting" aria-hidden="true"><div class="stBox"><img class="stGlow" alt="" /><img class="stLogo" alt="Rizzin Games" /><div class="stGlint"></div></div></div>
 </div>
 </div>
-<div id="srHud" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+<div id="srHud" class="sr-only" aria-live="polite" aria-atomic="true" style="position:fixed;left:-10000px;top:0;width:1px;height:1px;overflow:hidden;opacity:0;clip-path:inset(50%);pointer-events:none;z-index:-1"></div>

@@ -56,6 +56,10 @@ export function viewSize() {
 
 export function fitStage() {
 	const { vw, vh } = viewSize();
+	// Stake (and other hosts) can boot the iframe at 0x0 or visibility:hidden; a 1x1 first
+	// layout would pick the wrong design and, if no later resize is delivered, stick. Keep
+	// the last good stage until the viewport is a real size.
+	if (vw < 32 || vh < 32) return ST;
 	const kind = layoutKind(vw, vh);
 	const D = DESIGNS[kind];
 	const portrait = isPortraitKind(kind);
@@ -93,6 +97,13 @@ export function onStageChange(fn: () => void) {
 	addEventListener('resize', fn);
 	visualViewport?.addEventListener('resize', fn);
 	addEventListener('orientationchange', () => { setTimeout(fn, 120); setTimeout(fn, 500); });
+	addEventListener('visibilitychange', fn);
+	addEventListener('pageshow', fn);
+	try {
+		const ro = new ResizeObserver(() => fn());
+		ro.observe(document.documentElement);
+		if (document.body) ro.observe(document.body);
+	} catch { /* older webviews */ }
 	const hookDpr = () => {
 		try {
 			const mq = matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`);

@@ -77,6 +77,7 @@ export function initUiStage() {
 		const cv = a.canvas as HTMLCanvasElement;
 		cv.id = 'uiStage';
 		cv.setAttribute('aria-hidden', 'true');
+		if (document.body.classList.contains('introOn')) cv.style.opacity = '0';
 		// Must live outside #root: that node is translated + scaled (stage.ts), and a viewport-sized
 		// canvas parented there is itself scaled (it overflowed or shrank on every non-1:1 window).
 		document.body.appendChild(cv);

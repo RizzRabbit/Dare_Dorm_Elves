@@ -199,5 +199,7 @@ body.portrait #app #hud::before{grid-row:3}
 #top{opacity:0!important;pointer-events:none!important}
 #hud{pointer-events:none!important}
 #uiHostTree{position:fixed!important;left:-10000px!important;top:0!important;width:1px!important;height:1px!important;overflow:hidden!important;opacity:0!important;pointer-events:none!important;clip-path:inset(50%)!important;z-index:-1!important}
-#srHud,.sr-only{position:fixed!important;left:0!important;top:0!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;clip-path:inset(50%)!important;border:0!important;white-space:nowrap;opacity:0!important;color:transparent!important;font-size:1px!important;pointer-events:none!important}
+#srHud,.sr-only{position:fixed!important;left:-10000px!important;top:0!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;clip-path:inset(50%)!important;border:0!important;white-space:nowrap;opacity:0!important;color:transparent!important;font-size:1px!important;pointer-events:none!important;z-index:-1!important}
+/* The vestibule camera scales #bg down to 0.72, which would otherwise expose the page's mauve letterbox. */
+body.introOn{background:#120C18}
 body[data-ready="1"] #loader,body[data-ready="1"] #loader.out{opacity:0!important;pointer-events:none!important;visibility:hidden!important}
