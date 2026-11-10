@@ -12,11 +12,10 @@ body.phl #app #hud::before{left:8px;width:calc(var(--railL) - 16px);grid-row:aut
 body.phl #app #hud::after{right:8px;width:calc(var(--railR) - 16px)}
 body.phl #app #hud button{pointer-events:auto;position:absolute;margin:0;grid-area:auto!important}
 #app #hud .row{border-color:#5d4a2a!important}
-without a stacking context on #app they fell behind the room canvas at rest (desktop board with
 
 #root #app{isolation:isolate}
 
-#loader label.spSkip{min-height:max(48px,var(--t48,48px));bottom:max(8px,env(safe-area-inset-bottom));font-size:max(13px,var(--t12));gap:10px;white-space:nowrap}
+#loader label.spSkip{position:absolute;display:flex;align-items:center;min-height:max(48px,var(--t48,48px));bottom:max(8px,env(safe-area-inset-bottom));font-size:max(13px,var(--t12));gap:10px;white-space:nowrap}
 #loader label.spSkip input{accent-color:#FFC83D;width:max(20px,calc(var(--t12,12px)*1.6));height:max(20px,calc(var(--t12,12px)*1.6))}
 @media (orientation:landscape){
 #loader label.spSkip{left:auto;right:max(16px,env(safe-area-inset-right));translate:none}
@@ -26,5 +25,5 @@ body.replay.portrait #replayPlay{padding:0 14px!important;min-width:0}
 body.introOn #loader{touch-action:none;user-select:none;-webkit-user-select:none}
 body.compact #loader label.spSkip{min-height:var(--t48);font-size:calc(var(--t12) * .9)}
 body.compact #sting .stBox{height:calc(62*var(--vmin))}
-/* #sting lives in the scaled stage: stage vmin{font-size:max(13px,calc(10px / var(--s)));padding:calc(3px / var(--s)) calc(4px / var(--s)) calc(3px / var(--s)) calc(8px / var(--s));gap:calc(6px / var(--s));border-radius:calc(8px / var(--s))}
+/* #sting lives in the scaled stage. */
 body.compact.replay #replayPlay{min-height:var(--t48);font-size:inherit;padding:0 calc(10px / var(--s))!important;border-radius:calc(6px / var(--s))}

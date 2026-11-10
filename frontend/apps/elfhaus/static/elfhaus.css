@@ -41,8 +41,6 @@ body.short #hud{padding-bottom:4px}
 body:not(.portrait).short #hud{max-width:none}
 
 #scene{position:fixed;inset:0;z-index:0;width:100%;height:100%;pointer-events:none;display:block}
-strips/cells/lines draw above */
-
 /* ---- In-game title: ELFHAUS wordmark centered above the reel board ---- */
 #top{position:relative;top:auto;left:auto;right:auto;width:100%;height:auto;display:flex;justify-content:center;padding-top:6px;pointer-events:none;z-index:5}
 
@@ -87,9 +85,7 @@ body.tb .mwAmt{font-size:calc(44px*var(--tbs))}
 body.alcove.portrait #alcoveRail{display:block}
 body.alcove #app #hud,body.alcove.portrait #app #hud{background:none;border-color:transparent;box-shadow:none}
 body.alcove #app #hud::before{border-top-color:transparent}
-opacity only. z 0 + first in #app,so it
-   paints over the room (#bg is a positioned sibling in #root{--frameGlowOp:.8;--frameGlowLo:.6;
-  --reelLineOp:.3;--reelLineW:2px;--reelLineCol:#FF8FD2}
+:root{--frameGlowOp:.8;--frameGlowLo:.6;--reelLineOp:.3;--reelLineW:2px;--reelLineCol:#FF8FD2}
 #alcoveGlow{position:absolute;left:0;top:0;pointer-events:none;display:none;z-index:0;background-size:100% 100%;background-repeat:no-repeat;
   opacity:var(--frameGlowOp)}
 body.alcove #alcoveGlow{display:block}
@@ -142,7 +138,7 @@ body{--at:2} body.turbo{--at:1}
 #lBar i{width:100%;transform:scaleX(0);transform-origin:0 50%}
 
 #root #app,#root #loader,body.short:not(.portrait) #root #top{position:absolute}
-/* v3.9: the whole settings row is the tap target (settings.ts forwards a row tap to its switch); the switch's own hit area
+/* v3.9: the whole settings row is the tap target (settings.ts forwards a row tap to its switch). */
 
 /* ===== v3.13 (James 2026-10-26): panels (panels.ts) =====
    Corner X: a small stylized neon blade X (two tapered strokes, plum stone outline, soft pink neon), no button plate,
@@ -181,9 +177,9 @@ body.portrait #app #hud{grid-template-columns:repeat(5,minmax(0,1fr));grid-templ
 body.portrait #app #hud::before{grid-row:3}
 
 #introCv{position:absolute;left:0;top:0;z-index:199;pointer-events:none;display:block}
-#loader.px .spBg,#loader.px .spStage{display:none}
-#loader.px.pxOn.in{background:transparent}
-#loader.px .spSkip{z-index:2;color:#eee3f2;text-shadow:0 1px 3px #000}
+#loader.px .spBg,#loader.px .spStage,body.introOn #loader .spBg,body.introOn #loader .spStage{display:none!important}
+#loader.pxOn,body.introOn #loader{background:transparent!important}
+#loader.px .spSkip,body.introOn #loader .spSkip{position:absolute;display:flex;align-items:center;z-index:2;color:#eee3f2;text-shadow:0 1px 3px #000}
 
 /* studio sting */
 #sting{position:absolute;inset:0;z-index:5;background:radial-gradient(circle at 50% 50%,rgba(60,30,80,.6),#120C18 70%),#120C18;display:flex;align-items:center;justify-content:center;cursor:pointer}

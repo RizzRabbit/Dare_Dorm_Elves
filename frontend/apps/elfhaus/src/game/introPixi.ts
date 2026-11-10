@@ -231,7 +231,7 @@ function placeCards(inK, outT) {   // inK: global clock for the calm fade-in; ou
   if (G.pc.off) { cardsC.visible = false; if (dotsG) dotsG.visible = false; return; }   // v21: too short for the carousel
   cardsC.visible = true; if (dotsG) dotsG.visible = true;
   const { ch: h, cy } = G.pc, ks = G.ks, d = cardSpacing(), cxS = G.Ws / 2;
-  const a = seg(inK, 0.15, 0.5), rise = (1 - ease.outCubic(a)) * 24, ko = seg(outT, T.cards[0], T.cards[0] + 0.3, ease.inCubic);
+  const a = state === 'loading' ? seg(inK, 0.15, 0.5) : 1, rise = (1 - ease.outCubic(a)) * 24, ko = seg(outT, T.cards[0], T.cards[0] + 0.3, ease.inCubic);
   cardsC.alpha = dotsG.alpha = a * (1 - ko);
   for (const e of cardEls) { const r = wrapRel(e.i - CAR.pos), ar = Math.min(1, Math.abs(r));
     e.C.position.set((cxS + r * d) / ks, (cy + rise + 40 * ko) / ks); e.C.scale.set(lerp(1, 0.86, ar) * (1 - 0.06 * ko) / ks);
@@ -431,6 +431,8 @@ export async function initIntro(progress: () => number): Promise<boolean> {
     document.addEventListener('pointerdown', carDown, { capture: true }); addEventListener('pointermove', carMove, { capture: true, passive: false });
     addEventListener('pointerup', carUp, { capture: true }); addEventListener('pointercancel', carCancel, { capture: true });
     document.body.classList.add('introOn'); L.classList.add('pxOn');
+    L.style.background = 'transparent';
+    for (const sel of ['.spBg', '.spStage']) { const e = L.querySelector(sel); if (e instanceof HTMLElement) e.style.display = 'none'; }
     (window as any).__intro = { get state() { return state; }, get t() { return tt; }, T, skip, get card() { return carIndex(); }, get carPos() { return CAR.pos; },
       get btnY() { const r = app?.canvas?.getBoundingClientRect?.(); return r ? r.top + G.btn.y * G.ks / G.Hs * r.height : 0; }, get cardY() { const r = app?.canvas?.getBoundingClientRect?.(); return r ? r.top + G.pc.cy / G.Hs * r.height : 0; },
       // test hook: freeze the transition at intro time x (seconds after the tap) for frame-exact shots
@@ -445,7 +447,8 @@ export const introOn = () => !!app && state !== 'done' && state !== 'off';
 /** Loading finished: fill the bar, prime the game behind the doors, show TAP TO START (resolves once it is up). */
 export function introLoaded(): Promise<void> {
   if (!introOn()) return Promise.resolve();
-  prime(); state = 'tap'; tt = 0;
+  prime(); state = 'tap'; tt = 0; if (t < 0.55) t = 0.55;
+  if (app) { update(0); app.render(); }
   return new Promise((r) => (tapRes = r));
 }
 /** The player tapped: play the door transition (resolves when the game is fully handed over). */
