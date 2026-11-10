@@ -2,7 +2,7 @@
 // Existing transparent maxwin_elf_* cutouts only. Single-feature cards show one elf;
 // groups only on Wild Winter Spins / Powder Day. Secret Santa is the gift + ? badge.
 // Crop is a texture frame (head to mid-thigh) so nothing is clipped with a Pixi mask.
-import { Assets, Container, Rectangle, Sprite, Texture } from 'pixi.js';
+import { Assets, Container, Graphics, Rectangle, Sprite, Texture } from 'pixi.js';
 import { ELF_CUTOUT, type ElfId } from '../cardelves';
 import { spr } from '../scene/atlas';
 import SHEET_JSON from '../chalet/symbols.sheet.json';
@@ -64,6 +64,8 @@ function poseElf(id: ElfId, winW: number, winH: number, group: boolean, index: n
 	const spread = group && n > 1 ? (index - (n - 1) / 2) * (winW * 0.18) : 0;
 	s.position.set(winW / 2 + spread, 0);
 	s.scale.set(scale);
+	if (s.height > winH) s.scale.set(scale * (winH / s.height));
+	if (s.y + s.height > winH) s.y = Math.max(0, winH - s.height);
 	s.zIndex = Z[id] ?? index;
 	s.label = 'elf:' + id;
 	return s;
@@ -106,11 +108,11 @@ export function artWindow(mode: string, w: number, h: number) {
 	const group = ids.length > 1;
 	if (shadowTex && ids.length) {
 		const sh = new Sprite(shadowTex);
-		sh.anchor.set(0.5, 0.5);
-		sh.position.set(w / 2, h * 0.92);
-		const sk = (w * (group ? 0.9 : 0.7)) / Math.max(1, sh.texture.width);
-		sh.scale.set(sk, sk * 0.55);
-		sh.alpha = 0.55;
+		sh.anchor.set(0.5, 1);
+		const sk = Math.min((w * (group ? 0.8 : 0.6)) / Math.max(1, sh.texture.width), (h * 0.22) / Math.max(1, sh.texture.height));
+		sh.scale.set(sk, sk * 0.5);
+		sh.position.set(w / 2, h - 2);
+		sh.alpha = 0.45;
 		sh.eventMode = 'none';
 		inner.addChild(sh);
 	}
@@ -118,5 +120,10 @@ export function artWindow(mode: string, w: number, h: number) {
 		const s = poseElf(id, w, h, group, i, ids.length);
 		if (s) inner.addChild(s);
 	});
+	const clip = new Graphics();
+	clip.rect(0, 0, w, h).fill(0xffffff);
+	clip.eventMode = 'none';
+	root.addChild(clip);
+	root.mask = clip;
 	return root;
 }

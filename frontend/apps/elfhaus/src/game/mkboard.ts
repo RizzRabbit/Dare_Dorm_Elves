@@ -29,7 +29,7 @@ export function mkGeo(): MkGeo {
 		mode: L.portrait ? 'port' : 'land',
 		k: 1, ox: 0, oy: 0,
 		D: { w: L.W, h: L.H },
-		loose: L.kind === 'phonePort',
+		loose: L.kind === 'portrait',
 		bx: L.board.x, by: L.board.y, bs: L.board.bs, T: L.board.T,
 		logo: { x: L.logo.x, y: L.logo.y, s: L.logo.s },
 		hud: { ...L.hud },

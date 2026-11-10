@@ -473,6 +473,8 @@ function betStep(d: number) {
 	if (S.busy) return; const was = S.betIdx;
 	S.betIdx = Math.max(0, Math.min(S.levels.length - 1, S.betIdx + d)); setArm(armed, S.ante);
 	sfx(S.betIdx === was ? 'ui_error' : d > 0 ? 'ui_bet_up' : 'ui_bet_down'); // clamped at the min / max = error
+	// Keep the confirm card's price in lockstep with the live bet (modeCost * bet), same formula as the HUD.
+	if (confirming) openConfirm(confirming);
 }
 
 // ---------- rules (C14/C32/C33/C34) ----------

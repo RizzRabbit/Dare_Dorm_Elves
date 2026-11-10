@@ -154,7 +154,7 @@ function build() {
 // (touch + mouse), tap a side card, or Left / Right keys; wraps around. `pos` is the continuous index at the centre.
 const CAR = { pos: 0, from: 0, to: 0, t0: -1, dur: 0.24, drag: null as any, eatUntil: 0 };
 let dotsG = null;
-function cardSpacing() { const { cw } = G.pc; return Math.max(G.Ws / 2 + 0.235 * cw, 0.925 * cw + 14); }   // screen px between card centres
+function cardSpacing() { const { cw } = G.pc; const peek = 0.86 * cw / 2; const maxD = Math.max(cw * 0.62, G.Ws / 2 - peek - 8); return Math.min(Math.max(cw * 0.78, 0.7 * cw + 10), maxD); }
 function paintTx(txt, font, px, wrapW, al) {   // painted bitmap-font text as a Sprite (falls back to Pixi Text until decoded)
   const r = paintTextCanvas(txt, font, px, wrapW, al === 'center' ? 'center' : 'left');
   if (!r) return null;
@@ -162,14 +162,20 @@ function paintTx(txt, font, px, wrapW, al) {   // painted bitmap-font text as a 
   if (al === 'center') { sp.anchor.set(0.5, 0); }
   return sp;
 }
-function cardText(c, size, wrapW, maxH) {   // title + detail in the painted fonts (cran title, ink detail), shrinking the detail until it fits maxH
-  const ti = paintTx(c.title.toUpperCase(), 'font_cran', size.t * 0.8, 1e5, size.al)
-    || new Text({ text: c.title.toUpperCase(), style: { fontFamily: FONT, fontWeight: '400', fontSize: size.t, fill: CRAN, letterSpacing: 0.5, align: size.al } });
+function cardText(c, size, wrapW, maxH) {   // title + detail in the painted fonts (cran title, ink detail), shrinking both until they fit inside the plate
+  let ts = size.t, ti;
+  for (;;) {
+    ti?.destroy?.({ texture: true, textureSource: true });
+    ti = paintTx(c.title.toUpperCase(), 'font_cran', ts * 0.8, wrapW, size.al)
+      || new Text({ text: c.title.toUpperCase(), style: { fontFamily: FONT, fontWeight: '400', fontSize: ts, fill: CRAN, letterSpacing: 0.5, align: size.al, wordWrap: true, wordWrapWidth: wrapW } });
+    if (ti.width <= wrapW * 0.98 && ti.height <= maxH * 0.42 || ts <= 11) break; ts -= 0.5;
+  }
+  if (ti?.scale && ti.width > wrapW * 0.96) ti.scale.set(ti.scale.x * wrapW * 0.96 / ti.width);
   let fl = size.l, ln;
+  const room = Math.max(12, maxH - (ti.height || 0) - 6);
   for (;;) { ln?.destroy({ texture: true, textureSource: true }); ln = paintTx(c.line, 'font_ink', fl * 0.78, wrapW, size.al)
       || new Text({ text: c.line, style: { fontFamily: "Nunito, 'Segoe UI', sans-serif", fontWeight: '800', fontSize: fl, fill: PAL.ink, align: size.al, wordWrap: true, wordWrapWidth: wrapW, lineHeight: Math.round(fl * 1.3) } });
-    if (ti.height + 6 + ln.height <= maxH || fl <= (ST.compact ? 7 : 11)) break; fl -= 0.5; }
-  if (ti?.scale && ti.width > wrapW * 0.96) ti.scale.set(ti.scale.x * wrapW * 0.96 / ti.width);   // uifix: title always fits inside the card padding
+    if (ln.height <= room || fl <= (ST.compact ? 7 : 11)) break; fl -= 0.5; }
   return { ti, ln };
 }
 function addDepth(C, n, kind) {   // carddepth: painted depth so title / detail / art sit ON the cream card, not pasted flat
@@ -202,7 +208,7 @@ function buildCards() {
       const bh = ti.height + 6 + ln.height, y = -bh / 2;
       ti.position.set(tx, y); ln.position.set(tx, y + ti.height + 6); addDepth(C, ti, 'title'); addDepth(C, ln, 'line');
     } else {     // portrait: art on top, title + detail under it
-      const { ti, ln } = cardText(c, { t: Math.max(17, Math.min(24, w * 0.072)), l: Math.max(12.5, Math.min(15.5, w * 0.047)), al: 'center' }, w - 30, h * 0.56);
+      const { ti, ln } = cardText(c, { t: Math.max(17, Math.min(24, w * 0.072)), l: Math.max(12.5, Math.min(15.5, w * 0.047)), al: 'center' }, w - 30, h * 0.40);
       const textH = ti.height + 6 + ln.height, ab = Math.max(50, h - 14 - textH - 14 - 10), fit = Math.min((w - 30) / tw, ab / th);
       art.scale.set(fit); art.position.set(0, -h / 2 + 14 + ab / 2); addDepth(C, art, 'art');
       ti.anchor.set(0.5, 0); ti.position.set(0, -h / 2 + 14 + ab + 8); ln.anchor.set(0.5, 0); ln.position.set(0, ti.y + ti.height + 6); addDepth(C, ti, 'title'); addDepth(C, ln, 'line');
@@ -443,8 +449,25 @@ export async function initIntro(progress: () => number): Promise<boolean> {
     addEventListener('pointerup', carUp, { capture: true }); addEventListener('pointercancel', carCancel, { capture: true });
     document.body.classList.add('introOn'); L.classList.add('pxOn');
     L.style.background = 'transparent';
+    const cardFit = () => (cardEls || []).map((e) => {
+      const plate = e.C.children?.[0];
+      const pb = plate?.getBounds?.() || e.C.getBounds();
+      const texts = [];
+      const walk = (n) => { if (!n) return; const lab = String(n.label||''); if (n.getBounds && (n.anchor || lab.startsWith('bm:') || n.style)) texts.push(n); if (n.children) for (const c of n.children) walk(c); };
+      walk(e.C);
+      const issues = [];
+      for (const n of texts) {
+        try {
+          const b = n.getBounds();
+          if (b.width < 2 || b.height < 2) continue;
+          if (b.x < pb.x - 3 || b.y < pb.y - 3 || b.x+b.width > pb.x+pb.width+3 || b.y+b.height > pb.y+pb.height+3)
+            issues.push({ x:b.x,y:b.y,w:b.width,h:b.height, pb:[pb.x,pb.y,pb.width,pb.height] });
+        } catch {}
+      }
+      return { i:e.i, plate:{x:pb.x,y:pb.y,w:pb.width,h:pb.height}, issues };
+    });
     (window as any).__intro = { get state() { return state; }, get t() { return tt; }, T, skip, get card() { return carIndex(); }, get carPos() { return CAR.pos; },
-      get skipOn() { return skipSplash(); }, toggleSkip,
+      get skipOn() { return skipSplash(); }, toggleSkip, cardFit,
       get skipBox() { const r = skipRect(); const b = app?.canvas?.getBoundingClientRect?.(); if (!b || !G) return null; return { x: b.left + (r.x + r.w / 2) / G.Ws * b.width, y: b.top + (r.y + r.h / 2) / G.Hs * b.height }; },
       get btnY() { const r = app?.canvas?.getBoundingClientRect?.(); return r ? r.top + G.btn.y * G.ks / G.Hs * r.height : 0; }, get cardY() { const r = app?.canvas?.getBoundingClientRect?.(); return r ? r.top + G.pc.cy / G.Hs * r.height : 0; },
       // test hook: freeze the transition at intro time x (seconds after the tap) for frame-exact shots

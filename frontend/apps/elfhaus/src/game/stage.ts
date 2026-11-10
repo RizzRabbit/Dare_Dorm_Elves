@@ -6,7 +6,7 @@ export { layoutPass, layoutKind, isPortraitKind, capResolution, DPR_CAP, DESIGNS
 
 export type { LayoutKind, Layout };
 
-export const ST = { w: 1280, h: 800, s: 1, ox: 0, oy: 0, vw: 1280, vh: 800, kind: 'land' as LayoutKind, portrait: false, tablet: false, tb: 1, phl: false, railL: 0, railR: 0, compact: false, tap: 48 };
+export const ST = { w: 1280, h: 800, s: 1, ox: 0, oy: 0, vw: 1280, vh: 800, kind: 'landscape' as LayoutKind, portrait: false, tablet: false, tb: 1, phl: false, railL: 0, railR: 0, compact: false, tap: 48 };
 
 // Compact: small desktop popouts and every replay. Kept as a flag for typography / copy;
 // it no longer drives a second scale or a 48-screen-px control floor in the layout pass.
@@ -57,8 +57,8 @@ export function fitStage() {
 	document.body.classList.toggle('tb', false);
 	document.body.classList.toggle('portrait', portrait);
 	document.body.classList.toggle('tablet', tablet);
-	document.body.classList.toggle('wide', kind === 'wide');
-	document.body.classList.toggle('phone', kind === 'phonePort' || (!tablet && Math.min(vw, vh) <= 500));
+	document.body.classList.toggle('wide', kind === 'landscape' && vw / Math.max(1, vh) >= 16/9);
+	document.body.classList.toggle('phone', kind === 'portrait' && Math.min(vw, vh) <= 500);
 	const r = document.documentElement.style;
 	r.setProperty('--dw', w + 'px'); r.setProperty('--dh', h + 'px'); r.setProperty('--s', String(s));
 	r.setProperty('--tb', '1'); r.setProperty('--tbs', '1'); r.setProperty('--tbm', '1');
@@ -97,37 +97,78 @@ export function onStageChange(fn: () => void) {
 	startViewportWatch(kick);
 }
 
-// Stake iframes do not always fire window.resize when the parent viewport changes,
-// and requestAnimationFrame in those iframes can stall (headless / swiftshader /
-// hidden-iframe throttling). Compare the live window to the last applied stage and
-// kick layout the same turn the size actually changes. rAF is the same-frame path;
-// a short interval is the fallback when rAF is paused. Not a debounce: both only
-// fire when the size has already changed.
+// Event-driven layout: immediate pass plus one next-frame kick. Stake iframes do
+// not always fire window.resize, so a short poll may run after one of those events
+// (or while the host box is still 0x0 / tiny) and then stops. Never a permanent
+// ticker or interval while the game is idle.
 const watchFns = new Set<() => void>();
-let watching = false;
+let hooked = false;
+let pollId = 0, rafId = 0, pollUntil = 0;
+const POLL_MS = 50, POLL_FOR_MS = 1000;
+const watchState = () => ({ poll: !!pollId, raf: !!rafId });
+
+function viewportCheck() {
+	try {
+		const { vw, vh } = viewSize();
+		if (vw < 32 || vh < 32) return false;
+		if (Math.abs(vw - ST.vw) <= 0.5 && Math.abs(vh - ST.vh) <= 0.5) return false;
+		for (const f of watchFns) {
+			try { f(); } catch { /* keep going */ }
+		}
+		if (Math.abs(vw - ST.vw) > 0.5 || Math.abs(vh - ST.vh) > 0.5) {
+			dispatchEvent(new Event('resize'));
+		}
+		return true;
+	} catch { return false; }
+}
+
+function stopPoll() {
+	if (pollId) { clearInterval(pollId); pollId = 0; }
+	pollUntil = 0;
+}
+
+function armPoll() {
+	pollUntil = Date.now() + POLL_FOR_MS;
+	if (pollId) return;
+	pollId = setInterval(() => {
+		const changed = viewportCheck();
+		const { vw, vh } = viewSize();
+		// The host has not given a real box yet (0x0 / tiny boot): keep polling.
+		if (vw < 32 || vh < 32) { pollUntil = Date.now() + POLL_FOR_MS; return; }
+		if (changed) pollUntil = Date.now() + POLL_FOR_MS;
+		if (Date.now() >= pollUntil) stopPoll();
+	}, POLL_MS);
+}
+
+function kickViewport() {
+	viewportCheck();
+	if (!rafId) rafId = requestAnimationFrame(() => { rafId = 0; viewportCheck(); });
+	armPoll();
+}
+
 export function startViewportWatch(fn?: () => void) {
 	if (typeof window === 'undefined') return;
 	if (fn) watchFns.add(fn);
-	if (watching) return;
-	watching = true;
-	const check = () => {
+	if (hooked) return;
+	hooked = true;
+	addEventListener('resize', kickViewport);
+	visualViewport?.addEventListener('resize', kickViewport);
+	addEventListener('orientationchange', kickViewport);
+	addEventListener('visibilitychange', kickViewport);
+	addEventListener('pageshow', kickViewport);
+	try {
+		const ro = new ResizeObserver(() => kickViewport());
+		ro.observe(document.documentElement);
+		if (document.body) ro.observe(document.body);
+	} catch { /* older webviews */ }
+	const hookDpr = () => {
 		try {
-			const { vw, vh } = viewSize();
-			if (vw < 32 || vh < 32) return;
-			if (Math.abs(vw - ST.vw) <= 0.5 && Math.abs(vh - ST.vh) <= 0.5) return;
-			for (const f of watchFns) {
-				try { f(); } catch { /* keep watching */ }
-			}
-			// If no callback updated ST, notify the rest of the resize listeners.
-			if (Math.abs(vw - ST.vw) > 0.5 || Math.abs(vh - ST.vh) > 0.5) {
-				dispatchEvent(new Event('resize'));
-			}
-		} catch { /* keep watching */ }
+			const mq = matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`);
+			mq.addEventListener?.('change', () => { hookDpr(); kickViewport(); }, { once: true });
+		} catch { /* older webviews */ }
 	};
-	const loop = () => { check(); requestAnimationFrame(loop); };
-	requestAnimationFrame(loop);
-	setInterval(check, 16);
-	check();
+	hookDpr();
+	kickViewport();
 }
 
 /** A screen-space DOMRect (getBoundingClientRect) in stage design px. Retired once nothing places from DOM rects. */
@@ -139,4 +180,5 @@ export function toStage(r: DOMRect) {
 if (typeof globalThis !== 'undefined') {
 	(globalThis as any).__ST = ST;
 	(globalThis as any).__layout = getLayout;
+	(globalThis as any).__viewportWatch = watchState;
 }

@@ -58,11 +58,11 @@ function layout() {
 	card.removeChildren();
 	const kind = uiKind, portrait = isPortrait(kind);
 	const W = designW, H = designH;
-	const cardW = Math.min(portrait ? (kind === 'tabletPort' ? 560 : 350) : 520, W - 28);
+	const cardW = Math.min(portrait ? (kind === 'tablet' ? 560 : 350) : 520, W - 28);
 	const inner = 18;
-	const artH = Math.min(cardW * 0.78, portrait ? (kind === 'phonePort' ? 260 : 340) : 250);
-	const titleH = kind === 'phonePort' ? 56 : 72;
-	const spinH = kind === 'phonePort' ? 36 : 46;
+	const artH = Math.min(cardW * 0.78, portrait ? (kind === 'portrait' ? 260 : 340) : 250);
+	const titleH = kind === 'portrait' ? 56 : 72;
+	const spinH = kind === 'portrait' ? 36 : 46;
 	const btnW = Math.min(240, cardW - inner * 2), btnH = 64;
 	const cardH = inner + artH + 10 + titleH + 8 + spinH + 14 + btnH + inner;
 	const h = Math.min(cardH, H - 20);

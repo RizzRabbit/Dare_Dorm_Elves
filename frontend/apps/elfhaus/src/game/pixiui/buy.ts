@@ -165,12 +165,12 @@ function layoutBuy() {
 	const kind = uiKind;
 	const portrait = isPortrait(kind);
 	const W = designW, H = designH;
-	const margin = kind === 'phonePort' ? 10 : 24;
-	const panelW = Math.min(W - margin * 2, portrait ? (kind === 'tabletPort' ? 720 : 370) : Math.min(1200, W - 40));
-	const inner = kind === 'phonePort' ? 14 : 22;
-	const titleH = kind === 'phonePort' ? 36 : 48;
-	const rowH = kind === 'phonePort' ? 40 : 48;
-	const gap = kind === 'phonePort' ? 8 : 12;
+	const margin = kind === 'portrait' ? 10 : 24;
+	const panelW = Math.min(W - margin * 2, portrait ? (kind === 'tablet' ? 720 : 370) : Math.min(1200, W - 40));
+	const inner = kind === 'portrait' ? 14 : 22;
+	const titleH = kind === 'portrait' ? 36 : 48;
+	const rowH = kind === 'portrait' ? 40 : 48;
+	const gap = kind === 'portrait' ? 8 : 12;
 	const nCards = last.buyOff ? 0 : last.cards.length;
 	const cols = portrait ? 3 : Math.max(1, nCards || 5);
 	const cardGap = gap;
@@ -180,7 +180,7 @@ function layoutBuy() {
 	const headerH = inner + titleH + gap + rowH + gap + rowH + turboH;
 	const maxPanel = H - margin * 2;
 	const cardsBudget = Math.max(80, maxPanel - headerH - inner);
-	const wantH = nCards ? Math.min(cardW * 1.72, portrait ? (kind === 'tabletPort' ? 300 : 210) : 300) : 0;
+	const wantH = nCards ? Math.min(cardW * 1.72, portrait ? (kind === 'tablet' ? 300 : 210) : 300) : 0;
 	const fitH = nCards ? Math.floor((cardsBudget - (cardRows - 1) * cardGap) / cardRows) : 0;
 	const cardH = nCards ? Math.max(120, Math.min(wantH, fitH)) : 0;
 	const cardsH = nCards ? cardRows * cardH + (cardRows - 1) * cardGap : 0;
@@ -373,18 +373,18 @@ function layoutConfirm(s: ConfirmState) {
 	const kind = uiKind;
 	const W = designW, H = designH;
 	const portrait = isPortrait(kind);
-	const cardW = Math.min(portrait ? (kind === 'tabletPort' ? 520 : 340) : 480, W - 32);
-	const inner = 18;
-	const artH = Math.min(cardW * 0.72, portrait ? 280 : 240);
-	const titleH = 52;
-	const btnW = Math.min(240, cardW - inner * 2), btnH = 56;
-	// measure text after we have widths
-	const cardH = inner + artH + 8 + titleH + 90 + 70 + btnH + 36 + inner;
-	const bg = nineUi('plate_cream', cardW, Math.min(cardH, H - 24), 2);
+	const cardW = Math.min(kind === 'tablet' ? 720 : kind === 'portrait' ? 520 : 560, W - 32);
+	const inner = kind === 'portrait' ? 16 : 20;
+	const titleH = kind === 'portrait' ? 44 : 52;
+	const btnW = Math.min(240, cardW - inner * 2), btnH = kind === 'portrait' ? 52 : 56;
+	const pad = 12;
+	const maxCardH = H - 24;
+	// Room left for title, desc, amount, note, button, hint after art.
+	const textBudget = (kind === 'portrait' ? 280 : kind === 'tablet' ? 300 : 260);
+	let artH = Math.min(cardW * 0.62, kind === 'landscape' ? 220 : 280, Math.max(80, maxCardH - inner * 2 - textBudget));
+	const bg = nineUi('plate_cream', cardW, maxCardH, 2);
 	cfCard.addChild(bg);
-	cfCard.position.set((W - cardW) / 2, Math.max(12, (H - Math.min(cardH, H - 24)) / 2));
 	cfCard.label = 'uiPanel';
-	hit(cfCard, cardW, Math.min(cardH, H - 24));
 	cfCard.cursor = 'default';
 
 	const art = artWindow(s.mode, cardW - inner * 2, artH);
@@ -396,18 +396,30 @@ function layoutConfirm(s: ConfirmState) {
 		const t = bmFit(s.title, 'font_cream', 28, cardW - inner * 2, titleH);
 		cfTitle = t;
 	}
+	let y = inner + artH + 8;
 	if (cfTitle) {
-		if (cfTitle instanceof Sprite) centerSpr(cfTitle, cardW / 2, inner + artH + 8 + titleH / 2);
-		else cfTitle.position.set(cardW / 2, inner + artH + 8 + titleH / 2);
+		if (cfTitle instanceof Sprite) centerSpr(cfTitle, cardW / 2, y + titleH / 2);
+		else cfTitle.position.set(cardW / 2, y + titleH / 2);
 		cfCard.addChild(cfTitle);
+		y += titleH + 6;
 	}
-	let y = inner + artH + 8 + titleH + 6;
-	cfDesc = bmFit(s.desc, 'font_ink', 15, cardW - inner * 2, 70);
-	if (cfDesc) { cfDesc.position.set(cardW / 2, y); cfCard.addChild(cfDesc); y += (cfDesc.height * cfDesc.scale.y) + 8; }
-	const amt = bmFit(`${s.amount}  ${s.per}  ${s.x}`, 'font_gold', 18, cardW - inner * 2, 28);
-	if (amt) { amt.label = 'uiPrice'; amt.position.set(cardW / 2, y); cfCard.addChild(amt); cfAmt = amt; y += amt.height * amt.scale.y + 8; }
-	cfNote = bmFit(s.note, 'font_ink', 13, cardW - inner * 2, 56);
-	if (cfNote) { cfNote.position.set(cardW / 2, y); cfCard.addChild(cfNote); y += cfNote.height * cfNote.scale.y + 12; }
+	const textW = cardW - inner * 2;
+	// Sprite.height already includes scale; do not multiply by scale.y again (that overlapped the amount onto the desc).
+	const stack = (node: Sprite | Container | null, gap: number) => {
+		if (!node) return;
+		node.position.set(cardW / 2, y);
+		cfCard.addChild(node);
+		y += node.height + gap;
+	};
+	cfDesc = bmFit(s.desc, 'font_ink', kind === 'portrait' ? 14 : 15, textW, kind === 'portrait' ? 64 : 72);
+	stack(cfDesc, 10);
+	// Amount on its own line, multiplier under it, so "$750.00 PER SPIN 750X BET" cannot collide with the description.
+	const amt = bmFit(`${s.amount}  ${s.per}`, 'font_gold', kind === 'portrait' ? 16 : 18, textW, 26);
+	if (amt) { amt.label = 'uiPrice'; stack(amt, 4); cfAmt = amt; }
+	const xSpr = bmFit(s.x, 'font_gold', kind === 'portrait' ? 14 : 16, textW, 22);
+	if (xSpr) { xSpr.label = 'uiPriceX'; stack(xSpr, 8); }
+	cfNote = bmFit(s.note, 'font_ink', 13, textW, kind === 'portrait' ? 48 : 56);
+	stack(cfNote, 12);
 
 	const btn = goBtn(btnW, btnH, () => hooks?.onConfirmYes());
 	btn.position.set((cardW - btnW) / 2, y);
@@ -426,8 +438,17 @@ function layoutConfirm(s: ConfirmState) {
 	}
 	cfCard.addChild(btn);
 	y += btnH + 8;
-	cfHint = bmFit(s.hint, 'font_ink', 12, cardW - inner * 2, 20);
-	if (cfHint) { cfHint.position.set(cardW / 2, y); cfCard.addChild(cfHint); }
+	cfHint = bmFit(s.hint, 'font_ink', 12, textW, 20);
+	if (cfHint) { cfHint.position.set(cardW / 2, y); cfCard.addChild(cfHint); y += cfHint.height + 4; }
+
+	const cardH = Math.min(maxCardH, Math.max(y + inner, inner + artH + 80));
+	bg.width = cardW; // nine slice may ignore; replace size by rebuilding if needed
+	try { (bg as any).width = cardW; (bg as any).height = cardH; } catch { /* nine */ }
+	cfCard.removeChild(bg);
+	const bg2 = nineUi('plate_cream', cardW, cardH, 2);
+	cfCard.addChildAt(bg2, 0);
+	hit(cfCard, cardW, cardH);
+	cfCard.position.set((W - cardW) / 2, Math.max(pad, (H - cardH) / 2));
 
 	// Cancel: any tap on the card that did not start on CONFIRM (and is not a drag).
 	let x0 = 0, y0 = 0, pid = -1, moved = false, downYes = false;

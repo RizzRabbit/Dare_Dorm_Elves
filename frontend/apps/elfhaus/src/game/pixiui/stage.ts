@@ -18,7 +18,7 @@ export const uiScreen = new Container();
 export const uiRoot = new Container();
 export const uiLayer = new Container();
 
-export let uiScale = 1, uiKind: LayoutKind = 'phonePort', viewW = 0, viewH = 0, designW = 390, designH = 844;
+export let uiScale = 1, uiKind: LayoutKind = 'portrait', viewW = 0, viewH = 0, designW = 1080, designH = 1920;
 
 const relayout = new Set<() => void>();
 export const onUiLayout = (f: () => void) => { relayout.add(f); return () => relayout.delete(f); };

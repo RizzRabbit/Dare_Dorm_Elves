@@ -321,7 +321,9 @@ function badge(el: HTMLElement, c: Ctx, w: number, h: number) {
 	const g = o.d; if (g.parent !== layer.symFx) layer.symFx.addChild(g);
 	if ((g as any)._k !== key) {
 		g.removeChildren().forEach((x) => x.destroy());
-		const k = (48 * 1.1) / F.px; let x = 5; const y = 50 - F.base * k;
+		// Font source box is  ~65 x 110; use that full height so digits (taller than "x") are not clipped.
+		const boxH = Math.max(F.base, 110) * 1.05;
+		const k = (48 * 1.1) / F.px; let x = 5; const y = (boxH - F.base * k) / 2;
 		for (const ch of key) {
 			const f = F.fr['u' + ch.codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0')];
 			if (!f) { x += 18 * k; continue; }
@@ -330,10 +332,11 @@ function badge(el: HTMLElement, c: Ctx, w: number, h: number) {
 			x += f.adv * k;
 		}
 		(g as any)._k = key;
+		(g as any)._boxH = boxH;
 	}
-	// the badge svg is a 150 x 60 viewBox fitted (meet) into the .mx box
-	const kk = Math.min(w / 150, h / 60);
-	place(g, c.M, (w - 150 * kk) / 2, (h - 60 * kk) / 2, kk, kk);
+	const boxH = (g as any)._boxH || 110;
+	const kk = Math.min(w / 150, h / boxH);
+	place(g, c.M, (w - 150 * kk) / 2, (h - boxH * kk) / 2, kk, kk);
 	g.alpha = c.op; g.zIndex = order++; g.visible = true;
 }
 // ---------- geometry cache (layout is read only in rebuild(): on a resize, a class / child / layout-style change) ----------
@@ -446,7 +449,14 @@ function walk(el: HTMLElement, parent: Af, pc: Ctx, isRoot: boolean) {
 		if (base.f & F_MX) { badge(el, c, w, h); return; }
 		if (tag === 'CANVAS') {
 			const cv = el as unknown as HTMLCanvasElement;
-			if (base.f & F_DB) { const d = dbDisplay(cv); if (d) { const o = out(el, 'db', () => d.root); if (o.d !== d.root) o.d = d.root; if (d.root.destroyed) return; if (d.root.parent !== c.host) c.host.addChild(d.root); { const k = h / d.H; place(d.root, M, (w - d.W * k) / 2, 0, k, k); } d.root.alpha = c.op; d.root.zIndex = order++; d.root.visible = true; } return; }
+			if (base.f & F_DB) { const d = dbDisplay(cv); if (d) { const o = out(el, 'db', () => d.root); if (o.d !== d.root) o.d = d.root; if (d.root.destroyed) return; if (d.root.parent !== c.host) c.host.addChild(d.root); {
+				// Fit to the overlay's current box (the reel or merged stack), never the 1x1 placeholder
+				// canvas or a stale % length. Scale is uniform from height so the elf fills all 4 rows.
+				const ov = el.parentElement, og = ov && geo.get(ov);
+				const ow = og?.w || w, oh = og?.h || h;
+				const k = oh / Math.max(1e-6, d.H);
+				place(d.root, M, (ow - d.W * k) / 2, 0, k, k);
+			} d.root.alpha = c.op; d.root.zIndex = order++; d.root.visible = true; } return; }
 			if (!cv.width) return;
 			// Texture.from reads the canvas once. A pooled sheet canvas is redrawn in place (and a merge snapshot can
 			// be the same element as an earlier upload). Without source.update the board keeps the previous frame.

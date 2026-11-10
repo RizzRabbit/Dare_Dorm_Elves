@@ -1,6 +1,22 @@
 # Elfhaus layout architecture
 
-This document is the contract for a single layout system. It records every scale and layout path that exists on `311ef87`, why they compete (and why the game looks “slightly skewed”), and the target: one Pixi app, one root container, one layout pass, one uniform transform.
+## Current contract (Stake 3-kind + EXPAND)
+
+Kind selection matches Stake's web-sdk (`createLayout.svelte.ts`). `ratio = innerWidth / innerHeight`:
+
+| ratio | kind | design | chrome |
+|---|---|---|---|
+| `<= 0.8` | `portrait` | 1080×1920 | stacked: reels use the width, controls under the board |
+| `0.8 < r < 1.3` | `tablet` | 1920×1920 | stacked |
+| `>= 1.3` | `landscape` | 1920×1080 | controls beside the reels; short-landscape / mobile when `min(w,h) <= 480` |
+
+Within a kind, scale is uniform: `scale = min(vw/designW, vh/designH)`, then Phaser EXPAND (`W = vw/scale`, `H = vh/scale`, `ox = oy = 0`) so there is no letterbox. The board stays a fixed design size, centred. HUD, menu, Buy Bonus and Roxy anchor to the expanded edges and `env(safe-area-inset-*)`. Roxy is placed in spare space or hidden when there is no room (never over the board). The cover background is the only non-uniform element.
+
+The previous five kinds (`phonePort` / `tabletPort` / `square` / `land` / `wide`) are archived at `archive/pre-stake-layout/`. Resize recomputes from `innerWidth` / `innerHeight` on resize events only (no permanent ticker). Intro, buy menu and confirm each have a portrait, tablet and landscape panel; all text stays inside its panel.
+
+---
+
+This document originally described the pre-EXPAND five-kind system (historical audit below). This document is the contract for a single layout system. It records every scale and layout path that exists on `311ef87`, why they compete (and why the game looks “slightly skewed”), and the target: one Pixi app, one root container, one layout pass, one uniform transform.
 
 Approved looks stay: the bet bar style and relative positions, tablet-portrait Buy under the board next to autoplay, Roxy peeking over the logo on portrait, square/landscape Roxy larger with the board shifted left, Buy above spin. Win and balance formatting are not part of this work.
 

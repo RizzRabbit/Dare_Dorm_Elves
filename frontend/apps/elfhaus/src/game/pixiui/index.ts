@@ -77,7 +77,7 @@ export function uiBounds() {
 	const app = uiApp();
 	const issues: Issue[] = [];
 	if (!app || !on) return { ok: false, ready: false, issues: [{ label: 'ui', parent: '', why: 'not ready', box: [], pb: [] }], kind: uiKind, design: [designW, designH], scale: uiScale, view: [viewW, viewH] };
-	const labels = ['uiCard', 'uiPanel', 'uiTitle', 'uiPrice', 'uiX', 'uiArt', 'uiConfirm', 'uiStart', 'uiClose'] as const;
+	const labels = ['uiCard', 'uiPanel', 'uiTitle', 'uiPrice', 'uiPriceX', 'uiX', 'uiArt', 'uiConfirm', 'uiStart', 'uiClose'] as const;
 	const nodes: Container[] = [];
 	walk(app.stage, nodes, new Set(labels));
 	const screen = { x: 0, y: 0, w: viewW, h: viewH };
@@ -89,7 +89,7 @@ export function uiBounds() {
 			if (!contains(screen, b, 2)) issues.push({ label: n.label, parent: 'screen', why: 'outside viewport', box: [b.x, b.y, b.w, b.h], pb: [0, 0, viewW, viewH] });
 		}
 		// titles, prices, multipliers, art windows must stay inside their card / panel
-		if (n.label === 'uiTitle' || n.label === 'uiPrice' || n.label === 'uiX' || n.label === 'uiArt' || n.label === 'uiConfirm' || n.label === 'uiStart') {
+		if (n.label === 'uiTitle' || n.label === 'uiPrice' || n.label === 'uiPriceX' || n.label === 'uiX' || n.label === 'uiArt' || n.label === 'uiConfirm' || n.label === 'uiStart') {
 			let p: Container | null = n.parent;
 			while (p && p.label !== 'uiCard' && p.label !== 'uiPanel') p = p.parent;
 			if (p) {

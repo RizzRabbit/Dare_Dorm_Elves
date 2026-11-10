@@ -4,7 +4,7 @@
 // querySelector / getElementById / $ paths. Layout boxes come from mkPlace
 // styles plus the in-document #hud / #stage / #app origins.
 import { ST } from './stage';
-import { hostSize, hostOffset, hostStyle, standIn } from './uilayout';
+import { hostSize, hostOffset, hostStyle, standIn, lenPx } from './uilayout';
 import { layoutBox } from './board/hostlayout';
 
 const TEMPLATE = `
@@ -159,11 +159,16 @@ function parentBox(el: HTMLElement): { w: number; h: number } {
 
 function measure(el: HTMLElement, dim: 'w' | 'h'): number {
 	const st = dim === 'w' ? el.style.width : el.style.height;
-	const n = parsePx(st);
-	if (n > 0) return n;
+	const pb = parentBox(el);
+	// "100%" / "12.3%" must be resolved against the parent. parseFloat("100%") is 100
+	// and was treating a full-bleed canvas or still-elf as a 100 px (or few-px) box
+	// pinned at the top of the reel.
+	if (st) {
+		const n = lenPx(st, dim === 'w' ? pb.w : pb.h, el);
+		if (n > 0) return n;
+	}
 	const sz = standIn(el);
 	if (sz) return dim === 'w' ? sz[0] : sz[1];
-	const pb = parentBox(el);
 	const lay = layoutBox(el, pb.w, pb.h);
 	if (lay) return dim === 'w' ? lay.w : lay.h;
 	return hostSize(el, dim, pb.w, pb.h) || 0;
@@ -186,8 +191,8 @@ function offsetInTree(el: HTMLElement): { x: number; y: number; w: number; h: nu
 		const [tx, ty] = parseTranslate(n, nw, nh);
 		const pb = n.parentElement && n.parentElement !== tree ? { w: measure(n.parentElement, 'w'), h: measure(n.parentElement, 'h') } : { w: 0, h: 0 };
 		const lay = layoutBox(n, pb.w, pb.h);
-		x += (n.style.left ? parsePx(n.style.left) : (lay ? lay.x : hostOffset(n, 'x', pb.w, pb.h))) + tx;
-		y += (n.style.top ? parsePx(n.style.top) : (lay ? lay.y : hostOffset(n, 'y', pb.w, pb.h))) + ty;
+		x += (n.style.left ? lenPx(n.style.left, pb.w, n) : (lay ? lay.x : hostOffset(n, 'x', pb.w, pb.h))) + tx;
+		y += (n.style.top ? lenPx(n.style.top, pb.h, n) : (lay ? lay.y : hostOffset(n, 'y', pb.w, pb.h))) + ty;
 		n = n.parentElement;
 	}
 	return { x, y, w, h };
@@ -232,15 +237,15 @@ function hookBox(el: HTMLElement) {
 		Object.defineProperty(el, 'offsetWidth', { configurable: true, get() { return measure(this, 'w'); } });
 		Object.defineProperty(el, 'offsetHeight', { configurable: true, get() { return measure(this, 'h'); } });
 		Object.defineProperty(el, 'offsetLeft', { configurable: true, get() {
-			if (this.style.left) return parsePx(this.style.left);
 			const pb = parentBox(this);
+			if (this.style.left) return lenPx(this.style.left, pb.w, this);
 			const lay = layoutBox(this, pb.w, pb.h);
 			if (lay) return lay.x;
 			return hostOffset(this, 'x', pb.w, pb.h);
 		} });
 		Object.defineProperty(el, 'offsetTop', { configurable: true, get() {
-			if (this.style.top) return parsePx(this.style.top);
 			const pb = parentBox(this);
+			if (this.style.top) return lenPx(this.style.top, pb.h, this);
 			const lay = layoutBox(this, pb.w, pb.h);
 			if (lay) return lay.y;
 			return hostOffset(this, 'y', pb.w, pb.h);

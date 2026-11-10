@@ -152,12 +152,22 @@ async function dbPlayNew(ov: HTMLElement, name: string, anim: 'idle' | 'win'): P
 		const parts = await load(name); if (!parts || !ov.isConnected) { releasePin(); return !!parts && ov.isConnected; }
 		if (lives.has(ov)) { releasePin(); return dbPlay(ov, anim); }
 		const cv = document.createElement('canvas'); cv.width = 1; cv.height = 1; cv.className = 'stk stk_body stk_db'; cv.setAttribute('aria-hidden', 'true');
-		cv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none';
+		// Explicit px from the live overlay (S.cell x 4 rows, or n reels wide). A "100%" CSS size was
+		// read as 100 px by the host measure path and drew a miniature elf at the top of the reel.
+		const ow = Math.max(1, ov.offsetWidth || ov.clientWidth || 0);
+		const oh = Math.max(1, ov.offsetHeight || ov.clientHeight || 0);
+		cv.style.cssText = `position:absolute;inset:0;width:${ow}px;height:${oh}px;pointer-events:none`;
 		const root = new Container(); root.label = 'db:' + name;
 		const arms = parts.map((part) => { const d = PixiFactory.factory.buildArmatureDisplay(part, part, '', part) as PixiArmatureDisplay; root.addChild(d); return d; });
 		const ab = arms[0].armature.armatureData.aabb;
-		// placed by the mirror exactly as the old per-overlay canvas fit it: scale = overlay height / aabb height, centred in x
+		// Rest pose first, so the first painted frame is not a leftover bind / mid-anim pose.
+		for (const d of arms) {
+			if (d.animation.hasAnimation('idle')) d.animation.gotoAndStopByFrame('idle', 0);
+			d.armature.advanceTime(0);
+		}
+		// placed by the mirror: scale = overlay height / aabb height, centred in x
 		ov.prepend(cv);
+		kick();
 		if (name.startsWith('WF_') && !ov.querySelector(':scope > img.stk_glow')) {
 			const gl = document.createElement('img'); gl.className = 'stk stk_glow land'; gl.alt = ''; gl.setAttribute('aria-hidden', 'true');
 			gl.src = DIR + name + '_glow.webp'; ov.prepend(gl); setTimeout(() => gl.classList.remove('land'), 260);
@@ -255,3 +265,26 @@ export async function dbStill(name: string, renderer: { extract: { canvas: (o: o
 		dropPin(name);
 	}
 }
+
+/** Live overlay + rig boxes for the Stake iframe harness (merge frame capture). */
+export function wildAudit() {
+	const out: { name: string; reels: number[]; ovW: number; ovH: number; cvW: number; cvH: number; rig: { x: number; y: number; w: number; h: number } | null; visible: boolean }[] = [];
+	for (const [ov, L] of lives) {
+		const reels = (ov.dataset.reels ?? ov.dataset.reel ?? '').split(',').filter(Boolean).map(Number);
+		let rig: { x: number; y: number; w: number; h: number } | null = null;
+		try {
+			if (L.root && !L.root.destroyed) {
+				const b = L.root.getBounds();
+				rig = { x: b.x, y: b.y, w: b.width, h: b.height };
+			}
+		} catch { rig = null; }
+		out.push({
+			name: L.name, reels,
+			ovW: ov.offsetWidth, ovH: ov.offsetHeight,
+			cvW: L.cv.offsetWidth, cvH: L.cv.offsetHeight,
+			rig, visible: !!(L.root && !L.root.destroyed && L.root.visible && L.root.worldAlpha > 0.04),
+		});
+	}
+	return out;
+}
+if (typeof globalThis !== 'undefined') (globalThis as any).__wildAudit = wildAudit;

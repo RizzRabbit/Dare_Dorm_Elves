@@ -186,6 +186,7 @@ export function layoutStyle(el: HTMLElement): HostStyle | null {
 	if (cl.contains('sym') && cl.contains('symBack')) s.zIndex = '0';
 	if (cl.contains('sym') && cl.contains('symTop')) s.zIndex = '3';
 	if (cl.contains('ov')) { s.overflow = 'hidden'; s.zIndex = '2'; }
+	if (cl.contains('wart') && el.parentElement?.querySelector(':scope > canvas.stk_db, :scope > canvas.stk_body')) s.display = 'none';
 	if (cl.contains('mx')) {
 		s.zIndex = '3';
 		s.transformOrigin = el.classList.contains('total') ? '50% 60%' : (el.parentElement?.classList.contains('cell') ? '14% 45%' : '85% 45%');
@@ -253,7 +254,8 @@ export function boardRuleProps(el: HTMLElement): Record<string, string> {
 	if (rigdKid) p['z-index'] = '1';
 	if (cl.contains('ov')) { abs(); p.top = '0'; p.height = '100%'; p['z-index'] = '2'; p.overflow = 'hidden'; }
 	if (cl.contains('ov') && cl.contains('art')) { p['background-image'] = 'none'; p['clip-path'] = 'inset(-25% 0 -25% 0)'; }
-	if (cl.contains('wart')) { abs(); inset0(); }
+	if (cl.contains('wart')) { abs(); inset0();
+		if (par?.querySelector(':scope > canvas.stk_db, :scope > canvas.stk_body')) p.display = 'none'; }
 	if (el.tagName === 'IMG' && par?.classList.contains('wart') && el.closest('.ov')) {
 		p.display = 'block'; p.width = '100%'; p.height = '100%'; p['object-fit'] = 'cover'; p['pointer-events'] = 'none';
 	}
