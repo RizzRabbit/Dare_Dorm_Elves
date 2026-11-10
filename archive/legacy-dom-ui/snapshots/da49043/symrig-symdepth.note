@@ -1,0 +1,10 @@
+ARCHIVED / removed from the game after da49043.
+
+Source commit of the file contents: 311ef87 (identical to the live static/symrig.css and static/symdepth.css that were still linked from app.html).
+Original paths: frontend/apps/elfhaus/static/symrig.css, frontend/apps/elfhaus/static/symdepth.css
+Labeled copies already live at:
+  archive/legacy-dom-ui/snapshots/311ef87/frontend/apps/elfhaus/static/symrig.css
+  archive/legacy-dom-ui/snapshots/311ef87/frontend/apps/elfhaus/static/symdepth.css
+See archive/legacy-dom-ui/README.md. Not imported by the game.
+
+Replaced by: board/symframes.ts + chalet/symbols.sheet.json and chalet/symdepth.json (and the .webp sheets, which stay in the game). Hosts are off-document, so these stylesheets could not paint; frameOf() already has the tables. Unlinked from app.html and deleted from static/.

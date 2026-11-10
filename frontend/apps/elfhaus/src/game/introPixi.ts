@@ -295,18 +295,11 @@ function setDoors(aL, aR) {   // 0 = closed, 1 = ~80 deg open, swinging INTO the
 const shade = (a) => { const v = Math.round(255 * (1 - 0.35 * a)); return (v << 16) | (v << 8) | v; };   // leaf turns away from the vestibule light
 
 // ---------------- game hand-off (DOM board / HUD + Pixi room layer) ----------------
-const CAM0 = 0.72;
-let cam = 1, PV = { x: 0, y: 0 };
 const $id = (id) => document.getElementById(id);
 // #alcove is display:contents, so its pieces move one by one
 const BOARD = ['stage', 'alcoveAmbient', 'alcoveGlow', 'alcoveRecess', 'alcoveLedge', 'alcoveRail', 'alcoveCrown'];
-const camEls = () => ['bg', 'scene', 'app'].map($id).filter(Boolean);
-const unCam = (x, y, c) => ({ x: PV.x + (x - PV.x) / Math.max(c, 1e-6), y: PV.y + (y - PV.y) / Math.max(c, 1e-6) });
-function applyCam(c) { cam = 1; /* CSS camera removed: the intro uses the shared layout transform; door-push is Pixi-only on ov. */ }
 function setEl(id, dy, a) { const e = $id(id); if (!e) return; e.style.translate = dy ? `0 ${dy.toFixed(1)}px` : ''; e.style.opacity = a >= 1 ? '' : a.toFixed(3); }
-// Pixi HUD / logo / spin / buy live on #uiStage (a body-level canvas, not under #app). The vestibule camera
-// scales only #bg / #scene / #app, so without this those controls sit at full size over the 0.72 cam
-// (no board, floating HUD, fire-glow on the menu, WIN outside the bar).
+// Pixi HUD / logo / spin / buy live on #uiStage (a body-level canvas, not under #app).
 function setUiChrome(dy, a) {
   setEl('hud', dy, a);
   const cv = $id('uiStage'); if (!cv) return;
@@ -326,7 +319,6 @@ function predecode() {
 }
 function prime() {   // the game in its "behind the doors" state
   predecode();
-  PV = { x: G.cx * G.k, y: (G.top + G.dh * 0.5) * G.k };
   sceneHold(true); if (rig) { rig.doorway(true); rig.face('surprised', 0); }
   primed = true; setGame(0);
 }
@@ -335,7 +327,6 @@ function setGame(tt) {   // all game objects driven from the intro clock (transf
   if (tt < T.doorL[0]) sndLever = sndDoors = false;
   if (!sndLever && tt >= T.doorL[0]) { sndLever = true; sfx('intro_door_lever'); }
   if (!sndDoors && tt >= T.doorR[0]) { sndDoors = true; sfx('intro_doors_open'); }
-  applyCam(lerp(CAM0, 1, seg(tt, ...T.cam, ease.inOutCubic)));
   const H = ST.h, dropH = H * 0.62;
   // board + Roxy drop in together: fall from above, land past the mark and spring back (outBack)
   const kd = seg(tt, ...T.drop), dropY = (1 - ease.outBack(kd, 1.9)) * -dropH, dA = tt >= T.drop[0] ? 1 : 0;   // H3: solid from the first frame (it enters from above the view), no half-alpha ghost
@@ -361,7 +352,7 @@ function setGame(tt) {   // all game objects driven from the intro clock (transf
 function release() { if (roxyFree || !rig) return; roxyFree = true; rig.face('surprised', 0); rig.release(); rig.idle(); rig.view.alpha = 1; sceneHold(false); }
 function finish() {   // end state (also the skip)
   if (state === 'done') return; state = 'done';
-  applyCam(1); for (const id of [...BOARD, 'top', 'hud']) setEl(id, 0, 1); setUiChrome(0, 1);
+  for (const id of [...BOARD, 'top', 'hud']) setEl(id, 0, 1); setUiChrome(0, 1);
   release();
   if (app) { app.ticker.stop(); const c = app.canvas; app.stage.removeChildren().forEach((o) => o.destroy({ children: true })); releaseIntroGpu(app); c?.remove?.(); app = null; /* never destroy a Pixi 8 renderer while others live (shared batch pool): resize to 1x1 frees the framebuffer instead */ }
   document.body.classList.remove('introOn'); (window as any).ELFHAUS_INTRO_DONE = true; doneRes();
@@ -481,9 +472,9 @@ export function introEnter(): Promise<void> {
 }
 /** Returning players ("Don't show this again") and errors: straight to the end state. */
 export function introSkip() { if (!app || state === 'off') { killed = true; return; } if (state === 'done') return; if (!primed) prime(); state = 'trans'; setGame(T.end); finish(); }
-/** Run a layout pass with the intro's camera / drop styles lifted (DOM rects stay true), then re-apply the current pose. */
+/** Run a layout pass with intro drop styles lifted, then re-apply the current pose. */
 export function introLayout(fn: () => void) {
   if (!primed || state === 'done' || state === 'off') { fn(); return; }
-  const c = cam; for (const id of [...BOARD, 'top', 'hud']) setEl(id, 0, 1); setUiChrome(0, 1);
-  try { fn(); } finally { cam = c; setGame(state === 'trans' ? tt : 0); }
+  for (const id of [...BOARD, 'top', 'hud']) setEl(id, 0, 1); setUiChrome(0, 1);
+  try { fn(); } finally { setGame(state === 'trans' ? tt : 0); }
 }

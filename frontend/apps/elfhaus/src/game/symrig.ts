@@ -1,5 +1,5 @@
 // Symbol cut-out rigs (Winter Chalet). Every board symbol is a few layers cut from its approved art and packed in ONE
-// trimmed sheet (static/art/sheets/symbols.webp + .json, frame classes in static/symrig.css, built by
+// trimmed sheet (static/art/sheets/symbols.webp + .json, frame tables in board/symframes.ts, built by
 // build_symrig.py): base + 1-3 moving details (+ a 1/4-scale win glow, a shared contact shadow and sparkle).
 // At rest the layers rebuild the art exactly; the motion is CSS on real time (symrig rules in chalet.css):
 //   land  (.cell.rgLand)  snappy squash-and-settle, details follow through
@@ -50,7 +50,7 @@ export const tileTopHTML = (key: string) => (key.startsWith('W_') && RIG[key] ? 
 /** Recess + border (+ the tile light) for a stacked / merged wild overlay (any size; 9-slice). */
 export const ovEdgeHTML = () => edgeHTML() + lightHTML();
 const pc = (v: number, d: number) => ((v / d) * 100).toFixed(2) + '%';
-/** The symbol's baked depth (scripts/gen-symdepth-sprites.mjs, static/symdepth.css): its soft drop shadow (`d_`, follows
+/** The symbol's baked depth (scripts/gen-symdepth-sprites.mjs, board/symframes.ts): its soft drop shadow (`d_`, follows
  *  --lift by translate / scale only) and its raised edge + rim light (`e_`), sprite siblings under the body. */
 const depthHTML = (k: string) => `<i class="sd sdD d_${k}"></i><i class="sd e_${k}"></i>`;
 
