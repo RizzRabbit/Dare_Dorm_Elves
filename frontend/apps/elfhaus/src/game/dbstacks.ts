@@ -14,6 +14,7 @@ import { glowFilter, setGlow } from './board/glowFilter';
 import { PixiFactory, type PixiArmatureDisplay } from 'pixi-dragonbones-runtime';
 import { crumb, scrub } from './diag';
 import { createRigCache, releaseArmatures, snapshotPixels, stillResolution } from './riglife';
+import { applyBonePose, lerpPose, REST_POSE, type RigPose } from './mergepose';
 const DIR = 'assets/rig/db/';
 let index: Promise<Set<string>> | null = null;
 const known = new Set<string>();
@@ -26,9 +27,14 @@ const loaded = new Map<string, Pack>();
 const rigs = createRigCache();
 let AssetsRef: { unload: (u: string) => Promise<unknown> } | null = null;
 let built = 0, disposed = 0;
-type Live = { name: string; arms: PixiArmatureDisplay[]; root: Container; anim: string; t: number; blinkAt: number; cv: HTMLCanvasElement; W: number; H: number; gf: Filter | null; ga: number };
+type Live = { name: string; arms: PixiArmatureDisplay[]; root: Container; anim: string; t: number; blinkAt: number; cv: HTMLCanvasElement; W: number; H: number; gf: Filter | null; ga: number; posed: boolean };
 const lives = new Map<HTMLElement, Live>();
 const byCv = new WeakMap<HTMLCanvasElement, Live>();
+// One bounce on hat / hair / pom bones after a merge settles. Offset, not the root: the board mirror
+// rewrites the rig root's matrix every frame, so a root rotation would be thrown away.
+const nudges = new Map<HTMLElement, { amp: number; until: number; span: number }>();
+type Act = { from: RigPose; to: RigPose; t0: number; ms: number };
+const acts = new Map<HTMLElement, Act>();
 const starting = new Map<HTMLElement, Promise<boolean>>();
 const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const flushDb = (dt: number) => { try { PixiFactory.advanceTime(dt); } catch (e) { crumb('db-flush', { msg: scrub((e as Error)?.message || String(e)) }); } };
@@ -42,6 +48,7 @@ function step() {
 		if (!ov.isConnected) { dbStop(ov); continue; }
 		L.t += dt;
 		if (L.t > L.blinkAt) { L.blinkAt = L.t + 2.4 + Math.random() * 2.6; face(L, 'blink'); }
+		try { poseNow(ov, L, now); } catch { /* a rig without those bones still moves on the overlay */ }
 		for (const d of L.arms) d.armature.advanceTime(reduced() ? 0 : dt);
 		// win glow (silhouette filter) eases in / out with the overlay's .win
 		const want = ov.classList.contains('win') ? 1 : 0;
@@ -152,7 +159,7 @@ async function dbPlayNew(ov: HTMLElement, name: string, anim: 'idle' | 'win'): P
 			const gl = document.createElement('img'); gl.className = 'stk stk_glow land'; gl.alt = ''; gl.setAttribute('aria-hidden', 'true');
 			gl.src = DIR + name + '_glow.webp'; ov.prepend(gl); setTimeout(() => gl.classList.remove('land'), 260);
 		}
-		const L: Live = { name, arms, root, anim, t: 0, blinkAt: 1 + Math.random() * 3, cv, W: ab.width, H: ab.height, gf: null, ga: 0 };
+		const L: Live = { name, arms, root, anim, t: 0, blinkAt: 1 + Math.random() * 3, cv, W: ab.width, H: ab.height, gf: null, ga: 0, posed: false };
 		lives.set(ov, L); byCv.set(cv, L); fade(L, anim, 0);
 		for (const d of L.arms) d.armature.advanceTime(0);
 		if (!ticking) { ticking = true; animate(step); }
@@ -165,18 +172,68 @@ export function dbSnapshot(ov: HTMLElement): HTMLCanvasElement | null {
 	const L = lives.get(ov); const a = stageApp(); if (!L || !a) return null;
 	const keep = { p: L.root.parent, f: L.root.filters, x: L.root.x, y: L.root.y, sx: L.root.scale.x, sy: L.root.scale.y, r: L.root.rotation, v: L.root.visible };
 	L.root.filters = []; L.root.position.set(0, 0); L.root.scale.set(1); L.root.rotation = 0; L.root.visible = true;
+	// Off the board stage while extracting. An on-stage rig shares the stage render group; detaching makes the
+	// read a picture of this rig now, not whatever the stage presented last.
+	if (keep.p) L.root.removeFromParent();
 	// height budget matches the old `min(2, 1024 / H)`; width is capped too (riglife.snapshotPixels)
 	const { r } = snapshotPixels(L.W, L.H);
 	let c: HTMLCanvasElement | null = null;
 	try { c = a.renderer.extract.canvas({ target: L.root, frame: new Rectangle(0, 0, L.W, L.H), resolution: r }) as HTMLCanvasElement; }
 	catch (e) { c = null; crumb('snapshot', { msg: scrub((e as Error)?.message || String(e)) }); }
 	L.root.filters = keep.f; L.root.position.set(keep.x, keep.y); L.root.scale.set(keep.sx, keep.sy); L.root.rotation = keep.r; L.root.visible = keep.v;
-	if (keep.p && L.root.parent !== keep.p) keep.p.addChild(L.root);
+	if (keep.p) keep.p.addChild(L.root);
 	return c;
 }
-function fade(L: Live, anim: string, t = 0.25) {
-	for (const d of L.arms) if (d.animation.hasAnimation(anim)) d.animation.fadeIn(anim, t, anim === 'win' ? 0 : 0, 0, 'body');
+function fade(L: Live, anim: string, t = anim === 'win' ? 0.08 : 0.25) {
+	for (const d of L.arms) if (d.animation.hasAnimation(anim)) d.animation.fadeIn(anim, t, 0, 0, 'body');
 	if (anim === 'win') face(L, 'laugh');
+}
+function bonesOf(L: Live) {
+	return L.arms.flatMap((d) => d.armature.getBones() as Parameters<typeof applyBonePose>[0]);
+}
+/** Ease the live rig to `to` over `ms` real milliseconds. `ms` 0 snaps. No-op when this overlay has no rig. */
+export function dbAct(ov: HTMLElement, to: RigPose, ms: number) {
+	const L = lives.get(ov); if (!L) return;
+	const now = performance.now();
+	const prev = acts.get(ov);
+	const u0 = !prev || prev.ms <= 0 ? 1 : Math.min(1, (now - prev.t0) / prev.ms);
+	const from = prev ? lerpPose(prev.from, prev.to, u0 * u0 * (3 - 2 * u0)) : { ...REST_POSE };
+	acts.set(ov, { from, to, t0: now, ms: Math.max(0, ms) });
+	if (ms <= 0) poseNow(ov, L, now);
+}
+/** Drop a finished pose so idle is just the clip again. */
+export function dbActClear(ov: HTMLElement) {
+	acts.delete(ov);
+	const L = lives.get(ov); if (!L?.posed) return;
+	applyBonePose(bonesOf(L), null);
+	L.posed = false;
+	for (const d of L.arms) d.armature.advanceTime(0);
+}
+/** Jump the pose to its target and update the mesh, so a snapshot cannot catch a mid-tween. */
+export function dbActSnap(ov: HTMLElement) {
+	const act = acts.get(ov); if (!act) return;
+	act.from = act.to; act.ms = 0;
+	const L = lives.get(ov); if (L) poseNow(ov, L, performance.now());
+}
+function poseNow(ov: HTMLElement, L: Live, now: number) {
+	const act = acts.get(ov);
+	if (act) {
+		const u = act.ms <= 0 ? 1 : Math.min(1, Math.max(0, (now - act.t0) / act.ms));
+		const e = u * u * (3 - 2 * u);
+		applyBonePose(bonesOf(L), lerpPose(act.from, act.to, e));
+		L.posed = true;
+	} else if (L.posed) {
+		applyBonePose(bonesOf(L), null);
+		L.posed = false;
+	}
+	const nudge = nudges.get(ov);
+	if (nudge) {
+		const left = nudge.until - now;
+		const u = left > 0 ? Math.max(0, left / nudge.span) : 0;
+		settleBones(L, Math.sin(u * Math.PI) * nudge.amp);
+		if (left <= 0) nudges.delete(ov);
+	}
+	if (act || nudge) for (const d of L.arms) d.armature.advanceTime(0);
 }
 /** a painted face one-shot on every elf of the rig (blink_<elf> / laugh_<elf>); faces never reset the body pose */
 function face(L: Live, kind: 'blink' | 'laugh') {
@@ -185,8 +242,26 @@ function face(L: Live, kind: 'blink' | 'laugh') {
 	}
 }
 export function dbHas(ov: HTMLElement) { return lives.has(ov); }
+/** Brief secondary bounce on hat and hair bones, then back to whatever the body animation is doing. */
+export function dbNudge(ov: HTMLElement, amp: number, sec = 0.4) {
+	if (!lives.has(ov)) return;
+	const span = Math.max(16, sec * 1000);
+	nudges.set(ov, { amp, until: performance.now() + span, span });
+}
+function settleBones(L: Live, wave: number) {
+	type BoneLike = { name?: string; offset?: { rotation: number }; invalidUpdate?: () => void };
+	for (const d of L.arms) {
+		const bones = d.armature.getBones() as BoneLike[];
+		for (const b of bones) {
+			const name = String(b.name || '').toLowerCase();
+			if (!/hair|hat|bun|pony|bang|tuft|bow|pom/.test(name) || !b.offset) continue;
+			b.offset.rotation = wave;
+			b.invalidUpdate?.();
+		}
+	}
+}
 export function dbStop(ov: HTMLElement) {
-	const L = lives.get(ov); if (!L) return; lives.delete(ov);
+	const L = lives.get(ov); if (!L) return; lives.delete(ov); nudges.delete(ov); acts.delete(ov);
 	byCv.delete(L.cv); L.cv.remove(); ov.querySelector(':scope > img.stk_glow')?.remove();
 	L.root.removeFromParent();
 	if (L.gf) { try { L.root.filters = []; L.gf.destroy(); } catch { /* already destroyed */ } L.gf = null; }
