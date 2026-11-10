@@ -737,4 +737,26 @@ html body.pixiUi #intro{background:transparent!important;pointer-events:none!imp
 html body.pixiHud #hud,
 html body.pixiHud #fsBar,
 html body.pixiHud #mkBuyGlow{visibility:hidden!important;pointer-events:none!important}
-html body.pixiUi.pixiUiModal #uiStage{z-index:85!important;pointer-events:auto}
+html body.pixiUi.pixiUiModal #uiStage{z-index:85!important}
+/* pointer-events stay under uiInteractive(): typography-only win overlays must not steal taps
+   meant for the hidden DOM hosts (#bigwin / #outro / #maxwin / #msg). Buy / intro turn hits on. */
+
+/* Pixi win banners (chunk 3): hide painted typography / plates; keep elf canvases, max-win
+   title sheet, sunburst and the overlay itself (taps + dim / background). filter:opacity
+   leaves layout, WAAPI and canvas bitmaps intact so the Pixi layer can copy them. */
+html body.pixiWins #banner,
+html body.pixiWins #stepToast{filter:opacity(0)!important;background:none!important;border:0!important;box-shadow:none!important}
+html body.pixiWins #outro,
+html body.pixiWins #fsMore,
+html body.pixiWins #cardFlip,
+html body.pixiWins #msg{background:transparent!important}
+html body.pixiWins #fsMore.overlay::before{display:none!important}
+html body.pixiWins #outro .card,
+html body.pixiWins #fsMore .card,
+html body.pixiWins #cardFlip .cfStage,
+html body.pixiWins #msg .modal{filter:opacity(0)!important}
+html body.pixiWins #bigwin .bw,
+html body.pixiWins #bigwin .bwGlow,
+html body.pixiWins #bigwin .bwGhost,
+html body.pixiWins #bigwin .bwWarm{filter:opacity(0)!important}
+html body.pixiWins #maxwin .mwText{filter:opacity(0)!important}

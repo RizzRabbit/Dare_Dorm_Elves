@@ -1,4 +1,4 @@
-// Public API for the Pixi game-UI overlay (chunk 1: buy menu, confirm, feature intro).
+// Public API for the Pixi game-UI overlay (buy menu, confirm, intro, HUD, win banners).
 import { Container } from 'pixi.js';
 import { loadAtlas } from '../scene/atlas';
 import { initUiStage, uiApp, uiInteractive, uiKind, uiScale, designW, designH, viewW, viewH, kickUi } from './stage';
@@ -8,6 +8,11 @@ import { loadUiWidgets } from './widgets';
 import { buyVisible, confirmVisible, tapBuyCard } from './buy';
 import { introVisible } from './intro';
 import { initHud, layoutHud, syncHud, hudHit, hudRects } from './hud';
+import { initWins, winsVisible, relaxUiTier } from './wins';
+import { banner, toast, hideToast, bigWin } from '../ui';
+import { maxWinCelebration } from '../maxwin';
+import { titleType, titleTypeMirror } from '../titletype';
+import { ninePanel, CARD } from '../ninepanel';
 
 export { setBuyHooks, paintBuyMenu, showBuyMenu, hideBuyMenu, showBuyConfirm, hideBuyConfirm, type BuyState, type BuyCardState, type ConfirmState, type BuyHooks } from './buy';
 export { showFeatureIntro, hideFeatureIntro, type IntroState } from './intro';
@@ -30,6 +35,7 @@ export async function initUiPixi(): Promise<boolean> {
 	on = true;
 	document.body.classList.add('pixiUi');
 	await initHud();
+	await initWins();
 	kickUi();
 	installBounds();
 	return true;
@@ -92,7 +98,7 @@ export function uiBounds() {
 	return {
 		ok: issues.length === 0,
 		ready: true,
-		open: { buy: buyVisible(), confirm: confirmVisible(), intro: introVisible() },
+		open: { buy: buyVisible(), confirm: confirmVisible(), intro: introVisible(), wins: winsVisible() },
 		kind: uiKind,
 		design: [designW, designH],
 		scale: +uiScale.toFixed(4),
@@ -114,5 +120,37 @@ function installBounds() {
 		hudHit: (x: number, y: number) => hudHit(x, y),
 		layoutHud,
 		hudRects,
+		winsOpen: winsVisible,
+		relaxTier: relaxUiTier,
+		banner,
+		toast,
+		hideToast,
+		bigWin,
+		maxWin: maxWinCelebration,
+		previewOutro: (amountText: string) => {
+			const O = document.getElementById('outro'); if (!O) return;
+			const amt = O.querySelector('.otAmt') as HTMLElement | null;
+			if (amt) { titleTypeMirror(amt); amt.textContent = amountText; }
+			titleType(O.querySelector('.tierName') as HTMLElement, 'TOTAL WIN');
+			titleType(O.querySelector('.otHint') as HTMLElement, 'TAP TO CONTINUE');
+			ninePanel(O.querySelector('.card') as HTMLElement, CARD);
+			O.classList.add('landed'); O.classList.remove('hidden');
+		},
+		hideOutro: () => document.getElementById('outro')?.classList.add('hidden'),
+		previewFsMore: (added: number) => {
+			const O = document.getElementById('fsMore'); if (!O) return;
+			const big = O.querySelector('.fmBig') as HTMLElement | null;
+			titleType(big, added > 0 ? `+${added}` : 'MAX 20');
+			O.dataset.max = added > 0 ? '' : '1';
+			titleType(O.querySelector('.fmSub') as HTMLElement, 'FREE SPINS');
+			ninePanel(O.querySelector('.card') as HTMLElement, CARD);
+			O.classList.remove('hidden');
+		},
+		hideFsMore: () => document.getElementById('fsMore')?.classList.add('hidden'),
+		previewMsg: (title: string, body: string) => {
+			const t = document.getElementById('msgTitle'), b = document.getElementById('msgBody'), M = document.getElementById('msg');
+			if (t) t.textContent = title; if (b) b.textContent = body; M?.classList.remove('hidden');
+		},
+		hideMsg: () => document.getElementById('msg')?.classList.add('hidden'),
 	};
 }

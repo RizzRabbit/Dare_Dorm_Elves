@@ -122,11 +122,8 @@ function wordIn(name: string, w: number, h: number, gold = false) {
 	try {
 		const key = gold && (() => { try { atlasTex('titles', name + '_gold'); return name + '_gold'; } catch { return name; } })() || name;
 		const s = wordSpr(key);
-		// Short CSS line-boxes (buyLbl is often ~12px tall) would shrink the 411x96 mark to a stub.
-		// The DOM word is width-contained and may hang out of that box; allow up to 1.4x the box height.
 		const tw = Math.max(1, s.texture.width), th = Math.max(1, s.texture.height);
-		const kW = w / tw, kH = h / th;
-		s.scale.set((th * kW <= h * 1.4) ? kW : Math.min(kW, kH));
+		s.scale.set(Math.min(w / tw, h / th));
 		s.eventMode = 'none';
 		return s;
 	} catch {
@@ -305,8 +302,17 @@ function paintBuy() {
 			const s = bmFit('GET BONUS', 'font_cream', Math.max(10, lr.h), lr.w, lr.h, 'center');
 			if (s) { s.eventMode = 'none'; s.anchor.set(0.5, 0.5); s.position.set(lr.x - r.x + lr.w / 2, lr.y - r.y + lr.h / 2); buy.addChild(s); buyLab = s; }
 		} else {
-			const w = wordIn('w_buy_bonus', lr.w, lr.h, false);
-			if (w) { w.position.set(lr.x - r.x + lr.w / 2, lr.y - r.y + lr.h / 2); buy.addChild(w); buyLab = w; }
+			// Tall (mkV) plates: the CSS line-box is a short strip (~12px) but the painted word
+			// is width-contained in the label and sits in the band under the disc. Fit that band.
+			let boxW = lr.w, boxH = lr.h, cy = lr.y - r.y + lr.h / 2;
+			if (!mkP) {
+				const discBottom = dr ? (dr.y - r.y + dr.h) : r.h * 0.45;
+				const band = Math.max(lr.h, r.h - discBottom - 4);
+				boxH = band;
+				cy = discBottom + (r.h - discBottom) / 2;
+			}
+			const w = wordIn('w_buy_bonus', boxW, boxH, false);
+			if (w) { w.position.set(lr.x - r.x + lr.w / 2, cy); buy.addChild(w); buyLab = w; }
 		}
 	}
 	buy.alpha = dis ? 0.5 : 1;

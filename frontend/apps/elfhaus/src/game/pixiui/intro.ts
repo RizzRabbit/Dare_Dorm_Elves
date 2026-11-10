@@ -7,7 +7,7 @@ import { nineUi, startBtn, hit, modalDimTex } from './widgets';
 import { artWindow } from './elves';
 import { bmFit, centerSpr, fitSpr, typeRow, wordSpr } from './text';
 import { designH, designW, fillScreen, isPortrait, kickUi, onUiLayout, setUiTier, uiInteractive, uiKind, uiLayer } from './stage';
-import { confirmVisible, buyVisible } from './buy';
+import { relaxUiTier } from './wins';
 
 export type IntroState = { mode: string; spins: string };
 
@@ -156,7 +156,7 @@ export function hideFeatureIntro() {
 	const done = () => {
 		root.visible = false;
 		if (dim) dim.visible = false;
-		if (!buyVisible() && !confirmVisible()) { uiInteractive(false); setUiTier('hud'); }
+		relaxUiTier();
 		kickUi();
 	};
 	if (card) {

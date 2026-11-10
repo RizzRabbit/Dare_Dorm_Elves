@@ -8,6 +8,7 @@ import { nineUi, icoBtn, makeSwitch, goBtn, hit, modalDimTex } from './widgets';
 import { artWindow } from './elves';
 import { bmFit, buyTitleSpr, centerSpr, fitSpr, wordSpr, typeRow } from './text';
 import { designH, designW, fillScreen, isPortrait, kickUi, onUiLayout, setUiTier, uiInteractive, uiKind, uiLayer } from './stage';
+import { relaxUiTier } from './wins';
 import { introVisible } from './intro';
 
 export type BuyCardState = { mode: ModeKey; price: string; x: string; off: boolean; armed: boolean };
@@ -347,7 +348,7 @@ export function hideBuyMenu() {
 	const done = () => {
 		buyRoot.visible = false;
 		if (buyDim) buyDim.visible = false;
-		if (!confirmRoot.visible && !introVisible()) { uiInteractive(false); setUiTier('hud'); }
+		relaxUiTier();
 		kickUi();
 	};
 	if (panel && buyRoot.visible) {
@@ -500,7 +501,7 @@ export function hideBuyConfirm() {
 	const done = () => {
 		confirmRoot.visible = false;
 		if (confirmDim) confirmDim.visible = false;
-		if (!buyRoot.visible && !introVisible()) { uiInteractive(false); setUiTier('hud'); }
+		relaxUiTier();
 		kickUi();
 	};
 	if (cfCard) {
