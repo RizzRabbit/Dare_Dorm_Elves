@@ -1,11 +1,7 @@
-// Apply symbol-frame and board-model CSS to the detached UI host tree.
-// Stylesheets do not match off-document nodes, so the board mirror's
-// getComputedStyle / offset* reads would otherwise see empty boxes and
-// no background-image (blank reels). This resolver keeps the motion
-// model off-document and still supplies the same geometry the CSS had.
-import symrigCss from '../../static/symrig.css?raw';
-import symdepthCss from '../../static/symdepth.css?raw';
-
+// CSS resolver for leftover off-document UI hosts (HUD, menus, and any
+// board node hostlayout.ts does not cover). Board cells, symbol art,
+// rig parts and overlays use the TypeScript layout tables. Packed symbol
+// frame sheets are no longer parsed here.
 const LAYOUT_CSS = `
 #strips,#cells,#overlays{position:absolute;inset:0}
 #strips{z-index:0;pointer-events:none}
@@ -272,8 +268,6 @@ function ensure() {
 	if (parsed) return;
 	parsed = true;
 	parseSheet(LAYOUT_CSS);
-	parseSheet(symrigCss);
-	parseSheet(symdepthCss);
 	rules.sort((a, b) => a.spec - b.spec || a.ord - b.ord);
 }
 

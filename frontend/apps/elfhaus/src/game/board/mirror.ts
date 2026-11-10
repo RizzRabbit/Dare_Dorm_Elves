@@ -24,6 +24,7 @@ import { canvasRev } from '../sprite';
 import { isUiHost } from '../uihosts';
 import { hostProps } from '../hostcss';
 import { frameOf, SYM_INSET } from './symframes';
+import { layoutStyle } from './hostlayout';
 import { poseOf, motionLive, syncMotion, applyPoseMatrix, dimBright, markRestart, clearRestart } from './motion';
 import { slotPose, reelMoving } from '../reelpose';
 const hostLive = (el: Element | null | undefined) => !!el && (el.isConnected || isUiHost(el));
@@ -150,9 +151,24 @@ function flags(el: HTMLElement) {
 }
 function hostCs(el: HTMLElement): CSSStyleDeclaration {
 	// Detached hosts report display:none from the browser's getComputedStyle;
-	// use the resolved host stylesheet (and safe defaults) instead.
+	// board/symbol nodes use the TypeScript layout tables; other hosts fall back
+	// to the CSS resolver (and safe defaults).
 	if (!isUiHost(el)) return getComputedStyle(el);
-	const p = hostProps(el);
+	const lay = layoutStyle(el);
+	const p: Record<string, string> = lay ? {
+		display: lay.display,
+		visibility: lay.visibility,
+		opacity: lay.opacity,
+		overflow: lay.overflow,
+		'z-index': lay.zIndex,
+		filter: lay.filter,
+		translate: lay.translate,
+		transform: lay.transform,
+		'transform-origin': lay.transformOrigin,
+		'background-image': lay.backgroundImage,
+		'background-size': lay.backgroundSize,
+		'background-position': lay.backgroundPosition,
+	} : hostProps(el);
 	const get = (k: string, d = '') => p[k] || d;
 	const bag = {
 		paddingTop: get('padding-top', '0px'),
