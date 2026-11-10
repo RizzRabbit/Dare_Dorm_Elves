@@ -3,6 +3,7 @@
 // See docs/layout-architecture.md.
 import { layoutPass, layoutKind, isPortraitKind, capResolution, DPR_CAP, DESIGNS, getLayout, type LayoutKind, type Layout } from './layout';
 export { layoutPass, layoutKind, isPortraitKind, capResolution, DPR_CAP, DESIGNS, getLayout };
+
 export type { LayoutKind, Layout };
 
 export const ST = { w: 1280, h: 800, s: 1, ox: 0, oy: 0, vw: 1280, vh: 800, kind: 'land' as LayoutKind, portrait: false, tablet: false, tb: 1, phl: false, railL: 0, railR: 0, compact: false, tap: 48 };
@@ -80,4 +81,9 @@ export function onStageChange(fn: () => void) {
 export function toStage(r: DOMRect) {
 	const x = (r.left - ST.ox) / ST.s, y = (r.top - ST.oy) / ST.s, w = r.width / ST.s, h = r.height / ST.s;
 	return { left: x, top: y, width: w, height: h, right: x + w, bottom: y + h, x, y } as DOMRect;
+}
+
+if (typeof globalThis !== 'undefined') {
+	(globalThis as any).__ST = ST;
+	(globalThis as any).__layout = getLayout;
 }

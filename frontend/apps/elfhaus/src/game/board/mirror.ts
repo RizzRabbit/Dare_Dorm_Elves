@@ -25,7 +25,7 @@ import { isUiHost } from '../uihosts';
 import { hostProps } from '../uilayout';
 import { frameOf, SYM_INSET } from './symframes';
 import { layoutStyle } from './hostlayout';
-import { poseOf, motionLive, syncMotion, applyPoseMatrix, dimBright, markRestart, clearRestart } from './motion';
+import { poseOf, motionLive, syncMotion, applyPoseMatrix, markRestart, clearRestart } from './motion';
 import { slotPose, reelMoving } from '../reelpose';
 const hostLive = (el: Element | null | undefined) => !!el && (el.isConnected || isUiHost(el));
 import { mxFont } from '../ui';
@@ -215,10 +215,11 @@ function style(el: HTMLElement, force: boolean): St {
 	};
 	const fr = frameOf(el);
 	if (fr) { s.bg = fr.bg; s.bs = fr.bs; s.bp = fr.bp; s.disp = true; }
-	// dimBright is the only dim source (the filter string also encodes it; do not multiply twice).
-	// A leftover brightness(0) or NaN would tint the colour sprite black and leave the teal glow standing.
-	const dim = dimBright(el);
-	s.br = dim < 1 ? dim : (Number.isFinite(s.br) && s.br > 0 ? s.br : 1);
+	// Dim once, on the .cell that has .dim. Descendants inherit through ctx.br.
+	// Applying 0.48 on every node in a deep rig, then multiplying down the walk, tinted the
+	// colour sprite black and left a silhouette (sometimes with the win glow still standing).
+	const selfDim = el.classList.contains('cell') && el.classList.contains('dim');
+	s.br = selfDim ? 0.48 : (Number.isFinite(s.br) && s.br > 0 ? s.br : 1);
 	cache.set(el, s); return s;
 }
 

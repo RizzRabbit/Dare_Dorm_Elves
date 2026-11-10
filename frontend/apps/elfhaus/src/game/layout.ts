@@ -138,42 +138,59 @@ function chromePhone(AW: number, AH: number): Chrome {
 
 /** Tablet portrait authored in 1080 × 1440 (same aspect as 768×1024). Buy, turbo, auto | spin under the board. */
 function chromeTablet(AW: number, AH: number): Chrome {
-	const menuS = 144, menuB = 12 + menuS;
-	const TOP_MIN = menuB + 12 + 64 + 412 * 0.4 * 0.62;
-	const HBp = 330, hudYp = AH - HBp - 16;
-	const spSz = 240, abT = 132;
-	const spinRow = spSz + 16;
-	const buyS = 0.92, buyW = 216 * buyS * 0.92, buyH = 240 * buyS * 0.92;
-	const TOPT = TOP_MIN + 110;
-	const maxBsH = (hudYp - 18 - spinRow - TOPT) / (BH + FB + FT);
-	const maxBsW = (AW - 40) / (BW + 2 * FT);
-	const bs = Math.min(maxBsW, maxBsH);
+	// Author in this design's own size. The board takes the largest uniform scale
+	// that fits between the peeking logo/Roxy, the buy/auto/spin row, and the bet bar.
+	const menuS = Math.min(88, Math.max(64, AH * 0.085));
+	const maxBsW = (AW - 32) / (BW + 2 * FT);
+	const floorHud = Math.min(160, AH * 0.16), floorSp = Math.min(88, AH * 0.09), floorTop = Math.min(120, AH * 0.12);
+	let hudH = Math.min(230, Math.max(floorHud, AH * 0.18));
+	let spSz = Math.min(160, Math.max(floorSp, AH * 0.14));
+	let topMin = Math.min(220, Math.max(floorTop, menuS + 8 + 48 + 64));
+	const spinRowOf = () => spSz + 12;
+	const room = () => AH - 12 - hudH - 10 - spinRowOf() - topMin;
+	const need = maxBsW * (BH + FB + FT);
+	if (room() < need) {
+		const spareHud = hudH - floorHud, spareSp = spSz - floorSp, spareTop = topMin - floorTop;
+		const spare = spareHud + spareSp + spareTop, deficit = need - room();
+		if (spare > 0) {
+			const k = Math.min(1, deficit / spare);
+			hudH -= spareHud * k; spSz -= spareSp * k; topMin -= spareTop * k;
+		}
+	}
+	const hudYp = AH - hudH - 12, spinRow = spinRowOf();
+	const maxBsH = (hudYp - 10 - spinRow - topMin) / (BH + FB + FT);
+	const bs = Math.min(maxBsW, Math.max(0.4, maxBsH));
 	const fw = (BW + 2 * FT) * bs;
 	const bx = AW / 2 - fw / 2 + FT * bs;
-	let by = hudYp - 14 - spinRow - (BH + FB) * bs;
-	if (by - FT * bs < TOPT) by = TOPT + FT * bs;
+	let by = hudYp - 10 - spinRow - (BH + FB) * bs;
+	if (by - FT * bs < topMin) by = topMin + FT * bs;
 	const T = by - FT * bs;
 	const BC2 = bx + BW * bs / 2;
-	const spX = Math.min(BC2 + fw / 2 - spSz / 2, AW - 24 - spSz / 2);
-	const spY = Math.min(by + (BH + FB) * bs + 8 + spSz / 2, hudYp - 10 - spSz / 2);
-	const autoX = spX - spSz / 2 - 22 - abT / 2;
-	const turboX = autoX - abT - 18;
-	const buyX = turboX - abT / 2 - 22 - buyW / 2;
-	const pairY = spY, buyY = Math.min(spY, hudYp - 10 - buyH / 2);
-	const mb = 148, betHalf = 150, clear = betHalf + mb / 2 + 22;
-	const hudW = Math.min(1040, Math.max(fw + 40, 900)), hudX = BC2 - hudW / 2;
-	const balX = hudX + 36, winR = hudX + hudW - 36;
-	const zoneL = Math.max(200, (BC2 - clear) - balX), zoneR = Math.max(200, winR - (BC2 + clear));
+	const kUi = Math.min(1, spSz / 160);
+	const abT = Math.max(64, 110 * kUi);
+	const buyS = Math.max(0.5, 0.72 * kUi), buyW = 216 * buyS * 0.92, buyH = 240 * buyS * 0.92;
+	const spX = Math.min(BC2 + fw / 2 - spSz / 2, AW - 16 - spSz / 2);
+	const spY = Math.min(by + (BH + FB) * bs + 6 + spSz / 2, hudYp - 8 - spSz / 2);
+	const autoX = spX - spSz / 2 - 16 - abT / 2;
+	const turboX = autoX - abT - 14;
+	const buyX = turboX - abT / 2 - 16 - buyW / 2;
+	const pairY = spY, buyY = Math.min(spY, hudYp - 8 - buyH / 2);
+	const mb = Math.max(72, 120 * (hudH / 200)), betHalf = Math.max(90, 130 * (hudH / 200));
+	const clear = betHalf + mb / 2 + 16;
+	const hudW = Math.min(AW - 16, Math.max(fw + 24, AW * 0.92)), hudX = BC2 - hudW / 2;
+	const balX = hudX + 28, winR = hudX + hudW - 28;
+	const zoneL = Math.max(120, (BC2 - clear) - balX), zoneR = Math.max(120, winR - (BC2 + clear));
+	const ls = 22 * (hudH / 180), vs = 40 * (hudH / 180);
 	return {
 		board: { x: bx, y: by, w: BW * bs, h: BH * bs, bs, cell: CELL * bs, T },
-		logo: { x: BC2, y: T - 56, s: 0.5 },
-		roxy: { x: bx + BW * bs * 0.62, y: T + 8, s: 0.7, peek: true },
-		hud: { x: hudX, y: hudYp, w: hudW, h: HBp, r: 22 },
-		fBal: { x: balX, y: hudYp + 48, ls: 28, vs: 52, w: zoneL },
-		fBet: { x: BC2 - 84, y: hudYp + 48, ls: 28, vs: 52, w: 168 },
-		fWin: { x: BC2 + clear, y: hudYp + 48, ls: 28, vs: 52, w: zoneR },
-		minus: { x: BC2 - betHalf, y: hudYp + HBp / 2, s: mb, ic: 2.3 },
-		plus: { x: BC2 + betHalf, y: hudYp + HBp / 2, s: mb, ic: 2.3 },
+		logo: { x: BC2, y: T - 40, s: 0.38 },
+		roxy: { x: bx + BW * bs * 0.62, y: T + 8, s: 0.55, peek: true },
+		hud: { x: hudX, y: hudYp, w: hudW, h: hudH, r: 18 },
+		fBal: { x: balX, y: hudYp + 36 * (hudH / 180), ls, vs, w: zoneL },
+		fBet: { x: BC2 - 70, y: hudYp + 36 * (hudH / 180), ls, vs, w: 140 },
+		fWin: { x: BC2 + clear, y: hudYp + 36 * (hudH / 180), ls, vs, w: zoneR },
+		minus: { x: BC2 - betHalf, y: hudYp + hudH / 2, s: mb, ic: 2.3 },
+		plus: { x: BC2 + betHalf, y: hudYp + hudH / 2, s: mb, ic: 2.3 },
 		spin: { x: spX, y: spY, s: spSz, ic: 2.5 },
 		auto: { x: autoX, y: pairY, s: abT, ic: 2.1 },
 		turbo: { x: turboX, y: pairY, s: abT, ic: 2.1 },
@@ -267,7 +284,7 @@ function introChrome(AW: number, AH: number, port: boolean): Chrome['intro'] {
 function chromeFor(kind: LayoutKind, W: number, H: number): Chrome {
 	// Author in a matched-aspect space, then map once into the design (no second letterbox).
 	if (kind === 'phonePort') return kChrome(chromePhone(1080, 1080 * (844 / 390)), W / 1080);
-	if (kind === 'tabletPort') return kChrome(chromeTablet(1080, 1440), W / 1080);
+	if (kind === 'tabletPort') return chromeTablet(W, H);
 	if (kind === 'square') return kChrome(chromeLand(1920, 1440), W / 1920);
 	if (kind === 'land') return kChrome(chromeLand(1920, 1200), W / 1920);
 	return chromeLand(W, H); // wide: authored in 1920×1080

@@ -189,8 +189,10 @@ export function layoutStyle(el: HTMLElement): HostStyle | null {
 	const cell = el.closest('.cell');
 	if (cell?.classList.contains('spinning')) s.visibility = 'hidden';
 	if (cell?.classList.contains('out')) s.opacity = '0';
-	if (cell?.classList.contains('dim')) s.filter = 'brightness(0.48) saturate(0.7)';
-	else if (cell) s.filter = s.filter && s.filter !== 'none' ? s.filter : 'none';
+	// Dim only on the cell itself. Descendants inherit the 0.48 through the mirror walk;
+	// putting the filter on every child multiplied to a black tint (silhouettes).
+	if (cl.contains('cell') && cl.contains('dim')) s.filter = 'brightness(0.48) saturate(0.7)';
+	else if (cl.contains('cell')) s.filter = 'none';
 	if (cl.contains('m_lid')) s.scale = (el.style.scale && el.style.scale !== 'none') ? el.style.scale : '1 0';
 	if (cell?.classList.contains('puffed') && (cl.contains('sym') || cl.contains('symGlow') || cl.contains('symSh'))) s.opacity = '0';
 
