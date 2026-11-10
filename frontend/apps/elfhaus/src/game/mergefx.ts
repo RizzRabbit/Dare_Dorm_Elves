@@ -1,46 +1,75 @@
 // Stack + merge choreography (display only; the math is already decided by the book).
 //   stackIn(reel)        : normal: the 4 single wilds ease together and crossfade into the full-reel elf (calm, no flash);
 //                          turbo: the 4 wild cells squash toward the reel centre, flash, and the elf pops in elastically.
-//   mergeIn(reels, vals) : anticipation (board dims, the adjacent stacks glow) → the stacks physically lean / slide
-//                          together on one stage (their letters and the inner borders go) → squash at contact under a
-//                          rising bloom → HARD cut to the merged group at the bloom's peak, which scales up from about the
-//                          singles' size with an elastic settle (merge_join sheet) + magenta shockwave + lock burst per seam,
-//                          2-4 px micro shake → WILD letters ignite left to right after the settle → each reel's corner gem flies into the merged wild's
-//                          one corner gem, which shows the running product as they land (x7, then x42) and pops.
-//                          4-5 wide: bigger burst, stronger shake, longer hold. ~1.3-1.8 s.
+//   mergeIn(reels, vals) : on the 150 BPM grid (mergeclock.ts). The joining rigs are snapshotted at rest and released
+//                          before the lean, so their outline glow cannot linger. The snapshots crouch and lean in
+//                          horizontally (translateY capped at MERGE_MAX_DROP). At the hit the group rig loads under the
+//                          snapshot, then pops, the gems fly into one total, and it settles. Turbo shortens (~60%). A tap
+//                          advances one stage. ~1.6-2 s plus the gem flights.
 //   growIn(ov, ...)      : a merged group grows (connecting respin): the total splits back into one gem per reel corner,
 //                          each changed reel ticks +1 with a pop, then they fly back and recombine into the new total,
 //                          which counts up (x5, x30). ~1.3 s.
 //   ovWin(reel)          : a merged / full-reel wild that is part of a winning line bounces and shows its win outline.
-// Tap or turbo snaps to the end state (skipMerge finishes every running animation). Transform/opacity only.
-// Tempo (tempo.ts): every duration / delay / pause below is written at the old pace and stretched by ANIM_TEMPO in A() and
-// sw() (turbo = 1); the stacks sheets slow with it (sprite.ts), so the sheet beats and these beats stay in step.
+// Tap during stackIn snaps that stack. Tap during mergeIn advances exactly one merge stage (the merge does not snap
+// just because turbo is on). Transform/opacity only, plus the existing board camera.
+// Tempo (tempo.ts): stackIn durations below are written at the old pace and stretched by ANIM_TEMPO in A() and
+// sw() (turbo = 1). mergeIn uses mergeclock.ts (real milliseconds, turbo × 0.6) and does not go through T().
 // Art swap (stacks.ts): when the stacks_v1 sheets (MERGE_ANIM.md) are imported, stack_form / merge_join /
 // letters_ignite / merge_win play at these same beats and merge_idle loops; any sheet not there keeps its placeholder.
 import { preloadStacks } from './ui';
 import { S, $, setGem, gemHTML, ovMx, cellEl, pos, ovArt } from './ui';
-import { burst } from './fx';
-import { mergeFx, wfExpand } from './wildfx';
-import { grab } from './combine';
+import { wfExpand } from './wildfx';
+import { grab, hideGem, clearCoveredGems } from './combine';
 import { toStage } from './stage';
 import { hasStack, stackOnce, stackLetters, stackWin, stackWinOff, stackPrepare, stackRelease, stackWarm, stackReact, stackReactSkip } from './stacks';
-import { dbSnapshot, dbStats } from './dbstacks';
-import { setPhase } from './diag';
+import { dbDisplay, dbKnown, dbNudge, dbPlay, dbSnapshot, dbStats } from './dbstacks';
+import { canvasRev, hasSheet, play } from './sprite';
+import { boardShake, boardWin } from './boardfx';
+import { trailBetween } from './wintrail';
+import { MERGE_BEAT, MERGE_HIT, mergeAmp, mergeLean, mergeMs } from './mergeclock';
+import { crumb, scrub, setPhase } from './diag';
 import { T } from './tempo';
 
 let skipping = false, running = 0;
 const anims = new Set<Animation>();
+const stageAnims = new Set<Animation>();
+let beatRes: (() => void) | null = null;
+let pendingSkip = false;
+let mergeHold: { skip: () => void } | null = null;
+const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 function A(el: Element, kf: Keyframe[], o: KeyframeAnimationOptions) {
 	const a = el.animate(kf, { ...o, duration: T(Number(o.duration) || 0), delay: T(o.delay || 0) }); anims.add(a); a.finished.catch(() => {}).finally(() => anims.delete(a));
 	if (skipping) a.finish();
 	return a;
 }
+/** A merge-stage animation. Real milliseconds, not the stack tempo. A tap finishes these and only these. */
+function M(el: Element, kf: Keyframe[], o: KeyframeAnimationOptions) {
+	const a = el.animate(kf, o); stageAnims.add(a); a.finished.catch(() => {}).finally(() => stageAnims.delete(a));
+	return a;
+}
+function finishStage() {
+	for (const a of stageAnims) { try { a.finish(); } catch { a.cancel(); } }
+	stageAnims.clear();
+}
+function armSkip() {
+	mergeHold = { skip() { if (beatRes) { const r = beatRes; beatRes = null; r(); } else pendingSkip = true; } };
+}
+/** Wait real milliseconds. Resolves true when a tap ended this stage early. */
+function beat(ms: number): Promise<boolean> {
+	if (pendingSkip) { pendingSkip = false; finishStage(); return Promise.resolve(true); }
+	const wait = mergeMs(ms, !!S.turbo);
+	return new Promise<boolean>((res) => {
+		const t = setTimeout(() => { beatRes = null; res(false); }, wait);
+		beatRes = () => { clearTimeout(t); beatRes = null; finishStage(); res(true); };
+	});
+}
 /** A pause at the old pace, stretched by the tempo (`raw`: a plain cap, e.g. a decode wait, not stretched). */
 const sw = (ms: number, raw = false) => (skipping ? Promise.resolve() : new Promise<void>((r) => { const t = setTimeout(r, raw ? ms : T(ms)); waiters.add(() => { clearTimeout(t); r(); }); }));
 const waiters = new Set<() => void>();
-/** Tap: snap whatever merge/stack is playing to its end state. */
+/** Tap: during a merge, advance one stage. Otherwise snap the stack that's playing. */
 export function skipMerge() {
 	stackReactSkip(); // a face reaction snaps to the idle loop
+	if (mergeHold) { mergeHold.skip(); return; }
 	if (!running) return;
 	skipping = true; anims.forEach((a) => { try { a.finish(); } catch { a.cancel(); } }); waiters.forEach((w) => w()); waiters.clear();
 }
@@ -50,17 +79,6 @@ const end = () => { if (--running <= 0) { running = 0; skipping = false; } };
 const ovOf = (r: number) => document.querySelector<HTMLElement>(`.ov.full[data-reel="${r}"]`) ||
 	[...document.querySelectorAll<HTMLElement>('.ov.merge')].find((o) => o.dataset.reels?.split(',').includes(String(r))) || null;
 const cellsOf = (r: number) => [0, 1, 2, 3].map((row) => cellEl(r, row));
-
-function shake(px: number, ms: number) {
-	const b = $('#board');
-	A(b, [{ transform: 'none' }, { transform: `translate(${px}px,${-px / 2}px)` }, { transform: `translate(${-px}px,${px / 2}px)` }, { transform: `translate(${px / 2}px,0)` }, { transform: 'none' }], { duration: ms });
-}
-function ring(x: number, big: boolean) {
-	const r = document.createElement('div'); r.className = 'mRing' + (big ? ' big' : ''); r.style.left = x + 'px';
-	$('#board').appendChild(r);
-	A(r, [{ transform: 'translate(-50%,-50%) scale(.15)', opacity: 1 }, { transform: `translate(-50%,-50%) scale(${big ? 3 : 2.1})`, opacity: 0 }], { duration: 480, easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'forwards' }).finished.finally(() => r.remove());
-}
-const col = (x: number, w: number) => { const d = document.createElement('div'); d.className = 'wfxCol burstCol'; d.style.left = x + 'px'; d.style.width = w + 'px'; $('#board').appendChild(d); return d; };
 
 /** stackComplete. Normal pace (spinfix, user: "the single stacked Wild reel should appear from the merging of the individually
  * stacked wilds"): a vertical version of the reel merge, calm: short hold on the full reel → the 4 singles ease together
@@ -101,7 +119,7 @@ async function stackFromSingles(reel: number, render: (frameDelay?: number) => v
 		const warm = stackWarm(probe); // idle + letters decode during the hold / lean (usually prefetched already)
 		// the singles' multiplier badges already have their fly clones (stackComplete grab): hide the originals so they
 		// don't double up while the cells move
-		cells.forEach((el) => el.querySelectorAll<HTMLElement>('.mx').forEach((m) => A(m, [{ opacity: 0 }, { opacity: 0 }], { duration: 1, fill: 'forwards' })));
+		cells.forEach((el) => el.querySelectorAll<HTMLElement>('.mx').forEach(hideGem));
 		await sw(150); // 1) the full reel reads as 4 landed wilds for a beat
 		// 2) the singles ease together toward the reel centre (rows 0/3 travel most), a little vertical squeeze at the end
 		cells.forEach((el, row) => {
@@ -134,8 +152,13 @@ async function stackFromSingles(reel: number, render: (frameDelay?: number) => v
 		}
 		await sw(300);
 	} finally {
-		cells.forEach((el) => { el.getAnimations({ subtree: true }).forEach((a) => a.cancel()); if (S.full.has(reel)) el.style.visibility = 'hidden'; });
+		cells.forEach((el) => {
+			el.getAnimations({ subtree: true }).forEach((a) => a.cancel());
+			el.querySelectorAll<HTMLElement>('.mx').forEach(hideGem);
+			if (S.full.has(reel)) el.style.visibility = 'hidden';
+		});
 		document.querySelectorAll('.mGhost').forEach((g) => g.remove());
+		clearCoveredGems();
 		tapped = skipping; end();
 	}
 	// 5) the settled elf reacts (per-elf face, ~2.6-2.75 s at 12 fps, real speed); letters + frame keep drawing in alongside.
@@ -144,83 +167,168 @@ async function stackFromSingles(reel: number, render: (frameDelay?: number) => v
 	if (react && ov && !tapped && !S.turbo && ov.classList.contains('full')) void stackReact(ov, reel);
 }
 
-/** mergeGroups (a fresh group): the full choreography. `apply` swaps the overlays to the merged one at the hit. */
+/** mergeGroups (a fresh group). `apply` swaps the overlays to the merged one at the hit. */
 export async function mergeIn(reels: number[], values: number[], product: number, apply: () => void) {
-	stackReactSkip(); // the lean snapshots idle art
+	stackReactSkip();
 	begin();
+	skipping = false; // turbo shortens this merge; it does not snap it. stackIn still snaps.
+	armSkip();
 	setPhase('merge', dbStats());
 	const B = $('#board'), n = reels.length, big = n >= 4, lo = reels[0], step = n > 1 ? pos(lo + 1, 0).x - pos(lo, 0).x : S.cell, x0 = pos(lo, 0).x;
+	const amp = mergeAmp(reducedMotion());
 	const made: HTMLElement[] = [];
+	const dimmed: HTMLElement[] = [];
 	let stage: ReturnType<typeof leanStage> | null = null;
+	let applied = false;
+	const cut = () => {
+		if (applied) return; applied = true;
+		try { apply(); } catch (e) { crumb('merge-apply', { msg: scrub((e as Error)?.message || String(e)) }); }
+	};
 	try {
-		// 1) anticipation: board dims, the stacks about to join glow
-		B.classList.add('mAnt');
 		const olds = [...new Set(reels.map(ovOf))].filter((o): o is HTMLElement => !!o);
-		olds.forEach((o) => { const g = document.createElement('i'); g.className = 'ovGlow'; o.appendChild(g); A(g, [{ opacity: 0 }, { opacity: 1 }], { duration: 220, fill: 'forwards' }); });
-		// the singles' badges: fly clones made now (positions) but kept hidden until recombine; the originals stay until the
-		// lean hides their overlays. So exactly one badge per reel shows before the lean, none during it, one gem after.
+		const mid = lo + (n - 1) / 2;
+		// 1) wind-up. The board dims. Glow sprites come off the live rigs now, then a rest-pose
+		//    snapshot is staged. The live rigs (and their outline glow) are stopped in the same
+		//    turn, so a silhouette cannot stay behind while the body moves.
+		B.classList.add('mAnt');
+		const cells = document.getElementById('cells');
+		const dim = (1 - 0.4 * amp).toFixed(3);
+		if (cells) { cells.style.filter = `brightness(${dim})`; dimmed.push(cells); }
+		document.querySelectorAll<HTMLElement>('#overlays .ov').forEach((o) => {
+			if (!olds.includes(o)) { o.style.filter = `brightness(${dim})`; dimmed.push(o); }
+		});
+		olds.forEach((o) => { if (hasSheet('fx_wild')) play('fx_wild', 'wshineT', o, { cls: 'wfx wfxIn wfxTop', loop: false }); });
 		const badges = grab(reels.map((r) => ovMx(r)));
 		badges.forEach((g) => (g.style.opacity = '0'));
-		await sw(260);
-		// 2) the singles physically move: snapshots of their bodies on ONE stage over the merged area (no inner borders; their
-		//    own letters fade as the lean starts), elastic lean / slide toward the centre, then a squash at contact
-		const mid = lo + (n - 1) / 2;
-		stage = leanStage(olds);
-		stackRelease(olds); // the stage holds snapshots: the singles' sheets close before the group's decode (memory peak)
-		const warm = Promise.all([stackPrepare(reels), preloadStacks()]); // fix4 B: + the chalet panel / elf cut-outs; the group's join (usually prefetched already) / idle / letters decode during the lean
-		const parts = stage.parts.map((pt) => {
-			const d = (mid - pt.rc) * step, L = d * (n >= 4 ? 0.2 : 0.26), dir = Math.sign(d);
-			pt.lets.forEach((l) => A(l, [{ opacity: 1 }, { opacity: 0 }], { duration: 110, fill: 'forwards' }));
-			A(pt.el, [
-				{ transform: 'none', easing: 'cubic-bezier(.4,0,.6,1)' },
-				{ transform: `translateX(${-d * 0.035}px) rotate(${-dir}deg) scale(.99,1.012)`, offset: 0.26, easing: 'cubic-bezier(.55,0,.75,.5)' },
-				{ transform: `translateX(${L * 1.1}px) rotate(${dir * 3.6}deg) scale(1.01,.995)`, offset: 0.76, easing: 'cubic-bezier(.3,.6,.4,1)' },
-				{ transform: `translateX(${L}px) rotate(${dir * 2.6}deg)` }], { duration: LEAN, fill: 'forwards' });
-			return { ...pt, L, dir };
+		hideMergeGlows(olds);
+		if (olds.length) {
+			stage = leanStage(olds);
+			stackRelease(olds);
+		}
+		const warm = Promise.all([stackPrepare(reels), preloadStacks()]);
+		// 2) the snapshots crouch in place, then lean toward each other horizontally, feet-anchored.
+		const parts = (stage?.parts || []).map((pt) => {
+			const d = (mid - pt.rc) * step;
+			const pose = mergeLean(d, n, amp);
+			pt.el.style.transformOrigin = '50% 100%';
+			pt.lets.forEach((l) => M(l, [{ opacity: 1 }, { opacity: 0 }], { duration: mergeMs(160, !!S.turbo), fill: 'forwards' }));
+			M(pt.el, [{ transform: 'none' }, { transform: pose.crouch }], { duration: mergeMs(MERGE_BEAT, !!S.turbo), easing: 'cubic-bezier(.4,0,.6,1)', fill: 'forwards' });
+			return { ...pt, pose };
 		});
-		await sw(LEAN);
-		parts.forEach((pt) => A(pt.el, [{ transform: `translateX(${pt.L}px) rotate(${pt.dir * 2.6}deg)` }, { transform: `translateX(${pt.L * 1.04}px) rotate(${pt.dir * 1.6}deg) scale(1.075,.915)` }], { duration: SQUASH, easing: 'cubic-bezier(.3,0,.7,1)', fill: 'forwards' }));
-		const bloom = bloomOver(stage.el);
-		A(bloom, [{ opacity: 0 }, { opacity: 1 }], { duration: SQUASH, easing: 'cubic-bezier(.5,0,.9,.6)', fill: 'forwards' });
-		await sw(SQUASH);
-		await Promise.race([warm, sw(400, true)]); // (rarely waits: the bloom just holds a moment longer)
-		// 3) HARD cut under the opaque bloom: the merged overlay replaces the stage in the same frame, the group scales up
-		//    from about the singles' size (merge_join sheet, or a transform on the placeholder art); shockwave + burst per seam
-		// fix4 proof B: the merged overlay's first frame is empty (its sheet / canvas paints a frame later): hold the lean
-		// stage over it for two frames instead of cutting to a blank panel
-		{ const st = stage.el, host = st.parentElement; stage = null; apply(); if (!st.isConnected) ((host?.id && document.getElementById(host.id)) || host)?.appendChild(st); requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(() => st.remove()))); made.push(st); }
+		await beat(MERGE_BEAT);
+		parts.forEach((pt) => {
+			M(pt.el, [
+				{ transform: pt.pose.crouch },
+				{ transform: pt.pose.over, offset: 0.72 },
+				{ transform: pt.pose.pull },
+			], { duration: mergeMs(MERGE_BEAT, !!S.turbo), easing: 'cubic-bezier(.3,.6,.4,1)', fill: 'forwards' });
+		});
+		await beat(MERGE_BEAT);
+		// 3) impact. Flash and seam sparks; singles' atlases are already gone; the group decodes under the snapshot.
+		const seams: number[] = [];
+		for (let i = 1; i < n; i++) seams.push(x0 + i * step - (step - S.cell) / 2);
+		const flash = document.createElement('div');
+		flash.style.cssText = `position:absolute;left:${x0 + ((n - 1) * step) / 2}px;top:42%;width:1px;height:1px;pointer-events:none;z-index:7`;
+		B.appendChild(flash); made.push(flash);
+		if (hasSheet('fx_wild')) play('fx_wild', 'wflash', flash, { cls: 'wfx', loop: false, style: `position:absolute;width:${Math.round(n * S.cell * 0.95)}px;height:${Math.round(S.cell * 2.4)}px;translate:-50% -50%` });
+		seams.forEach((x) => {
+			const h = document.createElement('div');
+			h.style.cssText = `position:absolute;left:${x}px;top:46%;width:1px;height:1px;pointer-events:none;z-index:7`;
+			B.appendChild(h); made.push(h);
+			const tall = Math.round((olds[0]?.offsetHeight || S.cell * 4) * 0.92);
+			if (hasSheet('fx_wild')) play('fx_wild', 'seam', h, { cls: 'wfx', loop: false, style: `position:absolute;width:${Math.round(S.cell * 0.7)}px;height:${tall}px;translate:-50% -50%` });
+			if (hasSheet('fx_feat')) play('fx_feat', 'burst', h, { cls: 'wfx', loop: false, style: `position:absolute;width:${Math.round(120 * (0.75 + 0.25 * amp))}px;height:${Math.round(120 * (0.75 + 0.25 * amp))}px;translate:-50% -50%` });
+		});
+		try {
+			boardWin(n >= 4 ? 'big' : n >= 3 ? 'medium' : 'small');
+			boardShake(2 + n, 0.16);
+		} catch { /* the camera is optional; the cut still happens */ }
+		await new Promise<void>((res) => {
+			const hit = mergeMs(MERGE_HIT, !!S.turbo), cap = mergeMs(MERGE_BEAT, !!S.turbo);
+			let t = setTimeout(afterHit, hit);
+			const finish = () => { clearTimeout(t); beatRes = null; finishStage(); res(); };
+			beatRes = finish;
+			function afterHit() {
+				let open = true;
+				beatRes = finish;
+				t = setTimeout(() => { open = false; beatRes = null; res(); }, cap);
+				warm.then(() => { if (!open) return; open = false; clearTimeout(t); if (beatRes === finish) beatRes = null; res(); });
+			}
+		});
+		// 4) reveal. The snapshot stays up until the new body has been drawn.
+		{ const st = stage?.el, host = st?.parentElement || null; stage = null; cut();
+			if (st) { if (!st.isConnected) ((host?.id && document.getElementById(host.id)) || host)?.appendChild(st);
+				const t0 = performance.now();
+				const uncover = () => {
+					const ov = ovOf(lo);
+					ov?.querySelectorAll<HTMLElement>(':scope > .wart').forEach((w) => { w.style.visibility = 'hidden'; });
+					const cvs = ov ? [...ov.querySelectorAll<HTMLCanvasElement>(':scope > canvas.stk_body')] : [];
+					const ready = cvs.some((cv) => cv.classList.contains('stk_db') ? !!dbDisplay(cv) : canvasRev(cv) > 0);
+					if (!st.isConnected) return;
+					if (ready || performance.now() - t0 > 120) st.remove();
+					else requestAnimationFrame(uncover);
+				};
+				requestAnimationFrame(uncover);
+				made.push(st); } }
 		const ov = ovOf(lo);
 		if (ov) {
-			ov.style.animation = 'none';
+			ov.style.animation = 'none'; ov.style.transformOrigin = '50% 100%';
 			{ const m = ov.querySelector<HTMLElement>('.mx'); if (m) m.style.opacity = '0'; }
-			if (hasStack('merge_join', ov)) void stackOnce('merge_join', ov);
-			else growFromSingles(ov, n);
+			const pop = 1 + 0.07 * amp * (big ? 1.35 : 1);
+			M(ov, [
+				{ transform: `scale(${(0.9 - 0.03 * Math.min(n, 5)).toFixed(3)},0.84)` },
+				{ transform: `scale(${pop.toFixed(3)},${(pop * 0.98).toFixed(3)})`, offset: 0.55 },
+				{ transform: 'scale(0.99,1.012)', offset: 0.8 },
+				{ transform: 'none' },
+			], { duration: mergeMs(MERGE_BEAT, !!S.turbo), easing: 'ease-out', fill: 'forwards' });
+			try {
+				if (dbKnown(ov)) void dbPlay(ov, 'win').catch(() => {});
+				else if (hasStack('merge_join', ov)) void stackOnce('merge_join', ov);
+				else if (!ov.querySelector('canvas.stk_db')) growFromSingles(ov, n);
+			} catch { /* the scale above is the reveal either way */ }
 		}
-		A(bloom, [{ opacity: 1 }, { opacity: 0 }], { duration: 210, easing: 'cubic-bezier(.37,0,.63,1)', fill: 'forwards' }).finished.catch(() => {}).finally(() => bloom.remove());
-		made.push(bloom);
-		mergeFx(reels, false); // no seam beams: the merged wild reads as one piece
-		for (let i = 1; i < n; i++) ring(x0 + i * step - (step - S.cell) / 2, big);
-		if (big) { const h = col(x0, n * step); burst(h, 'big', 60); made.push(h); }
-		shake(big ? 4 : 2.5, big ? 170 : 120);
-		// 4) letters ignite left to right after the scale settle (the letters sheet's blank lead-in waits for it)
-		const lets = ov && !stackLetters(ov) ? [...ov.querySelectorAll<HTMLElement>('.mLets')] : []; // sheet not decoded yet: the r8d letters still
-		lets.forEach((l) => A(l, [{ opacity: 0 }, { opacity: 1 }], { duration: 280, delay: 600, easing: 'ease-out', fill: 'backwards' }));
-		await sw(140);
-		// 5) each reel's corner gem flies into the merged wild's one corner gem; it shows the running product as they land
+		const lets = ov && !stackLetters(ov) ? [...ov.querySelectorAll<HTMLElement>('.mLets')] : [];
+		lets.forEach((l, i) => M(l, [{ opacity: 0 }, { opacity: 1 }], { duration: mergeMs(220, !!S.turbo), delay: mergeMs(40 * i, !!S.turbo), easing: 'ease-out', fill: 'backwards' }));
+		await beat(MERGE_BEAT);
+		// 5) each reel's gem flies into the merged gem. The product punches on each landing.
 		const mx = ov?.querySelector<HTMLElement>('.mx') || null;
-		await recombine(badges, mx, values, product, big);
-		await sw(big ? 420 : 240);
+		await new Promise<void>((res) => {
+			const run = recombine(badges, mx, values, product, big, true);
+			const finish = () => { skipping = true; beatRes = null; finishStage(); anims.forEach((a) => { try { a.finish(); } catch { a.cancel(); } }); waiters.forEach((w) => w()); waiters.clear(); res(); };
+			beatRes = finish;
+			run.then(() => { if (beatRes === finish) beatRes = null; res(); }, () => { if (beatRes === finish) beatRes = null; res(); });
+		});
+		// 6) one secondary bounce, then idle.
+		if (ov) {
+			try { dbNudge(ov, 0.22 * amp, 0.36); } catch { /* overlay scale below still settles */ }
+			M(ov, [{ transform: 'none' }, { transform: `scale(${(1 + 0.025 * amp).toFixed(3)},${(1 - 0.02 * amp).toFixed(3)})`, offset: 0.4 }, { transform: 'none' }], { duration: mergeMs(200, !!S.turbo), easing: 'ease-out' });
+			if (dbKnown(ov)) void dbPlay(ov, 'idle').catch(() => {});
+		}
+		await beat(200);
+	} catch (e) {
+		crumb('merge', { msg: scrub((e as Error)?.message || String(e)) });
+		cut();
 	} finally {
+		mergeHold = null; beatRes = null; pendingSkip = false;
+		dimmed.forEach((e) => { e.style.filter = ''; });
 		made.forEach((m) => m.remove()); B.classList.remove('mAnt');
 		if (stage) { stage.el.remove(); stage.olds.forEach((o) => (o.style.visibility = '')); }
 		const ov = ovOf(lo), mx = ov?.querySelector<HTMLElement>('.mx'); if (mx) { mx.style.opacity = ''; setGem(mx, product, false); }
 		document.querySelectorAll('#flyLayer .fly').forEach((f) => f.remove());
+		clearCoveredGems();
 		end();
 		setPhase(S.inBonus ? 'bonus' : 'board', dbStats());
 	}
 }
 
-const LEAN = 340, SQUASH = 110;
+function hideMergeGlows(olds: HTMLElement[]) {
+	olds.forEach((o) => {
+		o.querySelectorAll<HTMLElement>(':scope > img.stk_glow, :scope .symGlow, :scope .ovGlow').forEach((g) => {
+			g.style.visibility = 'hidden';
+			g.remove();
+		});
+	});
+}
 /** One stage over the merging overlays (same look as an overlay, but one piece: no inner borders / gaps), holding a
  *  snapshot of each overlay's body (its stack canvas, or a copy of its placeholder image) and, separately, its letters.
  *  The overlays themselves are hidden under it; mergeIn's apply() re-renders them at the cut. */
@@ -232,8 +340,11 @@ function leanStage(olds: HTMLElement[]) {
 		const p = document.createElement('div');
 		p.style.cssText = `position:absolute;top:0;height:100%;left:${o.offsetLeft - x0}px;width:${o.offsetWidth}px;transform-origin:50% 100%;will-change:transform`;
 		const snap = (sel: string) => {
-			const cvs = [...o.querySelectorAll<HTMLCanvasElement>(sel)]; if (!cvs.length) return null;
+			// stk_db is a 1x1 placeholder for the rig. Copying it (or stretching it) is a garbage pixel, not the elf.
+			const cvs = [...o.querySelectorAll<HTMLCanvasElement>(sel)].filter((x) => !x.classList.contains('stk_db') && x.width > 1 && x.height > 1);
+			if (!cvs.length) return null;
 			const c = document.createElement('canvas'); c.width = cvs[0].width; c.height = cvs[0].height; const g = c.getContext('2d')!;
+			g.clearRect(0, 0, c.width, c.height);
 			cvs.forEach((x) => { try { g.drawImage(x, 0, 0, c.width, c.height); } catch { /* empty canvas */ } });
 			c.style.cssText = 'position:absolute;inset:0;width:100%;height:100%'; p.appendChild(c); return c;
 		};
@@ -242,34 +353,21 @@ function leanStage(olds: HTMLElement[]) {
 		const dbc = o.querySelector(':scope>canvas.stk_db') ? dbSnapshot(o) : null;
 		if (dbc) { dbc.style.cssText = 'position:absolute;top:0;left:50%;height:100%;width:auto;translate:-50% 0'; p.appendChild(dbc); }
 		else if (!snap(':scope>canvas.stk_body')) { const w = o.querySelector(':scope>.wart'); if (w) p.appendChild(w.cloneNode(true)); }
+		// the outline glow is a static silhouette (img.stk_glow), not a child of the rig. Leave it off the snapshot.
+		o.querySelectorAll<HTMLElement>(':scope > img.stk_glow, :scope .symGlow, :scope .ovGlow').forEach((g) => g.remove());
 		const lets = [snap(':scope>canvas.stk_letters'), o.querySelector<HTMLElement>(':scope>.mLets')?.cloneNode(true) as HTMLElement | undefined].filter((x): x is HTMLElement => !!x);
 		lets.forEach((l) => { if (!l.parentElement) p.appendChild(l); });
 		const rs = (o.dataset.reels ?? o.dataset.reel ?? '0').split(',').map(Number);
 		return { el: p, lets, rc: (rs[0] + rs[rs.length - 1]) / 2 };
 	});
 	parts.slice().sort((a, b) => Math.abs(b.rc - (parts[0].rc + parts[parts.length - 1].rc) / 2) - Math.abs(a.rc - (parts[0].rc + parts[parts.length - 1].rc) / 2)).forEach((pt) => el.appendChild(pt.el)); // centre on top
+	// Hide the live overlays before the stage is inserted, in the same turn, so a paint cannot show a leftover
+	// sheet canvas or the static still between the rig stopping and the snapshot appearing.
+	olds.forEach((o) => { o.style.visibility = 'hidden'; });
 	host.appendChild(el);
-	// fix4 proof B: cloned <img> cut-outs decode asynchronously (several blank frames); keep the singles showing under the
-	// stage until the clones have decoded, then hide them
-	const imgs = [...el.querySelectorAll('img')];
-	const hide = () => { if (el.isConnected) olds.forEach((o) => (o.style.visibility = 'hidden')); };
-	void Promise.all(imgs.map((i) => i.decode().catch(() => {}))).then(hide);
+	// Cloned <img> cut-outs decode asynchronously. The overlays stay hidden; the stage simply has no pixels there
+	// until the clone decodes, which is blank rather than a previous merge's frame.
 	return { el, parts, olds };
-}
-/** White-pink bloom over `over`'s box, opaque edge to edge at full opacity (so the cut under it is never seen). */
-function bloomOver(over: HTMLElement) {
-	const b = document.createElement('div'), host = $('#board'); // outside #overlays: the cut re-renders that
-	let x = 0, y = 0; for (let e: HTMLElement | null = over; e && e !== host; e = e.offsetParent as HTMLElement | null) { x += e.offsetLeft; y += e.offsetTop; }
-	b.style.cssText = `position:absolute;left:${x}px;top:${y}px;width:${over.offsetWidth}px;height:${over.offsetHeight}px;z-index:40;pointer-events:none;opacity:0;` +
-		'border-radius:6px;overflow:hidden;will-change:opacity';
-	// re-audit M3: no flat filled rect. A radial flash (hot white core, warm falloff, transparent edges) over slowly
-	// turning light rays, clipped to the merged reels' window; the core is opaque where the cut happens.
-	b.innerHTML = '<i class="mfRays"></i><i class="mfCore"></i>';
-	host.appendChild(b);
-	const [rays, core] = [...b.children] as HTMLElement[];
-	A(rays, [{ transform: 'scale(.8) rotate(0deg)' }, { transform: 'scale(1.25) rotate(24deg)' }], { duration: 900, easing: 'ease-out', fill: 'forwards' });
-	A(core, [{ transform: 'scale(.55)' }, { transform: 'scale(1.18)' }], { duration: 420, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'forwards' });
-	return b;
 }
 /** No merge_join sheet: the placeholder group art scales up from about a single's size (bottom anchored) with an elastic settle. */
 function growFromSingles(ov: HTMLElement, n: number) {
@@ -281,10 +379,18 @@ function growFromSingles(ov: HTMLElement, n: number) {
 	{ duration: 560, easing: 'ease-out' }).finished.catch(() => {}).finally(() => { body.style.transformOrigin = ''; });
 }
 
-const prodTo = (v: number[], i: number) => v.slice(0, i + 1).reduce((a, b) => a * b, 1);
-/** Fly gems (fixed-position clones, or gems inside the overlay) into `target`, one after another; as each lands the
- *  target shows the running product of `values` (honest math: adjacent reels multiply), the last one counting up. */
-async function recombine(gems: HTMLElement[], target: HTMLElement | null, values: number[], product: number, big = false) {
+const runTo = (v: number[], i: number, how: 'mul' | 'add') =>
+	how === 'add' ? v.slice(0, i + 1).reduce((a, b) => a + b, 0) : v.slice(0, i + 1).reduce((a, b) => a * b, 1);
+/** Fly gems into `target`. `how` is 'mul' for a cross-reel merge (the running product) and 'add' for a single-reel stack (the running sum). */
+export async function flyGems(gems: HTMLElement[], target: HTMLElement | null, values: number[], total: number, big = false, paced = false, how: 'mul' | 'add' = 'mul') {
+	return recombine(gems, target, values, total, big, paced, how);
+}
+async function recombine(gems: HTMLElement[], target: HTMLElement | null, values: number[], product: number, big = false, paced = false, how: 'mul' | 'add' = 'mul') {
+	const go = (el: Element, kf: Keyframe[], o: KeyframeAnimationOptions) => {
+		if (!paced) return A(el, kf, o);
+		const dur = Number(o.duration) || 0, delay = Number(o.delay) || 0;
+		return M(el, kf, { ...o, duration: dur ? mergeMs(dur, !!S.turbo) : 0, delay: delay ? mergeMs(delay, !!S.turbo) : 0 });
+	};
 	if (!target) { gems.forEach((g) => g.remove()); return; }
 	target.style.opacity = '0';
 	const tr = target.getBoundingClientRect();
@@ -293,24 +399,29 @@ async function recombine(gems: HTMLElement[], target: HTMLElement | null, values
 		const sc = toStage(r).width / (r.width || 1), dx = (tr.left - r.left) * sc, dy = (tr.top - r.top) * sc, lift = g.closest('.ov') ? S.cell * 0.14 : -S.cell * 0.3; // inside an overlay (overflow hidden) it dips instead
 		const hid = g.style.opacity === '0'; g.style.opacity = ''; // mergeIn's clones were hidden through the lean: they fade in at their corner, then fly
 		const here = Math.hypot(dx, dy) < 6; // the clone already sits on the group's gem (first reel): it simply becomes the gem
-		return A(g, here ? [{ opacity: 0 }, { opacity: 0 }] : [{ transform: `translate(0,0) scale(${hid ? 0.8 : 1})`, opacity: hid ? 0 : 1 }, { transform: 'translate(0,0) scale(1)', opacity: 1, offset: .18 }, { opacity: 1, offset: .5 }, { transform: `translate(${dx * 0.5}px,${dy * 0.5 + lift}px) scale(1.12)`, offset: .58 }, { opacity: 0, offset: .78 }, { transform: `translate(${dx}px,${dy}px) scale(${k})`, opacity: 0 }], // fades into the gem: never two badges on one corner
+		if (paced && !here) trailBetween(g, target, Math.min(1.5, 0.75 + Math.log2(Math.max(2, values[i] || 2)) * 0.12));
+		return go(g, here ? [{ opacity: 0 }, { opacity: 0 }] : [{ transform: `translate(0,0) scale(${hid ? 0.8 : 1})`, opacity: hid ? 0 : 1 }, { transform: 'translate(0,0) scale(1)', opacity: 1, offset: .18 }, { opacity: 1, offset: .5 }, { transform: `translate(${dx * 0.5}px,${dy * 0.5 + lift}px) scale(1.12)`, offset: .58 }, { opacity: 0, offset: .78 }, { transform: `translate(${dx}px,${dy}px) scale(${k})`, opacity: 0 }], // fades into the gem: never two badges on one corner
 			{ duration: here ? 1 : 340, delay: i * 80, easing: 'cubic-bezier(.45,0,.35,1)', fill: 'both' }).finished.catch(() => {}).then(async () => {
 			g.style.opacity = '0';
-			const last = i === gems.length - 1, v = last ? product : prodTo(values, i);
-			if (!last) { target.style.opacity = ''; setGem(target, v, false); A(target, [{ transform: 'scale(1)' }, { transform: 'scale(1.18)', offset: .4 }, { transform: 'scale(1)' }], { duration: 200 }); return; }
-			// the last one lands: count up from the running product to the total, then pop
-			const from = gems.length > 1 ? prodTo(values, i - 1) : values[0], dur = T(260), t0 = performance.now();
+			const last = i === gems.length - 1, v = last ? product : runTo(values, i, how);
+			const pop = paced
+				? 1 + Math.min(0.42, Math.log2(Math.max(2, v)) * 0.07) * (big ? 1.2 : 1) * mergeAmp(reducedMotion())
+				: (last ? (big ? 1.4 : 1.3) : 1.18);
+			if (!last) { target.style.opacity = ''; setGem(target, v, false); go(target, [{ transform: 'scale(1)' }, { transform: `scale(${pop.toFixed(3)})`, offset: .4 }, { transform: 'scale(1)' }], { duration: 200 }); return; }
+			// the last one lands: count up from the running product to the total, then pop. Elapsed time, not a frame count.
+			const from = gems.length > 1 ? runTo(values, i - 1, how) : values[0], dur = paced ? mergeMs(220, !!S.turbo) : T(260), t0 = performance.now();
 			target.style.opacity = '';
 			await new Promise<void>((res) => {
-				const tick = (t: number) => {
-					const u = skipping ? 1 : Math.min(1, (t - t0) / dur);
+				// Sample on a short timer. The shown value follows elapsed time, so 60 Hz and 120 Hz land on the same number.
+				const tick = () => {
+					const u = skipping || dur <= 0 ? 1 : Math.min(1, (performance.now() - t0) / dur);
 					setGem(target, Math.round(from + (v - from) * (1 - (1 - u) ** 3)), false);
-					u < 1 ? requestAnimationFrame(tick) : res();
+					u < 1 ? setTimeout(tick, 16) : res();
 				};
-				requestAnimationFrame(tick);
+				tick();
 			});
 			setGem(target, v);
-			A(target, [{ transform: 'scale(1)' }, { transform: `scale(${big ? 1.4 : 1.3})`, offset: .4 }, { transform: 'scale(1)' }], { duration: 300, easing: 'ease-out' });
+			go(target, [{ transform: 'scale(1)' }, { transform: `scale(${pop.toFixed(3)})`, offset: .4 }, { transform: 'scale(1)' }], { duration: 300, easing: 'ease-out' });
 		});
 	}));
 	gems.forEach((g) => g.remove()); target.style.opacity = '';

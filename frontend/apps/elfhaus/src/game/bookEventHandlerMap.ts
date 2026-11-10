@@ -15,14 +15,14 @@ import { trailToMeter } from './wintrail';
 import { puffWith } from './puff';
 import { wildLand, wfExpand } from './wildfx';
 import { setBg } from './bg';
-import { stackIn, mergeIn, growIn, clearOvWins } from './mergefx';
+import { stackIn, mergeIn, growIn, clearOvWins, flyGems } from './mergefx';
 import { stackPrefetch } from './stacks';
 import { frameIn } from './wildframe';
 /** stack_form sheets decode ahead for reels with 2+ wilds that are not full yet (stacks.ts loads sheets on demand). */
 const warmStacks = () => stackPrefetch(S.sym.flatMap((c, r) => (!S.full.has(r) && c.filter((x) => x === 'W').length >= 2 ? [r] : [])));
 import { featOpen, featPop, featClose } from './featfx';
 import { countTo, countMs, setAmount, skipCounts, BIG_TIERS, levelOf, WIN_EDGES } from './countup';
-import { grab, combineInto } from './combine';
+import { grab, combineInto, clearCoveredGems } from './combine';
 import { tempo, hold, gtempo } from './tempo';
 import { boardTease, boardPunch } from './boardfx';
 import { sfx, loop, music, musicSting, stingInMs, beatSnapMs, duck, duckFor, playVoice, type Handle } from './audio';
@@ -99,20 +99,24 @@ let egwPending: Map<number, number> | null = null;
 /** v3.15g (James): set by wincap; the max-win screen already showed the capped total, so freeSpinEnd skips its TOTAL WIN outro */
 let capHit = false;
 
-async function formStack(ev: { reel: number; value: number; instant?: boolean }, react = true) {
+async function formStack(ev: { reel: number; value: number; instant?: boolean; parts?: number[] }, react = true) {
 	// the four wild values ADD into the stack's value (SPEC: sum of the 4 cell values)
+	const parts = ev.parts?.length === 4 ? ev.parts : [0, 1, 2, 3].map((row) => S.vals.get(k(ev.reel, row)) || 1);
 	const flying = grab([0, 1, 2, 3].map((row) => cellEl(ev.reel, row).querySelector<HTMLElement>('.mx')));
 	const render = (frameDelay = 0) => {
 		S.full.set(ev.reel, ev.value);
 		for (let row = 0; row < ROWS; row++) { S.vals.delete(k(ev.reel, row)); cellEl(ev.reel, row).style.visibility = 'hidden'; }
 		renderOverlays(false);
 		frameIn(document.querySelector<HTMLElement>(`.ov.full[data-reel="${ev.reel}"]`), frameDelay); // the stack lands: its frame draws in
-		// normal pace: the sum gem waits for the flying badges (combineInto shows it), no "x4 x10" overlap during the crossfade
+		// the sum gem waits for the flying badges (flyGems shows it), no leftover cell badges over the elf
 		if (!S.turbo && flying.length) { const g = ovMx(ev.reel); if (g) g.style.visibility = 'hidden'; }
 	};
 	sfx('wild_stack_merge', { throttle: 250 });
 	if (ev.instant) render(); else await stackIn(ev.reel, render, react); // singles ease together → crossfade into the full-reel elf (turbo: squash → flash → pop)
-	await combineInto(flying, ovMx(ev.reel));
+	const mx = ovMx(ev.reel);
+	if (mx) mx.style.visibility = '';
+	await flyGems(flying, mx, parts, ev.value, ev.value >= 8, true, 'add');
+	clearCoveredGems();
 	await wait(250);
 }
 

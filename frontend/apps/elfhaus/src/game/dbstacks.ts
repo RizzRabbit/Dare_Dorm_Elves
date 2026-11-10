@@ -29,6 +29,9 @@ let built = 0, disposed = 0;
 type Live = { name: string; arms: PixiArmatureDisplay[]; root: Container; anim: string; t: number; blinkAt: number; cv: HTMLCanvasElement; W: number; H: number; gf: Filter | null; ga: number };
 const lives = new Map<HTMLElement, Live>();
 const byCv = new WeakMap<HTMLCanvasElement, Live>();
+// One decaying tilt on hat / hair bones after a merge settles. Offset, not the root: the board mirror
+// rewrites the rig root's matrix every frame, so a root rotation would be thrown away.
+const nudges = new Map<HTMLElement, { amp: number; until: number }>();
 const starting = new Map<HTMLElement, Promise<boolean>>();
 const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const flushDb = (dt: number) => { try { PixiFactory.advanceTime(dt); } catch (e) { crumb('db-flush', { msg: scrub((e as Error)?.message || String(e)) }); } };
@@ -43,6 +46,13 @@ function step() {
 		L.t += dt;
 		if (L.t > L.blinkAt) { L.blinkAt = L.t + 2.4 + Math.random() * 2.6; face(L, 'blink'); }
 		for (const d of L.arms) d.armature.advanceTime(reduced() ? 0 : dt);
+		const nudge = nudges.get(ov);
+		if (nudge) {
+			const left = nudge.until - now;
+			try { settleBones(L, left > 0 ? Math.sin(left / 90) * nudge.amp * Math.min(1, left / 400) : 0); }
+			catch { /* a rig without those bones still settles on the overlay */ }
+			if (left <= 0) nudges.delete(ov);
+		}
 		// win glow (silhouette filter) eases in / out with the overlay's .win
 		const want = ov.classList.contains('win') ? 1 : 0;
 		L.ga += (want - L.ga) * Math.min(1, dt * 10);
@@ -165,13 +175,16 @@ export function dbSnapshot(ov: HTMLElement): HTMLCanvasElement | null {
 	const L = lives.get(ov); const a = stageApp(); if (!L || !a) return null;
 	const keep = { p: L.root.parent, f: L.root.filters, x: L.root.x, y: L.root.y, sx: L.root.scale.x, sy: L.root.scale.y, r: L.root.rotation, v: L.root.visible };
 	L.root.filters = []; L.root.position.set(0, 0); L.root.scale.set(1); L.root.rotation = 0; L.root.visible = true;
+	// Off the board stage while extracting. An on-stage rig shares the stage render group; detaching makes the
+	// read a picture of this rig now, not whatever the stage presented last.
+	if (keep.p) L.root.removeFromParent();
 	// height budget matches the old `min(2, 1024 / H)`; width is capped too (riglife.snapshotPixels)
 	const { r } = snapshotPixels(L.W, L.H);
 	let c: HTMLCanvasElement | null = null;
 	try { c = a.renderer.extract.canvas({ target: L.root, frame: new Rectangle(0, 0, L.W, L.H), resolution: r }) as HTMLCanvasElement; }
 	catch (e) { c = null; crumb('snapshot', { msg: scrub((e as Error)?.message || String(e)) }); }
 	L.root.filters = keep.f; L.root.position.set(keep.x, keep.y); L.root.scale.set(keep.sx, keep.sy); L.root.rotation = keep.r; L.root.visible = keep.v;
-	if (keep.p && L.root.parent !== keep.p) keep.p.addChild(L.root);
+	if (keep.p) keep.p.addChild(L.root);
 	return c;
 }
 function fade(L: Live, anim: string, t = 0.25) {
@@ -185,8 +198,25 @@ function face(L: Live, kind: 'blink' | 'laugh') {
 	}
 }
 export function dbHas(ov: HTMLElement) { return lives.has(ov); }
+/** Brief secondary bounce on hat and hair bones, then back to whatever the body animation is doing. */
+export function dbNudge(ov: HTMLElement, amp: number, sec = 0.4) {
+	if (!lives.has(ov)) return;
+	nudges.set(ov, { amp, until: performance.now() + sec * 1000 });
+}
+function settleBones(L: Live, wave: number) {
+	type BoneLike = { name?: string; offset?: { rotation: number }; invalidUpdate?: () => void };
+	for (const d of L.arms) {
+		const bones = d.armature.getBones() as BoneLike[];
+		for (const b of bones) {
+			const name = String(b.name || '').toLowerCase();
+			if (!/hair|hat|bun|pony|bang|tuft|bow/.test(name) || !b.offset) continue;
+			b.offset.rotation = wave;
+			b.invalidUpdate?.();
+		}
+	}
+}
 export function dbStop(ov: HTMLElement) {
-	const L = lives.get(ov); if (!L) return; lives.delete(ov);
+	const L = lives.get(ov); if (!L) return; lives.delete(ov); nudges.delete(ov);
 	byCv.delete(L.cv); L.cv.remove(); ov.querySelector(':scope > img.stk_glow')?.remove();
 	L.root.removeFromParent();
 	if (L.gf) { try { L.root.filters = []; L.gf.destroy(); } catch { /* already destroyed */ } L.gf = null; }

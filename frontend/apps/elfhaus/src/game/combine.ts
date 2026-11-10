@@ -13,16 +13,34 @@ function layer() {
 	if (!l) { l = document.createElement('div'); l.id = 'flyLayer'; (document.getElementById('root') || document.body).appendChild(l); }
 	return l;
 }
-/** Snapshot multipliers where they are now (call before the DOM under them is replaced). */
+/** Hide a multiplier so the board mirror drops its glyph on the next tick (visibility, not only opacity). */
+export function hideGem(m: HTMLElement | null) {
+	if (!m) return;
+	m.style.visibility = 'hidden';
+	m.style.opacity = '0';
+}
+/** Cell multipliers sitting under a full-reel or merged overlay: hide them so they cannot float over the new art. */
+export function clearCoveredGems() {
+	document.querySelectorAll<HTMLElement>('.cell').forEach((el) => {
+		const hid = el.style.visibility === 'hidden' || (el as HTMLElement).hidden;
+		if (!hid) return;
+		el.querySelectorAll<HTMLElement>('.mx').forEach(hideGem);
+	});
+}
+/** Snapshot multipliers where they are now (call before the DOM under them is replaced).
+ *  The originals are hidden in the same turn so the Pixi badge glyphs leave with them. */
 export function grab(mxs: (HTMLElement | null)[]) {
-	return [...new Set(mxs)].filter((m): m is HTMLElement => !!m && !!m.offsetParent).map((m) => {
+	const src = [...new Set(mxs)].filter((m): m is HTMLElement => !!m && !!m.offsetParent);
+	const clones = src.map((m) => {
 		const r = toStage(m.getBoundingClientRect()), c = m.cloneNode(true) as HTMLElement;
 		c.querySelectorAll('canvas').forEach((x) => x.remove());
 		c.classList.add('fly');
-		c.style.cssText = `position:absolute;left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;right:auto;bottom:auto;margin:0;translate:none`;
+		c.style.cssText = `position:absolute;left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;right:auto;bottom:auto;margin:0;translate:none;visibility:visible`;
 		layer().appendChild(c);
 		return c;
 	});
+	src.forEach(hideGem);
+	return clones;
 }
 export async function combineInto(clones: HTMLElement[], target: HTMLElement | null) {
 	if (!target || !clones.length) { clones.forEach((c) => c.remove()); return; }

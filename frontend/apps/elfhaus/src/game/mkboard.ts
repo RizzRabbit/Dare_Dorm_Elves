@@ -237,13 +237,24 @@ function css(el: HTMLElement | null, o: Record<string, string | number>) {
 /** Board cell (stage px, whole px for the strip engine) for this layout. */
 export function mkCell() { G = mkGeo(); return Math.max(1, Math.floor(CELL * G.bs * G.k)); }
 
-/** v3.17: armTag label: the full mode name if it fits the pill's room next to SPIN, else its abbreviation (data-short). */
+/** Size the armed-mode pill to its full title (9-slice sprite follows the box). Abbreviates only when the
+ *  full name would still collide with SPIN after the pill has used all of the available gap. */
 export function fitArmTag() {
 	const tag = document.getElementById('armTag'), t = tag?.querySelector('.t') as HTMLElement | null;
 	if (!tag || !t || tag.classList.contains('hidden')) return;
-	t.textContent = tag.dataset.full || t.textContent;
-	if (tag.scrollWidth > tag.clientWidth + 1)
-		t.textContent = tag.dataset.short || t.textContent;
+	const full = tag.dataset.full || t.textContent || '', short = tag.dataset.short || full;
+	const max = parseFloat(tag.style.maxWidth || '') || tag.clientWidth || 0;
+	tag.style.width = 'auto';
+	t.textContent = full;
+	const need = Math.ceil(tag.scrollWidth);
+	if (max && need > max + 1) {
+		t.textContent = short;
+		const shortNeed = Math.ceil(tag.scrollWidth);
+		if (max && shortNeed > max + 1) tag.style.width = max + 'px';
+		else tag.style.width = shortNeed + 'px';
+		return;
+	}
+	tag.style.width = need + 'px';
 }
 
 /** Lay the board, logo, HUD bar, controls and BUY plate out (stage px). cell = the integer cell layoutRaw applied. */
@@ -307,13 +318,15 @@ export function mkPlace(cell: number) {
 	// portrait: the WIN label row is too thin for the pill, so it sits on the bet row instead, in the empty gap between [+]
 	// and SPIN (vertically centred on [+]); it can never touch the WIN value however long that gets
 	const pl = g.mode === 'port' ? rel(g.plus.x + g.plus.s / 2, g.plus.y) : null;
-	const left0 = pl ? pl.x : wl.x + lsz * 2.8;
-	const maxW = Math.max(hP * 2, right - (left0 + Math.max(L(14), 6 / ST.s)));
+	const left0 = pl ? pl.x : wl.x + lsz * 1.6;
+	const maxW = Math.max(hP * 2.4, right - (left0 + Math.max(L(8), 4 / ST.s)));
 	const cy = pl ? pl.y : Math.max(hP / 2 + Math.max(L(6), 3 / ST.s), wl.y + lsz * 0.6);
+	// Use as much of the gap toward SPIN as we can so the full title ("WILD WINTER SPINS") fits the 9-sliced pill.
+	const padX = Math.max(tf * 0.7, 8 / ST.s);
 	css(tag, { position: 'absolute', left: 'auto', right: (L(h.w) - right) + 'px', top: cy + 'px', bottom: 'auto',
-		translate: '0 -50%', width: 'auto', 'min-width': '0', 'max-width': maxW + 'px', 'min-height': '0', height: hP + 'px', margin: '0',
-		padding: '0 ' + tf * 0.6 + 'px', 'font-size': tf + 'px', 'line-height': '1', 'letter-spacing': '0.04em', 'white-space': 'nowrap', overflow: 'visible',
-		gap: tf * 0.4 + 'px', 'border-radius': hP / 2 + 'px', 'border-width': bwPx(Math.max(1, 1.2 / ST.s)), 'grid-area': 'auto', 'align-items': 'center',
+		translate: '0 -50%', width: 'auto', 'min-width': hP + 'px', 'max-width': maxW + 'px', 'min-height': '0', height: hP + 'px', margin: '0',
+		padding: '0 ' + padX + 'px', 'font-size': tf + 'px', 'line-height': '1', 'letter-spacing': '0.04em', 'white-space': 'nowrap', overflow: 'visible',
+		'display': 'flex', gap: tf * 0.4 + 'px', 'border-radius': hP / 2 + 'px', 'border-width': bwPx(Math.max(1, 1.2 / ST.s)), 'grid-area': 'auto', 'align-items': 'center', 'justify-content': 'center',
 		'--tagPad': Math.max(0, (Math.ceil(Math.min(44, ST.tap) / ST.s) - hP) / 2) + 'px', '--tagMax': maxW + 'px' });
 	fitArmTag();
 	// free-spins bar on the frame's sill, banner over the top row, step toast at the board's foot

@@ -653,3 +653,24 @@ html body #win.meterPunch,html body #strip .m:nth-child(3).meterPunch{
 /* motion pass: spin button press squash (existing ico_stop swap stays in skin.ts) */
 html body #spinBtn.pressed{animation:btnPressMotion .2s cubic-bezier(.3,1.55,.45,1)!important}
 @keyframes btnPressMotion{0%{transform:scale(.84)}60%{transform:scale(1.04)}100%{transform:none}}
+
+/* Buy bonus cards: centre the grid and each card's contents on every layout; keep the multiplier row
+   (price + bet multiple) fully visible; centre the last row when it has fewer cards than the one above. */
+html body #buyMenu .mView{overflow-x:hidden;overflow-y:auto}
+html body #buyMenu .mTrack{padding-bottom:18px}
+html body #buyCards{display:grid;justify-content:center;justify-items:stretch;align-items:stretch;width:100%;margin-left:auto;margin-right:auto}
+html body #buyCards .bcard{align-items:center;justify-content:flex-start;text-align:center;overflow:visible;padding-bottom:12px;min-height:0}
+html body #buyCards .bcard .bArt{display:block;width:100%;margin:0 auto;overflow:hidden}
+html body #buyCards .bcard .bName,html body #buyCards .bcard .bPrice,html body #buyCards .bcard .bX{
+	display:flex;align-items:center;justify-content:center;width:100%;text-align:center;flex-shrink:0;overflow:visible
+}
+html body #buyCards .bcard .bX{padding-top:2px;padding-bottom:2px;line-height:1.2}
+html body.portrait #buyCards{grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+html body.portrait #buyCards .bcard{grid-column:span 2}
+html body.portrait #buyCards .bcard:nth-child(4){grid-column:2 / 4}
+html body.portrait #buyCards .bcard:nth-child(5){grid-column:4 / 6}
+html body.tablet:not(.portrait) #buyCards{grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+html body.tablet:not(.portrait) #buyCards .bcard{grid-column:auto}
+/* Feature-spin arm tag: the gold pill 9-slices to the full mode title, with padding, on every layout. */
+html body.mk #app #armTag{overflow:visible;white-space:nowrap}
+html body.mk #app #armTag .t{overflow:visible;white-space:nowrap;flex:0 0 auto}
