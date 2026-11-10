@@ -33,6 +33,7 @@ import { crumb, scrub, setPhase } from './diag';
 import { bannerLevel } from './bannerLevel';
 import { titleType, titleTypeMirror } from './titletype';
 import { ninePanel, CARD, BTN } from './ninepanel';
+import { uiPixiOn, showFeatureIntro, hideFeatureIntro } from './pixiui';
 // Pauses here use ui.wait: the old pace x ANIM_TEMPO, skippable by tap / Space (tempo.ts); turbo keeps its short values.
 
 const scattersOnBoard = (): Pos[] => S.sym.flatMap((col, reel) => col.map((n, row) => ({ reel, row, n }))).filter((c) => c.n === 'S').map(({ reel, row }) => ({ reel, row }));
@@ -89,7 +90,7 @@ export function startGate(I: HTMLElement, autoMs = 0): Promise<void> {
 /** v3.18b: autoplay with the AUTO-PLAY BONUS toggle on plays bonuses hands-free; otherwise every bonus waits for taps. */
 const handsFree = () => S.auto > 0 && S.autoBonus;
 
-export const endBonusUi = () => { music('base'); setBg(false); document.body.classList.remove('inBonus'); $('#fsBar').classList.add('hidden'); $('#intro').classList.add('hidden'); $('#fsMore').classList.add('hidden'); S.inBonus = false; setPhase('base'); };
+export const endBonusUi = () => { music('base'); setBg(false); document.body.classList.remove('inBonus'); $('#fsBar').classList.add('hidden'); $('#intro').classList.add('hidden'); hideFeatureIntro(); $('#fsMore').classList.add('hidden'); S.inBonus = false; setPhase('base'); };
 
 /** EGW: the reels named by egwStart (reel -> stack value). The math sends them as already-locked full reels in the
  * next reveal; that reveal spins them like any other reel instead (they stop left to right with the normal settle and
@@ -295,11 +296,14 @@ export const bookEventHandlerMap: Handlers = {
 		I.dataset.tier = ev.tier; I.classList.remove('hidden');
 		music('bonus');   // no-op when the trigger already switched it
 		const fx = I.querySelector<HTMLElement>('.bwFx'); featOpen(fx); featPop(I.querySelector('.tierName'));
+		if (uiPixiOn()) showFeatureIntro({ mode: ev.tier === 'hidden' ? 'hidden' : ev.tier, spins: `${ev.totalFs} FREE SPINS` }, () => {
+			(I.querySelector('.cont') as HTMLElement | null)?.click();
+		});
 		// v3.18 (James 2026-10-30): the player starts every bonus with START (or a tap on the card / Space), in turbo
 		// exactly as without it; the old timer advanced it on its own (turbo: ~0.5 s, which read as "starts by itself").
 		// Only autoplay keeps the timed advance. Taps in the first 300 ms are ignored (a slam-stop double tap).
 		await startGate(I, handsFree() ? (S.turbo ? 1400 : 2600) : 0);   // v3.18b: waits for START (autoplay too, count kept) unless AUTO-PLAY BONUS
-		I.onclick = null; I.classList.add('hidden'); featClose(fx); unScatter(); voice('fsstart', { tier: ev.tier });
+		I.onclick = null; I.classList.add('hidden'); hideFeatureIntro(); featClose(fx); unScatter(); voice('fsstart', { tier: ev.tier });
 		showFsBar();
 		$('#fsTier').textContent = TL(ev.tier); $('#fsCount').textContent = `FREE SPIN 0 / ${ev.totalFs}`;
 	},

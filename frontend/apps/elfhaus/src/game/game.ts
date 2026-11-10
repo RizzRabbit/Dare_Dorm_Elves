@@ -48,6 +48,7 @@ import { applyLayers } from './layers';
 import { startMirror } from './board/mirror';
 import { startFsBanner } from './board/banners';
 import { loadAllFx } from './fx';
+import { initUiPixi, uiPixiOn, setBuyHooks, paintBuyMenu, showBuyMenu, hideBuyMenu, showBuyConfirm, hideBuyConfirm } from './pixiui';
 import { startSpin, abortSpin, hurry } from './reels';
 import { hideRespin } from './respin';
 import type { BookEvent } from './typesBookEvent';
@@ -348,22 +349,31 @@ async function playReplay() {
 const MYSTERY_CARD = () =>
 	`<span class="bMystFan" aria-hidden="true">${ART.L3_flat || ART.L3 ? `<img class="gift" src="${ART.L3_flat || ART.L3}" alt="" draggable="false">` : ''}` +
 	`<b class="bMystQ"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17"/><text x="20" y="28.5" text-anchor="middle">?</text></svg></b></span>`;
+function pickBuy(m: ModeKey) {
+	if (modeCost(m) * bet() > S.balance + 1e-9) return;
+	if (armed === m) { pickArm(null); sfx('ui_click_new'); paintBuy(); return; } // tap the active card again to turn it off (back to base: no confirm)
+	// v3.13 (James + Stake approval: a mode above CONFIRM_ABOVE_X the base bet is confirmed before it activates): the
+	// confirm card (feature, art, short description, amount per spin, CONFIRM; tap outside / Esc = back to the menu).
+	// Nothing is charged on CONFIRM either: the mode is armed and the spin button is the one tap that spends.
+	if (modeCost(m) > CONFIRM_ABOVE_X) openConfirm(m); else activate(m);
+}
 function buildBuy() {
 	const off = !!S.jur.disabledBuyFeature;
 	$('#buyTitle').textContent = t('buyTitle');
+	if (uiPixiOn()) {
+		$('#buyCards').classList.add('hidden');
+		$('#buyCards').innerHTML = '';
+		paintBuy();
+		return;
+	}
 	$('#buyCards').classList.toggle('hidden', off);
 	$('#buyCards').innerHTML = off ? '' : BUY_MODES.map((m) => {
 		return `<button class="bcard" data-m="${m}" aria-pressed="false"><span class="bArt">${m === 'mystery' ? MYSTERY_CARD() : elvesHTML(m)}</span>` +
 			`<span class="bName">${titleHTML(m, MODE_LABEL[m].toUpperCase())}</span><span class="bPrice"></span><span class="bX">${mult(modeCost(m))}</span></button>`;
 	}).join('');
 	$('#buyCards').querySelectorAll<HTMLElement>('.bcard').forEach((b) => (b.onclick = () => {
-		const m = b.dataset.m as ModeKey;
 		if (b.classList.contains('off')) return;
-		if (armed === m) { pickArm(null); sfx('ui_click_new'); return; } // tap the active card again to turn it off (back to base: no confirm)
-		// v3.13 (James + Stake approval: a mode above CONFIRM_ABOVE_X the base bet is confirmed before it activates): the
-		// confirm card (feature, art, short description, amount per spin, CONFIRM; tap outside / Esc = back to the menu).
-		// Nothing is charged on CONFIRM either: the mode is armed and the spin button is the one tap that spends.
-		if (modeCost(m) > CONFIRM_ABOVE_X) openConfirm(m); else activate(m);
+		pickBuy(b.dataset.m as ModeKey);
 	}));
 	paintBuy();
 }
@@ -377,26 +387,34 @@ const copyCtx = (): CopyCtx => ({
  *  (pickArm), never on the preview. A bonus closes the menu (no banner, v3.17: the armTag by SPIN is the indicator); Ante switches on in place. */
 function activate(m: ModeKey) {
 	if (m === 'ante') { pickArm(null, true); paintBuy(); sfx('ui_mode_arm'); return; }
-	pickArm(m); sfx('ui_mode_arm'); closePanel('#buyMenu', true);
+	closePanel('#buyMenu', true); hideBuyMenu(); pickArm(m); sfx('ui_mode_arm');
 	// v3.17 (James 02:32): no on-board 'MODE ON · $x PER SPIN' banner; the only armed indicator is the small armTag by SPIN
 	// (mode name + x); the price is in the HUD bet and on the confirm card
 }
 let confirming: ModeKey | null = null;
 /** CONFIRM on the bonus confirm card (only from the click handler on #bmConfirm, v3.13e). */
-function confirmYes() { const m = confirming; closePanel('#bmConfirm', true); confirming = null; if (m) activate(m); }
+function confirmYes() { const m = confirming; closePanel('#bmConfirm', true); confirming = null; hideBuyConfirm(); if (m) activate(m); }
 function openConfirm(m: ModeKey) {
 	confirming = m;
 	const c = confirmCopy(m as CopyMode, copyCtx(), MODE_LABEL[m], money(modeCost(m) * bet()), mult(modeCost(m)));
 	const art = $('.cfArt');
-	art.innerHTML = m === 'mystery' ? MYSTERY_CARD() : elvesHTML(m);
-	art.dataset.m = m; art.classList.toggle('hidden', !art.innerHTML);
+	if (!uiPixiOn()) {
+		art.innerHTML = m === 'mystery' ? MYSTERY_CARD() : elvesHTML(m);
+		art.dataset.m = m; art.classList.toggle('hidden', !art.innerHTML);
+	} else { art.innerHTML = ''; }
 	$('#cfName').textContent = c.title; $('#cfDesc').textContent = c.desc;
 	$('#cfAmount').textContent = c.amount; $('#cfPer').textContent = c.per; $('#cfX').textContent = c.x;
 	$('#cfNote').textContent = c.note; $('#cfYes').textContent = c.button; $('#cfHint').textContent = c.hint;
 	sfx('ui_click_new'); openPanel('#bmConfirm');
+	if (uiPixiOn()) showBuyConfirm({ mode: m, title: c.title, desc: c.desc, amount: c.amount, per: c.per, x: c.x, note: c.note, button: c.button, hint: c.hint });
 }
+
 /** Live state: prices at the current bet, affordability, armed card, Ante switch. */
+let paintingBuy = false;
 function paintBuy() {
+	if (paintingBuy) return;
+	paintingBuy = true;
+	try {
 	$('#bmBetV').textContent = money(bet()); $('#bmBet small').textContent = isSocial() ? 'PLAY AMOUNT' : t('betLabel');
 	$('#anteCost').textContent = `${money(modeCost('ante') * bet())} · ${fmtX(ANTE_COST)}${isSocial() ? ' play' : ' bet'}`; // v3.15b: live price like the cards
 	($('#bmDown') as HTMLButtonElement).disabled = S.busy || S.betIdx <= 0;
@@ -410,12 +428,30 @@ function paintBuy() {
 		b.classList.toggle('off', price > S.balance + 1e-9);
 		b.classList.toggle('armed', armed === m); b.setAttribute('aria-pressed', String(armed === m));
 	});
+	if (uiPixiOn()) paintBuyMenu({
+		social: isSocial(),
+		betLabel: isSocial() ? 'PLAY AMOUNT' : t('betLabel'),
+		betValue: money(bet()),
+		anteOn: S.ante,
+		anteCost: `${money(modeCost('ante') * bet())} · ${fmtX(ANTE_COST)}${isSocial() ? ' play' : ' bet'}`,
+		turboOn: !!S.turbo,
+		turboHidden: !!S.jur.disabledTurbo,
+		buyOff: !!S.jur.disabledBuyFeature,
+		canBetDown: !(S.busy || S.betIdx <= 0),
+		canBetUp: !(S.busy || S.betIdx >= S.levels.length - 1),
+		cards: BUY_MODES.map((m) => {
+			const price = modeCost(m) * bet();
+			return { mode: m, price: money(price), x: mult(modeCost(m)), off: price > S.balance + 1e-9, armed: armed === m };
+		}),
+	});
+	} finally { paintingBuy = false; }
 }
 function syncTurbo() {
 	const on = !!S.turbo, sw = $('#turboSw');
 	$('#turboBtn').classList.toggle('on', on); $('#turboBtn').setAttribute('aria-pressed', String(on));
 	sw.classList.toggle('on', on); sw.setAttribute('aria-checked', String(on));
 	syncTempo();
+	if (uiPixiOn() && isOpen('#buyMenu')) paintBuy();
 }
 function setTurbo(on: boolean) { if (S.jur.disabledTurbo) return; S.turbo = on; syncTurbo(); }
 function betStep(d: number) {
@@ -591,8 +627,18 @@ function wire() {
 		// on blur a valid amount is tidied to the money decimals rule (2 places; more only below one unit when significant)
 		el.onchange = () => { const v = parseAmt(el.value); if (v > 0) { el.value = amountStr(v); readStops(); } };
 	});
-	registerPanel('#buyMenu', { onClose: () => { sfx('ui_buy_close'); closePanel('#bmConfirm', true); } });
-	registerPanel('#bmConfirm', { onClose: () => { confirming = null; } });
+	(globalThis as any).__elfBuyConfirmYes = confirmYes;
+	setBuyHooks({
+		onCard: (m) => pickBuy(m),
+		onBet: (d) => { betStep(d); paintBuy(); setStrip(); },
+		onAnte: () => $('#anteSw').click(),
+		onTurbo: () => setTurbo(!S.turbo),
+		onClose: () => closePanel('#buyMenu'),
+		onConfirmYes: () => confirmYes(),
+		onConfirmCancel: () => closePanel('#bmConfirm'),
+	});
+	registerPanel('#buyMenu', { onClose: () => { sfx('ui_buy_close'); closePanel('#bmConfirm', true); hideBuyConfirm(); hideBuyMenu(); } });
+	registerPanel('#bmConfirm', { onClose: () => { confirming = null; hideBuyConfirm(); } });
 	{ // 'Tap anywhere to cancel': any tap on the confirm overlay or card cancels, except CONFIRM itself (a drag is not a tap).
 		// v3.13e (FSD B1/M1): touch target adjustment can retarget a tap near CONFIRM (e.g. on the hint) onto #cfYes and
 		// shifts the click's coordinates, so neither the click target nor the click point is trusted. CONFIRM needs a
@@ -614,7 +660,7 @@ function wire() {
 	}
 	registerPanel('#autoMenu'); registerPanel('#menu', { onClose: () => ($('#menuBtn') as HTMLElement).focus({ preventScroll: true }) }); // v3.15b (F1)
 	registerPanel('#msg', { closable: false }); registerPanel('#resumeCard', { closable: false }); // v3.16c
-	$('#buyBtn').onclick = () => { sfx('ui_buy_open'); buildBuy(); openPanel('#buyMenu'); };
+	$('#buyBtn').onclick = () => { sfx('ui_buy_open'); buildBuy(); openPanel('#buyMenu'); if (uiPixiOn()) showBuyMenu(); };
 	initSettings(() => { buildRules(); openPanel('#menu'); });
 	initSettingsPanel(() => !!S.turbo, () => setTurbo(!S.turbo));
 	$('#replayPlay').onclick = () => playReplay();
@@ -685,6 +731,7 @@ export async function initGame() {
 	track(document.fonts?.ready ?? Promise.resolve());
 	buildCells(); S.sym = IDLE.map((c) => [...c]); S.vals = new Map([[2 * 4 + 2, 1]]);
 	track(startMirror()); void startFsBanner();   // fix8: the board's symbols are drawn by the board stage (board/mirror.ts)
+	track(initUiPixi());   // chunk 1: buy menu, confirm, feature intro on the Pixi UI overlay
 	if (url.replay) document.body.classList.add('replay');   // v21 (review #193): replay styling is in place before the first layout
 	wire(); layout(); setBusy(true);
 	try {

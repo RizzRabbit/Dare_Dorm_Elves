@@ -716,3 +716,19 @@ html body #bmConfirm .cfArt{
 }
 html body #bmConfirm .cfArt img.elfCut{max-height:min(28vh,200px)}
 html body.portrait #bmConfirm .cfArt img.elfCut{max-height:min(24vh,160px)}
+
+
+/* Pixi UI overlay (chunk 1): the buy menu, confirm and feature intro are drawn on #uiStage.
+   Their DOM shells stay for state, a11y and keyboard (startGate / Esc / Space), but the painted
+   cards and dim are hidden so they don't sit on top of the canvas. */
+html body.pixiUi #uiStage{position:fixed;inset:0;pointer-events:none}
+html body.pixiUi #buyMenu>.modal,
+html body.pixiUi #bmConfirm>.modal,
+html body.pixiUi #intro>.card,
+html body.pixiUi #intro>.bwFx,
+html body.pixiUi #buyMenu>*,
+html body.pixiUi #bmConfirm>*,
+html body.pixiUi #intro>*{display:none!important}
+html body.pixiUi #buyMenu,
+html body.pixiUi #bmConfirm,
+html body.pixiUi #intro{background:transparent!important;pointer-events:none!important}
