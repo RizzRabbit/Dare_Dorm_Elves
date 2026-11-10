@@ -1,3 +1,4 @@
+import { playMotion, cancelMotion } from './board/motion';
 // v3.13 (James 2026-10-26): shared panel behaviour for the menu (settings + rules), bonus menu, autoplay, the bonus
 // confirm card and the message box.
 //  - Calm open / close: opacity on the backdrop, opacity + a small translate3d/scale on the card (about 2x slower than
@@ -157,7 +158,12 @@ export function openPanel(sel: string) {
 	clearTimeout(p.timer);
 	const was = isOpen(sel);
 	p.el.classList.remove('hidden', 'pOut');
-	if (!was) { void p.el.offsetWidth; p.el.classList.add('pIn'); p.scroller?.reset(); }
+	if (!was) {
+		p.el.classList.add('pIn'); p.scroller?.reset();
+		cancelMotion(p.el); const m = p.el.querySelector<HTMLElement>(':scope>.modal'); cancelMotion(m);
+		playMotion(p.el, [{ opacity: 0 }, { opacity: 1 }], { duration: 520, easing: 'ease-out', fill: 'both' });
+		if (m) playMotion(m, reduced() ? [{ opacity: 0 }, { opacity: 1 }] : [{ opacity: 0, transform: 'translate(0,14px) scale(.985)' }, { opacity: 1, transform: 'none' }], { duration: 520, easing: reduced() ? 'ease-out' : 'cubic-bezier(.22,.7,.3,1)', fill: 'both' });
+	}
 	const i = order.indexOf(sel); if (i >= 0) order.splice(i, 1); order.push(sel);
 	requestAnimationFrame(() => p.scroller?.measure());
 }
@@ -166,6 +172,9 @@ export function closePanel(sel: string, silent = false) {
 	const p = panels.get(sel); if (!p || !isOpen(sel)) return;
 	const i = order.indexOf(sel); if (i >= 0) order.splice(i, 1);
 	p.el.classList.remove('pIn'); p.el.classList.add('pOut');
+	{ const m = p.el.querySelector<HTMLElement>(':scope>.modal'); cancelMotion(p.el); cancelMotion(m);
+	  playMotion(p.el, [{ opacity: 1 }, { opacity: 0 }], { duration: 460, easing: 'ease-in', fill: 'forwards' });
+	  if (m && !reduced()) playMotion(m, [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translate(0,10px) scale(.99)' }], { duration: 460, easing: 'ease-in', fill: 'forwards' }); }
 	if (!silent) p.onClose?.();
 	p.timer = setTimeout(() => { p.el.classList.add('hidden'); p.el.classList.remove('pOut'); }, reduced() ? CLOSE_MS * 0.6 : CLOSE_MS);
 }

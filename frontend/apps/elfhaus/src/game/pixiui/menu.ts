@@ -1,3 +1,4 @@
+import { poseOf } from '../board/motion';
 // Pixi settings pop-out, settings panel, game-info chrome, and autoplay panel.
 // DOM stays the state / timing / input / a11y model. Rules body HTML is unchanged
 // and stays a live scroll window so touch + wheel keep working (panels.ts Scroller).
@@ -57,6 +58,9 @@ function rec(el: Element | null): Box | null {
 
 function opacityOf(el: HTMLElement | null) {
 	if (!el) return 0;
+	return baseOpacity(el) * (poseOf(el)?.op ?? 1);
+}
+function baseOpacity(el: HTMLElement) {
 	if (el.classList.contains('hidden')) return 0;
 	const inline = el.style.opacity;
 	if (inline) {

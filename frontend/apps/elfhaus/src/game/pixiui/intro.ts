@@ -129,8 +129,8 @@ export function showFeatureIntro(s: IntroState, start: () => void) {
 	last = s;
 	onStart = start;
 	shownAt = performance.now();
-	layout();
 	root.visible = true;
+	try { layout(); } catch (e) { console.warn('feature intro layout', e); }
 	if (dim) dim.visible = true;
 	setUiTier('modal');
 	uiInteractive(true);

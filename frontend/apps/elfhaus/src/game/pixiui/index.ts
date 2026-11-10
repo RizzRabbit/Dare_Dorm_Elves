@@ -12,6 +12,8 @@ import { initWins, winsVisible, relaxUiTier, playCardFlip } from './wins';
 import { initPanels } from './menu';
 import { banner, toast, hideToast, bigWin } from '../ui';
 import { maxWinCelebration } from '../maxwin';
+import { motionLive, motionSamples } from '../board/motion';
+import { reelMoving } from '../reelpose';
 import { titleType, titleTypeMirror } from '../titletype';
 import { ninePanel, CARD } from '../ninepanel';
 
@@ -155,5 +157,12 @@ function installBounds() {
 			if (t) t.textContent = title; if (b) b.textContent = body; M?.classList.remove('hidden');
 		},
 		hideMsg: () => document.getElementById('msg')?.classList.add('hidden'),
+		motion: () => {
+			const m = motionSamples(40);
+			const r = (v: number, k = 4) => +(Number.isFinite(v) ? v : 0).toFixed(k);
+			const samples = m.out.map((s, i) => ({ id: String(i) + ':' + s.cls, cls: s.cls, jobs: s.jobs, sx: r(s.p.sx), sy: r(s.p.sy), tx: r(s.p.tx), ty: r(s.p.ty), px: r(s.p.px, 2), py: r(s.p.py, 2), rot: r(s.p.rot, 3), op: r(s.p.op, 3), lift: r(s.p.lift, 3) }));
+			const sting = document.getElementById('sting'), cv = sting?.querySelector('canvas');
+			return { live: motionLive(), reel: reelMoving(), n: m.total, samples, sting: !!cv, stingW: cv?.width || 0, stingH: cv?.height || 0 };
+		},
 	};
 }

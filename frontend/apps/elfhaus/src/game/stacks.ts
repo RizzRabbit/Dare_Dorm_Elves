@@ -30,6 +30,7 @@
 import { dbKnown, dbPlay, dbStop, initDbStacks, rigName } from './dbstacks';
 import { loadSheet, unloadSheet, play, hasSheet, stop, type Atlas, type Anim } from './sprite';
 import { voice } from './voice';
+import { playMotion } from './board/motion';
 
 export type StackAnim = 'stack_form' | 'merge_join' | 'letters_ignite' | 'merge_idle' | 'merge_win';
 const DIR = 'assets/stacks/', FREE_MS = 4000, PIN_MS = 20000;
@@ -185,7 +186,7 @@ function endBlend(ov: HTMLElement) {
 	c.className = 'stk stkBlend'; c.setAttribute('aria-hidden', 'true'); c.style.cssText = src.style.cssText + ';position:absolute;pointer-events:none;z-index:3';
 	if (!c.style.inset && !c.style.left) c.style.inset = '0';
 	ov.appendChild(c);
-	c.animate([{ opacity: 1 }, { opacity: 1, offset: 0.15 }, { opacity: 0 }], { duration: 220, easing: 'cubic-bezier(.37,0,.63,1)', fill: 'forwards' }).finished.catch(() => {}).finally(() => c.remove());
+	playMotion(c as unknown as HTMLElement, [{ opacity: 1 }, { opacity: 1, offset: 0.15 }, { opacity: 0 }], { duration: 220, easing: 'cubic-bezier(.37,0,.63,1)', fill: 'forwards' }).finished.catch(() => {}).finally(() => c.remove());
 }
 export function stackOnce(a: 'stack_form' | 'merge_join', ov: HTMLElement) {
 	return new Promise<void>((res) => {

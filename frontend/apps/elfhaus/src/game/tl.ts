@@ -5,6 +5,7 @@ import { gsap } from 'gsap';
 const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const live = new WeakMap<HTMLElement, gsap.core.Timeline>();
 function enter(ov: HTMLElement) {
+	return; // Pixi UI owns sign entrances (pixiui/intro.ts, pixiui/wins.ts). DOM GSAP would be invisible / fight the stage.
 	if (reduced()) return;
 	const card = ov.querySelector<HTMLElement>('.card, .bw'), fx = ov.querySelector<HTMLElement>('.bwFx');
 	if (!card) return;

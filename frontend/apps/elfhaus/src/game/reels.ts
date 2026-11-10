@@ -20,6 +20,10 @@ import { S, ART } from './ui';
 import { ROWS, REELS } from './config';
 import { SPIN_TEMPO, STOP_TEMPO } from './tempo';
 import { sfx, loop, type Handle } from './audio';
+import { setSlotPose, clearSlotPose, setReelMoving } from './reelpose';
+import { kick } from './board/stage';
+import { mirrorChanged } from './board/mirror';
+import { hasMotion, poseOf } from './board/motion';
 // sound (v3.8): spin start + spin bed on every spin / respin (no bed in turbo); a stop per cell (turbo: the last one, quieter)
 let bed: Handle | null = null;
 const spinSound = () => { sfx('reel_spin_start'); bed?.stop(); bed = S.turbo ? null : loop('reel_spin_loop'); };
@@ -159,7 +163,9 @@ function paint(C: Cell, at: number, pitch: number) {
 	for (let n = base - 1; n <= base + 1; n++) {
 		const sl = C.slots[((n % 3) + 3) % 3];
 		if (sl.n !== n) setSlot(C, sl, n);
-		sl.style.transform = `translate3d(0,${((at - n) * pitch).toFixed(2)}px,0)`;
+		// Visual motion is the Pixi slot pose (reelpose), not a CSS transform on the host.
+		// full-speed stretch (old .sl scale: 1 calc(1 + .22 * --tr)), centred on the unit
+		setSlotPose(sl, (at - n) * pitch, reduced() ? 1 : 1 + 0.22 * (C.tr || 0));
 	}
 }
 function frame(now: number) {
@@ -174,7 +180,8 @@ function frame(now: number) {
 		const k = Math.round(Math.max(0, Math.min(1, (Math.abs(m.v) / C.p.v - 0.55) / 0.45)) * 20) / 20;
 		if (k !== C.tr) { C.tr = k; C.win.style.setProperty('--tr', String(k)); }
 	}
-	if (cells.size) raf = requestAnimationFrame(frame);
+	if (cells.size) { setReelMoving(true); mirrorChanged(); kick(); raf = requestAnimationFrame(frame); }
+	else setReelMoving(false);
 }
 let scSpin = -1, scN = 0;   // scatters landed this spin (scatter_land pitch steps)
 function impact(C: Cell) {
@@ -193,8 +200,9 @@ function finish(C: Cell) {
 	const c = document.getElementById(`c${C.r}${C.row}`);
 	c?.classList.remove('spinning');
 	if (c) { c.style.setProperty('--gd', `-${C.p.set}ms`); c.classList.remove('tGlint'); void c.offsetWidth; c.classList.add('tGlint'); setTimeout(() => c.classList.remove('tGlint'), 500); rigLand(c); }
+	C.slots.forEach((sl) => clearSlotPose(sl));
 	C.el.remove();
-	if (!cells.size) bedOff();
+	if (!cells.size) { setReelMoving(false); bedOff(); }
 	antCheck(C.r);
 	res?.();
 }
@@ -210,7 +218,7 @@ export function spinCells(list: { reel: number; row: number }[]) {
 		seeds.delete(reel + ':' + row);
 		// a popped cell (its symbol burst into snow) starts from its own tile alone: that empty unit scrolls away as the
 		// new units drop in (the popped symbol never reappears, the tile never changes colour)
-		const symEl = c.querySelector(':scope>.sym'), wasPuffed = c.classList.contains('puffed') || !!symEl?.getAnimations().length && getComputedStyle(symEl!).opacity === '0';
+		const symEl = c.querySelector(':scope>.sym'), wasPuffed = c.classList.contains('puffed') || (hasMotion(symEl) && (poseOf(symEl!)?.op ?? 1) < 0.01);
 		const prev = symEl && (symEl.classList.contains('W') ? keyOf('W', reel) : [...symEl.classList].find((x) => /^(H\d|L\d|S)$/.test(x)));
 		const C = makeCell(reel, row, now, host);
 		if (wasPuffed && prev) { C.init = prev; C.empty = true; }
@@ -280,7 +288,7 @@ export function hurry() {
 }
 /** Hard stop (errors / resume): remove the spinners, unhide the cells. */
 export function abortSpin() {
-	cells.forEach((C) => { C.el.remove(); C.res?.(); }); cells.clear(); antOff();
+	cells.forEach((C) => { C.slots.forEach((sl) => clearSlotPose(sl)); C.el.remove(); C.res?.(); }); cells.clear(); setReelMoving(false); antOff();
 	document.querySelectorAll('#cells .cell.spinning').forEach((c) => c.classList.remove('spinning'));
 	spinning = false; bedOff();
 }

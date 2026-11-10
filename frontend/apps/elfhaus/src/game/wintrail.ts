@@ -7,6 +7,7 @@ import { gsap } from 'gsap';
 import { S } from './ui';
 import { loadAtlas, atlasTex } from './scene/atlas';
 import { boardStage, layer, centreOf, kick } from './board/stage';
+import { punchWinMeter } from './pixiui/hud';
 import type { Pos } from './typesBookEvent';
 
 const NAMES = ['puff_flake', 'flake_a', 'spark', 'snow_clump', 'flake_far'] as const;
@@ -35,9 +36,7 @@ function meterEl(): HTMLElement | null {
 
 /** Scale punch on the WIN meter (HUD transform only; sprite text stays). */
 export function meterPunch() {
-	const el = meterEl(); if (!el) return;
-	el.classList.remove('meterPunch'); void el.offsetWidth; el.classList.add('meterPunch');
-	setTimeout(() => el.classList.remove('meterPunch'), 320);
+	try { punchWinMeter(); } catch { /* hud may not be up */ }
 }
 
 /** Frame-local layout px of an element's centre (works for HUD nodes outside #frame too). */

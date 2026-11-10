@@ -7,6 +7,7 @@ import { S } from './ui';
 import { mxBurst } from './fx';
 import { toStage } from './stage';
 import { T } from './tempo';
+import { playMotion } from './board/motion';
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 function layer() {
 	let l = document.getElementById('flyLayer');
@@ -49,7 +50,7 @@ export async function combineInto(clones: HTMLElement[], target: HTMLElement | n
 	const t = toStage(target.getBoundingClientRect()), tx = t.left + t.width * 0.62, ty = t.top + t.height / 2;
 	await Promise.all(clones.map((c, i) => {
 		const r = toStage(c.getBoundingClientRect()), dx = tx - (r.left + r.width * 0.62), dy = ty - (r.top + r.height / 2);
-		return c.animate([
+		return playMotion(c, [
 			{ transform: 'translate(0,0) scale(1)', opacity: 1 },
 			{ transform: `translate(${dx * 0.35}px,${dy * 0.35 - 10}px) scale(1.12)`, opacity: 1, offset: 0.35 },
 			{ transform: `translate(${dx}px,${dy}px) scale(.5)`, opacity: 0.15 },
@@ -58,6 +59,6 @@ export async function combineInto(clones: HTMLElement[], target: HTMLElement | n
 	clones.forEach((c) => c.remove());
 	target.style.visibility = '';
 	mxBurst(target);
-	target.animate([{ transform: 'scale(.55)' }, { transform: 'scale(1.16)', offset: 0.6 }, { transform: 'scale(1)' }], { duration: fast ? 160 : T(320), easing: 'ease-out' });
+	playMotion(target, [{ transform: 'scale(.55)' }, { transform: 'scale(1.16)', offset: 0.6 }, { transform: 'scale(1)' }], { duration: fast ? 160 : T(320), easing: 'ease-out' });
 	await sleep(fast ? 140 : T(300));
 }

@@ -34,6 +34,7 @@ import { bannerLevel } from './bannerLevel';
 import { titleType, titleTypeMirror } from './titletype';
 import { ninePanel, CARD, BTN } from './ninepanel';
 import { uiPixiOn, showFeatureIntro, hideFeatureIntro } from './pixiui';
+import { playMotion } from './board/motion';
 // Pauses here use ui.wait: the old pace x ANIM_TEMPO, skippable by tap / Space (tempo.ts); turbo keeps its short values.
 
 const scattersOnBoard = (): Pos[] => S.sym.flatMap((col, reel) => col.map((n, row) => ({ reel, row, n }))).filter((c) => c.n === 'S').map(({ reel, row }) => ({ reel, row }));
@@ -62,14 +63,15 @@ async function fsMoreCard(added: number) {
 	const calm = !matchMedia('(prefers-reduced-motion: reduce)').matches, f = S.turbo ? 0.5 : 1;
 	const from = { opacity: 0, transform: calm ? 'scale(.92)' : 'none' }, to = { opacity: 1, transform: 'none' };
 	O.classList.remove('hidden');
-	O.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 450 * f, easing: 'ease-out' });
-	card.animate([from, to], { duration: 450 * f, easing: 'cubic-bezier(.2,.8,.3,1)' });
+	playMotion(O, [{ opacity: 0 }, { opacity: 1 }], { duration: 450 * f, easing: 'ease-out' });
+	playMotion(card, [from, to], { duration: 450 * f, easing: 'cubic-bezier(.2,.8,.3,1)' });
 	await Promise.race([hold(800), new Promise<void>((res) => (O.onclick = () => res()))]);
 	O.onclick = null;
 	const out = { duration: 350 * f, easing: 'ease-in', fill: 'forwards' as const };
-	O.animate([{ opacity: 1 }, { opacity: 0 }], out);
-	await card.animate([to, { opacity: 0, transform: calm ? 'scale(.96)' : 'none' }], out).finished.catch(() => {});
-	O.classList.add('hidden'); O.getAnimations().forEach((a) => a.cancel()); card.getAnimations().forEach((a) => a.cancel());
+	const oOut = playMotion(O, [{ opacity: 1 }, { opacity: 0 }], out);
+	const cOut = playMotion(card, [to, { opacity: 0, transform: calm ? 'scale(.96)' : 'none' }], out);
+	await cOut.finished;
+	O.classList.add('hidden'); oOut.cancel(); cOut.cancel();
 }
 const unScatter = () => { document.querySelectorAll('.cell').forEach((c) => c.classList.remove('win', 'dim')); clearSymWins(); };
 /** Wilds that stay for the bonus: lock them in place on the current board (no re-render, so nothing jumps). */
@@ -325,13 +327,13 @@ export const bookEventHandlerMap: Handlers = {
 			renderOverlays(false);
 			const ov = document.querySelector<HTMLElement>(`.ov.full[data-reel="${st.reel}"]`);
 			const cells = Array.from({ length: ROWS }, (_, row) => cellEl(st.reel, row)), base = S.turbo ? 220 : 600, dur = S.turbo ? base : base * tempo(); // wait() applies the tempo itself
-			if (ov) { ov.animate([{ opacity: 0 }, { opacity: 1 }], { duration: dur, easing: 'cubic-bezier(.3,.1,.3,1)' }); ovArt(ov).forEach((e) => e.animate([{ transform: 'scale(1.03)' }, { transform: 'none' }], { duration: dur, easing: 'cubic-bezier(.3,.1,.3,1)' })); }
-			cells.forEach((el) => el.animate([{ opacity: 1 }, { opacity: 1, offset: 0.4 }, { opacity: 0 }], { duration: dur, easing: 'ease-in-out', fill: 'forwards' }));
+			if (ov) { playMotion(ov, [{ opacity: 0 }, { opacity: 1 }], { duration: dur, easing: 'cubic-bezier(.3,.1,.3,1)' }); ovArt(ov).forEach((e) => playMotion(e as HTMLElement, [{ transform: 'scale(1.03)' }, { transform: 'none' }], { duration: dur, easing: 'cubic-bezier(.3,.1,.3,1)' })); }
+			const fades = cells.map((el) => playMotion(el, [{ opacity: 1 }, { opacity: 1, offset: 0.4 }, { opacity: 0 }], { duration: dur, easing: 'ease-in-out', fill: 'forwards' }));
 			frameIn(ov, S.turbo ? 0 : base * 0.5);
 			sfx('wild_stack_merge', { throttle: 250 });
 			wfExpand(ov); // top shine only (v3.11: no per-reel elf expand sheet)
 			await Promise.all([combineInto(flying, ovMx(st.reel)), wait(base)]);
-			cells.forEach((el) => { el.getAnimations().forEach((a) => a.cancel()); el.style.visibility = 'hidden'; });
+			fades.forEach((a) => a.cancel()); cells.forEach((el) => { el.style.visibility = 'hidden'; });
 			await wait(S.turbo ? 150 : 350);
 		}
 		lockCarried(ev.locked);

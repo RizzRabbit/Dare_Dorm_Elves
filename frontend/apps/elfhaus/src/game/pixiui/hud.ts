@@ -114,6 +114,10 @@ function paintBtn(b: HudBtn, el: HTMLElement, r: { x: number; y: number; w: numb
 	} catch { /* */ }
 	hit(b, r.w, r.h);
 	b.alpha = dis ? 0.55 : 1;
+	const pk = kOf(idOf(b));
+	b.pivot.set(r.w / 2, r.h / 2);
+	b.position.set(r.x + r.w / 2, r.y + r.h / 2);
+	b.scale.set(pk);
 }
 
 function idOf(b: HudBtn) {
@@ -254,6 +258,10 @@ function paintSpin() {
 	} catch { /* */ }
 	spinIco.position.set(r.w / 2, r.h / 2);
 	spin.alpha = dis ? 0.7 : 1;
+	const sk = kOf('spinBtn');
+	spin.pivot.set(r.w / 2, r.h / 2);
+	spin.position.set(r.x + r.w / 2, r.y + r.h / 2);
+	spin.scale.set(sk);
 	const n = $('autoN')?.textContent || '';
 	if (autoNSpr) {
 		if (autoNSpr.parent) autoNSpr.parent.removeChild(autoNSpr);
@@ -370,6 +378,7 @@ function paintFields() {
 		const key = wordKey(lab?.textContent || (id === 'bet' ? 'BET' : id.toUpperCase()));
 		if (lr && key) f.lab = placeWord(f.root, f.lab, key, lr, true, align);
 		f.val = placeBm(f.root, f.val, (span?.textContent || '').trim(), 'font_cream', vr || lr!, align);
+		if (id === 'win') f.root.scale.set(meterK);
 	}
 }
 
@@ -522,6 +531,30 @@ export function hudRects() {
 
 
 let press: { id: string; node: Container; ptr: number } | null = null;
+const pressK: Record<string, number> = {};
+let meterK = 1;
+let meterTw: gsap.core.Tween | null = null;
+
+function kOf(id: string) { return pressK[id] ?? 1; }
+
+export function punchWinMeter() {
+	const n = fields.win?.root; if (!n) return;
+	meterTw?.kill();
+	meterK = 1;
+	const proxy = { k: 1 };
+	meterTw = gsap.to(proxy, {
+		k: 1.18, duration: 0.28 * 0.35, ease: cssEase('cubic-bezier(.3,1.5,.5,1)'),
+		onUpdate: () => { meterK = proxy.k; n.scale.set(meterK); kickUi(); },
+		onComplete: () => {
+			meterTw = gsap.to(proxy, {
+				k: 1, duration: 0.28 * 0.65, ease: cssEase('cubic-bezier(.3,1.5,.5,1)'),
+				onUpdate: () => { meterK = proxy.k; n.scale.set(meterK); kickUi(); },
+				onComplete: () => { meterK = 1; n.scale.set(1); kickUi(); },
+			});
+		},
+	});
+}
+
 
 function canvasLive() {
 	const cv = uiApp()?.canvas as HTMLCanvasElement | undefined;
@@ -534,6 +567,18 @@ function onHudDown(e: PointerEvent) {
 	if (!t) return;
 	press = { id: t.id, node: t.node, ptr: e.pointerId };
 	t.node.alpha = 0.92;
+	const proxy = { k: 0.84 };
+	pressK[t.id] = 0.84;
+	gsap.killTweensOf(proxy);
+	gsap.to(proxy, {
+		keyframes: [
+			{ k: 0.84, duration: 0 },
+			{ k: 1.04, duration: 0.2 * 0.6, ease: cssEase('cubic-bezier(.3,1.55,.45,1)') },
+			{ k: 1, duration: 0.2 * 0.4, ease: cssEase('cubic-bezier(.3,1.55,.45,1)') },
+		],
+		onUpdate: () => { pressK[t.id] = proxy.k; kickUi(); },
+		onComplete: () => { pressK[t.id] = 1; kickUi(); },
+	});
 	kickUi();
 	e.stopPropagation();
 }

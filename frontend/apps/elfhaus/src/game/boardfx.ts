@@ -6,6 +6,7 @@
 import { gsap } from 'gsap';
 import { setBoardFx } from './board/stage';
 import { S } from './ui';
+import { playMotion } from './board/motion';
 
 const BEAT = 0.4, BAR = 1.6;
 const c = { sw: 1, pk: 1, bp: 1, br: 1, x: 0, y: 0 };
@@ -67,7 +68,7 @@ export function reelBump(r: number) { safe(() => {
 	const d = Math.max(3, 9 * amp());
 	for (let row = 0; row < 8; row++) {
 		const e = document.getElementById(`c${r}${row}`); if (!e) break;
-		e.animate([{ translate: '0 0' }, { translate: `0 -${d}px`, offset: 0.3 }, { translate: '0 0' }], { duration: BEAT * 500, easing: 'ease-out', composite: 'add' });
+		playMotion(e, [{ transform: 'translate(0,0)' }, { transform: `translate(0,-${d}px)`, offset: 0.3 }, { transform: 'translate(0,0)' }], { duration: BEAT * 500, easing: 'ease-out' });
 	}
 	boardShake(2, 0.15);
 }); }

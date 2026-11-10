@@ -5,6 +5,7 @@
 // styles plus the in-document #hud / #stage / #app origins.
 import { ST } from './stage';
 import { hostCssSize, hostCssOffset, hostComputedStyle } from './hostcss';
+import { frameSize, frameOffset, artInset } from './board/symframes';
 
 const TEMPLATE = `
 <div id="frame">
@@ -165,6 +166,8 @@ function measure(el: HTMLElement, dim: 'w' | 'h'): number {
 	const inn = INTRINSIC.get(el);
 	if (inn) return dim === 'w' ? inn.w : inn.h;
 	const pb = parentBox(el);
+	const art = artInset(el, dim, pb.w, pb.h); if (art != null) return art;
+	const fr = frameSize(el, dim, pb.w, pb.h); if (fr != null) return fr;
 	return hostCssSize(el, dim, pb.w, pb.h) || 0;
 }
 
@@ -184,8 +187,8 @@ function offsetInTree(el: HTMLElement): { x: number; y: number; w: number; h: nu
 		const nw = measure(n, 'w'), nh = measure(n, 'h');
 		const [tx, ty] = parseTranslate(n, nw, nh);
 		const pb = n.parentElement && n.parentElement !== tree ? { w: measure(n.parentElement, 'w'), h: measure(n.parentElement, 'h') } : { w: 0, h: 0 };
-		x += (n.style.left ? parsePx(n.style.left) : hostCssOffset(n, 'x', pb.w, pb.h)) + tx;
-		y += (n.style.top ? parsePx(n.style.top) : hostCssOffset(n, 'y', pb.w, pb.h)) + ty;
+		x += (n.style.left ? parsePx(n.style.left) : (artInset(n, 'x', pb.w, pb.h) ?? frameOffset(n, 'x', pb.w, pb.h) ?? hostCssOffset(n, 'x', pb.w, pb.h))) + tx;
+		y += (n.style.top ? parsePx(n.style.top) : (artInset(n, 'y', pb.w, pb.h) ?? frameOffset(n, 'y', pb.w, pb.h) ?? hostCssOffset(n, 'y', pb.w, pb.h))) + ty;
 		n = n.parentElement;
 	}
 	return { x, y, w, h };
@@ -232,11 +235,15 @@ function hookBox(el: HTMLElement) {
 		Object.defineProperty(el, 'offsetLeft', { configurable: true, get() {
 			if (this.style.left) return parsePx(this.style.left);
 			const pb = parentBox(this);
+			const art = artInset(this, 'x', pb.w, pb.h); if (art != null) return art;
+			const fr = frameOffset(this, 'x', pb.w, pb.h); if (fr != null) return fr;
 			return hostCssOffset(this, 'x', pb.w, pb.h);
 		} });
 		Object.defineProperty(el, 'offsetTop', { configurable: true, get() {
 			if (this.style.top) return parsePx(this.style.top);
 			const pb = parentBox(this);
+			const art = artInset(this, 'y', pb.w, pb.h); if (art != null) return art;
+			const fr = frameOffset(this, 'y', pb.w, pb.h); if (fr != null) return fr;
 			return hostCssOffset(this, 'y', pb.w, pb.h);
 		} });
 		Object.defineProperty(el, 'clientWidth', { configurable: true, get() { return measure(this, 'w'); } });

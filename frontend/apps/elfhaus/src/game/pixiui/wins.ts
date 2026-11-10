@@ -5,6 +5,7 @@
 // typography, over the dim) so their sprite.ts / ElfRig motion is unchanged.
 import { Assets, Container, Sprite, Texture } from 'pixi.js';
 import { gsap } from 'gsap';
+import { poseOf } from '../board/motion';
 import { nine } from '../scene/atlas';
 import { animateUi, kickUi, onUiLayout, setUiTier, uiInteractive, uiScreen, viewH, viewW } from './stage';
 import { bmFit, setBm, typeRow, wordSpr, fitSpr } from './text';
@@ -31,6 +32,9 @@ function rect(el: Element | null) {
 
 function opacityOf(el: HTMLElement | null) {
 	if (!el) return 0;
+	return baseOpacity(el) * (poseOf(el)?.op ?? 1);
+}
+function baseOpacity(el: HTMLElement) {
 	if (el.classList.contains('hidden')) return 0;
 	const inline = el.style.opacity;
 	if (inline) {
@@ -57,8 +61,19 @@ function winBoxes() {
 }
 
 
-function placeIn(c: Container, r: Box) {
-	c.position.set(r.x, r.y);
+/** Place a Pixi container on its state host's box; the host's motion pose (board/motion playMotion) scales it about the box centre. */
+function placeIn(c: Container, r: Box, el?: HTMLElement | null) {
+	const p = el ? poseOf(el) : null;
+	if (p && (p.sx !== 1 || p.sy !== 1 || p.tx || p.ty)) {
+		const ox = r.w * (Number.isNaN(p.ox) ? 0.5 : p.ox), oy = r.h * (Number.isNaN(p.oy) ? 0.5 : p.oy);
+		c.pivot.set(ox, oy);
+		c.position.set(r.x + ox + p.tx * r.w + p.px, r.y + oy + p.ty * r.h + p.py);
+		c.scale.set(p.sx, p.sy);
+	} else {
+		c.pivot.set(0, 0);
+		c.scale.set(1, 1);
+		c.position.set(r.x, r.y);
+	}
 	c.visible = true;
 }
 
@@ -345,7 +360,7 @@ function syncBig() {
 	const fb = winBoxes();
 	const tr = rect(T) || (T ? fb.title : null), gr = rect(G), ar = rect(A) || (A ? fb.amt : null), xr = rect(X) || (X ? fb.x : null);
 	if (T && tr) {
-		placeIn(bigTitle, tr);
+		placeIn(bigTitle, tr, T);
 		bigTitle.alpha = opacityOf(T);
 		const frame = titleFrame(T);
 		const key = frame + '|' + (T.textContent || '');
@@ -365,7 +380,7 @@ function syncBig() {
 		}
 	} else bigTitle.visible = false;
 	if (G && gr && opacityOf(G) > 0.02) {
-		placeIn(bigGhost, gr);
+		placeIn(bigGhost, gr, G);
 		bigGhost.alpha = opacityOf(G);
 		const gFrame = titleFrame(G);
 		const gKey = gFrame + '|' + (G.textContent || '');
@@ -382,7 +397,7 @@ function syncBig() {
 		lastBwGhost = '';
 	}
 	if (A && ar) {
-		placeIn(bigAmt, ar);
+		placeIn(bigAmt, ar, A);
 		bigAmt.alpha = opacityOf(A);
 		const txt = (A.textContent || '').trim();
 		if (txt !== lastBwAmt) {
@@ -523,7 +538,7 @@ function syncCard(overlay: HTMLElement | null, root: Container, dim: Sprite | nu
 	const host = overlay.querySelector<HTMLElement>('.card');
 	const r = rect(host) || winBoxes().card;
 	if (!host || !r) { card.visible = false; return; }
-	placeIn(card, r);
+	placeIn(card, r, host);
 	card.alpha = opacityOf(host) * opacityOf(overlay);
 	resetBg(card, 'sign_plate', r.w, r.h, 2);
 	if (kind === 'outro') {
@@ -704,9 +719,11 @@ function syncFlyGems() {
 		}
 		const r = c.getBoundingClientRect();
 		spr.visible = true;
-		spr.position.set(r.x + r.width / 2, r.y + r.height / 2);
+		const fp = poseOf(c), sk = ST.s || 1;
+		spr.position.set(r.x + r.width / 2 + (fp ? (fp.tx * r.width + fp.px * sk) : 0), r.y + r.height / 2 + (fp ? (fp.ty * r.height + fp.py * sk) : 0));
 		spr.alpha = Math.max(0, Math.min(1, parseFloat(c.style.opacity || '') || opacityOf(c)));
-		try {
+		if (fp) spr.scale.set(fp.sx, fp.sy);
+		else try {
 			const xf = getComputedStyle(c).transform;
 			if (xf.startsWith('matrix(')) {
 				const m = xf.slice(7, -1).split(',').map(Number);

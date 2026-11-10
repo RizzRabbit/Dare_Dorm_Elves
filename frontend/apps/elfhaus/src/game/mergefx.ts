@@ -30,22 +30,23 @@ import { trailBetween } from './wintrail';
 import { MERGE_BEAT, MERGE_HIT, mergeAmp, mergeLean, mergeMs } from './mergeclock';
 import { crumb, scrub, setPhase } from './diag';
 import { T } from './tempo';
+import { type Motion, playMotion, cancelMotion } from './board/motion';
 
 let skipping = false, running = 0;
-const anims = new Set<Animation>();
-const stageAnims = new Set<Animation>();
+const anims = new Set<Motion>();
+const stageAnims = new Set<Motion>();
 let beatRes: (() => void) | null = null;
 let pendingSkip = false;
 let mergeHold: { skip: () => void } | null = null;
 const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 function A(el: Element, kf: Keyframe[], o: KeyframeAnimationOptions) {
-	const a = el.animate(kf, { ...o, duration: T(Number(o.duration) || 0), delay: T(o.delay || 0) }); anims.add(a); a.finished.catch(() => {}).finally(() => anims.delete(a));
+	const a = playMotion(el as HTMLElement, kf, { ...o, duration: T(Number(o.duration) || 0), delay: T(o.delay || 0) }); anims.add(a); a.finished.catch(() => {}).finally(() => anims.delete(a));
 	if (skipping) a.finish();
 	return a;
 }
 /** A merge-stage animation. Real milliseconds, not the stack tempo. A tap finishes these and only these. */
 function M(el: Element, kf: Keyframe[], o: KeyframeAnimationOptions) {
-	const a = el.animate(kf, o); stageAnims.add(a); a.finished.catch(() => {}).finally(() => stageAnims.delete(a));
+	const a = playMotion(el as HTMLElement, kf, o); stageAnims.add(a); a.finished.catch(() => {}).finally(() => stageAnims.delete(a));
 	return a;
 }
 function finishStage() {
@@ -105,7 +106,7 @@ export async function stackIn(reel: number, render: (frameDelay?: number) => voi
 		cells.forEach((el, row) => el.querySelectorAll<HTMLElement>('.sym').forEach((s) => A(s, [{ transform: 'none', opacity: 1 }, { transform: `translateY(${(1.5 - row) * c * 0.42}px) scale(.72,.6)`, opacity: 0.35 }], { duration: 230, easing: 'cubic-bezier(.5,0,.9,.4)', fill: 'forwards' })));
 		await sw(230);
 		render();
-		cells.forEach((el) => el.querySelectorAll('.sym').forEach((s) => s.getAnimations().forEach((a) => a.cancel())));
+		cells.forEach((el) => el.querySelectorAll('.sym').forEach((s) => cancelMotion(s)));
 		const ov = ovOf(reel);
 		if (ov) { A(ov, [{ opacity: 0 }, { opacity: 1, offset: .3 }, { opacity: 1 }], { duration: 480, easing: 'ease-out' }); ovArt(ov).forEach((e) => A(e, [{ transform: 'scale(.9,.25)' }, { transform: 'scale(1.06,1.08)', offset: .45 }, { transform: 'scale(.98,.97)', offset: .72 }, { transform: 'none' }], { duration: 480, easing: 'ease-out' })); wfExpand(ov); }
 		await sw(260);
@@ -156,7 +157,7 @@ async function stackFromSingles(reel: number, render: (frameDelay?: number) => v
 		await sw(300);
 	} finally {
 		cells.forEach((el) => {
-			el.getAnimations({ subtree: true }).forEach((a) => a.cancel());
+			cancelMotion(el, true);
 			el.querySelectorAll<HTMLElement>('.mx').forEach(hideGem);
 			if (S.full.has(reel)) el.style.visibility = 'hidden';
 		});
@@ -409,12 +410,12 @@ export async function growIn(ov: HTMLElement, from: number[], to: number[], from
 		await sw(k * 90 + 260);
 		gems.forEach((g, i) => setGem(g, to[i], false));
 		// 3) fly back and recombine into the new total (counts up)
-		if (mx) { mx.getAnimations().forEach((a) => a.cancel()); }
+		if (mx) { cancelMotion(mx); }
 		await recombine(gems, mx, to, toProd);
 		await sw(60);
 	} finally {
 		gems.forEach((g) => g.remove());
-		if (mx) { mx.getAnimations().forEach((a) => a.cancel()); mx.style.opacity = ''; setGem(mx, toProd, false); }
+		if (mx) { cancelMotion(mx); mx.style.opacity = ''; setGem(mx, toProd, false); }
 		end();
 	}
 }
@@ -424,6 +425,6 @@ export function ovWin(reel: number) {
 	const ov = ovOf(reel); if (!ov || ov.classList.contains('win')) return;
 	ov.classList.add('win'); stackWin(ov);
 	// the art bumps (a beat after the tile's border flash, CSS .ov.win>.tGl); the overlay's tile edge holds still
-	ovArt(ov).forEach((e) => e.animate([{ transform: 'none' }, { transform: 'translateY(-3%) scale(1.03)', offset: .4 }, { transform: 'translateY(.6%) scale(.995)', offset: .75 }, { transform: 'none' }], { duration: T(460), delay: 40, easing: 'ease-out' }));
+	ovArt(ov).forEach((e) => playMotion(e as HTMLElement, [{ transform: 'none' }, { transform: 'translateY(-3%) scale(1.03)', offset: .4 }, { transform: 'translateY(.6%) scale(.995)', offset: .75 }, { transform: 'none' }], { duration: T(460), delay: 40, easing: 'ease-out' }));
 }
 export const clearOvWins = () => document.querySelectorAll<HTMLElement>('.ov.win').forEach((o) => { o.classList.remove('win'); stackWinOff(o); });

@@ -7,6 +7,7 @@
 // with sticky wilds and goes when the wild clears. frameIn() draws it in (opacity + scale only) at the merge's hard
 // cut / when a stack lands; the glow layer breathes in CSS (opacity only).
 import { T } from './tempo';
+import { playMotion } from './board/motion';
 export const ELF_ACC = ['#E2559D', '#24A89B', '#8550D6', '#CC6670', '#3B6FE0'] as const; // Roxy, Jade, Vi, Coco, Delilah
 export const ELF_RIM = ['#FF7DBE', '#4FF0DC', '#B98BFF', '#FF9A9E', '#7FA4FF'] as const;
 
@@ -22,5 +23,5 @@ export const frameHTML = (reels: number[]) =>
  *  breath is CSS and stays a 3.6 s cycle (not stretched). */
 export function frameIn(ov: HTMLElement | null | undefined, delay = 0) {
 	const f = ov?.querySelector<HTMLElement>(':scope>.wFrame'); if (!f) return;
-	f.animate([{ opacity: 0, transform: 'scale(1.04)' }, { opacity: 1, transform: 'none' }], { duration: T(300), delay: T(delay), easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'backwards' });
+	playMotion(f, [{ opacity: 0, transform: 'scale(1.04)' }, { opacity: 1, transform: 'none' }], { duration: T(300), delay: T(delay), easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'backwards' });
 }

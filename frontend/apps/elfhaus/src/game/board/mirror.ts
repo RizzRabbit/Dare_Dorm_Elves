@@ -23,6 +23,9 @@ import { dbDisplay } from '../dbstacks';
 import { canvasRev } from '../sprite';
 import { isUiHost } from '../uihosts';
 import { hostProps } from '../hostcss';
+import { frameOf, SYM_INSET } from './symframes';
+import { poseOf, motionLive, syncMotion, applyPoseMatrix, dimBright, markRestart, clearRestart } from './motion';
+import { slotPose, reelMoving } from '../reelpose';
 const hostLive = (el: Element | null | undefined) => !!el && (el.isConnected || isUiHost(el));
 import { mxFont } from '../ui';
 
@@ -191,6 +194,9 @@ function style(el: HTMLElement, force: boolean): St {
 		br: brightness(cs.filter), blend: cs.mixBlendMode, clip: clipOf(cs, w, h), ov: cs.overflow === 'hidden' || cs.overflow === 'clip',
 		bg: cs.backgroundImage, bs: cs.backgroundSize, bp: cs.backgroundPosition, bw: num(cs.borderImageWidth) > 4 ? num(cs.borderImageWidth) : num(cs.borderTopWidth), fit: cs.objectFit,
 	};
+	const fr = frameOf(el);
+	if (fr) { s.bg = fr.bg; s.bs = fr.bs; s.bp = fr.bp; s.disp = true; }
+	s.br *= dimBright(el);
 	cache.set(el, s); return s;
 }
 
@@ -326,6 +332,7 @@ function measure(el: HTMLElement, x: number, y: number) {
 function restyle(el: HTMLElement) {
 	const g = geo.get(el); if (!g) return;
 	style(el, true);
+	syncMotion(el);
 	for (const k of el.children) restyle(k as HTMLElement);
 	// children in paint order: z-index, then DOM order (negative z under the element's own art)
 	g.kids = ([...el.children] as HTMLElement[]).map((k, i) => [cache.get(k)?.z ?? 0, i, k] as const).sort((p, q) => p[0] - q[0] || p[1] - q[1]).map((v) => v[2]);
@@ -425,7 +432,22 @@ function walk(el: HTMLElement, parent: Af, pc: Ctx, isRoot: boolean) {
 	const g = geo.get(el); if (!g) { geoDirty = true; return; }
 	const base = cache.get(el); if (!base) { geoDirty = true; return; }
 	if (base.f & F_SKIP) return;
-	const an = running.get(el), s = an ? animStyle(el, base, an) : base;
+	const an = running.get(el);
+	let s = an ? animStyle(el, base, an) : base;
+	const pose = poseOf(el);
+	if (pose) {
+		s = s === base ? { ...base } : s;
+		const o = base.o.split(' '), fx = g.w ? lenOf(o[0] || '50%', g.w) / g.w : 0.5, fy = g.h ? lenOf(o[1] || '50%', g.h) / g.h : 0.5;
+		s.m = applyPoseMatrix(s.m, pose, g.w, g.h, fx, fy);
+		s.op *= pose.op;
+		s.br *= pose.br;
+	}
+	const slot = slotPose(el);
+	if (slot) {
+		s = s === base ? { ...base } : s;
+		s.m = s.m.translate(0, slot.y);
+		if (slot.sy != null && slot.sy !== 1) s.m = s.m.translate(0, g.h / 2).scale(1, slot.sy).translate(0, -g.h / 2);
+	}
 	if (!s.disp) return;
 	const w = g.w, h = g.h;
 	const M = compose(parent, g.x, g.y, s.m);
@@ -503,6 +525,7 @@ function tick() {
 	visQ.clear();
 	for (const el of styleQ) style(el, true);
 	styleQ.clear();
+	clearRestart();
 	// an element whose animation just ended: its base style was read mid-animation, so read it again (once)
 	const was = [...running.keys()]; running.clear();
 	for (const a of board.getAnimations({ subtree: true })) {
@@ -511,7 +534,7 @@ function tick() {
 	}
 	for (const el of was) if (!running.has(el) && hostLive(el)) style(el as HTMLElement, true);
 	// nothing moved, nothing changed: the stage keeps last frame's displays (idle costs one getAnimations call)
-	if (!changed && !running.size && !extraMoving()) { if (import.meta.env.DEV) { msLog.push(performance.now() - t0); if (msLog.length > 600) msLog.shift(); } return true; }
+	if (!changed && !running.size && !extraMoving() && !motionLive() && !reelMoving()) { if (import.meta.env.DEV) { msLog.push(performance.now() - t0); if (msLog.length > 600) msLog.shift(); } return true; }
 	changed = false;
 	const bs = cache.get(board)!, ba = running.get(board), b = ba ? animStyle(board, bs, ba) : bs;
 	const M = compose([1, 0, 0, 1, 0, 0], origin.x, origin.y, b.m);
@@ -541,7 +564,8 @@ function onMutations(recs: MutationRecord[]) {
 			const a = new Set((r.oldValue || '').split(/\s+/)), b = new Set(t.className.split(/\s+/)), diff = [...a, ...b].filter((x) => x && a.has(x) !== b.has(x));
 			if (diff.some((x) => BODY_GEO.test(x))) { geoDirty = true; } else if (diff.length) for (const rt of roots) styleQ.add(rt);
 		}
-		else if (r.attributeName === 'class') { if (CLASS_GEO.test((r.oldValue || '') + ' ' + t.className)) { const a = known(t); if (a) geoQ.add(a); else geoDirty = true; } else if (geo.has(t)) styleQ.add(t); else { const a = known(t); if (a) geoQ.add(a); } }
+		else if (r.attributeName === 'class') { { const was = new Set((r.oldValue || '').split(/\s+/)); if (t.className && typeof t.className === 'string' && t.className.split(/\s+/).some((c) => c && !was.has(c))) markRestart(t); }
+			if (CLASS_GEO.test((r.oldValue || '') + ' ' + t.className)) { const a = known(t); if (a) geoQ.add(a); else geoDirty = true; } else if (geo.has(t)) styleQ.add(t); else { const a = known(t); if (a) geoQ.add(a); } }
 		else { const a = known(t); if (a) geoQ.add(a); else geoDirty = true; }   // src / data-v
 	}
 	kick();

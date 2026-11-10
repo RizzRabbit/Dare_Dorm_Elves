@@ -28,6 +28,7 @@ import { clearRace } from './winlines';
 
 export const ART = ART_JSON as Record<string, string | null>;
 import { findHost } from './uihosts';
+import { playMotion } from './board/motion';
 export const $ = <T extends HTMLElement = HTMLElement>(s: string) => (document.querySelector(s) || findHost(s)) as T;
 
 export const S = {
@@ -165,7 +166,7 @@ export function setGem(el: Element | null, v: number, fx = true) {
 	g.dataset.v = String(v); g.dataset.tl = pc(5); g.dataset.tr = pc(5 + tw); g.dataset.cx = pc(5 + tw / 2);
 	if (!fx) return;
 	mxBurst(g);
-	g.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.32)', offset: .35 }, { transform: 'scale(1)' }], { duration: 320, easing: 'cubic-bezier(.3,1.6,.5,1)' });
+	playMotion(g, [{ transform: 'scale(1)' }, { transform: 'scale(1.32)', offset: .35 }, { transform: 'scale(1)' }], { duration: 320, easing: 'cubic-bezier(.3,1.6,.5,1)' });
 }
 /** reel (0-based) picks that reel's own elf as the single wild (W_R1..W_R5, the same elf that fills the reel when the
  * wilds merge); without art for that reel it falls back to the generic W (+ its win pose). */
@@ -324,13 +325,13 @@ function tierHit(T: HTMLElement, amt: HTMLElement, name: string, first: boolean,
 	if (!first) { // ghost = the outgoing title, same box (absolute over it), fades while the new one pops
 		r.ghost.className = T.className + ' bwGhost'; r.ghost.dataset.tier = T.dataset.tier || ''; r.ghost.textContent = T.textContent;
 		const img = T.style.getPropertyValue('--title-img'); if (img) r.ghost.style.setProperty('--title-img', img); else r.ghost.style.removeProperty('--title-img');
-		r.ghost.animate([{ opacity: 1, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(1.12)' }], { duration: 180 * at, easing: 'ease-out', fill: 'forwards' });
+		playMotion(r.ghost, [{ opacity: 1, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(1.12)' }], { duration: 180 * at, easing: 'ease-out', fill: 'forwards' });
 	}
 	if (T.textContent !== name) T.textContent = name; titleHook(T, name); T.classList.add('on');
-	T.animate([{ opacity: 0, transform: 'scale(.7)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 220 * at, easing: EASE_BACK });
+	playMotion(T, [{ opacity: 0, transform: 'scale(.7)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 220 * at, easing: EASE_BACK });
 	r.glow.style.setProperty('--tt-neon', r.neon[tier] || '#FFD27A');
-	r.glow.animate([{ opacity: 0, transform: 'translateX(-50%) scale(.4)' }, { opacity: 0.95, transform: 'translateX(-50%) scale(1.05)', offset: 0.25 }, { opacity: 0, transform: 'translateX(-50%) scale(1.35)' }], { duration: 700 * at, easing: 'ease-out' });
-	amt.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.06)', offset: 0.35 }, { transform: 'scale(1)' }], { duration: 200 * at, easing: 'ease-out' });
+	playMotion(r.glow, [{ opacity: 0, transform: 'translateX(-50%) scale(.4)' }, { opacity: 0.95, transform: 'translateX(-50%) scale(1.05)', offset: 0.25 }, { opacity: 0, transform: 'translateX(-50%) scale(1.35)' }], { duration: 700 * at, easing: 'ease-out' });
+	playMotion(amt, [{ transform: 'scale(1)' }, { transform: 'scale(1.06)', offset: 0.35 }, { transform: 'scale(1)' }], { duration: 200 * at, easing: 'ease-out' });
 }
 /** `level` = the math win level from the synced edges applied to x (setWin passes it; computed here when absent). */
 export async function bigWin(x: number, label?: string, level?: number) {
@@ -369,7 +370,7 @@ export async function bigWin(x: number, label?: string, level?: number) {
 	await counted;
 	endStage(names[stIx] ?? 'bw:final');
 	// the end: the amount lands on the exact value with a confident pop, then holds
-	amt.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.12)', offset: 0.4 }, { transform: 'scale(1)' }], { duration: 280 * at, easing: EASE_BACK });
+	playMotion(amt, [{ transform: 'scale(1)' }, { transform: 'scale(1.12)', offset: 0.4 }, { transform: 'scale(1)' }], { duration: 280 * at, easing: EASE_BACK });
 	cu.stop(200); boardPulse(false);
 	beginStage('bw:landed', () => close());
 	await Promise.race([waitRaw(S.turbo ? 700 * 0.35 : top ? 2200 : 1500), closed]);

@@ -3,6 +3,7 @@ import { loadSheet, play, stop, frameCSS, hasSheet, type Atlas } from './sprite'
 // Every generated atlas (scripts/sprites/*) is bundled; its sheet image comes from the art manifest under the same key.
 const ATLASES = import.meta.glob('./fx/*.atlas.json', { eager: true, import: 'default' }) as Record<string, Atlas>;
 import ART_JSON from './art.generated.json';
+import { playMotion } from './board/motion';
 const ART = ART_JSON as Record<string, string | null>;
 
 export const FX = 'fx_ui';
@@ -36,13 +37,13 @@ export function landBump(cell: HTMLElement) {
 		// anim-v4: every symbol gets a quick squash-and-stretch on land in normal pace too (the reel's own bounce carries it,
 	// this adds weight); wilds / scatters hit harder. Still transform only, ~150-220 ms.
 	if (!document.body.classList.contains('turbo')) {
-		sym.animate(heavy
+		playMotion(sym as HTMLElement, heavy
 			? [{ transform: 'translateY(4%) scale(1.14,.84)' }, { transform: 'translateY(-3%) scale(.94,1.08)', offset: .4 }, { transform: 'scale(1.02,.98)', offset: .72 }, { transform: 'none' }]
 			: [{ transform: 'translateY(3%) scale(1.09,.9)' }, { transform: 'translateY(-2%) scale(.96,1.05)', offset: .42 }, { transform: 'scale(1.01,.99)', offset: .75 }, { transform: 'none' }],
 			{ duration: heavy ? 260 : 200, easing: 'ease-out' });
 		return;
 	}
-	sym.animate(heavy
+	playMotion(sym as HTMLElement, heavy
 		? [{ transform: 'scale(1.12,.84)' }, { transform: 'scale(.95,1.07)', offset: .45 }, { transform: 'none' }]
 		: [{ transform: 'scale(1.05,.93)' }, { transform: 'scale(.98,1.02)', offset: .5 }, { transform: 'none' }],
 		{ duration: heavy ? 190 : 120, easing: 'ease-out' });

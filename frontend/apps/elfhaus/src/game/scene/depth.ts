@@ -6,6 +6,7 @@
 // All pointer-events:none, aria-hidden, above #board and under the garland. prefers-reduced-motion: no glint, steady light.
 import { FT, FW } from '../mkboard';
 import { reduced } from './room';
+import { type Motion, playMotion } from '../board/motion';
 
 let lit: HTMLElement | null = null, gl: HTMLElement | null = null, band: HTMLElement | null = null, u = 1;
 const mk = (id: string, parent: HTMLElement) => {
@@ -28,12 +29,12 @@ export function frameFire(v: number) {
 	if (!lit) return; const o = Math.round((reduced() ? 0.75 : 0.45 + 0.55 * v) * 50) / 50;
 	if (o !== lastO) { lastO = o; lit.style.opacity = String(o); }
 }
-let glintAnim: Animation | null = null;
+let glintAnim: Motion | null = null;
 /** The frame catches a flare: one highlight sweep across the band, away from the fire (left to right). */
 export function frameGlint() {
 	if (!gl || !band || reduced() || document.hidden) return;
 	if (glintAnim && glintAnim.playState === 'running') return;
 	const w = gl.clientWidth || FW * u;
-	glintAnim = band.animate([{ transform: `translateX(${-0.3 * w}px) skewX(-20deg)`, opacity: 0 }, { opacity: 1, offset: 0.2 }, { opacity: 1, offset: 0.75 },
+	glintAnim = playMotion(band, [{ transform: `translateX(${-0.3 * w}px) skewX(-20deg)`, opacity: 0 }, { opacity: 1, offset: 0.2 }, { opacity: 1, offset: 0.75 },
 		{ transform: `translateX(${1.15 * w}px) skewX(-20deg)`, opacity: 0 }], { duration: 1100, easing: 'cubic-bezier(.45,.05,.4,1)' });
 }
