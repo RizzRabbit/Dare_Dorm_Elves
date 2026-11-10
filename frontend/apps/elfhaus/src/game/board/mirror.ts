@@ -1,6 +1,6 @@
 // fix8 (James 2026-11-04 "do it the right way"): every board symbol is drawn by the ONE board Pixi stage. The DOM under
 // #board (#strips spinners, #cells, #overlays) stays only as an invisible state + motion model: the classes other files
-// read (win / dim / spinning / puffed / wild ...), the layout, and the CSS / WAAPI motion they already author. Its paint
+// read (win / dim / spinning / puffed / wild ...), the layout, and the pose-store motion (board/motion.ts). Its paint
 // is off (opacity 0); this module walks it in paint order every frame something moves and draws each visual leaf as a
 // Pixi sprite with the element's full composed transform (offset, transform-origin, transform / translate / rotate /
 // scale, 3D projected), its composed opacity, brightness (dim) and blend mode:
@@ -22,7 +22,7 @@ import { boardStage, layer, kick, animate, onLayout } from './stage';
 import { dbDisplay } from '../dbstacks';
 import { canvasRev } from '../sprite';
 import { isUiHost } from '../uihosts';
-import { hostProps } from '../hostcss';
+import { hostProps } from '../uilayout';
 import { frameOf, SYM_INSET } from './symframes';
 import { layoutStyle } from './hostlayout';
 import { poseOf, motionLive, syncMotion, applyPoseMatrix, dimBright, markRestart, clearRestart } from './motion';
@@ -151,8 +151,8 @@ function flags(el: HTMLElement) {
 }
 function hostCs(el: HTMLElement): CSSStyleDeclaration {
 	// Detached hosts report display:none from the browser's getComputedStyle;
-	// board/symbol nodes use the TypeScript layout tables; other hosts fall back
-	// to the CSS resolver (and safe defaults).
+	// board/symbol nodes use the TypeScript layout tables; other hosts use their
+	// uilayout props (inline style) and safe defaults.
 	if (!isUiHost(el)) return getComputedStyle(el);
 	const lay = layoutStyle(el);
 	const p: Record<string, string> = lay ? {
@@ -377,8 +377,7 @@ function rebuild() {
 	inlineQ.clear(); styleQ.clear(); geoQ.clear();
 }
 
-// ---------- motion without layout reads: inline transforms parsed from el.style, CSS / WAAPI motion from the
-// animation's own keyframes at its current progress (getComputedTiming: no style or layout flush) ----------
+// ---------- motion without layout reads: inline transforms parsed from el.style; poses from board/motion.ts ----------
 const inlineQ = new Set<HTMLElement>(), styleQ = new Set<HTMLElement>(), geoQ = new Set<HTMLElement>();
 // ghostfix: an inline visibility change (a cell hidden under a full-reel / merged wild, bookEventHandlerMap) inherits to
 // the whole subtree in CSS, but the cache held each descendant's old 'visible': the hidden cell's bust, WILD letters,
@@ -398,58 +397,12 @@ function inlineUpdate(el: HTMLElement) {
 	if (st.visibility) s.vis = st.visibility !== 'hidden';
 	if (st.display) s.disp = st.display !== 'none';
 }
-type KF = { off: number; ease: (t: number) => number; v: Record<string, string> };
-const kfCache = new WeakMap<Animation, KF[]>();
-function bezier(x1: number, y1: number, x2: number, y2: number) {
-	const B = (t: number, a: number, b: number) => 3 * a * t * (1 - t) ** 2 + 3 * b * t * t * (1 - t) + t ** 3;
-	return (x: number) => { let lo = 0, hi = 1, t = x; for (let i = 0; i < 18; i++) { t = (lo + hi) / 2; if (B(t, x1, x2) < x) lo = t; else hi = t; } return B(t, y1, y2); };
-}
-const EASE: Record<string, (t: number) => number> = { linear: (t) => t, ease: bezier(0.25, 0.1, 0.25, 1), 'ease-in': bezier(0.42, 0, 1, 1), 'ease-out': bezier(0, 0, 0.58, 1), 'ease-in-out': bezier(0.42, 0, 0.58, 1) };
-function easeOf(e: string | undefined) {
-	if (!e) return EASE.linear; if (EASE[e]) return EASE[e];
-	const m = /cubic-bezier\(([^)]+)\)/.exec(e); if (m) { const [a, b, c, d] = m[1].split(',').map(num); return (EASE[e] = bezier(a, b, c, d)); }
-	return EASE.linear;
-}
-const PROPS = ['transform', 'translate', 'rotate', 'scale', 'opacity', 'filter', 'transformOrigin'];
-function keyframes(a: Animation): KF[] {
-	let k = kfCache.get(a); if (k) return k;
-	const raw = ((a.effect as KeyframeEffect | null)?.getKeyframes() ?? []) as any[];
-	k = raw.map((f, i) => {
-		const v: Record<string, string> = {}; for (const p of PROPS) if (f[p] != null && f[p] !== '') v[p] = String(f[p]);
-		return { off: f.computedOffset ?? f.offset ?? (raw.length > 1 ? i / (raw.length - 1) : 0), ease: easeOf(f.easing), v };
-	});
-	kfCache.set(a, k); return k;
-}
-const lerpM = (a: DOMMatrix, b: DOMMatrix, t: number) => new DOMMatrix([a.a + (b.a - a.a) * t, a.b + (b.b - a.b) * t, a.c + (b.c - a.c) * t, a.d + (b.d - a.d) * t, a.e + (b.e - a.e) * t, a.f + (b.f - a.f) * t]);
-/** The element's style with its running animations applied (later animations win, like the CSS cascade). */
-function animStyle(el: HTMLElement, base: St, anims: Animation[]): St {
-	let s = base;
-	for (const a of anims) {
-		const p = (a.effect as KeyframeEffect | null)?.getComputedTiming().progress;
-		if (p == null) continue;
-		const kf = keyframes(a); if (!kf.length) continue;
-		let i = 0; while (i < kf.length - 2 && p > kf[i + 1].off) i++;
-		const A = kf[i], B = kf[Math.min(i + 1, kf.length - 1)], span = B.off - A.off, t = span > 0 ? A.ease(Math.max(0, Math.min(1, (p - A.off) / span))) : 1;
-		const has = (k: string) => k in A.v || k in B.v;
-		if (s === base) s = { ...base };
-		if (has('opacity')) { const o0 = A.v.opacity != null ? num(A.v.opacity) : base.op, o1 = B.v.opacity != null ? num(B.v.opacity) : base.op; s.op = o0 + (o1 - o0) * t; }
-		if (has('filter')) { const b0 = A.v.filter != null ? brightness(A.v.filter) : base.br, b1 = B.v.filter != null ? brightness(B.v.filter) : base.br; s.br = b0 + (b1 - b0) * t; }
-		if (has('transform') || has('translate') || has('rotate') || has('scale')) {
-			const tp = (f: KF): TP => ({ transformOrigin: f.v.transformOrigin ?? base.o, translate: f.v.translate ?? base.tr, rotate: f.v.rotate ?? base.ro, scale: f.v.scale ?? base.sc, transform: f.v.transform ?? base.tf });
-			s.m = lerpM(localMatrix(tp(A), base.w, base.h), localMatrix(tp(B), base.w, base.h), t);
-		}
-	}
-	return s;
-}
-
 // ---------- the walk (cached geometry + styles only: no layout or computed-style reads) ----------
-const running = new Map<Element, Animation[]>();
 function walk(el: HTMLElement, parent: Af, pc: Ctx, isRoot: boolean) {
 	const g = geo.get(el); if (!g) { geoDirty = true; return; }
 	const base = cache.get(el); if (!base) { geoDirty = true; return; }
 	if (base.f & F_SKIP) return;
-	const an = running.get(el);
-	let s = an ? animStyle(el, base, an) : base;
+	let s = base;
 	const pose = poseOf(el);
 	if (pose) {
 		s = s === base ? { ...base } : s;
@@ -511,7 +464,6 @@ function walk(el: HTMLElement, parent: Af, pc: Ctx, isRoot: boolean) {
 }
 
 let changed = true;
-const extraMoving = () => extras.some((e) => e.getAnimations({ subtree: true }).length > 0);
 export const mirrorChanged = () => { changed = true; };
 let extras: HTMLElement[] = [], mo: MutationObserver | null = null;
 const watched = new WeakSet<Element>();
@@ -542,23 +494,17 @@ function tick() {
 	for (const el of styleQ) style(el, true);
 	styleQ.clear();
 	clearRestart();
-	// an element whose animation just ended: its base style was read mid-animation, so read it again (once)
-	const was = [...running.keys()]; running.clear();
-	for (const a of board.getAnimations({ subtree: true })) {
-		const t = (a.effect as KeyframeEffect | null)?.target as Element | null; if (!t) continue;
-		const l = running.get(t); if (l) l.push(a); else running.set(t, [a]);
-	}
-	for (const el of was) if (!running.has(el) && hostLive(el)) style(el as HTMLElement, true);
-	// nothing moved, nothing changed: the stage keeps last frame's displays (idle costs one getAnimations call)
-	if (!changed && !running.size && !extraMoving() && !motionLive() && !reelMoving()) { if (import.meta.env.DEV) { msLog.push(performance.now() - t0); if (msLog.length > 600) msLog.shift(); } return true; }
+	// nothing moved, nothing changed: the stage keeps last frame's displays. All motion is the pose
+	// store (motionLive) or the reels; detached hosts never run page (CSS / WAAPI) animations.
+	if (!changed && !motionLive() && !reelMoving()) { if (import.meta.env.DEV) { msLog.push(performance.now() - t0); if (msLog.length > 600) msLog.shift(); } return true; }
 	changed = false;
-	const bs = cache.get(board)!, ba = running.get(board), b = ba ? animStyle(board, bs, ba) : bs;
+	const b = cache.get(board)!;
 	const M = compose([1, 0, 0, 1, 0, 0], origin.x, origin.y, b.m);
 	const base: Ctx = { M, op: 1, br: 1, host: layer.reels, glow: false };
 	for (const r of roots) walk(r, M, base, true);
 	// the frame's fire light and glint, over the frame back (they were DOM over #mkFrame)
 	const fb: Ctx = { M: [1, 0, 0, 1, 0, 0], op: 1, br: 1, host: layer.frameBack, glow: false };
-	for (const e of extras) { if (!hostLive(e)) { geoDirty = true; continue; } for (const a of e.getAnimations({ subtree: true })) { const t = (a.effect as KeyframeEffect | null)?.target as Element | null; if (t) { const l = running.get(t); if (l) l.push(a); else running.set(t, [a]); } } walk(e, fb.M, fb, false); }
+	for (const e of extras) { if (!hostLive(e)) { geoDirty = true; continue; } walk(e, fb.M, fb, false); }
 	for (const x of live) if (x.d.destroyed) live.delete(x); else if (x.used !== frameNo) { if (x.d.visible) x.d.visible = false; if (!x.d.parent || x.used < frameNo - 120) releaseOut(x); }
 	for (const k of liveClips) if (k.used !== frameNo) { k.c.visible = false; if (k.used < frameNo - 120) { k.c.removeFromParent(); liveClips.delete(k); } } else k.c.visible = true;
 	if (import.meta.env.DEV) { msLog.push(performance.now() - t0); if (msLog.length > 600) msLog.shift(); }

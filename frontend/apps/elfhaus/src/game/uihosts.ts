@@ -4,7 +4,7 @@
 // querySelector / getElementById / $ paths. Layout boxes come from mkPlace
 // styles plus the in-document #hud / #stage / #app origins.
 import { ST } from './stage';
-import { hostCssSize, hostCssOffset, hostComputedStyle } from './hostcss';
+import { hostSize, hostOffset, hostStyle, standIn } from './uilayout';
 import { layoutBox } from './board/hostlayout';
 
 const TEMPLATE = `
@@ -120,7 +120,6 @@ export type HostOrigin = 'hud' | 'stage' | 'app' | 'view';
 let tree: HTMLElement | null = null;
 const byId = new Map<string, HTMLElement>();
 const ORIGIN = new WeakMap<HTMLElement, HostOrigin>();
-const INTRINSIC = new WeakMap<HTMLElement, { w: number; h: number }>();
 let patched = false;
 
 export function uiHostTree() { return tree; }
@@ -129,12 +128,11 @@ export function isUiHost(el: Element | null): boolean {
 	return !!el && !!tree && tree.contains(el);
 }
 
-function mark(id: string, origin: HostOrigin, size?: [number, number]) {
+function mark(id: string, origin: HostOrigin) {
 	const el = tree?.querySelector<HTMLElement>('#' + id);
 	if (!el) return;
 	ORIGIN.set(el, origin);
 	for (const k of el.querySelectorAll<HTMLElement>('*')) if (!ORIGIN.has(k)) ORIGIN.set(k, origin);
-	if (size) INTRINSIC.set(el, { w: size[0], h: size[1] });
 }
 
 function findOrigin(el: HTMLElement): HostOrigin {
@@ -163,12 +161,12 @@ function measure(el: HTMLElement, dim: 'w' | 'h'): number {
 	const st = dim === 'w' ? el.style.width : el.style.height;
 	const n = parsePx(st);
 	if (n > 0) return n;
-	const inn = INTRINSIC.get(el);
-	if (inn) return dim === 'w' ? inn.w : inn.h;
+	const sz = standIn(el);
+	if (sz) return dim === 'w' ? sz[0] : sz[1];
 	const pb = parentBox(el);
 	const lay = layoutBox(el, pb.w, pb.h);
 	if (lay) return dim === 'w' ? lay.w : lay.h;
-	return hostCssSize(el, dim, pb.w, pb.h) || 0;
+	return hostSize(el, dim, pb.w, pb.h) || 0;
 }
 
 function parseTranslate(el: HTMLElement, w: number, h: number): [number, number] {
@@ -188,8 +186,8 @@ function offsetInTree(el: HTMLElement): { x: number; y: number; w: number; h: nu
 		const [tx, ty] = parseTranslate(n, nw, nh);
 		const pb = n.parentElement && n.parentElement !== tree ? { w: measure(n.parentElement, 'w'), h: measure(n.parentElement, 'h') } : { w: 0, h: 0 };
 		const lay = layoutBox(n, pb.w, pb.h);
-		x += (n.style.left ? parsePx(n.style.left) : (lay ? lay.x : hostCssOffset(n, 'x', pb.w, pb.h))) + tx;
-		y += (n.style.top ? parsePx(n.style.top) : (lay ? lay.y : hostCssOffset(n, 'y', pb.w, pb.h))) + ty;
+		x += (n.style.left ? parsePx(n.style.left) : (lay ? lay.x : hostOffset(n, 'x', pb.w, pb.h))) + tx;
+		y += (n.style.top ? parsePx(n.style.top) : (lay ? lay.y : hostOffset(n, 'y', pb.w, pb.h))) + ty;
 		n = n.parentElement;
 	}
 	return { x, y, w, h };
@@ -238,14 +236,14 @@ function hookBox(el: HTMLElement) {
 			const pb = parentBox(this);
 			const lay = layoutBox(this, pb.w, pb.h);
 			if (lay) return lay.x;
-			return hostCssOffset(this, 'x', pb.w, pb.h);
+			return hostOffset(this, 'x', pb.w, pb.h);
 		} });
 		Object.defineProperty(el, 'offsetTop', { configurable: true, get() {
 			if (this.style.top) return parsePx(this.style.top);
 			const pb = parentBox(this);
 			const lay = layoutBox(this, pb.w, pb.h);
 			if (lay) return lay.y;
-			return hostCssOffset(this, 'y', pb.w, pb.h);
+			return hostOffset(this, 'y', pb.w, pb.h);
 		} });
 		Object.defineProperty(el, 'clientWidth', { configurable: true, get() { return measure(this, 'w'); } });
 		Object.defineProperty(el, 'clientHeight', { configurable: true, get() { return measure(this, 'h'); } });
@@ -284,18 +282,9 @@ export function installUiHosts() {
 
 	const hudIds = ['ctrlTop', 'bar', 'strip', 'turboBtn', 'buyBtn', 'buyLbl', 'menuBtn', 'betDown', 'spinBtn', 'autoN', 'armTag', 'betUp', 'autoBtn', 'balance', 'bet', 'betLabel', 'win'];
 	for (const id of hudIds) mark(id, 'hud');
-	// Strip labels/values get width from mkPlace but no height; give them a readable box.
-	for (const id of ['balance', 'bet', 'win', 'betLabel']) mark(id, 'hud', [96, 28]);
-	const strip = tree.querySelectorAll('#strip .m, #strip label, #strip span');
-	for (const el of strip) if (!INTRINSIC.get(el as HTMLElement)) INTRINSIC.set(el as HTMLElement, { w: 96, h: 28 });
-	const disc = tree.querySelector<HTMLElement>('#buyBtn .disc');
-	if (disc) INTRINSIC.set(disc, { w: 48, h: 48 });
-	mark('fsBar', 'stage', [240, 32]);
-	mark('fsTier', 'stage');
-	mark('fsCount', 'stage');
-	mark('banner', 'stage', [280, 48]);
-	mark('stepToast', 'stage', [260, 44]);
-	mark('replayBar', 'app', [320, 36]);
+	// strip fields and the buy disc are sized by syncHostLayout; toasts / bars use uilayout STANDIN
+	for (const id of ['fsBar', 'banner', 'stepToast']) mark(id, 'stage');
+	mark('replayBar', 'app');
 	for (const id of ['frame', 'board', 'strips', 'cells', 'overlays', 'reelLines']) mark(id, 'stage');
 	mark('flyLayer', 'view');
 	new MutationObserver((ms) => {
@@ -319,7 +308,7 @@ export function installUiHosts() {
 		const rawCS = window.getComputedStyle.bind(window);
 		window.getComputedStyle = ((elt: Element, pseudo?: string | null) => {
 			const cs = rawCS(elt, pseudo);
-			if (elt instanceof HTMLElement && isUiHost(elt)) return hostComputedStyle(elt, cs);
+			if (elt instanceof HTMLElement && isUiHost(elt)) return hostStyle(elt, cs);
 			return cs;
 		}) as typeof getComputedStyle;
 	}

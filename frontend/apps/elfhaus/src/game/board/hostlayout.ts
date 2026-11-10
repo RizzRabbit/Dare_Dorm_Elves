@@ -1,6 +1,6 @@
 // Plain TypeScript layout and paint state for the off-document board host tree.
 // Board, cells, symbols, rigs, overlays and multiplier badges no longer need
-// the CSS resolver in hostcss.ts. Other UI hosts still fall back to hostcss.
+// a CSS resolver; other UI hosts read uilayout.ts (inline style + stand-in boxes).
 import { artInset, frameOf, frameLen } from './symframes';
 
 export type HostBox = { x: number; y: number; w: number; h: number };
@@ -174,3 +174,64 @@ export function layoutStyle(el: HTMLElement): HostStyle | null {
 
 /** True when this node is covered by the TypeScript board/symbol layout tables. */
 export const isBoardHost = (el: HTMLElement) => layoutStyle(el) != null || layoutBox(el, 0, 0) != null;
+
+/**
+ * The declarations the old board stylesheet gave a node itself (before its inline style), as
+ * getComputedStyle-style props. Same values the CSS resolver produced; no selector engine.
+ */
+export function boardRuleProps(el: HTMLElement): Record<string, string> {
+	const p: Record<string, string> = {};
+	const cl = el.classList, id = el.id, par = el.parentElement;
+	const abs = () => { p.position = 'absolute'; };
+	const inset0 = () => { p.top = '0'; p.right = '0'; p.bottom = '0'; p.left = '0'; };
+	if (id === 'strips' || id === 'cells' || id === 'overlays') { abs(); inset0(); }
+	if (id === 'strips') { p['z-index'] = '0'; p['pointer-events'] = 'none'; }
+	if (id === 'cells') p['z-index'] = '1';
+	if (id === 'overlays') p['z-index'] = '2';
+	if (id === 'reelLines') p.display = 'none';
+	if (cl.contains('cell')) abs();
+	if (cl.contains('sym')) { abs(); inset0(); p['z-index'] = '1'; p.overflow = 'hidden'; }
+	if (cl.contains('sym') && cl.contains('art')) { p.top = p.right = p.bottom = p.left = '3.75%'; }
+	const rigdKid = cl.contains('rig') && !!par?.classList.contains('sym') && par.classList.contains('rigd');
+	const rigdBody = cl.contains('rgBody') && !!el.closest('.sym.rigd');
+	const still = cl.contains('rig') && cl.contains('still');
+	const stillBody = cl.contains('rgBody') && !!el.closest('.rig.still');
+	if (rigdKid || rigdBody || still || stillBody) { abs(); inset0(); p.display = 'block'; p['pointer-events'] = 'none'; }
+	if (rigdKid) p['z-index'] = '1';
+	if (cl.contains('ov')) { abs(); p.top = '0'; p.height = '100%'; p['z-index'] = '2'; p.overflow = 'hidden'; }
+	if (cl.contains('ov') && cl.contains('art')) { p['background-image'] = 'none'; p['clip-path'] = 'inset(-25% 0 -25% 0)'; }
+	if (cl.contains('wart')) { abs(); inset0(); }
+	if (el.tagName === 'IMG' && par?.classList.contains('wart') && el.closest('.ov')) {
+		p.display = 'block'; p.width = '100%'; p.height = '100%'; p['object-fit'] = 'cover'; p['pointer-events'] = 'none';
+	}
+	// tiles, slot shadows and frames the art replaced (display:none)
+	const pc = par?.classList;
+	if ((cl.contains('tile') && !!pc && (pc.contains('cell') || pc.contains('cspin') || pc.contains('ov')))
+		|| ((cl.contains('tRec') || cl.contains('tBd') || cl.contains('tFr') || cl.contains('wFrame')) && !!pc?.contains('ov'))
+		|| cl.contains('tGl') || cl.contains('tGw')
+		|| (cl.contains('slT') && !!el.closest('.cspin'))
+		|| (cl.contains('symSh') && !!pc?.contains('cell'))) p.display = 'none';
+	if (cl.contains('mx')) {
+		abs(); p.top = '2px'; p.right = '2px'; p['z-index'] = '3'; p.height = 'max(19.5px,calc(var(--cell)*0.318))';
+		p['aspect-ratio'] = '150/60'; p['pointer-events'] = 'none'; p['transform-origin'] = '85% 45%';
+		const inOv = !!el.closest('.ov');
+		if (pc?.contains('cell') && !cl.contains('stack')) { p.top = 'calc(1px + var(--mxdy,0)*var(--cell))'; p.bottom = 'auto'; p['transform-origin'] = '14% 45%'; p.height = 'max(18px,calc(var(--cell)*0.29))'; }
+		if (inOv) p.top = '3px';
+		if (inOv && cl.contains('total')) { p.top = 'auto'; p.right = 'auto'; p.left = '50%'; p.bottom = '5px'; p.translate = '-50% 0'; p.height = 'max(17px,calc(var(--cell)*0.22))'; p['transform-origin'] = '50% 60%'; }
+		if (inOv && cl.contains('stack')) p.height = 'max(24px,calc(var(--cell)*0.4))';
+	}
+	if (cl.contains('cell') && cl.contains('spinning')) p.visibility = 'hidden';
+	if (cl.contains('cell') && cl.contains('out')) p.opacity = '0';
+	if (cl.contains('cell') && cl.contains('dim')) { p.opacity = '1'; p.filter = 'brightness(0.48) saturate(0.7)'; }
+	if ((cl.contains('sym') || cl.contains('symGlow') || cl.contains('symSh')) && el.closest('.cell.puffed')) p.opacity = '0';
+	if (cl.contains('sym') && pc?.contains('cell')) { const t = wildTranslate(el); if (t !== 'none') p.translate = t; }
+	const ov = el.closest('.ov') as HTMLElement | null;
+	if (ov && (cl.contains('mLets') || (el.tagName === 'CANVAS' && cl.contains('stk_letters')))
+		&& (ov.classList.contains('merge') || (ov.getAttribute('data-reels') || '').includes(','))
+		&& [...ov.children].some((k) => k.tagName === 'CANVAS' && k.classList.contains('stk_db'))) p.display = 'none';
+	if (el.tagName === 'IMG' && cl.contains('stk_glow') && !!pc?.contains('ov')) {
+		abs(); inset0(); p.width = '100%'; p.height = '100%'; p['object-fit'] = 'cover'; p['pointer-events'] = 'none'; p['z-index'] = '0';
+	}
+	if (cl.contains('sd')) { abs(); p.display = 'block'; p['pointer-events'] = 'none'; }
+	return p;
+}
