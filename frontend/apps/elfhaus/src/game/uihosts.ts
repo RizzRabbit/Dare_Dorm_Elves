@@ -274,6 +274,9 @@ export function installUiHosts() {
 	if (tree) return tree;
 	tree = document.createElement('div');
 	tree.id = 'uiHostTree';
+	tree.setAttribute('aria-hidden', 'true');
+	tree.setAttribute('inert', '');
+	tree.style.cssText = 'position:fixed;left:-10000px;top:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;clip-path:inset(50%);z-index:-1';
 	tree.innerHTML = TEMPLATE;
 	hookBox(tree);
 	byId.clear();

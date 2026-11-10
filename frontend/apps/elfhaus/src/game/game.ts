@@ -37,7 +37,7 @@ import { initSkin } from './skin';
 import { initTimelines } from './tl';
 import { setBg, warmBg } from './bg';
 import { placeAlcove } from './alcove';
-import { mkCell, mkPlace, fitArmTag } from './mkboard';
+import { mkCell, mkPlace, fitArmTag, resetGeo } from './mkboard';
 import { initLoader, preloadArt, track, loaderReady, hideLoader } from './loader';
 import { preloadPuff } from './puff';
 import { symArtReady } from './symrig';
@@ -554,7 +554,8 @@ function placeBuy(portrait: boolean, fr: DOMRect) {
 export function layout() { introLayout(layoutRaw); }
 const MK = true; // approved mockup board (mkboard.ts); false = the old B2 alcove board
 function layoutRaw() {
-	// one shared scale (stage.ts): lay out in stage design px; the stage is never 'short' any more
+	// one shared scale (stage.ts): lay out in stage design px; always recompute geo on resize
+	resetGeo();
 	const st = fitStage(), W = st.w, H = st.h, portrait = st.portrait, short = false;
 	requestAnimationFrame(fitStrip); // v3.16f (#194): refit the HUD values once this layout has applied
 	document.body.classList.toggle('portrait', portrait);
@@ -702,6 +703,13 @@ function wire() {
 	// iOS reports the new size late after a rotation: lay out again once it has settled
 	addEventListener('orientationchange', () => { setTimeout(layout, 120); setTimeout(layout, 500); });
 	visualViewport?.addEventListener('resize', layout);
+	const hookDpr = () => {
+		try {
+			const mq = matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`);
+			mq.addEventListener?.('change', () => { hookDpr(); layout(); }, { once: true });
+		} catch { /* older webviews */ }
+	};
+	hookDpr();
 }
 function applyJurisdiction() {
 	if (S.jur.disabledAutoplay) $('#autoBtn').style.visibility = 'hidden';

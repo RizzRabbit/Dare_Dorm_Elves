@@ -5,25 +5,11 @@ import { Application, Container, Sprite, Texture } from 'pixi.js';
 import { Assets } from 'pixi.js';
 import { TZ } from '../layers';
 import { watchCanvas } from '../diag';
+import { DESIGNS, layoutKind, isPortraitKind, capResolution, fitStage, type LayoutKind } from '../stage';
 
-export type LayoutKind = 'phonePort' | 'tabletPort' | 'square' | 'land';
-
-export const DESIGNS: Record<LayoutKind, { w: number; h: number }> = {
-	phonePort: { w: 390, h: 844 },
-	tabletPort: { w: 768, h: 1024 },
-	square: { w: 1024, h: 768 },
-	land: { w: 1280, h: 800 },
-};
-
-export function layoutKind(vw: number, vh: number): LayoutKind {
-	const r = vw / Math.max(1, vh);
-	if (r < 0.72) return 'phonePort';
-	if (r < 0.95) return 'tabletPort';
-	if (r < 1.2) return 'square';
-	return 'land';
-}
-
-export const isPortrait = (k: LayoutKind) => k === 'phonePort' || k === 'tabletPort';
+export type { LayoutKind };
+export { DESIGNS, layoutKind };
+export const isPortrait = isPortraitKind;
 
 let app: Application | null = null, appP: Promise<Application | null> | null = null;
 /** Unscaled, covers the real viewport (dim / backdrop). */
@@ -60,23 +46,23 @@ export function uiInteractive(on: boolean) {
 
 function place() {
 	if (!app) return;
-	const vv = window.visualViewport;
-	const vw = Math.max(1, Math.round(vv?.width ?? window.innerWidth));
-	const vh = Math.max(1, Math.round(vv?.height ?? window.innerHeight));
-	viewW = vw; viewH = vh;
-	uiKind = layoutKind(vw, vh);
-	const D = DESIGNS[uiKind];
-	designW = D.w; designH = D.h;
+	try {
+	const st = fitStage();
+	viewW = st.vw; viewH = st.vh;
+	uiKind = st.kind;
+	designW = st.w; designH = st.h;
 	const cv = app.canvas as HTMLCanvasElement;
-	const r = Math.min(3, Math.max(1, window.devicePixelRatio || 1));
+	const r = capResolution();
 	if (app.renderer.resolution !== r) app.renderer.resolution = r;
-	if (app.renderer.width !== vw || app.renderer.height !== vh) app.renderer.resize(vw, vh);
-	cv.style.cssText = `position:fixed;left:0;top:0;width:${vw}px;height:${vh}px;pointer-events:${cv.style.pointerEvents || 'none'};z-index:${uiZ};touch-action:none`;
-	uiScale = Math.min(vw / D.w, vh / D.h);
-	uiRoot.scale.set(uiScale);
-	uiRoot.position.set((vw - D.w * uiScale) / 2, (vh - D.h * uiScale) / 2);
+	if (app.renderer.width !== st.vw || app.renderer.height !== st.vh) app.renderer.resize(st.vw, st.vh);
+	cv.style.cssText = `position:fixed;left:0;top:0;width:${st.vw}px;height:${st.vh}px;pointer-events:${cv.style.pointerEvents || 'none'};z-index:${uiZ};touch-action:none`;
+	// Same uniform contain scale as the board / room / HUD (#root). Never a second, disagreeing scale.
+	uiScale = st.s;
+	uiRoot.scale.set(st.s);
+	uiRoot.position.set(st.ox, st.oy);
 	relayout.forEach((f) => f());
 	kickUi();
+	} catch (e) { console.warn('ui place', e); }
 }
 
 export function initUiStage() {
@@ -110,6 +96,13 @@ export function initUiStage() {
 		addEventListener('resize', later);
 		visualViewport?.addEventListener('resize', later);
 		addEventListener('orientationchange', () => { setTimeout(later, 120); setTimeout(later, 500); });
+		const hookDpr = () => {
+			try {
+				const mq = matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`);
+				mq.addEventListener?.('change', () => { hookDpr(); later(); }, { once: true });
+			} catch { /* older webviews */ }
+		};
+		hookDpr();
 		a.ticker.add(() => {
 			let live = false;
 			for (const t of tickers) { if (t()) live = true; else tickers.delete(t); }

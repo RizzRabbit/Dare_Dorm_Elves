@@ -30,6 +30,7 @@ export type MkGeo = {
 	cmp: { x: number; y: number; s: number };
 };
 export let G: MkGeo | null = null;
+export function resetGeo() { G = null; }
 
 /** The mockup's layout() for the current stage (design units). */
 export function mkGeo(): MkGeo {
@@ -148,85 +149,109 @@ export function mkGeo(): MkGeo {
 			turbo: { x: 606 + pair / 2 - ab / 2, y: top + bh + gp + ab / 2, s: ab, ic: 0.98 * ab / 64 },
 			bonus: { v: 'v', x: 606, y: top + bh / 2, s: s0 }, cmp };
 	}
-	// v28i: tablet near-square gets a TALLER design so fit() doesn't letterbox 16:9 into a square
-	// window (that empty floor under the HUD). Desktop stays 1920×1080.
-	const tab = ST.tablet;
+	// Landscape / square / desktop share the approved right-stack chrome (buy, spin, auto, turbo
+	// beside the board, Roxy on the right, HUD under the board). The inner design aspect follows
+	// the fixed stage so fit() fills the design without a second letterbox.
 	const tabAR = ST.w / Math.max(1, ST.h);
-	const D = tab
-		? { w: 1920, h: Math.max(1080, Math.round(1920 / Math.min(1.78, Math.max(1.05, tabAR)))) }
-		: { w: 1920, h: 1080 };
+	const D = { w: 1920, h: Math.max(1080, Math.round(1920 / Math.min(1.78, Math.max(1.05, tabAR)))) };
 	const f = fit(D), tt = t48(f.k), sb = (s: number) => Math.max(s, tt);
-	const mb = sb(tab ? 180 : 128), ph = ST.tb > 1.001 || mb > 116;
-	const s0 = tab ? 1.25 : ph ? 1.2 : 1.05, bw = 216 * s0, bh = 240 * s0;
-	const ab = sb(tab ? 120 : 106), gp = tab ? 22 : 18;
-	if (tab) {
-		// v28l: buy joins the right stack (buy, spin, auto, turbo); group shifts left; Roxy bigger at right
-		const buyS = 0.85, buyW = 216 * buyS * 0.92, buyH = 240 * buyS * 0.92;
-		const ROXY_CLEAR = Math.round(D.w * 0.80);
-		const spSz = sb(200);
-		const btnCol = Math.max(spSz, buyW) + 16;
-		const hudH = 300;
-		const hudY = D.h - hudH - 16;
-		const topMin = 215;
-		const maxBsH = (hudY - 24 - topMin) / (BH + FB + FT);
-		const playL = 64, playR = ROXY_CLEAR - 8;
-		const maxBsW = (playR - playL - btnCol - 14) / (BW + 2 * FT);
-		const bs = Math.min(1.32, maxBsH, maxBsW);
-		const fw = (BW + 2 * FT) * bs;
-		const playW = fw + 14 + btnCol;
-		const playX0 = playL + Math.max(0, (playR - playL - playW) / 2);
-		const bx = playX0 + FT * bs;
-		let by = hudY - 22 - (BH + FB) * bs;
-		if (by - FT * bs < topMin) by = topMin + FT * bs;
-		const BC = bx + BW * bs / 2;
-		const spinX = playX0 + fw + 14 + btnCol / 2 - 8;
-		const buyX = spinX, buyY = by - FT * bs + buyH / 2;
-		const spinY = buyY + buyH / 2 + 16 + spSz / 2;
-		const autoX = spinX, turboX = spinX;
-		const autoY = spinY + spSz / 2 + 14 + ab / 2;
-		const turboY = autoY + ab + 12;
-		const hudW = Math.min(1400, 2 * (BC - 44), 2 * (ROXY_CLEAR - 16 - BC));
-		const hudX = BC - hudW / 2;
-		const mbT = sb(Math.round(hudH * 0.45)), betHalf = 156, clear = betHalf + mbT / 2 + 52;   // v28m: tabP-sized +/-
-		const balX = hudX + 44, winR = hudX + hudW - 44;
-		const zoneL = Math.max(240, (BC - clear) - balX), zoneR = Math.max(240, winR - (BC + clear));
-				const tls = 42, tvs = 80;
-		return { mode: 'land', ...f, D, loose: false, bx, by, bs, T: by - FT * bs,
-			logo: { x: BC, y: by - FT * bs - 18, s: 0.44 },
-			hud: { x: hudX, y: hudY, w: hudW, h: hudH, r: 22 },
-			fBal: { x: balX, y: hudY + 50, ls: tls, vs: tvs, w: zoneL },
-			fBet: { x: BC - 96, y: hudY + 50, ls: tls, vs: tvs, w: 192 },
-			fWin: { x: BC + clear, y: hudY + 50, ls: tls, vs: tvs, w: zoneR },
-			minus: { x: BC - betHalf, y: hudY + hudH / 2 - 4, s: mbT, ic: 2.2 },
-			plus: { x: BC + betHalf, y: hudY + hudH / 2 - 4, s: mbT, ic: 2.2 },
-			spin: { x: spinX, y: spinY, s: spSz, ic: 2.05 },
-			auto: { x: autoX, y: autoY, s: ab, ic: 1.95 }, turbo: { x: turboX, y: turboY, s: ab, ic: 1.95 },
-			bonus: { v: 'v', x: buyX, y: buyY, s: buyS }, cmp };
-	}
-	const bx = 430, by = 170, bs = 1;
+	const ab = sb(120);
+	const buyS = 0.85, buyW = 216 * buyS * 0.92, buyH = 240 * buyS * 0.92;
+	const ROXY_CLEAR = Math.round(D.w * 0.80);
+	const spSz = sb(200);
+	const btnCol = Math.max(spSz, buyW) + 16;
+	const hudH = 300;
+	const hudY = D.h - hudH - 16;
+	const topMin = 215;
+	const maxBsH = (hudY - 24 - topMin) / (BH + FB + FT);
+	const playL = 64, playR = ROXY_CLEAR - 8;
+	const maxBsW = (playR - playL - btnCol - 14) / (BW + 2 * FT);
+	const bs = Math.min(1.32, maxBsH, maxBsW);
+	const fw = (BW + 2 * FT) * bs;
+	const playW = fw + 14 + btnCol;
+	const playX0 = playL + Math.max(0, (playR - playL - playW) / 2);
+	const bx = playX0 + FT * bs;
+	let by = hudY - 22 - (BH + FB) * bs;
+	if (by - FT * bs < topMin) by = topMin + FT * bs;
 	const BC = bx + BW * bs / 2;
-	const top = 500 - (bh + gp + ab) / 2;
-	const ax = Math.max(bw / 2 - ab / 2, (ab + gp) / 2);
-	const spSz = sb(168);
-	const hudW = 1520, hudH = 200, hudY = 868;
+	const spinX = playX0 + fw + 14 + btnCol / 2 - 8;
+	const buyX = spinX, buyY = by - FT * bs + buyH / 2;
+	const spinY = buyY + buyH / 2 + 16 + spSz / 2;
+	const autoX = spinX, turboX = spinX;
+	const autoY = spinY + spSz / 2 + 14 + ab / 2;
+	const turboY = autoY + ab + 12;
+	const hudW = Math.min(1400, 2 * (BC - 44), 2 * (ROXY_CLEAR - 16 - BC));
 	const hudX = BC - hudW / 2;
-	const betHalf = 130, clear = betHalf + mb / 2 + 24;
-	const balX = hudX + 40, winR = hudX + hudW - 40;
-	const zoneL = Math.max(200, (BC - clear) - balX), zoneR = Math.max(200, winR - (BC + clear));
-	const spinX = hudX + hudW + 16 + spSz / 2;
-	const spinY = hudY + hudH / 2;
-	const autoX = 236 - ax, turboX = 236 + ax, pairY = top + bh + gp + ab / 2;
+	const mbT = sb(Math.round(hudH * 0.45)), betHalf = 156, clear = betHalf + mbT / 2 + 52;
+	const balX = hudX + 44, winR = hudX + hudW - 44;
+	const zoneL = Math.max(240, (BC - clear) - balX), zoneR = Math.max(240, winR - (BC + clear));
+	const tls = 42, tvs = 80;
 	return { mode: 'land', ...f, D, loose: false, bx, by, bs, T: by - FT * bs,
-		logo: { x: BC, y: by - FT * bs - 20, s: 0.36 },
+		logo: { x: BC, y: by - FT * bs - 18, s: 0.44 },
 		hud: { x: hudX, y: hudY, w: hudW, h: hudH, r: 22 },
-		fBal: { x: balX, y: hudY + 32, ls: 20, vs: 40, w: zoneL },
-		fBet: { x: BC - 80 * (ph ? ST.tb : 1), y: hudY + 32, ls: 20, vs: 40, w: 160 * (ph ? ST.tb : 1) },
-		fWin: { x: BC + clear, y: hudY + 32, ls: 20, vs: 40, w: zoneR },
-		minus: { x: BC - betHalf, y: hudY + hudH / 2 - 4, s: mb, ic: 2.2 },
-		plus: { x: BC + betHalf, y: hudY + hudH / 2 - 4, s: mb, ic: 2.2 },
-		spin: { x: spinX, y: spinY, s: spSz, ic: 1.75 },
-		auto: { x: autoX, y: pairY, s: ab, ic: 1.62 }, turbo: { x: turboX, y: pairY, s: ab, ic: 1.62 },
-		bonus: { v: 'v', x: 236, y: top + bh / 2, s: s0 }, cmp };
+		fBal: { x: balX, y: hudY + 50, ls: tls, vs: tvs, w: zoneL },
+		fBet: { x: BC - 96, y: hudY + 50, ls: tls, vs: tvs, w: 192 },
+		fWin: { x: BC + clear, y: hudY + 50, ls: tls, vs: tvs, w: zoneR },
+		minus: { x: BC - betHalf, y: hudY + hudH / 2 - 4, s: mbT, ic: 2.2 },
+		plus: { x: BC + betHalf, y: hudY + hudH / 2 - 4, s: mbT, ic: 2.2 },
+		spin: { x: spinX, y: spinY, s: spSz, ic: 2.05 },
+		auto: { x: autoX, y: autoY, s: ab, ic: 1.95 }, turbo: { x: turboX, y: turboY, s: ab, ic: 1.95 },
+		bonus: { v: 'v', x: buyX, y: buyY, s: buyS }, cmp };
+}
+
+/** Snap the HUD bar, spin and buy to the window's safe edges after the uniform contain fit.
+ *  Translates (never stretches): bottom-anchored chrome drops into the lower letterbox; a
+ *  nearly full-width bar grows to the side safe edges when the stage letterboxes on the sides.
+ *  Overflowing controls are pulled back so nothing clips the viewport. */
+function snapGeo(g: MkGeo): MkGeo {
+	const pad = 8;
+	const k = g.k || 1;
+	const toSt = (x: number, y: number) => ({ x: g.ox + x * k, y: g.oy + y * k });
+	const hudSt = toSt(g.hud.x, g.hud.y);
+	const hudBottomSt = hudSt.y + g.hud.h * k;
+	const screenSlack = (ST.oy + (ST.h - hudBottomSt) * ST.s) - pad;
+	const dySt = screenSlack / Math.max(1e-6, ST.s);
+	const dy = dySt / k;
+	const nearBottom = (g.hud.y + g.hud.h) * k + g.oy > ST.h * 0.7;
+	if (nearBottom && Math.abs(dy) > 0.5) {
+		const shift = (o: { y: number } | null | undefined) => { if (o) o.y += dy; };
+		const hudTop = g.hud.y;
+		const isLow = (y: number) => y >= hudTop - 40 || y > g.by + BH * g.bs * 0.6;
+		shift(g.hud);
+		if (isLow(g.spin.y)) shift(g.spin);
+		if (isLow(g.auto.y)) shift(g.auto);
+		if (isLow(g.turbo.y)) shift(g.turbo);
+		if (isLow(g.bonus.y)) shift(g.bonus);
+		if (isLow(g.minus.y)) shift(g.minus);
+		if (isLow(g.plus.y)) shift(g.plus);
+		if (isLow(g.fBal.y)) shift(g.fBal);
+		if (isLow(g.fBet.y)) shift(g.fBet);
+		if (isLow(g.fWin.y)) shift(g.fWin);
+	}
+	// Full-bleed HUD: reach the window's side safe edges when the design was already nearly full width.
+	if (g.hud.w * k > ST.w * 0.85) {
+		const leftSt = (pad - ST.ox) / Math.max(1e-6, ST.s);
+		const rightSt = (ST.vw - pad - ST.ox) / Math.max(1e-6, ST.s);
+		g.hud.x = (leftSt - g.ox) / k;
+		g.hud.w = (rightSt - leftSt) / k;
+	}
+	// Pull any bottom-right control back if it would clip the viewport after the contain fit.
+	const clampPt = (x: number, y: number, half: number) => {
+		const st = toSt(x, y);
+		const sx = ST.ox + st.x * ST.s, sy = ST.oy + st.y * ST.s, r = half * k * ST.s;
+		let nx = x, ny = y;
+		if (sx + r > ST.vw - pad) nx = ((ST.vw - pad - r - ST.ox) / ST.s - g.ox) / k;
+		if (sx - r < pad) nx = ((pad + r - ST.ox) / ST.s - g.ox) / k;
+		if (sy + r > ST.vh - pad) ny = ((ST.vh - pad - r - ST.oy) / ST.s - g.oy) / k;
+		if (sy - r < pad) ny = ((pad + r - ST.oy) / ST.s - g.oy) / k;
+		return { x: nx, y: ny };
+	};
+	const cSpin = clampPt(g.spin.x, g.spin.y, g.spin.s / 2);
+	g.spin.x = cSpin.x; g.spin.y = cSpin.y;
+	const buyHalf = 216 * g.bonus.s * 0.92 / 2;
+	const cBuy = clampPt(g.bonus.x, g.bonus.y, buyHalf);
+	g.bonus.x = cBuy.x; g.bonus.y = cBuy.y;
+	return g;
 }
 
 // ---------------------------------------------------------------- DOM placement
@@ -236,7 +261,7 @@ function css(el: HTMLElement | null, o: Record<string, string | number>) {
 	for (const [k, v] of Object.entries(o)) el.style.setProperty(k, typeof v === 'number' ? v.toFixed(2) + 'px' : v, 'important');
 }
 /** Board cell (stage px, whole px for the strip engine) for this layout. */
-export function mkCell() { G = mkGeo(); return Math.max(1, Math.floor(CELL * G.bs * G.k)); }
+export function mkCell() { G = snapGeo(mkGeo()); return Math.max(1, Math.floor(CELL * G.bs * G.k)); }
 
 /** Size the armed-mode pill to its full title (9-slice sprite follows the box). Abbreviates only when the
  *  full name would still collide with SPIN after the pill has used all of the available gap. */
@@ -260,7 +285,7 @@ export function fitArmTag() {
 
 /** Lay the board, logo, HUD bar, controls and BUY plate out (stage px). cell = the integer cell layoutRaw applied. */
 export function mkPlace(cell: number) {
-	const g = G || mkGeo(); G = g;
+	const g = G || snapGeo(mkGeo()); G = g;
 	const X = (x: number) => g.ox + x * g.k, Y = (y: number) => g.oy + y * g.k, L = (v: number) => v * g.k;
 	const r = document.documentElement.style;
 	// board: whole-px cells; the frame keeps the mockup proportions around them, centred where the mockup puts it

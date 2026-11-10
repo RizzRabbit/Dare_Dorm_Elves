@@ -9,12 +9,11 @@
 // depths (far: small, slow; near the glass: larger, soft, sparse), the fire / embers / dust / fire light with the
 // fireplace, the bulbs with the wall / fireplace / tree they hang on. Cast shadows of the board, HUD bar and BUY plate.
 import { Application, Container, Graphics, Sprite } from 'pixi.js';
-import { ST } from '../stage';
+import { ST, capResolution, viewSize } from '../stage';
 import { PZ } from '../layers';
 import { G as MKG, FW, FT, BW, BH } from '../mkboard';
 import { createRoxy, type RoxyAdapter } from '../roxyrig';
 import LIGHTS from '../chalet/bglights.json';
-import { toStage } from '../stage';
 import { P as PL, ROOMS, buildRoom, camTick, dAt, listenCam, loadFx, loadRoom, placeShadows, reduced, roomOn, tex, tickRoom, wallItem, type Key } from './room';
 import { frameFire, frameGlint, placeDepth } from './depth';
 import { watchCanvas } from '../diag';
@@ -23,6 +22,7 @@ export let app: Application | null = null;
 export let rig: RoxyAdapter | null = null;
 const amb = new Container(), snowL = new Container(), glassL = new Container(), snowMask = new Graphics(), fireL = new Container(), twL = new Container(), twC = new Container(), twT = new Container(), roxyL = new Container(), fx = new Container();
 const roxyMask = new Graphics();
+const world = new Container();
 let now = 0, bonus = false, nightK = 0, snap = false, roxyOn = true, hold = false, free = false, last: [boolean, DOMRect] | null = null;
 const WAIST = 60;
 export const roxyAt = { x: 0, y: 0, s: 1, portrait: false };
@@ -144,12 +144,20 @@ function tick(dt: number) {
 
 /** Start the room + Roxy. Resolves false when WebGL / assets are unavailable (the game then runs on the #bg painting). */
 export async function initScene(): Promise<boolean> {
-	const cv = document.getElementById('scene') as HTMLCanvasElement | null; if (!cv) return false;
+	const cv = (document.getElementById('scene') || document.querySelector('canvas#scene')) as HTMLCanvasElement | null;
+	if (!cv) { console.warn('scene off: no #scene canvas'); return false; }
 	try {
 		const a = new Application();
-		await a.init({ canvas: cv, width: ST.w, height: ST.h, resolution: res(), autoDensity: false, backgroundAlpha: 0, antialias: true,
+		const { vw, vh } = viewSize();
+		await a.init({ canvas: cv, width: vw, height: vh, resolution: capResolution(), autoDensity: false, backgroundAlpha: 0, antialias: true,
 			preference: 'webgl', autoStart: true, sharedTicker: false, hello: false, powerPreference: 'high-performance' });
 		watchCanvas(cv, 'scene');
+		// #scene must live outside #root: that node is contain-scaled, and a viewport-covering
+		// room canvas parented there would be scaled again (or clipped to the design rect).
+		const root = document.getElementById('root');
+		if (root && cv.parentElement !== root.parentElement) {
+			root.parentElement ? root.parentElement.insertBefore(cv, root) : document.body.appendChild(cv);
+		}
 		const [r] = await Promise.all([createRoxy(), loadFx(), loadRoom(ST.portrait ? 'port' : 'land')]);
 		rig = r; app = a;
 		roxyL.addChild(r.view, roxyMask); clipRoxy(null);
@@ -163,8 +171,9 @@ export async function initScene(): Promise<boolean> {
 		amb.addChild(PL.out, snowL, snowMask, PL.glass, PL.wall, twL, PL.chim, PL.tree, PL.grade, PL.chimFx, PL.shadow);
 		PL.glass.addChild(glassL);
 		// fix6 #25: explicit z from the layer map (layers.ts PZ), not addChild order
-		a.stage.sortableChildren = true; amb.zIndex = PZ.room; roxyL.zIndex = PZ.roxy; PL.near.zIndex = PZ.roomNear; fx.zIndex = PZ.roomFx;
-		a.stage.addChild(amb, roxyL, PL.near, fx);
+		a.stage.sortableChildren = true; amb.zIndex = PZ.room; world.zIndex = PZ.roxy; PL.near.zIndex = PZ.roomNear; fx.zIndex = PZ.roomFx;
+		world.addChild(roxyL);
+		a.stage.addChild(amb, world, PL.near, fx);
 		listenCam();
 		a.ticker.add((t) => {
 			const dt = Math.min(0.05, t.deltaMS / 1000); now += dt;
@@ -176,26 +185,30 @@ export async function initScene(): Promise<boolean> {
 		document.body.classList.add('hasScene');
 		(window as any).__scene = { app: a, rig: r, roxyAt, roxyL, planes: PL };
 		return true;
-	} catch (e) { console.warn('scene off (no WebGL?)', e); cv.style.display = 'none'; return false; }
+	} catch (e) { console.warn('scene off (no WebGL?)', e); try { cv.style.display = 'none'; } catch {} return false; }
 }
 function clipRoxy(y: number | null) {
 	if (y === null || y >= ST.h) { roxyL.mask = null; roxyMask.visible = false; return; }
 	roxyMask.visible = true; roxyMask.clear().rect(-50, -400, ST.w + 100, y + 400).fill(0xffffff); roxyL.mask = roxyMask;
 }
-const res = () => Math.min(2, Math.max(0.5, ST.s * (window.devicePixelRatio || 1)));
 /** Fit the ambient layer to the #bg cover fit and place Roxy beside the board (stage design px). Called from layout(). */
 export function placeScene(portrait: boolean, fr: DOMRect) {
 	if (!app || !rig) return;
 	last = [portrait, fr];
-	const W = ST.w, H = ST.h, cv = app.canvas as HTMLCanvasElement;
-	app.renderer.resize(W, H, res()); cv.style.width = W + 'px'; cv.style.height = H + 'px';
-	// #bg: background-size cover, centred, over the whole stage
-	const key: Key = portrait ? 'port' : 'land', P = PAINT[key], c0 = Math.max(W / P.iw, H / P.ih);
+	const { vw, vh } = viewSize(), cv = app.canvas as HTMLCanvasElement;
+	const dpr = capResolution();
+	if (app.renderer.resolution !== dpr) app.renderer.resolution = dpr;
+	app.renderer.resize(vw, vh);
+	cv.style.cssText = `position:fixed;left:0;top:0;width:${vw}px;height:${vh}px;pointer-events:none;display:block`;
+	// Design-space objects (Roxy) ride the same contain transform as #root.
+	world.position.set(ST.ox, ST.oy);
+	world.scale.set(ST.s);
+	// Room art cover-fits the WINDOW so letterbox margins are the room, not empty bars.
+	const key: Key = portrait ? 'port' : 'land', P = PAINT[key], c0 = Math.max(vw / P.iw, vh / P.ih);
 	if (!tex.room[key]) void loadRoom(key).then((ok) => { if (ok && last && last[0] === portrait) placeScene(...last); });
-	// with the room planes: a little overscan so the camera never shows a plane's edge (#bg is hidden then)
-	const m = tex.room[key] && tex.fx ? 16 * c0 : 0, c = Math.max((W + 2 * m) / P.iw, (H + 2 * m) / P.ih);
-	fit = { c, ox: (W - P.iw * c) / 2, oy: (H - P.ih * c) / 2, key, A: c0 * (P.iw === 1920 ? 1 : 1920 / 1080) * 0.95 };
-	const room = buildRoom(key, fit, W, H);
+	const m = tex.room[key] && tex.fx ? 16 * c0 : 0, c = Math.max((vw + 2 * m) / P.iw, (vh + 2 * m) / P.ih);
+	fit = { c, ox: (vw - P.iw * c) / 2, oy: (vh - P.ih * c) / 2, key, A: c0 * (P.iw === 1920 ? 1 : 1920 / 1080) * 0.95 };
+	const room = buildRoom(key, fit, vw, vh);
 	document.body.classList.toggle('hasRoom', room);
 	if (!room) for (const o of Object.values(PL)) o.position.set(0, 0);
 	build();
@@ -207,10 +220,9 @@ export function placeScene(portrait: boolean, fr: DOMRect) {
 		let x: number, feet: number, s: number;
 		if (g.mode === 'cmp') { x = X(g.cmp.x); feet = Y(g.cmp.y); s = g.cmp.s * f * k; }
 		else {
-			// v28j: tablet — further right + slightly smaller so the bigger play group clears her torso
-			const tab = ST.tablet;
+			// Right-stack landscape (square + desktop): Roxy stands in the right column, same approved 1280x800 placement.
 			const Dw = g.D?.w ?? 1920, Dh = g.D?.h ?? 1080;
-			x = X(tab ? Dw * 0.89 : 1440)   /* v28l: bigger side character, arm margin */; feet = Y(tab ? Dh - 150 : 852); s = (tab ? 1.25 : 1.26) * f * k;
+			x = X(Dw * 0.89); feet = Y(Dh - 150); s = 1.25 * f * k;
 		}   // review #13 / v28i
 		if (!hold) { R.view.position.set(x, feet); R.view.scale.set(s); }
 		roxyL.visible = true; clipRoxy(null); R.shadow(true);
@@ -250,9 +262,19 @@ export function placeScene(portrait: boolean, fr: DOMRect) {
 		Object.assign(roxyAt, { x: rx * kp, y: feet * kp, s: rs * kp, portrait });
 	}
 	// cast shadows (stage px) + the frame's share of the light (DOM)
-	const buy = document.getElementById('buyBtn'), br = buy && buy.offsetParent ? toStage(buy.getBoundingClientRect()) : null;
-	const hud = g ? { x: g.ox + g.hud.x * g.k, y: g.oy + g.hud.y * g.k, w: g.hud.w * g.k, h: g.hud.h * g.k } : null;
-	placeShadows(fr, hud, br && br.width > 4 ? br : null, u);
+	// Shadows live on the room (screen space). Use viewport rects, not stage design px.
+	const buy = document.getElementById('buyBtn');
+	const buyR = buy ? buy.getBoundingClientRect() : null;
+	const hudEl = document.getElementById('hud');
+	const hudR = hudEl ? hudEl.getBoundingClientRect() : (g ? {
+		x: ST.ox + (g.ox + g.hud.x * g.k) * ST.s,
+		y: ST.oy + (g.oy + g.hud.y * g.k) * ST.s,
+		w: g.hud.w * g.k * ST.s,
+		h: g.hud.h * g.k * ST.s,
+	} : null);
+	const hud = hudR && 'width' in hudR ? { x: hudR.x, y: hudR.y, w: hudR.width, h: hudR.height } : hudR;
+	const frScreen = document.getElementById('frame')?.getBoundingClientRect() ?? null;
+	placeShadows(frScreen, hud, buyR && buyR.width > 4 ? buyR : null, u * ST.s);
 	placeDepth(fr);
 	void BW; void dAt;
 }

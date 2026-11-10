@@ -4,14 +4,13 @@
 	onMount(() => { initGame(); });
 </script>
 
-<div id="root">
 <div id="bg"></div>
 <canvas id="scene" aria-hidden="true"></canvas>
+<div id="root">
 <div id="app">
 	<header id="top" aria-hidden="true"></header>
 	<div id="stage"></div>
 	<footer id="hud" aria-hidden="true"></footer>
-	<div id="srHud" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 </div>
 
 <div id="loader" role="dialog" aria-label="Loading Elfhaus">
@@ -25,3 +24,4 @@
 	<div id="sting" aria-hidden="true"><div class="stBox"><img class="stGlow" alt="" /><img class="stLogo" alt="Rizzin Games" /><div class="stGlint"></div></div></div>
 </div>
 </div>
+<div id="srHud" class="sr-only" aria-live="polite" aria-atomic="true"></div>

@@ -14,9 +14,9 @@
   --drop:0 3px 0 #2A243366, 0 8px 14px -4px #2A243355;
 }
 *{box-sizing:border-box}
-html,body{margin:0;height:100%;overflow:hidden;background:#B9B5C6;color:var(--ink);font-family:"Nunito",system-ui,sans-serif;font-weight:700;touch-action:manipulation;user-select:none}
+html,body{margin:0;height:100%;overflow:hidden;background:#3a2e3c;color:var(--ink);font-family:"Nunito",system-ui,sans-serif;font-weight:700;touch-action:manipulation;user-select:none}
 /* PLACEHOLDER background (painted grey-violet wash) until assets/final/background_* lands */
-#bg{position:fixed;inset:0;background:var(--paint),radial-gradient(ellipse at 50% 35%,#B7B1C8,#8C8599 55%,#5A5468);background-size:cover;background-position:center}
+#bg{position:fixed;inset:0;z-index:0;background:var(--paint),radial-gradient(ellipse at 50% 35%,#B7B1C8,#8C8599 55%,#5A5468);background-size:cover;background-position:center}
 #bg.art{background-repeat:no-repeat}
 #bgFade{position:fixed;inset:0;background-repeat:no-repeat;pointer-events:none;opacity:0;will-change:opacity}
 body.inBonus #bg:not(.fs){filter:saturate(1.1) hue-rotate(18deg) brightness(.92)}
@@ -40,7 +40,7 @@ body.short #top{display:none;height:0}
 body.short #hud{padding-bottom:4px}
 body:not(.portrait).short #hud{max-width:none}
 
-#scene{position:fixed;left:0;top:0;pointer-events:none;display:block}
+#scene{position:fixed;inset:0;z-index:0;width:100%;height:100%;pointer-events:none;display:block}
 strips/cells/lines draw above */
 
 /* ---- In-game title: ELFHAUS wordmark centered above the reel board ---- */
@@ -73,7 +73,7 @@ body.portrait .otAmt{font-size:34px}
 #hud button{position:relative}
 #lGo{z-index:1}
 #lGo{position:relative}
-#root{position:fixed;left:0;top:0;width:var(--dw,100vw);height:var(--dh,100vh);overflow:hidden;transform-origin:0 0;
+#root{position:fixed;left:0;top:0;z-index:1;width:var(--dw,100vw);height:var(--dh,100vh);overflow:hidden;background:transparent;transform-origin:0 0;
   transform:translate(var(--ox,0),var(--oy,0)) scale(var(--s,1));contain:layout size}
 body.tb .lock{font-size:calc(var(--cell)*.085*var(--tbs))}
 body.tb #fsCap{font-size:calc(13px*var(--tb))}
@@ -141,7 +141,7 @@ body{--at:2} body.turbo{--at:1}
 /* ===== house-rule pass (final): every animated property is transform or opacity ===== */
 #lBar i{width:100%;transform:scaleX(0);transform-origin:0 50%}
 
-#root #bg,#root #bgFade,#root #scene,#root #app,#root #loader,body.short:not(.portrait) #root #top{position:absolute}
+#root #app,#root #loader,body.short:not(.portrait) #root #top{position:absolute}
 /* v3.9: the whole settings row is the tap target (settings.ts forwards a row tap to its switch); the switch's own hit area
 
 /* ===== v3.13 (James 2026-10-26): panels (panels.ts) =====
@@ -193,3 +193,11 @@ body.portrait #app #hud::before{grid-row:3}
 #sting .stGlow{position:absolute;left:50%;top:50%;width:135%;translate:-50% -50%;opacity:0;pointer-events:none}
 
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+
+/* Pixi paints the game; in-document shells and the off-document host tree must never show as DOM text or unstyled chrome. */
+#top{opacity:0!important;pointer-events:none!important}
+#hud{pointer-events:none!important}
+#uiHostTree{position:fixed!important;left:-10000px!important;top:0!important;width:1px!important;height:1px!important;overflow:hidden!important;opacity:0!important;pointer-events:none!important;clip-path:inset(50%)!important;z-index:-1!important}
+#srHud,.sr-only{position:fixed!important;left:0!important;top:0!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;clip-path:inset(50%)!important;border:0!important;white-space:nowrap;opacity:0!important;color:transparent!important;font-size:1px!important;pointer-events:none!important}
+body[data-ready="1"] #loader,body[data-ready="1"] #loader.out{opacity:0!important;pointer-events:none!important;visibility:hidden!important}

@@ -28,22 +28,27 @@ export const uiPixiOn = () => on;
 
 export async function initUiPixi(): Promise<boolean> {
 	if (on) return true;
-	const app = await initUiStage();
-	if (!app) return false;
 	try {
-		await Promise.all([loadAtlas('ui'), loadAtlas('titles'), loadUiText(), loadElfArt(), loadUiWidgets()]);
+		const app = await initUiStage();
+		if (!app) { console.warn('ui pixi: no stage'); return false; }
+		try {
+			await Promise.all([loadAtlas('ui'), loadAtlas('titles'), loadUiText(), loadElfArt(), loadUiWidgets()]);
+		} catch (e) {
+			console.warn('ui pixi assets', e);
+			return false;
+		}
+		on = true;
+		document.body.classList.add('pixiUi');
+		await initHud();
+		await initWins();
+		await initPanels();
+		kickUi();
+		installBounds();
+		return true;
 	} catch (e) {
-		console.warn('ui pixi assets', e);
+		console.warn('ui pixi init', e);
 		return false;
 	}
-	on = true;
-	document.body.classList.add('pixiUi');
-	await initHud();
-	await initWins();
-	await initPanels();
-	kickUi();
-	installBounds();
-	return true;
 }
 
 type Issue = { label: string; parent: string; why: string; box: number[]; pb: number[] };
