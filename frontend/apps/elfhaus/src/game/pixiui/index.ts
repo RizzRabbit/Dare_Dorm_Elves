@@ -7,8 +7,8 @@ import { loadElfArt } from './elves';
 import { loadUiWidgets } from './widgets';
 import { buyVisible, confirmVisible, tapBuyCard } from './buy';
 import { introVisible } from './intro';
-import { initHud, layoutHud, syncHud, hudHit, hudRects } from './hud';
-import { initWins, winsVisible, relaxUiTier, playCardFlip } from './wins';
+import { initHud, layoutHud, syncHud, hudHit, hudRects, hudProbe } from './hud';
+import { initWins, winsVisible, relaxUiTier, playCardFlip, winsProbe } from './wins';
 import { initPanels } from './menu';
 import { banner, toast, hideToast, bigWin } from '../ui';
 import { maxWinCelebration } from '../maxwin';
@@ -125,6 +125,14 @@ function installBounds() {
 		hudHit: (x: number, y: number) => hudHit(x, y),
 		layoutHud,
 		hudRects,
+		motionProbe: () => ({
+			t: performance.now(),
+			hud: hudProbe(),
+			wins: winsProbe(),
+			board: (globalThis as any).__boardFx?.() ?? null,
+			poses: motionSamples(40),
+			ant: [...document.querySelectorAll('.strip.ant, .ant')].map((e) => e.id || e.className).slice(0, 8),
+		}),
 		winsOpen: winsVisible,
 		relaxTier: relaxUiTier,
 		banner,

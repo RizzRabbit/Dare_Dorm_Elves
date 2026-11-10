@@ -840,14 +840,25 @@ const FLIP_TITLE: Record<'triple_dare' | 'hidden', string> = {
 	hidden: 't_bonus_powder',
 };
 
-async function loadTex(src: string) {
-	if (!src) return Texture.EMPTY;
-	try {
-		const t = await Assets.load(src);
-		return t instanceof Texture ? t : Texture.from(src);
-	} catch {
-		try { return Texture.from(src); } catch { return Texture.EMPTY; }
+const imgTex = new Map<string, Promise<Texture>>();
+/** A texture for an art URL. Runtime-baked art (symrig's blob: PNGs, e.g. ART.S) has no file extension, so the
+ *  Assets parsers skip it; it decodes through an <img> instead. Never returns null. */
+function loadTex(src: string): Promise<Texture> {
+	if (!src) return Promise.resolve(Texture.EMPTY);
+	let p = imgTex.get(src);
+	if (!p) {
+		p = (async () => {
+			if (!/^(blob:|data:)/.test(src)) {
+				try { const t = await Assets.load(src); if (t instanceof Texture) return t; } catch { /* fall through */ }
+			}
+			try {
+				const im = new Image(); im.decoding = 'async'; im.src = src; await im.decode();
+				return Texture.from(im);
+			} catch { return Texture.EMPTY; }
+		})();
+		imgTex.set(src, p);
 	}
+	return p;
 }
 
 /** Pixi-only ski-pass flip. Same timings as the previous presentation; skip holds after the turn. */
@@ -931,4 +942,18 @@ export async function playCardFlip(result: 'triple_dare' | 'hidden') {
 	flipRoot.visible = false;
 	flipRoot.alpha = 1;
 	kickUi();
+}
+
+/** QA: live state of the toast, banner, card flip and gem-fly layers. */
+export function winsProbe() {
+	const one = (n: Container | null | undefined) => {
+		if (!n) return null;
+		let b = { x: 0, y: 0, width: 0, height: 0 };
+		try { b = n.getBounds(); } catch { /* */ }
+		return { vis: n.visible, a: +n.alpha.toFixed(3), sx: +n.scale.x.toFixed(4), sy: +n.scale.y.toFixed(4), kids: n.children.length, x: +b.x.toFixed(1), y: +b.y.toFixed(1), w: +b.width.toFixed(1), h: +b.height.toFixed(1) };
+	};
+	return {
+		toast: one(toastRoot), banner: one(bannerRoot), flip: one(flipRoot), flipCard: one(flipCard), fly: one(flyRoot),
+		flyKids: flyRoot ? flyRoot.children.filter((c) => c.visible).map((c) => ({ x: +c.position.x.toFixed(1), y: +c.position.y.toFixed(1), sx: +c.scale.x.toFixed(3), a: +c.alpha.toFixed(3) })) : [],
+	};
 }

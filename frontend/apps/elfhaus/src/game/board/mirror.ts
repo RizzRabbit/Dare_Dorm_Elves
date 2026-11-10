@@ -168,6 +168,7 @@ function hostCs(el: HTMLElement): CSSStyleDeclaration {
 		'background-image': lay.backgroundImage,
 		'background-size': lay.backgroundSize,
 		'background-position': lay.backgroundPosition,
+		'padding-top': lay.paddingTop,
 	} : hostProps(el);
 	const get = (k: string, d = '') => p[k] || d;
 	const bag = {

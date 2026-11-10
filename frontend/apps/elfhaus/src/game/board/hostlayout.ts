@@ -17,10 +17,19 @@ export type HostStyle = {
 	backgroundImage: string;
 	backgroundSize: string;
 	backgroundPosition: string;
+	paddingTop: string;
 };
 
 const HIDDEN = new Set(['tile', 'tRec', 'tBd', 'tFr', 'tGl', 'tGw', 'slT', 'symSh', 'wFrame']);
-const FILL_IDS = new Set(['frame', 'board', 'strips', 'cells', 'overlays', 'flyLayer']);
+const FILL_IDS = new Set(['frame', 'board', 'strips', 'cells', 'overlays', 'flyLayer', 'frameLit', 'frameGlint']);
+
+// Frame fire light and flare glint: painted parts of the board atlas (assets/board/boardfx, 'lit' / 'glint').
+const BOARDFX = 'url(assets/board/boardfx.webp)';
+const FRAME_FX: Record<'lit' | 'glint', { bs: string; bp: string }> = {
+	lit: { bs: '678.1250% 896.8750%', bp: '64.1892% 93.3333%' },
+	glint: { bs: '1356.2500% 3587.5000%', bp: '75.1244% 85.3047%' },
+};
+const isGlintBand = (el: HTMLElement) => el.tagName === 'I' && el.parentElement?.id === 'frameGlint';
 
 const WILD_SYM: Record<string, [number, number]> = {
 	k_W_R1: [0.0242, -0.0227],
@@ -62,6 +71,8 @@ export function layoutBox(el: HTMLElement, parentW: number, parentH: number): Ho
 	if (el.tagName === 'IMG' && cl.contains('stk_glow')) return fillBox(parentW, parentH);
 
 	if (FILL_IDS.has(id)) return fillBox(parentW, parentH);
+	// the glint band: a 14%-wide strip, 12% taller than the frame each way (it sweeps by transform)
+	if (isGlintBand(el)) return { x: 0, y: -0.12 * parentH, w: 0.14 * parentW, h: 1.24 * parentH };
 
 	const art = artInset(el, 'w', parentW, parentH);
 	if (art != null) return { x: artInset(el, 'x', parentW, parentH) ?? 0, y: artInset(el, 'y', parentW, parentH) ?? 0, w: art, h: artInset(el, 'h', parentW, parentH) ?? art };
@@ -125,6 +136,7 @@ const BASE_STYLE: HostStyle = {
 	backgroundImage: 'none',
 	backgroundSize: 'auto',
 	backgroundPosition: '0% 0%',
+	paddingTop: '0px',
 };
 
 /** Paint flags for a board-tree node. null = not a board/symbol rule. */
@@ -134,7 +146,7 @@ export function layoutStyle(el: HTMLElement): HostStyle | null {
 	if (id === 'reelLines' || [...cl].some((c) => HIDDEN.has(c))) {
 		return { ...BASE_STYLE, display: 'none' };
 	}
-	const boardish = FILL_IDS.has(id) || cl.contains('cell') || cl.contains('sym') || cl.contains('rig') || cl.contains('rgBody')
+	const boardish = FILL_IDS.has(id) || isGlintBand(el) || cl.contains('cell') || cl.contains('sym') || cl.contains('rig') || cl.contains('rgBody')
 		|| cl.contains('rp') || cl.contains('sd') || cl.contains('ov') || cl.contains('wart') || cl.contains('mx')
 		|| cl.contains('symGlow') || cl.contains('stkElf') || cl.contains('stkGrp') || el.tagName === 'IMG' && cl.contains('stk_glow')
 		|| cl.contains('antGlow') || cl.contains('cspin') || cl.contains('rgSh') || cl.contains('rgSp') || cl.contains('rgShine');
@@ -142,6 +154,25 @@ export function layoutStyle(el: HTMLElement): HostStyle | null {
 
 	const s: HostStyle = { ...BASE_STYLE };
 	if (cl.contains('rgShine') || cl.contains('wFrame')) s.display = 'none';
+
+	// Fire spill and flare glint: same atlas frames the old chalet.css painted, plus the inline opacity / padding JS writes.
+	if (id === 'frameLit') {
+		s.backgroundImage = BOARDFX;
+		s.backgroundSize = FRAME_FX.lit.bs;
+		s.backgroundPosition = FRAME_FX.lit.bp;
+		s.opacity = el.style.opacity || '0.7';
+	}
+	if (id === 'frameGlint') {
+		s.overflow = 'hidden';
+		s.paddingTop = el.style.paddingTop || el.style.padding || '0px';
+	}
+	if (isGlintBand(el)) {
+		s.backgroundImage = BOARDFX;
+		s.backgroundSize = FRAME_FX.glint.bs;
+		s.backgroundPosition = FRAME_FX.glint.bp;
+		s.opacity = el.style.opacity || '0';
+		if (el.style.transform) s.transform = el.style.transform;
+	}
 
 	if (cl.contains('sym')) { s.overflow = 'hidden'; s.zIndex = '1'; s.translate = wildTranslate(el); }
 	if (cl.contains('ov')) { s.overflow = 'hidden'; s.zIndex = '2'; }

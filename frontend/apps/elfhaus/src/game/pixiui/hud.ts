@@ -8,6 +8,8 @@ import { kickUi, onUiLayout, uiApp, uiScreen } from './stage';
 import { bmFit, fitSpr, wordSpr } from './text';
 import { hit, nineUi } from './widgets';
 import { syncHostLayout, uiHostTree } from '../uihosts';
+import { gsap } from 'gsap';
+import { cssEase } from '../board/motion';
 
 export const hudLayer = new Container();
 hudLayer.label = 'uiHud';
@@ -285,7 +287,9 @@ function paintBuy() {
 	const r = rect(el);
 	if (!el || !r) { buy.visible = false; return; }
 	buy.visible = true;
-	buy.position.set(r.x, r.y);
+	buy.pivot.set(r.w / 2, r.h / 2);
+	buy.position.set(r.x + r.w / 2, r.y + r.h / 2);
+	buy.scale.set(kOf('buyBtn'));
 	hit(buy, r.w, r.h);
 	const mkP = el.classList.contains('mkP');
 	const dis = !!el.disabled;
@@ -334,7 +338,9 @@ function paintArm() {
 	const hidden = !el || el.classList.contains('hidden') || !r || r.w < 4;
 	arm.visible = !hidden;
 	if (hidden || !el || !r) return;
-	arm.position.set(r.x, r.y);
+	arm.pivot.set(r.w / 2, r.h / 2);
+	arm.position.set(r.x + r.w / 2, r.y + r.h / 2);
+	arm.scale.set(kOf('armTag'));
 	hit(arm, r.w, r.h);
 	clearKids(armBg);
 	armBg.addChild(nineAt('pill_gold', r.w, r.h, 2));
@@ -378,7 +384,13 @@ function paintFields() {
 		const key = wordKey(lab?.textContent || (id === 'bet' ? 'BET' : id.toUpperCase()));
 		if (lr && key) f.lab = placeWord(f.root, f.lab, key, lr, true, align);
 		f.val = placeBm(f.root, f.val, (span?.textContent || '').trim(), 'font_cream', vr || lr!, align);
-		if (id === 'win') f.root.scale.set(meterK);
+		if (id === 'win') {
+			// the meter punches about the WIN value's centre (children sit in screen px)
+			const c = vr || lr!;
+			f.root.pivot.set(c.x + c.w / 2, c.y + c.h / 2);
+			f.root.position.set(c.x + c.w / 2, c.y + c.h / 2);
+			f.root.scale.set(meterK);
+		}
 	}
 }
 
@@ -569,6 +581,7 @@ function onHudDown(e: PointerEvent) {
 	t.node.alpha = 0.92;
 	const proxy = { k: 0.84 };
 	pressK[t.id] = 0.84;
+	t.node.scale.set(0.84);
 	gsap.killTweensOf(proxy);
 	gsap.to(proxy, {
 		keyframes: [
@@ -576,8 +589,8 @@ function onHudDown(e: PointerEvent) {
 			{ k: 1.04, duration: 0.2 * 0.6, ease: cssEase('cubic-bezier(.3,1.55,.45,1)') },
 			{ k: 1, duration: 0.2 * 0.4, ease: cssEase('cubic-bezier(.3,1.55,.45,1)') },
 		],
-		onUpdate: () => { pressK[t.id] = proxy.k; kickUi(); },
-		onComplete: () => { pressK[t.id] = 1; kickUi(); },
+		onUpdate: () => { pressK[t.id] = proxy.k; t.node.scale.set(proxy.k); kickUi(); },
+		onComplete: () => { pressK[t.id] = 1; t.node.scale.set(1); kickUi(); },
 	});
 	kickUi();
 	e.stopPropagation();
@@ -620,4 +633,13 @@ export async function initHud() {
 	layoutHud(true);
 	requestAnimationFrame(() => layoutHud(true));
 	setTimeout(() => layoutHud(true), 120);
+}
+
+/** QA: live scale / alpha of the HUD nodes that animate (press squash, win meter punch). */
+export function hudProbe() {
+	const one = (n: Container | null | undefined) => n ? { sx: +n.scale.x.toFixed(4), sy: +n.scale.y.toFixed(4), a: +n.alpha.toFixed(3), vis: n.visible } : null;
+	return {
+		spinBtn: one(spin), turboBtn: one(btns.turboBtn), autoBtn: one(btns.autoBtn), betDown: one(btns.betDown), betUp: one(btns.betUp),
+		menuBtn: one(btns.menuBtn), buyBtn: one(buy), win: one(fields.win?.root), pressK: { ...pressK }, meterK,
+	};
 }

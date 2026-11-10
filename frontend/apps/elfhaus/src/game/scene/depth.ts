@@ -35,6 +35,9 @@ export function frameGlint() {
 	if (!gl || !band || reduced() || document.hidden) return;
 	if (glintAnim && glintAnim.playState === 'running') return;
 	const w = gl.clientWidth || FW * u;
+	band.style.opacity = '1';
+	const b = band;
 	glintAnim = playMotion(band, [{ transform: `translateX(${-0.3 * w}px) skewX(-20deg)`, opacity: 0 }, { opacity: 1, offset: 0.2 }, { opacity: 1, offset: 0.75 },
 		{ transform: `translateX(${1.15 * w}px) skewX(-20deg)`, opacity: 0 }], { duration: 1100, easing: 'cubic-bezier(.45,.05,.4,1)' });
+	void glintAnim.finished.then(() => { b.style.opacity = '0'; });
 }
