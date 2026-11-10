@@ -37,8 +37,9 @@ console.log('\n=== source: glow leaves with the rig, badges are hidden at grab =
 	ok(cb.includes('src.forEach(hideGem)') || cb.includes('src.forEach((m) => hideGem'), 'grab hides the original badges in the same turn');
 	ok(cb.includes('export function clearCoveredGems'), 'covered cell badges have a lifecycle cleanup');
 	ok(mf.includes('hideMergeGlows') && mf.includes('stk_glow'), 'merge strips the outline glow before the lean');
-	ok(mf.indexOf('hideMergeGlows(olds)') < mf.indexOf('leanStage(olds)'), 'glow is removed before the snapshot stage is shown');
-	ok(mf.indexOf('leanStage(olds)') < mf.indexOf('stackRelease(olds)'), 'live rigs stop after the snapshot is taken');
+	ok(mf.indexOf('hideMergeGlows(olds)') < mf.indexOf("dbPlay(o, 'win'"), 'glow is removed before the live win clip');
+	ok(mf.indexOf("dbPlay(o, 'win'") < mf.indexOf('await beat(MERGE_BEAT)'), 'live rigs play a win clip during the lean');
+	ok(mf.indexOf('await beat(MERGE_BEAT)') < mf.indexOf('stackRelease(olds)'), 'live rigs are released at the hit, not before the lean');
 	ok(db.includes("ov.querySelector(':scope > img.stk_glow')?.remove()"), 'dbStop still removes the glow with the rig');
 	ok(!/dbAct\(/.test(mf), 'live bone lift is not used (it walked the elf out of its glow)');
 	ok(!/translateY\(\$\{Math\.round\(26/.test(mf) && !/translateY\(\$\{Math\.round\(16/.test(mf),

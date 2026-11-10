@@ -25,13 +25,14 @@ function drop(px: number, amp: number): number {
  *  Horizontal lean and a scale-Y crouch do the work; translateY never exceeds MERGE_MAX_DROP. */
 export function mergeLean(d: number, n: number, amp: number): { crouch: string; over: string; pull: string } {
 	const a = amp;
-	const L = d * (n >= 4 ? 0.22 : 0.28) * (0.65 + 0.35 * a);
+	// Travel most of the way to the meeting point so the lean reads on a phone. translateY stays capped.
+	const L = d * (n >= 4 ? 0.72 : 0.84) * (0.7 + 0.3 * a);
 	const dir = Math.sign(d) || 1;
-	const yC = drop(5, a);
-	const yO = drop(2, a);
-	const crouch = `translateY(${yC.toFixed(1)}px) rotate(${(dir * 2.2 * a).toFixed(2)}deg) scale(${(1 + 0.02 * a).toFixed(3)},${(1 - 0.07 * a).toFixed(3)})`;
-	const over = `translateX(${(L * 1.08).toFixed(1)}px) translateY(${yO.toFixed(1)}px) rotate(${(dir * 5.2 * a).toFixed(2)}deg) scale(${(1 + 0.04 * a).toFixed(3)},${(1 - 0.05 * a).toFixed(3)})`;
-	const pull = `translateX(${L.toFixed(1)}px) rotate(${(dir * 3.2 * a).toFixed(2)}deg) scale(${(1 + 0.02 * a).toFixed(3)},${(1 - 0.03 * a).toFixed(3)})`;
+	const yC = drop(6, a);
+	const yO = drop(3, a);
+	const crouch = `translateY(${yC.toFixed(1)}px) rotate(${(dir * 6 * a).toFixed(2)}deg) scale(${(1 + 0.04 * a).toFixed(3)},${(1 - 0.16 * a).toFixed(3)})`;
+	const over = `translateX(${(L * 1.08).toFixed(1)}px) translateY(${yO.toFixed(1)}px) rotate(${(dir * 9 * a).toFixed(2)}deg) scale(${(1 + 0.06 * a).toFixed(3)},${(1 - 0.10 * a).toFixed(3)})`;
+	const pull = `translateX(${L.toFixed(1)}px) rotate(${(dir * 5 * a).toFixed(2)}deg) scale(${(1 + 0.03 * a).toFixed(3)},${(1 - 0.06 * a).toFixed(3)})`;
 	return { crouch, over, pull };
 }
 

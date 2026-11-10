@@ -1,11 +1,12 @@
 // Stack + merge choreography (display only; the math is already decided by the book).
 //   stackIn(reel)        : normal: the 4 single wilds ease together and crossfade into the full-reel elf (calm, no flash);
 //                          turbo: the 4 wild cells squash toward the reel centre, flash, and the elf pops in elastically.
-//   mergeIn(reels, vals) : on the 150 BPM grid (mergeclock.ts). The joining rigs are snapshotted at rest and released
-//                          before the lean, so their outline glow cannot linger. The snapshots crouch and lean in
-//                          horizontally (translateY capped at MERGE_MAX_DROP). At the hit the group rig loads under the
-//                          snapshot, then pops, the gems fly into one total, and it settles. Turbo shortens (~60%). A tap
-//                          advances one stage. ~1.6-2 s plus the gem flights.
+//   mergeIn(reels, vals) : on the 150 BPM grid (mergeclock.ts). Live rigs keep playing their win clips; whole
+//                          overlay containers crouch and lean toward each other (translateY capped at MERGE_MAX_DROP,
+//                          no bone posing). Outline glows come off so they cannot ghost. At the hit a large sprite
+//                          flash / burst and a screen punch cover the cut, the group rig bursts in with its win clip,
+//                          and the gems arc into one total. Turbo shortens (~60%). A tap advances one stage.
+//                          ~1.6-2.2 s plus the gem flights.
 //   growIn(ov, ...)      : a merged group grows (connecting respin): the total splits back into one gem per reel corner,
 //                          each changed reel ticks +1 with a pop, then they fly back and recombine into the new total,
 //                          which counts up (x5, x30). ~1.3 s.
@@ -123,7 +124,7 @@ async function stackFromSingles(reel: number, render: (frameDelay?: number) => v
 		await sw(150); // 1) the full reel reads as 4 landed wilds for a beat
 		// 2) the singles ease together toward the reel centre (rows 0/3 travel most), a little vertical squeeze at the end
 		cells.forEach((el, row) => {
-			const dy = (1.5 - row) * c * 0.2;
+			const dy = (1.5 - row) * c * 0.38;
 			A(el, [{ transform: 'none' }, { transform: `translateY(${dy.toFixed(1)}px) scale(.985,.96)` }], { duration: 280, easing: 'cubic-bezier(.45,0,.55,1)', fill: 'forwards' });
 		});
 		await sw(280);
@@ -140,13 +141,15 @@ async function stackFromSingles(reel: number, render: (frameDelay?: number) => v
 		const lets = ov ? [...ov.querySelectorAll<HTMLElement>('canvas.stk_letters, .mLets')] : [];
 		cells.forEach((el, row) => {
 			el.style.visibility = ''; // render() hid them: keep them for the crossfade, hidden again in finally
-			const dy = (1.5 - row) * c * 0.2;
+			const dy = (1.5 - row) * c * 0.38;
 			A(el, [{ transform: `translateY(${dy.toFixed(1)}px) scale(.985,.96)`, opacity: 1 }, { opacity: 1, offset: 0.45 }, { transform: `translateY(${(dy * 1.15).toFixed(1)}px) scale(.98,.95)`, opacity: 0 }], { duration: 300, easing: 'ease-in-out', fill: 'forwards' }); // stay under the rising elf, then go
 		});
 		if (ov) {
 			ov.style.animation = 'none';
-			// fix4 B: continuous crossfade (sine in-out) from the bloom into the merged stack, same overall timing
-			A(ov, [{ transform: 'scale(1.03)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 300, easing: 'cubic-bezier(.37,0,.63,1)' });
+			ov.style.transformOrigin = '50% 100%';
+			if (hasSheet('fx_wild')) play('fx_wild', 'wflash', ov, { cls: 'wfx', loop: false, style: `position:absolute;left:50%;top:50%;width:${Math.round(S.cell * 2.2)}px;height:${Math.round(S.cell * 3.6)}px;translate:-50% -50%;z-index:6` });
+			if (hasSheet('fx_feat')) play('fx_feat', 'burst', ov, { cls: 'wfx', loop: false, style: `position:absolute;left:50%;top:50%;width:${Math.round(S.cell * 2)}px;height:${Math.round(S.cell * 2)}px;translate:-50% -50%;z-index:6` });
+			A(ov, [{ transform: 'scale(.82,.78)', opacity: 0 }, { transform: 'scale(1.16,1.08)', opacity: 1, offset: 0.5 }, { transform: 'none', opacity: 1 }], { duration: 360, easing: 'cubic-bezier(.15,1.35,.4,1)' });
 			// 4) letters fade up softly after the body (the held last frame of letters_ignite, or the CSS letters)
 			lets.forEach((l) => A(l, [{ opacity: 0 }, { opacity: 1 }], { duration: 250, delay: 240, easing: 'ease-out', fill: 'backwards' }));
 		}
@@ -178,7 +181,6 @@ export async function mergeIn(reels: number[], values: number[], product: number
 	const amp = mergeAmp(reducedMotion());
 	const made: HTMLElement[] = [];
 	const dimmed: HTMLElement[] = [];
-	let stage: ReturnType<typeof leanStage> | null = null;
 	let applied = false;
 	const cut = () => {
 		if (applied) return; applied = true;
@@ -187,9 +189,9 @@ export async function mergeIn(reels: number[], values: number[], product: number
 	try {
 		const olds = [...new Set(reels.map(ovOf))].filter((o): o is HTMLElement => !!o);
 		const mid = lo + (n - 1) / 2;
-		// 1) wind-up. The board dims. Glow sprites come off the live rigs now, then a rest-pose
-		//    snapshot is staged. The live rigs (and their outline glow) are stopped in the same
-		//    turn, so a silhouette cannot stay behind while the body moves.
+		// 1) wind-up. The board dims. Outline glows come off (they are static silhouettes and
+		//    would otherwise ghost). Live rigs stay up, play their win clips, and the whole
+		//    overlay container leans in — not a frozen snapshot, and not a bone pose.
 		B.classList.add('mAnt');
 		const cells = document.getElementById('cells');
 		const dim = (1 - 0.4 * amp).toFixed(3);
@@ -197,26 +199,28 @@ export async function mergeIn(reels: number[], values: number[], product: number
 		document.querySelectorAll<HTMLElement>('#overlays .ov').forEach((o) => {
 			if (!olds.includes(o)) { o.style.filter = `brightness(${dim})`; dimmed.push(o); }
 		});
-		olds.forEach((o) => { if (hasSheet('fx_wild')) play('fx_wild', 'wshineT', o, { cls: 'wfx wfxIn wfxTop', loop: false }); });
-		const badges = grab(reels.map((r) => ovMx(r)));
-		badges.forEach((g) => (g.style.opacity = '0'));
 		hideMergeGlows(olds);
-		if (olds.length) {
-			stage = leanStage(olds);
-			stackRelease(olds);
-		}
+		olds.forEach((o) => {
+			if (hasSheet('fx_wild')) play('fx_wild', 'wshineT', o, { cls: 'wfx wfxIn wfxTop', loop: false });
+			try { if (dbKnown(o) || o.querySelector(':scope > canvas.stk_db')) void dbPlay(o, 'win').catch(() => {}); } catch { /* stills still lean */ }
+		});
 		const warm = Promise.all([stackPrepare(reels), preloadStacks()]);
-		// 2) the snapshots crouch in place, then lean toward each other horizontally, feet-anchored.
-		const parts = (stage?.parts || []).map((pt) => {
-			const d = (mid - pt.rc) * step;
+		const movers = olds.map((o) => {
+			const rs = (o.dataset.reels ?? o.dataset.reel ?? '0').split(',').map(Number);
+			const rc = (rs[0] + rs[rs.length - 1]) / 2;
+			const d = (mid - rc) * step;
 			const pose = mergeLean(d, n, amp);
-			pt.el.style.transformOrigin = '50% 100%';
-			pt.lets.forEach((l) => M(l, [{ opacity: 1 }, { opacity: 0 }], { duration: mergeMs(160, !!S.turbo), fill: 'forwards' }));
-			M(pt.el, [{ transform: 'none' }, { transform: pose.crouch }], { duration: mergeMs(MERGE_BEAT, !!S.turbo), easing: 'cubic-bezier(.4,0,.6,1)', fill: 'forwards' });
-			return { ...pt, pose };
+			o.style.transformOrigin = '50% 100%';
+			o.style.overflow = 'visible';
+			o.style.zIndex = String(4 + Math.round(2 - Math.abs(mid - rc)));
+			o.querySelectorAll<HTMLElement>('.mLets, canvas.stk_letters').forEach((l) =>
+				M(l, [{ opacity: 1 }, { opacity: 0 }], { duration: mergeMs(200, !!S.turbo), fill: 'forwards' }));
+			M(o, [{ transform: 'none' }, { transform: pose.crouch }], { duration: mergeMs(MERGE_BEAT, !!S.turbo), easing: 'cubic-bezier(.4,0,.6,1)', fill: 'forwards' });
+			return { el: o, pose };
 		});
 		await beat(MERGE_BEAT);
-		parts.forEach((pt) => {
+		// 2) a big, readable pull-in on the live containers.
+		movers.forEach((pt) => {
 			M(pt.el, [
 				{ transform: pt.pose.crouch },
 				{ transform: pt.pose.over, offset: 0.72 },
@@ -224,24 +228,30 @@ export async function mergeIn(reels: number[], values: number[], product: number
 			], { duration: mergeMs(MERGE_BEAT, !!S.turbo), easing: 'cubic-bezier(.3,.6,.4,1)', fill: 'forwards' });
 		});
 		await beat(MERGE_BEAT);
-		// 3) impact. Flash and seam sparks; singles' atlases are already gone; the group decodes under the snapshot.
+		// 3) impact. A large sprite flash, seam sparks, a screen punch, and a brief white-out
+		//    frame (existing wflash sprite, scaled over the whole group). Then the singles
+		//    are released and the group rig bursts in.
 		const seams: number[] = [];
 		for (let i = 1; i < n; i++) seams.push(x0 + i * step - (step - S.cell) / 2);
 		const flash = document.createElement('div');
-		flash.style.cssText = `position:absolute;left:${x0 + ((n - 1) * step) / 2}px;top:42%;width:1px;height:1px;pointer-events:none;z-index:7`;
+		const midX = x0 + ((n - 1) * step) / 2 + S.cell / 2;
+		flash.style.cssText = `position:absolute;left:${midX}px;top:50%;width:1px;height:1px;pointer-events:none;z-index:8`;
 		B.appendChild(flash); made.push(flash);
-		if (hasSheet('fx_wild')) play('fx_wild', 'wflash', flash, { cls: 'wfx', loop: false, style: `position:absolute;width:${Math.round(n * S.cell * 0.95)}px;height:${Math.round(S.cell * 2.4)}px;translate:-50% -50%` });
+		const flashW = Math.round(Math.max(n * S.cell * 1.35, S.cell * 3.2));
+		const flashH = Math.round(S.cell * 4.2);
+		if (hasSheet('fx_wild')) play('fx_wild', 'wflash', flash, { cls: 'wfx', loop: false, style: `position:absolute;width:${flashW}px;height:${flashH}px;translate:-50% -50%` });
+		if (hasSheet('fx_feat')) play('fx_feat', 'burst', flash, { cls: 'wfx', loop: false, style: `position:absolute;width:${Math.round(S.cell * 3.2 * (0.85 + 0.15 * amp))}px;height:${Math.round(S.cell * 3.2 * (0.85 + 0.15 * amp))}px;translate:-50% -50%` });
 		seams.forEach((x) => {
 			const h = document.createElement('div');
-			h.style.cssText = `position:absolute;left:${x}px;top:46%;width:1px;height:1px;pointer-events:none;z-index:7`;
+			h.style.cssText = `position:absolute;left:${x}px;top:46%;width:1px;height:1px;pointer-events:none;z-index:8`;
 			B.appendChild(h); made.push(h);
-			const tall = Math.round((olds[0]?.offsetHeight || S.cell * 4) * 0.92);
-			if (hasSheet('fx_wild')) play('fx_wild', 'seam', h, { cls: 'wfx', loop: false, style: `position:absolute;width:${Math.round(S.cell * 0.7)}px;height:${tall}px;translate:-50% -50%` });
-			if (hasSheet('fx_feat')) play('fx_feat', 'burst', h, { cls: 'wfx', loop: false, style: `position:absolute;width:${Math.round(120 * (0.75 + 0.25 * amp))}px;height:${Math.round(120 * (0.75 + 0.25 * amp))}px;translate:-50% -50%` });
+			const tall = Math.round((olds[0]?.offsetHeight || S.cell * 4) * 0.95);
+			if (hasSheet('fx_wild')) play('fx_wild', 'seam', h, { cls: 'wfx', loop: false, style: `position:absolute;width:${Math.round(S.cell * 0.95)}px;height:${tall}px;translate:-50% -50%` });
+			if (hasSheet('fx_feat')) play('fx_feat', 'burst', h, { cls: 'wfx', loop: false, style: `position:absolute;width:${Math.round(160 * (0.85 + 0.15 * amp))}px;height:${Math.round(160 * (0.85 + 0.15 * amp))}px;translate:-50% -50%` });
 		});
 		try {
 			boardWin(n >= 4 ? 'big' : n >= 3 ? 'medium' : 'small');
-			boardShake(2 + n, 0.16);
+			boardShake(3 + n, 0.2);
 		} catch { /* the camera is optional; the cut still happens */ }
 		await new Promise<void>((res) => {
 			const hit = mergeMs(MERGE_HIT, !!S.turbo), cap = mergeMs(MERGE_BEAT, !!S.turbo);
@@ -255,32 +265,21 @@ export async function mergeIn(reels: number[], values: number[], product: number
 				warm.then(() => { if (!open) return; open = false; clearTimeout(t); if (beatRes === finish) beatRes = null; res(); });
 			}
 		});
-		// 4) reveal. The snapshot stays up until the new body has been drawn.
-		{ const st = stage?.el, host = st?.parentElement || null; stage = null; cut();
-			if (st) { if (!st.isConnected) ((host?.id && document.getElementById(host.id)) || host)?.appendChild(st);
-				const t0 = performance.now();
-				const uncover = () => {
-					const ov = ovOf(lo);
-					ov?.querySelectorAll<HTMLElement>(':scope > .wart').forEach((w) => { w.style.visibility = 'hidden'; });
-					const cvs = ov ? [...ov.querySelectorAll<HTMLCanvasElement>(':scope > canvas.stk_body')] : [];
-					const ready = cvs.some((cv) => cv.classList.contains('stk_db') ? !!dbDisplay(cv) : canvasRev(cv) > 0);
-					if (!st.isConnected) return;
-					if (ready || performance.now() - t0 > 120) st.remove();
-					else requestAnimationFrame(uncover);
-				};
-				requestAnimationFrame(uncover);
-				made.push(st); } }
+		// 4) reveal. Stop the joining rigs only now, at the hit, and burst the group in over the flash.
+		const badges = grab(reels.map((r) => ovMx(r)));
+		if (olds.length) stackRelease(olds);
+		cut();
 		const ov = ovOf(lo);
 		if (ov) {
 			ov.style.animation = 'none'; ov.style.transformOrigin = '50% 100%';
 			{ const m = ov.querySelector<HTMLElement>('.mx'); if (m) m.style.opacity = '0'; }
-			const pop = 1 + 0.07 * amp * (big ? 1.35 : 1);
+			const pop = 1 + 0.22 * amp * (big ? 1.25 : 1);
 			M(ov, [
-				{ transform: `scale(${(0.9 - 0.03 * Math.min(n, 5)).toFixed(3)},0.84)` },
-				{ transform: `scale(${pop.toFixed(3)},${(pop * 0.98).toFixed(3)})`, offset: 0.55 },
-				{ transform: 'scale(0.99,1.012)', offset: 0.8 },
+				{ transform: `scale(${(0.72 - 0.04 * Math.min(n, 5)).toFixed(3)},0.68)` },
+				{ transform: `scale(${pop.toFixed(3)},${(pop * 0.96).toFixed(3)})`, offset: 0.48 },
+				{ transform: 'scale(0.97,1.03)', offset: 0.78 },
 				{ transform: 'none' },
-			], { duration: mergeMs(MERGE_BEAT, !!S.turbo), easing: 'ease-out', fill: 'forwards' });
+			], { duration: mergeMs(MERGE_BEAT, !!S.turbo), easing: 'cubic-bezier(.15,1.4,.35,1)', fill: 'forwards' });
 			try {
 				if (dbKnown(ov)) void dbPlay(ov, 'win').catch(() => {});
 				else if (hasStack('merge_join', ov)) void stackOnce('merge_join', ov);
@@ -290,7 +289,7 @@ export async function mergeIn(reels: number[], values: number[], product: number
 		const lets = ov && !stackLetters(ov) ? [...ov.querySelectorAll<HTMLElement>('.mLets')] : [];
 		lets.forEach((l, i) => M(l, [{ opacity: 0 }, { opacity: 1 }], { duration: mergeMs(220, !!S.turbo), delay: mergeMs(40 * i, !!S.turbo), easing: 'ease-out', fill: 'backwards' }));
 		await beat(MERGE_BEAT);
-		// 5) each reel's gem flies into the merged gem. The product punches on each landing.
+		// 5) gems arc into the merged total; the product punches on each landing.
 		const mx = ov?.querySelector<HTMLElement>('.mx') || null;
 		await new Promise<void>((res) => {
 			const run = recombine(badges, mx, values, product, big, true);
@@ -300,8 +299,8 @@ export async function mergeIn(reels: number[], values: number[], product: number
 		});
 		// 6) one secondary bounce, then idle.
 		if (ov) {
-			try { dbNudge(ov, 0.22 * amp, 0.36); } catch { /* overlay scale below still settles */ }
-			M(ov, [{ transform: 'none' }, { transform: `scale(${(1 + 0.025 * amp).toFixed(3)},${(1 - 0.02 * amp).toFixed(3)})`, offset: 0.4 }, { transform: 'none' }], { duration: mergeMs(200, !!S.turbo), easing: 'ease-out' });
+			try { dbNudge(ov, 0.28 * amp, 0.36); } catch { /* overlay scale below still settles */ }
+			M(ov, [{ transform: 'none' }, { transform: `scale(${(1 + 0.04 * amp).toFixed(3)},${(1 - 0.03 * amp).toFixed(3)})`, offset: 0.4 }, { transform: 'none' }], { duration: mergeMs(200, !!S.turbo), easing: 'ease-out' });
 			if (dbKnown(ov)) void dbPlay(ov, 'idle').catch(() => {});
 		}
 		await beat(200);
@@ -311,8 +310,8 @@ export async function mergeIn(reels: number[], values: number[], product: number
 	} finally {
 		mergeHold = null; beatRes = null; pendingSkip = false;
 		dimmed.forEach((e) => { e.style.filter = ''; });
+		document.querySelectorAll<HTMLElement>('#overlays .ov').forEach((o) => { if (o.style.overflow === 'visible') o.style.overflow = ''; });
 		made.forEach((m) => m.remove()); B.classList.remove('mAnt');
-		if (stage) { stage.el.remove(); stage.olds.forEach((o) => (o.style.visibility = '')); }
 		const ov = ovOf(lo), mx = ov?.querySelector<HTMLElement>('.mx'); if (mx) { mx.style.opacity = ''; setGem(mx, product, false); }
 		document.querySelectorAll('#flyLayer .fly').forEach((f) => f.remove());
 		clearCoveredGems();
@@ -396,12 +395,12 @@ async function recombine(gems: HTMLElement[], target: HTMLElement | null, values
 	const tr = target.getBoundingClientRect();
 	await Promise.all(gems.map((g, i) => {
 		const r = g.getBoundingClientRect(), k = r.width ? tr.width / r.width : 1; // getBoundingClientRect: same (screen) space for both
-		const sc = toStage(r).width / (r.width || 1), dx = (tr.left - r.left) * sc, dy = (tr.top - r.top) * sc, lift = g.closest('.ov') ? S.cell * 0.14 : -S.cell * 0.3; // inside an overlay (overflow hidden) it dips instead
+		const sc = toStage(r).width / (r.width || 1), dx = (tr.left - r.left) * sc, dy = (tr.top - r.top) * sc, lift = g.closest('.ov') ? S.cell * 0.14 : -S.cell * 0.62; // a high, readable arc (inside an overlay it dips — overflow hidden)
 		const hid = g.style.opacity === '0'; g.style.opacity = ''; // mergeIn's clones were hidden through the lean: they fade in at their corner, then fly
 		const here = Math.hypot(dx, dy) < 6; // the clone already sits on the group's gem (first reel): it simply becomes the gem
 		if (paced && !here) trailBetween(g, target, Math.min(1.5, 0.75 + Math.log2(Math.max(2, values[i] || 2)) * 0.12));
-		return go(g, here ? [{ opacity: 0 }, { opacity: 0 }] : [{ transform: `translate(0,0) scale(${hid ? 0.8 : 1})`, opacity: hid ? 0 : 1 }, { transform: 'translate(0,0) scale(1)', opacity: 1, offset: .18 }, { opacity: 1, offset: .5 }, { transform: `translate(${dx * 0.5}px,${dy * 0.5 + lift}px) scale(1.12)`, offset: .58 }, { opacity: 0, offset: .78 }, { transform: `translate(${dx}px,${dy}px) scale(${k})`, opacity: 0 }], // fades into the gem: never two badges on one corner
-			{ duration: here ? 1 : 340, delay: i * 80, easing: 'cubic-bezier(.45,0,.35,1)', fill: 'both' }).finished.catch(() => {}).then(async () => {
+		return go(g, here ? [{ opacity: 0 }, { opacity: 0 }] : [{ transform: `translate(0,0) scale(${hid ? 0.8 : 1})`, opacity: hid ? 0 : 1 }, { transform: 'translate(0,0) scale(1)', opacity: 1, offset: .18 }, { opacity: 1, offset: .5 }, { transform: `translate(${dx * 0.5}px,${dy * 0.5 + lift}px) scale(1.28)`, offset: .58 }, { opacity: 0, offset: .78 }, { transform: `translate(${dx}px,${dy}px) scale(${k})`, opacity: 0 }], // fades into the gem: never two badges on one corner
+			{ duration: here ? 1 : 420, delay: i * 90, easing: 'cubic-bezier(.45,0,.35,1)', fill: 'both' }).finished.catch(() => {}).then(async () => {
 			g.style.opacity = '0';
 			const last = i === gems.length - 1, v = last ? product : runTo(values, i, how);
 			const pop = paced

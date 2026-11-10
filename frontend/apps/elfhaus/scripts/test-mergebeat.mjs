@@ -29,9 +29,9 @@ console.log('\n=== merge source guards ===');
 	const body = mf.slice(mf.indexOf('export async function mergeIn'));
 	const rel = body.indexOf('stackRelease(olds)');
 	const prep = body.indexOf('stackPrepare(reels)');
-	const lean = body.indexOf('leanStage(olds)');
-	ok(lean > 0 && rel > lean && prep > rel, 'snapshot, then release singles, then prepare the group');
-	ok(lean < body.indexOf('await beat(MERGE_BEAT)'), 'the snapshot is taken at rest, before the lean');
+	const beat = body.indexOf('await beat(MERGE_BEAT)');
+	ok(prep > 0 && rel > beat, 'group prepares during the lean; singles release at the hit');
+	ok(body.indexOf("dbPlay(o, 'win'") > 0 && body.indexOf("dbPlay(o, 'win'") < beat, 'live rigs play a win clip before the first beat');
 	ok(body.includes('skipping = false'), 'turbo does not snap the merge');
 	ok(body.includes('cut()') && body.includes("crumb('merge'"), 'an animation error still applies the merge and does not reject');
 	ok(!/createLinearGradient|box-shadow|linear-gradient|radial-gradient/.test(mf), 'no drawn gradients or shadows');
@@ -155,13 +155,12 @@ async function play(n, opts) {
   let applied = 0, applyAt = 0, crouch = '';
   const live = [];
   const timer = setInterval(() => {
-    const part = document.querySelector('.mStage > div');
-    if (part && !crouch && part.getAnimations()[0] && part.getAnimations()[0].effect) {
-      const kfs = part.getAnimations()[0].effect.getKeyframes();
+    const ov = document.querySelector('.ov.full');
+    if (ov && !crouch && ov.getAnimations()[0] && ov.getAnimations()[0].effect) {
+      const kfs = ov.getAnimations()[0].effect.getKeyframes();
       crouch = String((kfs[kfs.length - 1] && kfs[kfs.length - 1].transform) || '');
     }
-    const ov = document.querySelector('.ov.full');
-    live.push({ t: Math.round(performance.now() - t0), up: !!ov && ov.style.visibility !== 'hidden', anim: part ? part.getAnimations().length : 0, stage: !!document.querySelector('.mStage') });
+    live.push({ t: Math.round(performance.now() - t0), up: !!ov && ov.style.visibility !== 'hidden', anim: ov ? ov.getAnimations().length : 0, stage: !!document.querySelector('.mStage') });
   }, 80);
   mark('play ' + n + (opts.turbo ? ' turbo' : '') + (opts.bonus ? ' bonus' : '') + (opts.skipAt != null ? ' skip' : '') + (opts.explode ? ' boom' : ''));
   if (opts.skipAt != null) setTimeout(() => skipMerge(), opts.skipAt);
@@ -265,21 +264,21 @@ main();
 			ok(r.beat.ms >= 380 && r.beat.ms < 600, `400 ms wait measured ${r.beat.ms} ms (${r.beat.frames} rafs)`);
 			for (const [k, n] of [['g2', 2], ['g3', 3], ['g4', 4], ['g5', 5]]) {
 				const p = r[k];
-				ok(p && !p.threw && p.applied === 1 && p.rel >= 0 && p.rel < p.prep, `${n}-reel applied once, release before prepare (${p && p.ms} ms, shake ${p && p.shake})`);
+				ok(p && !p.threw && p.applied === 1 && p.prep >= 0 && p.rel > p.prep, `${n}-reel applied once, prepare during the lean, release at the hit (${p && p.ms} ms, shake ${p && p.shake})`);
 				const e = early(p);
-				ok(!!e && e.stage && e.anim > 0 && !e.up, `${n}-reel snapshots lean at ${e && e.t} ms (live hidden, stage anim ${e && e.anim})`);
+				ok(!!e && e.up && e.anim > 0, `${n}-reel live overlays lean at ${e && e.t} ms (anim ${e && e.anim})`);
 				ok(p && p.leftover === 0 && p.flies === 0, `${n}-reel leftover badges ${p && p.leftover} flies ${p && p.flies}`);
 				ok(p && String(p.groupV) === String(2 ** n), `${n}-reel group gem is x${p && p.groupV}`);
 			}
 			ok(r.g2.applyAt > 700 && r.g2.applyAt < 1200, `2-reel cut at ${r.g2.applyAt} ms (after the wind-up and pull, not at frame 0)`);
-			ok(/translateY\(5(\.0)?px\)/.test(r.g2.crouch) || /translateY\(5px\)/.test(r.g2.crouch), `full wind-up crouch is ${r.g2.crouch}`);
-			ok(r.half && r.half.applied === 1 && /translateY\(2\.5px\)/.test(r.half.crouch), `reduced motion crouch is half (${r.half && r.half.crouch})`);
+			ok(/translateY\(6(\.0)?px\)/.test(r.g2.crouch) || /translateY\(6px\)/.test(r.g2.crouch), `full wind-up crouch is ${r.g2.crouch}`);
+			ok(r.half && r.half.applied === 1 && /translateY\(3(\.0)?px\)/.test(r.half.crouch), `reduced motion crouch is half (${r.half && r.half.crouch})`);
 			ok(r.half && r.half.ms > r.g2.ms * 0.8 && r.half.ms < r.g2.ms * 1.25, `reduced motion keeps the duration (${r.half && r.half.ms} vs ${r.g2.ms})`);
-			ok(r.g5.shake === 7 && r.g2.shake === 4, `camera scales with the group (${r.g2.shake} vs ${r.g5.shake})`);
+			ok(r.g5.shake === 8 && r.g2.shake === 5, `camera scales with the group (${r.g2.shake} vs ${r.g5.shake})`);
 			ok(r.g5.cam === 'big' && r.g2.cam === 'small', `push-in is ${r.g2.cam} for 2 and ${r.g5.cam} for 5`);
 			ok(r.turbo.applied === 1 && r.turbo.ms < r.g2.ms * 0.8 && r.turbo.ms > r.g2.ms * 0.45, `turbo ${r.turbo.ms} ms vs normal ${r.g2.ms} ms`);
 			ok(r.bonus.phase === 'bonus' && r.g2.phase === 'board', `phase returns to ${r.g2.phase} and to ${r.bonus.phase} in the bonus`);
-			ok(r.again.applied === 1 && r.again.rel < r.again.prep, `a second 5-reel merge also released before prepare`);
+			ok(r.again.applied === 1 && r.again.rel > r.again.prep, `a second 5-reel merge also prepared before release`);
 			ok(r.skip.applied === 1 && r.skip.ms < r.g2.ms - 150, `one tap shortens the merge (${r.skip.ms} vs ${r.g2.ms})`);
 			ok(r.boom && !r.boom.threw && r.boom.applied === 0 && r.boom.crumbs.includes('merge-apply'), 'a throwing apply is contained');
 			console.log('  times', JSON.stringify({ g2: r.g2.ms, g3: r.g3.ms, g4: r.g4.ms, g5: r.g5.ms, turbo: r.turbo.ms, skip: r.skip.ms, bonus: r.bonus.ms, again: r.again.ms, hit: r.hit, beat: r.beat }));

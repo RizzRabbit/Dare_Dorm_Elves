@@ -51,6 +51,7 @@ import { loadAllFx } from './fx';
 import { startSpin, abortSpin, hurry } from './reels';
 import { hideRespin } from './respin';
 import type { BookEvent } from './typesBookEvent';
+import { elvesHTML } from './cardelves';
 
 const DISCLAIMER =
 	'Malfunction voids all wins and plays. A consistent internet connection is required. In the event of a disconnection, reload the game to finish any uncompleted rounds. The expected return is calculated over many plays. The game display is not representative of any physical device and is for illustrative purposes only. Winnings are settled according to the amount received from the Remote Game Server and not from events within the web browser. © 2026 Rizzin Games.';
@@ -342,13 +343,8 @@ async function playReplay() {
 
 // ---------- bonus menu: Ante toggle, activate a bonus, bet -/+ with live prices ----------
 // Real in-game art on every card: Bunny Slope = a single (per-reel) wild, Black Diamond / Double Black = the merged 2- and
-// 3-elf groups, Wild Winter Spins = the 5-wide group; Secret Santa is a wrapped gift with a "?" tag.
-// v3.6: Double / Triple / Elves Gone Wild use the approved stacks r8d stills (scripts/gen-stack-stills.py), not the old
-// static WM2 / WM3 / WM5 scenes.
-// Chalet (task 3 item 2): square group shots made for the cards (build_art.py cards), heads to thighs, so the art fills the
-// card at every size instead of a tall board still shrunk into a square.
-const CARD_ART: Partial<Record<ModeKey, string>> = { dare: 'assets/cards/card_dare.webp', double_dare: 'assets/cards/card_double_dare.webp', triple_dare: 'assets/cards/card_triple_dare.webp', egw: 'assets/cards/card_egw.webp' };
 // Secret Santa card: the wrapped Gift symbol art on cranberry with a gold "?" tag (approved symbol art + code only).
+// Feature and buy cards use existing transparent elf cutouts (cardelves.ts), not the tiled card webps.
 const MYSTERY_CARD = () =>
 	`<span class="bMystFan" aria-hidden="true">${ART.L3_flat || ART.L3 ? `<img class="gift" src="${ART.L3_flat || ART.L3}" alt="" draggable="false">` : ''}` +
 	`<b class="bMystQ"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17"/><text x="20" y="28.5" text-anchor="middle">?</text></svg></b></span>`;
@@ -357,8 +353,7 @@ function buildBuy() {
 	$('#buyTitle').textContent = t('buyTitle');
 	$('#buyCards').classList.toggle('hidden', off);
 	$('#buyCards').innerHTML = off ? '' : BUY_MODES.map((m) => {
-		const a = CARD_ART[m];
-		return `<button class="bcard" data-m="${m}" aria-pressed="false"><span class="bArt">${m === 'mystery' ? MYSTERY_CARD() : a ? `<img src="${a}" alt="" draggable="false">` : ''}</span>` +
+		return `<button class="bcard" data-m="${m}" aria-pressed="false"><span class="bArt">${m === 'mystery' ? MYSTERY_CARD() : elvesHTML(m)}</span>` +
 			`<span class="bName">${titleHTML(m, MODE_LABEL[m].toUpperCase())}</span><span class="bPrice"></span><span class="bX">${mult(modeCost(m))}</span></button>`;
 	}).join('');
 	$('#buyCards').querySelectorAll<HTMLElement>('.bcard').forEach((b) => (b.onclick = () => {
@@ -392,8 +387,8 @@ function confirmYes() { const m = confirming; closePanel('#bmConfirm', true); co
 function openConfirm(m: ModeKey) {
 	confirming = m;
 	const c = confirmCopy(m as CopyMode, copyCtx(), MODE_LABEL[m], money(modeCost(m) * bet()), mult(modeCost(m)));
-	const a = CARD_ART[m], art = $('.cfArt');
-	art.innerHTML = m === 'mystery' ? MYSTERY_CARD() : a ? `<img src="${a}" alt="" draggable="false">` : '';
+	const art = $('.cfArt');
+	art.innerHTML = m === 'mystery' ? MYSTERY_CARD() : elvesHTML(m);
 	art.dataset.m = m; art.classList.toggle('hidden', !art.innerHTML);
 	$('#cfName').textContent = c.title; $('#cfDesc').textContent = c.desc;
 	$('#cfAmount').textContent = c.amount; $('#cfPer').textContent = c.per; $('#cfX').textContent = c.x;

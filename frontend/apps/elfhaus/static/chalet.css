@@ -674,3 +674,45 @@ html body.tablet:not(.portrait) #buyCards .bcard{grid-column:auto}
 /* Feature-spin arm tag: the gold pill 9-slices to the full mode title, with padding, on every layout. */
 html body.mk #app #armTag{overflow:visible;white-space:nowrap}
 html body.mk #app #armTag .t{overflow:visible;white-space:nowrap;flex:0 0 auto}
+
+/* Feature intro + buy / confirm cards: transparent elf cutouts on the cream card. No tiled
+   plate and no gold window frame behind them. Shadow is the existing ground-shadow sprite. */
+html body #intro .tArtWin{position:relative;overflow:visible;background:none;border:0;border-radius:0;width:min(100%,520px);aspect-ratio:auto;height:auto;margin:.15em auto .35em}
+html body #intro .tArtWin .tArtFr{display:none!important}
+html body #intro .elfRow,html body #buyCards .elfRow,html body #bmConfirm .elfRow{
+	position:relative;display:flex;align-items:flex-end;justify-content:center;width:100%;gap:0;min-height:0
+}
+html body #intro .elfShadow,html body #buyCards .elfShadow,html body #bmConfirm .elfShadow{
+	position:absolute;left:8%;right:8%;bottom:-2%;width:84%;height:22%;object-fit:contain;object-position:50% 100%;
+	z-index:0;pointer-events:none
+}
+html body #intro .elfCut{
+	display:block;position:relative;z-index:1;width:auto;height:auto;max-height:min(42vh,300px);
+	object-fit:contain;object-position:50% 100%;transform:none!important;border:0;background:none
+}
+html body #intro .elfRow[data-n="1"] .elfCut{max-height:min(46vh,320px)}
+html body #intro .elfRow[data-n="5"] .elfCut{max-height:min(34vh,230px)}
+html body.portrait #intro .elfCut{max-height:min(28vh,210px)}
+html body.portrait #intro .elfRow[data-n="5"] .elfCut{max-height:min(22vh,160px)}
+html body.tablet #intro .elfCut{max-height:min(40vh,300px)}
+@media (orientation:landscape) and (max-height:500px){
+	html body #intro .elfCut{max-height:min(46vh,180px)}
+	html body #intro .elfRow[data-n="5"] .elfCut{max-height:min(40vh,140px)}
+}
+html body #buyCards .bcard .bArt{
+	background:transparent!important;border:0!important;box-shadow:none!important;overflow:visible!important;
+	aspect-ratio:auto;display:flex;align-items:flex-end;justify-content:center;min-height:96px;padding:0 4px 4px
+}
+html body #buyCards .bcard .bArt img.elfCut,html body #bmConfirm .cfArt img.elfCut{
+	width:auto!important;height:auto!important;max-height:150px;object-fit:contain!important;object-position:50% 100%!important;
+	transform:none!important;position:relative;z-index:1;background:none;border:0
+}
+html body.portrait #buyCards .bcard .bArt img.elfCut{max-height:110px}
+html body.tablet #buyCards .bcard .bArt img.elfCut{max-height:170px}
+html body.tablet:not(.portrait) #buyCards .bcard .bArt img.elfCut{max-height:160px}
+html body #bmConfirm .cfArt{
+	background:transparent!important;border:0!important;overflow:visible!important;aspect-ratio:auto;
+	width:min(260px,72%);margin:0 auto 8px;display:flex;align-items:flex-end;justify-content:center
+}
+html body #bmConfirm .cfArt img.elfCut{max-height:min(28vh,200px)}
+html body.portrait #bmConfirm .cfArt img.elfCut{max-height:min(24vh,160px)}

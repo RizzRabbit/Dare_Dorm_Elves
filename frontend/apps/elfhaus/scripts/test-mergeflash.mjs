@@ -28,7 +28,7 @@ console.log('\n=== merge flash: source guards ===');
 	ok(mi.includes('t.destroy(true)') && mi.includes('releaseOut(x)'), 'dropping a snapshot still destroys its GPU texture');
 	ok(mf.includes("!x.classList.contains('stk_db')"), 'a rig placeholder is never copied as the snapshot');
 	ok(mf.includes("o.style.visibility = 'hidden'") && mf.indexOf("o.style.visibility = 'hidden'") < mf.indexOf('host.appendChild(el)'), 'live overlays hide before the snapshot stage is shown');
-	ok(mf.includes('performance.now() - t0 > 120'), 'the snapshot stays up until the new body has been drawn, on a time cap');
+	ok(mf.includes("dbPlay(o, 'win'") && mf.indexOf('stackRelease(olds)') > mf.indexOf('await beat(MERGE_BEAT)'), 'live rigs stay up through the lean and release at the hit');
 	ok(db.includes('removeFromParent()'), 'a rig snapshot is taken off the board stage');
 	ok(db.includes('resolution: r') || db.includes('snapshotPixels'), 'snapshot cap stays');
 	ok(/resolution:\s*'inherit'/.test(src('../src/game/board/glowFilter.ts')), "win glow stays at resolution 'inherit'");

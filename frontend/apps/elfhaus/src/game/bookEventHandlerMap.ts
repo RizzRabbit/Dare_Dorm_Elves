@@ -21,6 +21,7 @@ import { frameIn } from './wildframe';
 /** stack_form sheets decode ahead for reels with 2+ wilds that are not full yet (stacks.ts loads sheets on demand). */
 const warmStacks = () => stackPrefetch(S.sym.flatMap((c, r) => (!S.full.has(r) && c.filter((x) => x === 'W').length >= 2 ? [r] : [])));
 import { featOpen, featPop, featClose } from './featfx';
+import { elvesHTML } from './cardelves';
 import { countTo, countMs, setAmount, skipCounts, BIG_TIERS, levelOf, WIN_EDGES } from './countup';
 import { grab, combineInto, clearCoveredGems } from './combine';
 import { tempo, hold, gtempo } from './tempo';
@@ -31,7 +32,7 @@ import { payoutFlow } from './payoutFlow';
 import { crumb, scrub, setPhase } from './diag';
 import { bannerLevel } from './bannerLevel';
 import { titleType, titleTypeMirror } from './titletype';
-import { ninePanel, CARD, BTN, WINDOW } from './ninepanel';
+import { ninePanel, CARD, BTN } from './ninepanel';
 // Pauses here use ui.wait: the old pace x ANIM_TEMPO, skippable by tap / Space (tempo.ts); turbo keeps its short values.
 
 const scattersOnBoard = (): Pos[] => S.sym.flatMap((col, reel) => col.map((n, row) => ({ reel, row, n }))).filter((c) => c.n === 'S').map(({ reel, row }) => ({ reel, row }));
@@ -286,21 +287,11 @@ export const bookEventHandlerMap: Handlers = {
 		// the spin count is the card's hero line, in the title lettering (sprite glyphs; the text stays for screen readers)
 		titleType(I.querySelector<HTMLElement>('.spins'), `${ev.totalFs} FREE SPINS`); titleType(I.querySelector<HTMLElement>('.cont'), 'START');
 		ninePanel(I.querySelector<HTMLElement>('.card'), CARD); ninePanel(I.querySelector<HTMLElement>('.cont'), BTN);
-		// chalet: the tier's elves on the card, so it reads as a scene, not a dialog: the tier's approved square card art
-		// (assets/cards, the same paintings as the buy menu) shown whole, so nobody is cut at the face or chest. c = the
-		// crop as fractions of the image [x0, y0, x1, y1] (the whole image) and the window takes its aspect.
-		{ const art: Record<string, { u: string; c: [number, number, number, number]; px: [number, number] }> = {
-				dare: { u: 'assets/cards/card_dare.webp', c: [0, 0, 1, 1], px: [640, 640] },
-				double_dare: { u: 'assets/cards/card_double_dare.webp', c: [0, 0, 1, 1], px: [640, 640] },
-				triple_dare: { u: 'assets/cards/card_triple_dare.webp', c: [0, 0, 1, 1], px: [640, 640] },
-				hidden: { u: 'assets/cards/card_powder_day.webp', c: [0, 0, 1, 1], px: [640, 640] } };
-		  const t = art[ev.tier] || art.double_dare, [x0, y0, x1, y1] = t.c, cw = x1 - x0, ch = y1 - y0;
-		  let wv = I.querySelector<HTMLElement>('.card .tArtWin'), a = wv?.querySelector<HTMLImageElement>('img.tArt');
-		  if (!wv || !a) { wv = document.createElement('div'); wv.className = 'tArtWin'; a = document.createElement('img'); a.className = 'tArt'; a.alt = ''; a.draggable = false;
-		    const fr = document.createElement('i'); fr.className = 'tArtFr'; wv.append(a, fr); I.querySelector('.card .spins')!.before(wv); ninePanel(fr, WINDOW); }
-		  wv.style.setProperty('--ar', ((cw * t.px[0]) / (ch * t.px[1])).toFixed(4));
-		  Object.assign(a.style, { width: `${100 / cw}%`, height: `${100 / ch}%`, left: `${(-x0 / cw) * 100}%`, top: `${(-y0 / ch) * 100}%` });
-		  if (a.getAttribute('src') !== t.u) a.src = t.u; }
+		// The tier's elves sit on the cream card as transparent cutouts (existing maxwin sprites).
+		// No tiled plate and no gold window frame behind them.
+		{ let wv = I.querySelector<HTMLElement>('.card .tArtWin');
+		  if (!wv) { wv = document.createElement('div'); wv.className = 'tArtWin'; I.querySelector('.card .spins')!.before(wv); }
+		  wv.innerHTML = elvesHTML(ev.tier === 'hidden' ? 'hidden' : ev.tier); }
 		I.dataset.tier = ev.tier; I.classList.remove('hidden');
 		music('bonus');   // no-op when the trigger already switched it
 		const fx = I.querySelector<HTMLElement>('.bwFx'); featOpen(fx); featPop(I.querySelector('.tierName'));
