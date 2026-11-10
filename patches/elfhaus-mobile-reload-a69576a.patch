@@ -1,0 +1,841 @@
+diff -ruN a/frontend/apps/elfhaus/package.json b/frontend/apps/elfhaus/package.json
+--- a/frontend/apps/elfhaus/package.json	2026-11-05 23:36:42.000000000 +0000
++++ b/frontend/apps/elfhaus/package.json	2026-11-06 14:34:27.989911955 +0000
+@@ -8,7 +8,7 @@
+ 		"sync": "node scripts/sync-art.mjs && node scripts/sync-config.mjs",
+ 		"dev": "node scripts/sync-art.mjs && node scripts/sync-config.mjs && vite dev --host",
+ 		"build": "node scripts/sync-art.mjs && node scripts/sync-config.mjs && node scripts-build.mjs",
+-		"test": "node scripts/sync-config.mjs && node scripts/test-format.mjs && node scripts/test-books.mjs && node scripts/test-voice.mjs && node scripts/test-egw.mjs && node scripts/test-arm.mjs && node scripts/test-winstages.mjs && node scripts/test-payout.mjs && node scripts/test-banner.mjs && node scripts/test-balance.mjs",
++		"test": "node scripts/sync-config.mjs && node scripts/test-format.mjs && node scripts/test-books.mjs && node scripts/test-voice.mjs && node scripts/test-egw.mjs && node scripts/test-arm.mjs && node scripts/test-winstages.mjs && node scripts/test-payout.mjs && node scripts/test-banner.mjs && node scripts/test-balance.mjs && node --experimental-strip-types scripts/test-reload.mjs",
+ 		"package": "node scripts/package-release.mjs",
+ 		"preview": "vite preview"
+ 	},
+diff -ruN a/frontend/apps/elfhaus/scripts/test-reload.mjs b/frontend/apps/elfhaus/scripts/test-reload.mjs
+--- a/frontend/apps/elfhaus/scripts/test-reload.mjs	1970-01-01 00:00:00.000000000 +0000
++++ b/frontend/apps/elfhaus/scripts/test-reload.mjs	2026-11-06 14:36:19.606587306 +0000
+@@ -0,0 +1,179 @@
++// Regression for the mobile reload: DragonBones armatures left on the world clock, atlas refcount,
++// merge-snapshot size past the WebGL max texture, and breadcrumbs that survive the reload.
++// Pure modules only (no Pixi). Source guards pin the call sites that free the GPU / clock.
++import { readFileSync } from 'node:fs';
++import { fileURLToPath } from 'node:url';
++
++const root = fileURLToPath(new URL('..', import.meta.url));
++const src = (p) => readFileSync(new URL(p, import.meta.url), 'utf8');
++let fail = 0;
++const ok = (c, m) => { if (c) console.log('  OK ' + m); else { fail++; console.error('  FAIL ' + m); } };
++
++const store = new Map();
++globalThis.sessionStorage = {
++	getItem: (k) => (store.has(k) ? store.get(k) : null),
++	setItem: (k, v) => { store.set(k, String(v)); },
++	removeItem: (k) => { store.delete(k); },
++};
++store.set('eh.diag.v1', JSON.stringify([{ t: 1, k: 'pagehide', d: { phase: 'merge', live: 12 } }]));
++const heard = [];
++const origInfo = console.info.bind(console);
++console.info = (...a) => { heard.push(a.map((x) => (typeof x === 'string' ? x : JSON.stringify(x))).join(' ')); origInfo(...a); };
++const listeners = new Map();
++globalThis.addEventListener = (type, fn) => {
++	if (!listeners.has(type)) listeners.set(type, []);
++	listeners.get(type).push(fn);
++};
++
++const { snapshotPixels, stillResolution, releaseArmatures, createRigCache } = await import('../src/game/riglife.ts');
++const diag = await import('../src/game/diag.ts');
++
++console.log('\n=== reload: snapshot size ===');
++{
++	const wide = snapshotPixels(8000, 1800);
++	const oldR = Math.min(1, 512 / 1800) * 2;
++	const oldW = Math.floor(8000 * oldR);
++	ok(oldW > 4096, `old wide snapshot was ${oldW}px (past a 4096 max texture)`);
++	ok(wide.w <= 2048 && wide.h <= 1024, `wide snapshot is ${wide.w}x${wide.h}`);
++	const tall = snapshotPixels(600, 2000);
++	const oldTall = Math.min(1, 512 / 2000) * 2;
++	ok(Math.abs(tall.r - oldTall) < 1e-9, `tall rig keeps the old height budget (${tall.r} vs ${oldTall})`);
++	ok(tall.h <= 1024 && tall.w <= oldTall * 600 + 1, 'tall snapshot does not get larger');
++	const still = stillResolution(3000, 400);
++	ok(still === Math.min(1, 900 / 400, 2048 / 3000) && still <= 2048 / 3000, `still resolution capped (${still})`);
++	ok(snapshotPixels(100, 100).w === 200 && snapshotPixels(100, 100).h === 200, 'small rig stays at resolution 2');
++}
++
++console.log('\n=== reload: armature clock ===');
++{
++	const clock = [];
++	const arm = () => {
++		const a = { buffered: false, armature: { dispose() { a.buffered = true; } } };
++		clock.push(a);
++		return a;
++	};
++	const flush = (dt) => {
++		if (dt !== 0) throw new Error('flush dt ' + dt);
++		for (let i = clock.length - 1; i >= 0; i--) if (clock[i].buffered) clock.splice(i, 1);
++	};
++	for (let m = 0; m < 40; m++) for (let i = 0; i < 5; i++) arm();
++	flush(0);
++	ok(clock.length === 200, `without dispose, 40 merges leave ${clock.length} armatures on the clock`);
++	clock.length = 0;
++	let flushes = 0;
++	for (let m = 0; m < 40; m++) {
++		const batch = Array.from({ length: 5 }, arm);
++		releaseArmatures(batch, (dt) => { flushes++; flush(dt); });
++	}
++	ok(flushes === 40 && clock.length === 0, `dispose + advanceTime(0) clears the clock (${clock.length} left, ${flushes} flushes)`);
++}
++
++console.log('\n=== reload: atlas refcount ===');
++{
++	const c = createRigCache();
++	const resident = new Set();
++	const pin = (n) => { c.pin(n); resident.add(n); };
++	const unpin = (n) => { if (c.unpin(n)) resident.delete(n); };
++	pin('WF_R1'); pin('WF_R2');
++	pin('WF_R1'); unpin('WF_R1');
++	ok(c.pinned('WF_R1') === 1 && resident.has('WF_R1'), 'sticky re-render pins the replacement before the old one stops');
++	unpin('WF_R1'); unpin('WF_R2');
++	ok(!resident.has('WF_R1') && !resident.has('WF_R2'), 'merge unpin drops the singles');
++	pin('WM2_R1-2');
++	ok(resident.size === 1 && resident.has('WM2_R1-2'), 'group atlas is the only resident after the merge');
++
++	const bonus = createRigCache();
++	const held = new Set();
++	let built = 0;
++	const names = ['WF_R1', 'WF_R2', 'WF_R3', 'WF_R4', 'WF_R5'];
++	for (const n of names) { bonus.pin(n); held.add(n); built++; }
++	for (let spin = 0; spin < 18; spin++) {
++		for (let rebuild = 0; rebuild < 4; rebuild++) {
++			for (const n of names) { bonus.pin(n); held.add(n); built++; }
++			for (const n of names) if (bonus.unpin(n)) held.delete(n);
++		}
++	}
++	ok(built === names.length * (1 + 18 * 4), `bonus rebuilt ${built} rig displays`);
++	ok(held.size === names.length && names.every((n) => bonus.pinned(n) === 1), `resident stays the ${held.size} on-screen rigs, not the cumulative rebuilds`);
++
++	const p = createRigCache();
++	p.begin('WF_R1'); p.pin('WF_R1');
++	ok(p.unpin('WF_R1') === false && p.busy('WF_R1'), 'unpin while a load is in flight does not evict');
++	ok(p.end('WF_R1') === true && !p.busy('WF_R1'), 'the load finishing after the last pin is the evict');
++	p.begin('WF_R2'); p.pin('WF_R2');
++	ok(p.end('WF_R2') === false && p.unpin('WF_R2') === true, 'a load that finishes while pinned waits for the last unpin');
++}
++
++console.log('\n=== reload: breadcrumbs ===');
++{
++	diag.installDiag(() => ({ live: 4, atlases: 2 }));
++	ok(heard.some((s) => s.includes('last session') && s.includes('merge')), 'next boot prints the previous pagehide');
++	ok(diag.diagLog().some((c) => c.k === 'pagehide' && c.d?.phase === 'merge'), 'previous merge crumb is still in the ring');
++	ok(diag.diagLog().some((c) => c.k === 'boot'), 'boot crumb appended on install');
++	listeners.get('pagehide').forEach((fn) => fn());
++	const hide = diag.diagLog().at(-1);
++	ok(hide?.k === 'pagehide' && hide.d?.phase === 'boot' && hide.d?.live === 4 && hide.d?.atlases === 2, 'pagehide records phase and rig stats');
++	diag.diagReset();
++	diag.crumb('x', { sessionID: 'abc', token: 'sekrit', bet: 5, balance: 9, msg: 'player@mail.com token=sekrit rgs_url=https://x.test/play?sessionID=sekrit' });
++	const row = JSON.stringify(diag.diagLog().at(-1));
++	ok(!/sekrit|mail\.com|sessionID|\?|"bet"|"balance"|"token"|"abc"/.test(row), 'secrets, bet and balance are not stored: ' + row);
++	ok(row.includes('[redacted]') && row.includes('[email]'), 'a message that mentioned them keeps only the redaction');
++	diag.diagReset();
++	diag.setPhase('merge', { live: 5 });
++	diag.setPhase('merge');
++	ok(diag.diagLog().filter((c) => c.k === 'phase').length === 1, 'same phase without extra counts is one crumb');
++	diag.setPhase('merge', { live: 1 });
++	ok(diag.diagLog().filter((c) => c.k === 'phase').length === 2, 'a merge before/after count is kept');
++	diag.diagReset();
++	for (let i = 0; i < 40; i++) diag.crumb('n', { i });
++	const log = diag.diagLog();
++	ok(log.length === 32 && log.at(-1)?.d?.i === 39 && log[0]?.d?.i === 8, `ring keeps the newest 32 (len ${log.length})`);
++	const cv = { addEventListener(t, fn) { this[t] = fn; } };
++	let prevented = false;
++	diag.watchCanvas(cv, 'board');
++	cv.webglcontextlost({ preventDefault() { prevented = true; } });
++	ok(prevented && diag.diagLog().some((c) => c.k === 'webgl-lost' && c.d?.canvas === 'board'), 'context loss is recorded and not a reload');
++	let resized = null;
++	diag.releaseIntroGpu({ renderer: { resize: (w, h, r) => { resized = [w, h, r]; } } });
++	ok(resized?.[0] === 1 && resized?.[1] === 1 && resized?.[2] === 1, 'intro renderer shrinks to 1x1');
++}
++
++console.log('\n=== reload: source guards ===');
++{
++	const db = src('../src/game/dbstacks.ts');
++	const stop = db.slice(db.indexOf('export function dbStop'), db.indexOf('export async function dbStill'));
++	const still = db.slice(db.indexOf('export async function dbStill'));
++	ok(stop.includes('releaseArmatures') && still.includes('releaseArmatures'), 'dbStop and dbStill flush disposed armatures');
++	ok(/unpin\(name\)\) evictRig/.test(db) || /unpin\(name\)\) evictRig/.test(db.replace(/\s+/g, ' ')), 'a dropped pin evicts the atlas');
++	ok(db.includes('snapshotPixels') && db.includes('stillResolution'), 'snapshots use the capped resolution');
++	ok(db.includes('rigs.pin(name)') && db.indexOf('rigs.pin(name)') < db.indexOf('await initDbStacks'), 'dbPlay pins before its first await');
++	const intro = src('../src/game/introPixi.ts');
++	const finish = intro.slice(intro.indexOf('function finish()'), intro.indexOf('function onKey'));
++	ok(finish.includes('releaseIntroGpu(app)') && !finish.includes('app.destroy'), 'intro finish frees the framebuffer without destroying the shared renderer');
++	ok(intro.includes("watchCanvas(cv, 'intro')"), 'intro canvas watches context loss');
++	const game = src('../src/game/game.ts');
++	const reloads = [...game.matchAll(/location\.reload\(\)/g)];
++	ok(reloads.length === 1, `one explicit reload (${reloads.length})`);
++	const line = game.split('\n').find((l) => l.includes('location.reload()')) || '';
++	ok(line.includes("crumb('explicit-reload'"), 'that reload writes a breadcrumb first');
++	const round = game.slice(game.indexOf('async function round('), game.indexOf('// ---------- startup'));
++	ok(/setPhase\('spin'\)/.test(round) && /setPhase\('idle'\)/.test(round), 'a round records spin and idle');
++	ok(!/setArm\(|pickArm\(|armed\s*=/.test(round), 'round() still never disarms');
++	const fe = src('../src/game/bookEventHandlerMap.ts');
++	const feFn = fe.slice(fe.indexOf('export function feError'));
++	ok(feFn.includes("crumb('fe'"), 'feError persists a scrubbed crumb');
++	ok(fe.includes("setPhase('bonus')") && fe.includes("setPhase('base')"), 'bonus start and end change phase');
++	const merge = src('../src/game/mergefx.ts');
++	ok(merge.includes("setPhase('merge', dbStats())") && merge.includes("setPhase(S.inBonus ? 'bonus' : 'board', dbStats())"), 'merge records before and after');
++	const mirror = src('../src/game/board/mirror.ts');
++	ok(mirror.includes('t.destroy(true)') && mirror.includes('releaseOut(x)'), 'a dropped lean snapshot destroys its GPU texture');
++	const stage = src('../src/game/board/stage.ts');
++	const scene = src('../src/game/scene/scene.ts');
++	ok(stage.includes("watchCanvas(cv, 'board')") && scene.includes("watchCanvas(cv, 'scene')"), 'board and room canvases watch context loss');
++	const all = src('../src/game/game.ts') + fe + merge + db;
++	ok((all.match(/location\.reload\(\)/g) || []).length === 1, 'merge and bonus paths do not reload');
++	ok(root.endsWith('/'), 'app root resolved');
++}
++
++console.log(fail ? `\nreload tests: ${fail} FAILED` : '\nreload tests: all passed');
++process.exit(fail ? 1 : 0);
+diff -ruN a/frontend/apps/elfhaus/src/game/board/mirror.ts b/frontend/apps/elfhaus/src/game/board/mirror.ts
+--- a/frontend/apps/elfhaus/src/game/board/mirror.ts	2026-11-05 23:36:42.000000000 +0000
++++ b/frontend/apps/elfhaus/src/game/board/mirror.ts	2026-11-06 14:32:33.157217230 +0000
+@@ -145,13 +145,20 @@
+ }
+ 
+ // ---------- display pool (one per DOM leaf, reused across frames) ----------
+-type Out = { d: Container; used: number; kind: string };
++type Out = { d: Container; used: number; kind: string; cv?: HTMLCanvasElement };
+ const outs = new WeakMap<Element, Out>();
+ const live = new Set<Out>();
+ let frameNo = 0;
++function releaseOut(o: Out) {
++	o.d.removeFromParent();
++	if (o.kind !== 'db' && !o.d.destroyed) o.d.destroy({ children: true });
++	// merge lean snapshots are uploaded once; dropping the sprite must free the GPU copy too
++	if (o.cv) { const t = cvTex.get(o.cv); if (t) { cvTex.delete(o.cv); try { t.destroy(true); } catch { /* already destroyed */ } } o.cv = undefined; }
++	live.delete(o);
++}
+ function out(el: Element, kind: string, make: () => Container): Out {
+ 	let o = outs.get(el);
+-	if (!o || o.kind !== kind || (o.d.destroyed && kind !== 'db') || !live.has(o)) { if (o) { o.d.removeFromParent(); if (o.kind !== 'db' && !o.d.destroyed) o.d.destroy({ children: true }); live.delete(o); } o = { d: make(), used: 0, kind }; outs.set(el, o); live.add(o); }
++	if (!o || o.kind !== kind || (o.d.destroyed && kind !== 'db') || !live.has(o)) { if (o) releaseOut(o); o = { d: make(), used: 0, kind }; outs.set(el, o); live.add(o); }
+ 	o.used = frameNo; return o;
+ }
+ const SKIP = /\b(tGl|tGw|rgShine|wFrame|ovWinO|ovGlow|lock|nm|plate|mfRays|mfCore)\b/;
+@@ -392,8 +399,10 @@
+ 			const cv = el as unknown as HTMLCanvasElement;
+ 			if (base.f & F_DB) { const d = dbDisplay(cv); if (d) { const o = out(el, 'db', () => d.root); if (o.d !== d.root) o.d = d.root; if (d.root.destroyed) return; if (d.root.parent !== c.host) c.host.addChild(d.root); { const k = h / d.H; place(d.root, M, (w - d.W * k) / 2, 0, k, k); } d.root.alpha = c.op; d.root.zIndex = order++; d.root.visible = true; } return; }
+ 			if (!cv.width) return;
+-			let t = cvTex.get(cv); if (!t) { t = Texture.from(cv); cvTex.set(cv, t); }
+-			sprite(el, t, c, 0, 0, w, h, s); return;
++			let t = cvTex.get(cv); if (!t || (t as Texture & { destroyed?: boolean }).destroyed) { t = Texture.from(cv); cvTex.set(cv, t); }
++			sprite(el, t, c, 0, 0, w, h, s);
++			const held = outs.get(el); if (held) held.cv = cv;
++			return;
+ 		}
+ 		if (tag === 'IMG') {
+ 			const im = el as HTMLImageElement, t = im.currentSrc || im.src ? source(im.currentSrc || im.src) : null; if (!t) return;
+@@ -456,7 +465,7 @@
+ 	// the frame's fire light and glint, over the frame back (they were DOM over #mkFrame)
+ 	const fb: Ctx = { M: [1, 0, 0, 1, 0, 0], op: 1, br: 1, host: layer.frameBack, glow: false };
+ 	for (const e of extras) { if (!e.isConnected) { geoDirty = true; continue; } for (const a of e.getAnimations({ subtree: true })) { const t = (a.effect as KeyframeEffect | null)?.target as Element | null; if (t) { const l = running.get(t); if (l) l.push(a); else running.set(t, [a]); } } walk(e, fb.M, fb, false); }
+-	for (const x of live) if (x.d.destroyed) live.delete(x); else if (x.used !== frameNo) { if (x.d.visible) x.d.visible = false; if (!x.d.parent || x.used < frameNo - 120) { x.d.removeFromParent(); if (x.kind !== 'db') x.d.destroy({ children: true }); live.delete(x); } }
++	for (const x of live) if (x.d.destroyed) live.delete(x); else if (x.used !== frameNo) { if (x.d.visible) x.d.visible = false; if (!x.d.parent || x.used < frameNo - 120) releaseOut(x); }
+ 	for (const k of liveClips) if (k.used !== frameNo) { k.c.visible = false; if (k.used < frameNo - 120) { k.c.removeFromParent(); liveClips.delete(k); } } else k.c.visible = true;
+ 	if (import.meta.env.DEV) { msLog.push(performance.now() - t0); if (msLog.length > 600) msLog.shift(); }
+ 	return true;
+diff -ruN a/frontend/apps/elfhaus/src/game/board/stage.ts b/frontend/apps/elfhaus/src/game/board/stage.ts
+--- a/frontend/apps/elfhaus/src/game/board/stage.ts	2026-11-05 23:36:42.000000000 +0000
++++ b/frontend/apps/elfhaus/src/game/board/stage.ts	2026-11-06 14:34:25.889899250 +0000
+@@ -12,6 +12,7 @@
+ // Rendered once per frame at device px (stage CSS scale x devicePixelRatio, capped 3), only while something is live.
+ import { Application, Container, Sprite, Texture } from 'pixi.js';
+ import { FRZ } from '../layers';
++import { watchCanvas } from '../diag';
+ 
+ export const BL = { frameBack: 0, winGlow: 5, reels: 10, symFx: 30, lines: 40, winAmt: 50, lip: 60, banners: 70 } as const;
+ export type BLayer = keyof typeof BL;
+@@ -47,7 +48,7 @@
+ 		const a = new Application();
+ 		try { await a.init({ backgroundAlpha: 0, antialias: true, preference: 'webgl', autoDensity: false, hello: false, sharedTicker: false, autoStart: false, width: 8, height: 8 }); }
+ 		catch (e) { console.warn('board stage', e); return null; }
+-		const cv = a.canvas as HTMLCanvasElement; cv.id = 'boardStage'; cv.setAttribute('aria-hidden', 'true'); fr.appendChild(cv);
++		const cv = a.canvas as HTMLCanvasElement; cv.id = 'boardStage'; cv.setAttribute('aria-hidden', 'true'); fr.appendChild(cv); watchCanvas(cv, 'board');
+ 		a.stage.sortableChildren = true; fxRoot = new Container(); fxRoot.label = 'boardFx'; fxRoot.sortableChildren = true; a.stage.addChild(fxRoot);
+ 		for (const n of Object.keys(BL) as BLayer[]) { const c = new Container(); c.label = n; c.zIndex = BL[n]; c.sortableChildren = true; layer[n] = c; fxRoot.addChild(c); }
+ 		app = a; place();
+diff -ruN a/frontend/apps/elfhaus/src/game/bookEventHandlerMap.ts b/frontend/apps/elfhaus/src/game/bookEventHandlerMap.ts
+--- a/frontend/apps/elfhaus/src/game/bookEventHandlerMap.ts	2026-11-05 23:36:42.000000000 +0000
++++ b/frontend/apps/elfhaus/src/game/bookEventHandlerMap.ts	2026-11-06 14:34:21.621873427 +0000
+@@ -28,6 +28,7 @@
+ import { sfx, loop, music, musicSting, stingInMs, beatSnapMs, duck, duckFor, playVoice, type Handle } from './audio';
+ import { voice, voiceSpin, teaseOk } from './voice';
+ import { payoutFlow } from './payoutFlow';
++import { crumb, scrub, setPhase } from './diag';
+ import { bannerLevel } from './bannerLevel';
+ import { titleType, titleTypeMirror } from './titletype';
+ import { ninePanel, CARD, BTN, WINDOW } from './ninepanel';
+@@ -36,7 +37,7 @@
+ const scattersOnBoard = (): Pos[] => S.sym.flatMap((col, reel) => col.map((n, row) => ({ reel, row, n }))).filter((c) => c.n === 'S').map(({ reel, row }) => ({ reel, row }));
+ const TL = (t: Tier) => TIER_LABEL[t].toUpperCase();
+ const setFsTotal = (n: number) => { const el = $('#fsCount'); el.textContent = el.textContent!.replace(/\/ \d+/, '/ ' + n); };
+-const showFsBar = () => { setBg(true); S.inBonus = true; document.body.classList.add('inBonus'); $('#fsBar').classList.remove('hidden'); };
++const showFsBar = () => { setBg(true); S.inBonus = true; document.body.classList.add('inBonus'); $('#fsBar').classList.remove('hidden'); setPhase('bonus'); };
+ /** Scatter highlight: the Ski Passes play their win loop, everything else dims. */
+ async function showScatters(ps: Pos[], ms: number) {
+ 	if (!ps.length) return;
+@@ -87,7 +88,7 @@
+ /** v3.18b: autoplay with the AUTO-PLAY BONUS toggle on plays bonuses hands-free; otherwise every bonus waits for taps. */
+ const handsFree = () => S.auto > 0 && S.autoBonus;
+ 
+-export const endBonusUi = () => { music('base'); setBg(false); document.body.classList.remove('inBonus'); $('#fsBar').classList.add('hidden'); $('#intro').classList.add('hidden'); $('#fsMore').classList.add('hidden'); S.inBonus = false; };
++export const endBonusUi = () => { music('base'); setBg(false); document.body.classList.remove('inBonus'); $('#fsBar').classList.add('hidden'); $('#intro').classList.add('hidden'); $('#fsMore').classList.add('hidden'); S.inBonus = false; setPhase('base'); };
+ 
+ /** EGW: the reels named by egwStart (reel -> stack value). The math sends them as already-locked full reels in the
+  * next reveal; that reveal spins them like any other reel instead (they stop left to right with the normal settle and
+@@ -427,5 +428,7 @@
+ export function feError(where: string, e: unknown) {
+ 	console.error('[elfhaus] ' + where, e);
+ 	const g = globalThis as any, l = (g.__elfErr ||= []);
+-	l.push({ where, at: new Date().toISOString(), msg: String((e as any)?.message ?? e), stack: String((e as any)?.stack ?? '').slice(0, 1500), raw: e }); if (l.length > 20) l.shift();
++	const msg = String((e as any)?.message ?? e);
++	l.push({ where, at: new Date().toISOString(), msg, stack: String((e as any)?.stack ?? '').slice(0, 1500), raw: e }); if (l.length > 20) l.shift();
++	crumb('fe', { where: scrub(where), msg: scrub(msg) });
+ }
+diff -ruN a/frontend/apps/elfhaus/src/game/dbstacks.ts b/frontend/apps/elfhaus/src/game/dbstacks.ts
+--- a/frontend/apps/elfhaus/src/game/dbstacks.ts	2026-11-05 23:36:42.000000000 +0000
++++ b/frontend/apps/elfhaus/src/game/dbstacks.ts	2026-11-06 14:36:22.646605700 +0000
+@@ -3,10 +3,17 @@
+ // the baked loop sheets. Each shown overlay gets one canvas (class stk stk_body, so the CSS placeholder hides as for a
+ // sheet) with its own small Pixi renderer, made on demand and destroyed with the overlay. Split rigs (_A/_B, per
+ // <name>_parts.json) are built and played together. Rigs: static/assets/rig/db/ (scripts/import-art.mjs rigs).
++// Memory: buildArmatureDisplay registers the armature on the DragonBones world clock, and dispose() only buffers it.
++// This game never calls DragonBones.advanceTime (useSharedTicker is false). dbStop / dbStill therefore flush with
++// advanceTime(0) — dt 0 does not tick Roxy, who shares the clock — or every merge and every bonus re-render keeps the
++// previous rig forever. Atlas GPU textures follow the same refcount: released when the last overlay of that rig stops
++// and nothing is loading it, so a merge can drop the singles before the group decodes (the sheet path already did this).
+ import { Container, Rectangle, type Filter } from 'pixi.js';
+ import { animate, kick, stageApp } from './board/stage';
+ import { glowFilter, setGlow } from './board/glowFilter';
+ import { PixiFactory, type PixiArmatureDisplay } from 'pixi-dragonbones-runtime';
++import { crumb, scrub } from './diag';
++import { createRigCache, releaseArmatures, snapshotPixels, stillResolution } from './riglife';
+ const DIR = 'assets/rig/db/';
+ let index: Promise<Set<string>> | null = null;
+ const known = new Set<string>();
+@@ -14,10 +21,17 @@
+ /** sync: is there a rig for this overlay (after initDbStacks resolved)? */
+ export const dbKnown = (ov: HTMLElement) => known.has(rigName(ov));
+ const parsed = new Map<string, Promise<string[] | null>>();
+-type Live = { arms: PixiArmatureDisplay[]; root: Container; anim: string; t: number; blinkAt: number; cv: HTMLCanvasElement; W: number; H: number; gf: Filter | null; ga: number };
++type Pack = { parts: string[]; urls: string[] };
++const loaded = new Map<string, Pack>();
++const rigs = createRigCache();
++let AssetsRef: { unload: (u: string) => Promise<unknown> } | null = null;
++let built = 0, disposed = 0;
++type Live = { name: string; arms: PixiArmatureDisplay[]; root: Container; anim: string; t: number; blinkAt: number; cv: HTMLCanvasElement; W: number; H: number; gf: Filter | null; ga: number };
+ const lives = new Map<HTMLElement, Live>();
+ const byCv = new WeakMap<HTMLCanvasElement, Live>();
++const starting = new Map<HTMLElement, Promise<boolean>>();
+ const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
++const flushDb = (dt: number) => { try { PixiFactory.advanceTime(dt); } catch (e) { crumb('db-flush', { msg: scrub((e as Error)?.message || String(e)) }); } };
+ // fix8: the rigs live IN the board stage (board/mirror.ts places each rig's root on its overlay's placeholder canvas,
+ // canvas.stk_db, a 1x1 state element kept so the CSS :has(canvas.stk_body) rules and the merge choreography still
+ // see it). No per-overlay renderer / canvas any more; one shared ticker advances every rig.
+@@ -43,6 +57,10 @@
+ 	const L = byCv.get(cv); if (!L || L.root.destroyed) return null;
+ 	return { root: L.root, W: L.W, H: L.H, glow: () => {} };
+ }
++/** Live rigs, how many were built / released, and how many atlas packs are still resident. Page-hide breadcrumbs read this. */
++export function dbStats(): Record<string, number> {
++	return { live: lives.size, built, disposed, atlases: loaded.size };
++}
+ export function initDbStacks() {
+ 	return (index ||= fetch(DIR + 'index.json').then((r) => (r.ok ? r.json() : { rigs: [] })).catch(() => ({ rigs: [] }))
+ 		.then((j: { rigs?: string[] }) => { (j.rigs || []).forEach((n) => { const b = n.replace(/_[AB]$/, ''); known.add(b); if (b !== n) split.add(b); }); return known; }));
+@@ -53,54 +71,105 @@
+ 	if (!r.length) return '';
+ 	return r.length === 1 ? `WF_R${r[0]}` : `WM${r.length}_R${r[0]}-${r[r.length - 1]}`;
+ }
++function evictRig(name: string) {
++	const info = loaded.get(name);
++	loaded.delete(name); parsed.delete(name);
++	// A failed load never parsed anything. Touching PixiFactory.factory here would create the shared factory
++	// (and, if useSharedTicker were still at its default, start the clock) before the game has set that flag.
++	if (!info) return;
++	const urls = info.urls;
++	try {
++		const F = PixiFactory.factory;
++		for (const part of info?.parts || []) {
++			try { F.removeTextureAtlasData(part, true); } catch { /* atlas was not parsed */ }
++			try { F.removeDragonBonesData(part, true); } catch { /* data was not parsed */ }
++		}
++		PixiFactory.advanceTime(0);
++	} catch (e) { crumb('atlas-evict', { name, msg: scrub((e as Error)?.message || String(e)) }); }
++	if (!urls.length) return;
++	queueMicrotask(() => {
++		// a re-render may have pinned and started a new load of the same rig before this ran
++		if (rigs.busy(name) || parsed.has(name) || !AssetsRef) return;
++		for (const u of urls) void AssetsRef.unload(u).catch(() => {});
++	});
++}
++function dropPin(name: string) { if (name && rigs.unpin(name)) evictRig(name); }
+ function load(name: string) {
+ 	let p = parsed.get(name);
+-	if (!p) parsed.set(name, (p = (async () => {
+-		const pj = !split.has(name) ? null : await fetch(DIR + name + '_parts.json').then((r) => (r.ok ? r.json() : null)).catch(() => null);
+-		const parts: string[] = pj?.parts || [name];
+-		PixiFactory.useSharedTicker = false;
+-		const { Assets } = await import('pixi.js');
+-		for (const p of parts) {
+-			const [ske, atl] = await Promise.all([fetch(DIR + p + '_ske.json').then((r) => r.json()), fetch(DIR + p + '_tex.json').then((r) => r.json())]);
+-			const tex = await Assets.load(DIR + p + '_tex.webp');
+-			PixiFactory.factory.parseDragonBonesData(ske, p); PixiFactory.factory.parseTextureAtlasData(atl, tex, p);
+-		}
+-		return parts;
+-	})().catch(() => null)));
++	if (!p) {
++		rigs.begin(name);
++		parsed.set(name, (p = (async () => {
++			try {
++				const pj = !split.has(name) ? null : await fetch(DIR + name + '_parts.json').then((r) => (r.ok ? r.json() : null)).catch(() => null);
++				const parts: string[] = pj?.parts || [name];
++				PixiFactory.useSharedTicker = false;
++				const { Assets } = await import('pixi.js');
++				AssetsRef = Assets;
++				const urls: string[] = [];
++				for (const part of parts) {
++					const url = DIR + part + '_tex.webp'; urls.push(url);
++					const [ske, atl] = await Promise.all([fetch(DIR + part + '_ske.json').then((r) => r.json()), fetch(DIR + part + '_tex.json').then((r) => r.json())]);
++					const tex = await Assets.load(url);
++					PixiFactory.factory.parseDragonBonesData(ske, part); PixiFactory.factory.parseTextureAtlasData(atl, tex, part);
++				}
++				loaded.set(name, { parts, urls });
++				return parts;
++			} catch (e) { crumb('atlas-load', { name, msg: scrub((e as Error)?.message || String(e)) }); return null; }
++			finally { if (rigs.end(name)) evictRig(name); }
++		})()));
++	}
+ 	return p;
+ }
+ /** Play the rig's body anim on this overlay. Resolves false when there is no rig (the sheet path then runs). */
+ export async function dbPlay(ov: HTMLElement, anim: 'idle' | 'win'): Promise<boolean> {
+-	const name = rigName(ov); if (!name || !(await initDbStacks()).has(name)) return false;
++	const name = rigName(ov); if (!name) return false;
+ 	const cur = lives.get(ov);
+ 	if (cur) { if (cur.anim !== anim) { cur.anim = anim; fade(cur, anim); } return true; }
+-	const parts = await load(name); if (!parts || !ov.isConnected) return !!parts;
+-	if (lives.has(ov)) return dbPlay(ov, anim);
+-	const cv = document.createElement('canvas'); cv.width = 1; cv.height = 1; cv.className = 'stk stk_body stk_db'; cv.setAttribute('aria-hidden', 'true');
+-	cv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none';
+-	const root = new Container(); root.label = 'db:' + name;
+-	const arms = parts.map((p) => { const d = PixiFactory.factory.buildArmatureDisplay(p, p, '', p) as PixiArmatureDisplay; root.addChild(d); return d; });
+-	const ab = arms[0].armature.armatureData.aabb;
+-	// placed by the mirror exactly as the old per-overlay canvas fit it: scale = overlay height / aabb height, centred in x
+-	ov.prepend(cv);
+-	if (name.startsWith('WF_') && !ov.querySelector(':scope > img.stk_glow')) {
+-		const gl = document.createElement('img'); gl.className = 'stk stk_glow land'; gl.alt = ''; gl.setAttribute('aria-hidden', 'true');
+-		gl.src = DIR + name + '_glow.webp'; ov.prepend(gl); setTimeout(() => gl.classList.remove('land'), 260);
+-	}
+-	const L: Live = { arms, root, anim, t: 0, blinkAt: 1 + Math.random() * 3, cv, W: ab.width, H: ab.height, gf: null, ga: 0 };
+-	lives.set(ov, L); byCv.set(cv, L); fade(L, anim, 0);
+-	for (const d of L.arms) d.armature.advanceTime(0);
+-	if (!ticking) { ticking = true; animate(step); }
+-	return true;
++	const inflight = starting.get(ov);
++	if (inflight) { await inflight; return dbPlay(ov, anim); }
++	const job = dbPlayNew(ov, name, anim);
++	starting.set(ov, job);
++	try { return await job; } finally { if (starting.get(ov) === job) starting.delete(ov); }
++}
++async function dbPlayNew(ov: HTMLElement, name: string, anim: 'idle' | 'win'): Promise<boolean> {
++	// Pin before the first await. renderOverlays detaches the previous overlay synchronously and the
++	// ticker dbStops it on a later frame; the pin has to land in the microtask gap or the atlas is evicted and reloaded.
++	rigs.pin(name);
++	let owned = true;
++	const releasePin = () => { if (owned) { owned = false; dropPin(name); } };
++	try {
++		if (!(await initDbStacks()).has(name)) { releasePin(); return false; }
++		const parts = await load(name); if (!parts || !ov.isConnected) { releasePin(); return !!parts && ov.isConnected; }
++		if (lives.has(ov)) { releasePin(); return dbPlay(ov, anim); }
++		const cv = document.createElement('canvas'); cv.width = 1; cv.height = 1; cv.className = 'stk stk_body stk_db'; cv.setAttribute('aria-hidden', 'true');
++		cv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none';
++		const root = new Container(); root.label = 'db:' + name;
++		const arms = parts.map((part) => { const d = PixiFactory.factory.buildArmatureDisplay(part, part, '', part) as PixiArmatureDisplay; root.addChild(d); return d; });
++		const ab = arms[0].armature.armatureData.aabb;
++		// placed by the mirror exactly as the old per-overlay canvas fit it: scale = overlay height / aabb height, centred in x
++		ov.prepend(cv);
++		if (name.startsWith('WF_') && !ov.querySelector(':scope > img.stk_glow')) {
++			const gl = document.createElement('img'); gl.className = 'stk stk_glow land'; gl.alt = ''; gl.setAttribute('aria-hidden', 'true');
++			gl.src = DIR + name + '_glow.webp'; ov.prepend(gl); setTimeout(() => gl.classList.remove('land'), 260);
++		}
++		const L: Live = { name, arms, root, anim, t: 0, blinkAt: 1 + Math.random() * 3, cv, W: ab.width, H: ab.height, gf: null, ga: 0 };
++		lives.set(ov, L); byCv.set(cv, L); fade(L, anim, 0);
++		for (const d of L.arms) d.armature.advanceTime(0);
++		if (!ticking) { ticking = true; animate(step); }
++		owned = false; built++;
++		return true;
++	} catch (e) { releasePin(); crumb('db-play', { name, msg: scrub((e as Error)?.message || String(e)) }); return false; }
+ }
+ /** A still of the rig as it shows now (the merge lean's snapshot), or null. */
+ export function dbSnapshot(ov: HTMLElement): HTMLCanvasElement | null {
+ 	const L = lives.get(ov); const a = stageApp(); if (!L || !a) return null;
+ 	const keep = { p: L.root.parent, f: L.root.filters, x: L.root.x, y: L.root.y, sx: L.root.scale.x, sy: L.root.scale.y, r: L.root.rotation, v: L.root.visible };
+ 	L.root.filters = []; L.root.position.set(0, 0); L.root.scale.set(1); L.root.rotation = 0; L.root.visible = true;
+-	const k = Math.min(1, 512 / Math.max(1, L.H));
++	// height budget matches the old `min(2, 1024 / H)`; width is capped too (riglife.snapshotPixels)
++	const { r } = snapshotPixels(L.W, L.H);
+ 	let c: HTMLCanvasElement | null = null;
+-	try { c = a.renderer.extract.canvas({ target: L.root, frame: new Rectangle(0, 0, L.W, L.H), resolution: k * 2 }) as HTMLCanvasElement; } catch { c = null; }
++	try { c = a.renderer.extract.canvas({ target: L.root, frame: new Rectangle(0, 0, L.W, L.H), resolution: r }) as HTMLCanvasElement; }
++	catch (e) { c = null; crumb('snapshot', { msg: scrub((e as Error)?.message || String(e)) }); }
+ 	L.root.filters = keep.f; L.root.position.set(keep.x, keep.y); L.root.scale.set(keep.sx, keep.sy); L.root.rotation = keep.r; L.root.visible = keep.v;
+ 	if (keep.p && L.root.parent !== keep.p) keep.p.addChild(L.root);
+ 	return c;
+@@ -119,18 +188,40 @@
+ export function dbStop(ov: HTMLElement) {
+ 	const L = lives.get(ov); if (!L) return; lives.delete(ov);
+ 	byCv.delete(L.cv); L.cv.remove(); ov.querySelector(':scope > img.stk_glow')?.remove();
+-	L.root.removeFromParent(); L.gf?.destroy(); L.root.destroy({ children: true }); kick();
++	L.root.removeFromParent();
++	if (L.gf) { try { L.root.filters = []; L.gf.destroy(); } catch { /* already destroyed */ } L.gf = null; }
++	// clock release BEFORE the container destroy, and BEFORE the atlas drop: dispose() flushes slots first
++	releaseArmatures(L.arms, flushDb);
++	if (!L.root.destroyed) L.root.destroy({ children: true });
++	disposed++;
++	dropPin(L.name);
++	kick();
+ }
+ 
+ /** uifix: a still of a board wild rig at its rest pose ('idle' frame 0), rendered with the caller's renderer, for the intro
+  *  cards (so the Wild Winter Spins card shows exactly the elves the board shows). null when the rig is missing. */
+ export async function dbStill(name: string, renderer: { extract: { canvas: (o: object) => unknown } }): Promise<HTMLCanvasElement | null> {
+-	if (!(await initDbStacks()).has(name)) return null;
+-	const parts = await load(name); if (!parts) return null;
++	if (!name) return null;
++	rigs.pin(name);
+ 	const root = new Container();
++	const arms: PixiArmatureDisplay[] = [];
+ 	try {
+-		for (const p of parts) { const d = PixiFactory.factory.buildArmatureDisplay(p, p, '', p) as PixiArmatureDisplay; root.addChild(d); d.animation.gotoAndStopByFrame('idle', 0); d.armature.advanceTime(0); }
++		if (!(await initDbStacks()).has(name)) return null;
++		const parts = await load(name); if (!parts) return null;
++		for (const part of parts) {
++			const d = PixiFactory.factory.buildArmatureDisplay(part, part, '', part) as PixiArmatureDisplay;
++			if (!d) continue;
++			root.addChild(d); arms.push(d); d.animation.gotoAndStopByFrame('idle', 0); d.armature.advanceTime(0);
++		}
++		if (!arms.length) return null;
++		built++;
+ 		const b = root.getLocalBounds();
+-		return renderer.extract.canvas({ target: root, frame: new Rectangle(b.x, b.y, b.width, b.height), resolution: Math.min(1, 900 / Math.max(1, b.height)) }) as HTMLCanvasElement;
+-	} catch { return null; } finally { root.destroy({ children: true }); }
++		return renderer.extract.canvas({ target: root, frame: new Rectangle(b.x, b.y, b.width, b.height), resolution: stillResolution(b.width, b.height) }) as HTMLCanvasElement;
++	} catch (e) { crumb('db-still', { name, msg: scrub((e as Error)?.message || String(e)) }); return null; }
++	finally {
++		releaseArmatures(arms, flushDb);
++		if (!root.destroyed) root.destroy({ children: true });
++		disposed++;
++		dropPin(name);
++	}
+ }
+diff -ruN a/frontend/apps/elfhaus/src/game/diag.ts b/frontend/apps/elfhaus/src/game/diag.ts
+--- a/frontend/apps/elfhaus/src/game/diag.ts	1970-01-01 00:00:00.000000000 +0000
++++ b/frontend/apps/elfhaus/src/game/diag.ts	2026-11-06 14:36:19.442586314 +0000
+@@ -0,0 +1,106 @@
++// Bounded diagnostic breadcrumbs that survive a mobile process kill / reload.
++// sessionStorage only. No bet, balance, session, player, account, or URL query.
++// In-memory window.__elfErr is wiped when Safari jetsam-reloads the tab; this ring is how the next
++// boot shows the last phase (merge / bonus), resource counts, and whether the WebGL context died first.
++
++const KEY = 'eh.diag.v1';
++const MAX = 32;
++type Crumb = { t: number; k: string; d?: Record<string, string | number> };
++
++let phase = 'boot';
++let stats: (() => Record<string, number>) | null = null;
++let installed = false;
++const mem: Crumb[] = [];
++
++const SECRET = /session|rgs_url|token|auth|bearer|email|player|account|password|cookie|balance|bet|amount|currency|wallet/i;
++
++/** Drop query strings, emails, and anything that looks like a credential. */
++export function scrub(s: string) {
++	return String(s || '')
++		.replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+/g, '[email]')
++		.replace(/[?#][^\s)]*/g, '')
++		.replace(/\b(sessionID|sessionId|rgs_url|token|access_token)=\S+/gi, '$1=[redacted]')
++		.replace(/\s+/g, ' ')
++		.slice(0, 240);
++}
++
++function safeData(d?: Record<string, string | number>) {
++	if (!d) return undefined;
++	const out: Record<string, string | number> = {};
++	for (const [k, v] of Object.entries(d)) {
++		if (SECRET.test(k)) continue;
++		if (typeof v === 'number' && Number.isFinite(v)) out[k] = v;
++		else if (typeof v === 'string') { const s = scrub(v); if (s) out[k] = s; }
++	}
++	return out;
++}
++
++function read(): Crumb[] {
++	try {
++		const raw = globalThis.sessionStorage?.getItem(KEY);
++		const arr = raw ? JSON.parse(raw) : mem;
++		return Array.isArray(arr) ? arr.filter((c) => c && typeof c.t === 'number' && typeof c.k === 'string').slice(-MAX) : [];
++	} catch { return mem.slice(); }
++}
++
++function write(list: Crumb[]) {
++	const cut = list.slice(-MAX);
++	mem.length = 0; mem.push(...cut);
++	try { globalThis.sessionStorage?.setItem(KEY, JSON.stringify(cut)); } catch { /* private mode / quota: keep the in-memory ring */ }
++}
++
++/** Append one breadcrumb. Numbers and short scrubbed strings only. */
++export function crumb(k: string, d?: Record<string, string | number>) {
++	const list = read();
++	list.push({ t: Date.now(), k: scrub(k).slice(0, 40), d: safeData(d) });
++	write(list);
++}
++
++export const diagPhase = () => phase;
++
++/** Remember what the player is in the middle of. A reload's pagehide crumb carries this. Repeated calls with the same phase are kept only when `extra` is set (a merge's before/after counts). */
++export function setPhase(next: string, extra?: Record<string, number>) {
++	const same = next === phase;
++	phase = next;
++	if (same && !extra) return;
++	crumb('phase', { phase: next, ...(extra || {}) });
++}
++
++export function watchCanvas(cv: HTMLCanvasElement | null | undefined, name: string) {
++	if (!cv || (cv as HTMLCanvasElement & { __ehWatch?: boolean }).__ehWatch) return;
++	(cv as HTMLCanvasElement & { __ehWatch?: boolean }).__ehWatch = true;
++	cv.addEventListener('webglcontextlost', (e) => {
++		e.preventDefault(); // the context is allowed to restore; this handler never reloads the page
++		crumb('webgl-lost', { canvas: name, phase });
++	});
++	cv.addEventListener('webglcontextrestored', () => crumb('webgl-restored', { canvas: name, phase }));
++}
++
++/** Shrink an intro renderer to a 1×1 framebuffer without Application.destroy (that clears Pixi 8's shared batch pool while the room / board renderers are alive). */
++export function releaseIntroGpu(app: { renderer?: { resize?: (w: number, h: number, r: number) => void } } | null) {
++	try { app?.renderer?.resize?.(1, 1, 1); crumb('intro-gpu', { w: 1 }); } catch (e) { crumb('intro-gpu-fail', { msg: scrub((e as Error)?.message || String(e)) }); }
++}
++
++export function installDiag(getStats?: () => Record<string, number>) {
++	if (getStats) stats = getStats;
++	if (installed) return;
++	installed = true;
++	const prev = read();
++	const last = prev[prev.length - 1];
++	if (last && (last.k === 'pagehide' || last.k === 'webgl-lost' || last.k === 'error')) {
++		try { console.info('[elfhaus] last session', prev.slice(-8)); } catch { /* no console */ }
++	}
++	crumb('boot', { phase });
++	if (typeof addEventListener !== 'function') return;
++	addEventListener('error', (e) => crumb('error', { msg: scrub(e.message || ''), line: e.lineno || 0 }));
++	addEventListener('unhandledrejection', (e) => {
++		const r = (e as PromiseRejectionEvent).reason as { message?: string } | undefined;
++		crumb('rejection', { msg: scrub(r?.message || String(r || '')) });
++	});
++	addEventListener('pagehide', () => crumb('pagehide', { phase, ...(stats ? stats() : {}) }));
++	addEventListener('pageshow', (e) => crumb('pageshow', { persisted: (e as PageTransitionEvent).persisted ? 1 : 0, phase }));
++}
++
++/** Test hook: the persisted ring (newest last). */
++export function diagLog() { return read(); }
++export function diagReset() { phase = 'boot'; write([]); }
+diff -ruN a/frontend/apps/elfhaus/src/game/game.ts b/frontend/apps/elfhaus/src/game/game.ts
+--- a/frontend/apps/elfhaus/src/game/game.ts	2026-11-05 23:36:42.000000000 +0000
++++ b/frontend/apps/elfhaus/src/game/game.ts	2026-11-06 14:34:23.497884778 +0000
+@@ -28,6 +28,8 @@
+ import { $, S, ART, bet, titleHTML, buildCells, renderAll, renderOverlays, setOverlayHook, resetWinMeter, setRoundMode, banner, waitRaw, preloadStacks } from './ui';
+ import { skipHolds, syncTempo } from './tempo';
+ import { playBookEvents, endBonusUi, feError } from './bookEventHandlerMap';
++import { crumb, diagPhase, installDiag, setPhase } from './diag';
++import { dbStats } from './dbstacks';
+ import { initRoxy, placeRoxy } from './roxy';
+ import { initStacks, stackIdle } from './stacks';
+ import { initSkin } from './skin';
+@@ -122,7 +124,7 @@
+ function message(title: string, body: string, opts: { reload?: boolean } = {}) {
+ 	$('#msgTitle').textContent = title; $('#msgBody').textContent = body;
+ 	const b = $('#msgOk'); b.textContent = opts.reload ? 'RELOAD' : 'OK';
+-	b.onclick = () => (opts.reload ? location.reload() : closePanel('#msg'));
++	b.onclick = () => { if (!opts.reload) { closePanel('#msg'); return; } crumb('explicit-reload', { phase: diagPhase() }); location.reload(); };
+ 	setClosable('#msg', !opts.reload); $('#msg').classList.toggle('fatal', !!opts.reload);
+ 	openPanel('#msg');
+ }
+@@ -239,6 +241,7 @@
+ 	// so its reel would "land" instantly at reveal: the bonus-buy reel-5-first bug)
+ 	document.querySelectorAll<HTMLElement>('#cells .cell').forEach((c) => { c.classList.remove('locked'); c.style.visibility = ''; });
+ 	startSpin();
++	setPhase('spin');
+ 	try {
+ 		const data: any = await requestBet({ sessionID: url.sessionID, rgsUrl: url.rgsUrl, currency: S.currency, amount: bet(), mode });
+ 		if (data?.error) throw data;
+@@ -252,7 +255,7 @@
+ 		if (S.auto > 0 && autoStopReason(S.meterX * bet())) stopAuto();
+ 	} catch (e) {
+ 		stopAuto(); endBonusUi(); abortSpin(); renderAll(); showError(e);
+-	} finally { setBusy(false); }
++	} finally { setBusy(false); setPhase('idle'); }
+ 	if (S.auto > 0) { S.auto--; setAuto(); if (S.auto) setTimeout(() => { if (S.auto) round(spinMode()); }, 300); }
+ 	// v3.17 LOCKED James rule (overrides re-audit M5's 'disarm after the round'): a confirmed mode (dare, double_dare,
+ 	// triple_dare, mystery, egw, ante) stays armed for every spin press and autoplay until the player turns it off (active
+@@ -658,6 +661,7 @@
+ const IDLE = [['H1', 'L2', 'L4', 'H3'], ['L1', 'H2', 'L5', 'L3'], ['H4', 'L3', 'W', 'L1'], ['L5', 'H1', 'L2', 'H2'], ['L4', 'L1', 'H3', 'L5']];
+ 
+ export async function initGame() {
++	installDiag(() => dbStats());
+ 	applyLayers();   // fix6 #25: the one layer map (layers.ts)
+ 	setLocale(url.lang);
+ 	initAudio(); initVoiceIdle(); // reads the sound switches; audio itself starts on the first tap
+diff -ruN a/frontend/apps/elfhaus/src/game/introPixi.ts b/frontend/apps/elfhaus/src/game/introPixi.ts
+--- a/frontend/apps/elfhaus/src/game/introPixi.ts	2026-11-05 23:36:42.000000000 +0000
++++ b/frontend/apps/elfhaus/src/game/introPixi.ts	2026-11-06 14:34:25.053894191 +0000
+@@ -16,6 +16,7 @@
+ import ARTG from './art.generated.json';
+ import { symArtReady } from './symrig';
+ import { dbStill } from './dbstacks';
++import { releaseIntroGpu, watchCanvas } from './diag';
+ const TITLE = ARTG.logo || 'art/logo.webp';
+ import { EGW_STACK_X } from './config';
+ import { sfx } from './audio';
+@@ -334,7 +335,7 @@
+   if (state === 'done') return; state = 'done';
+   applyCam(1); for (const id of [...BOARD, 'top', 'hud']) setEl(id, 0, 1);
+   release(); for (const e of camEls()) e.style.transformOrigin = '';
+-  if (app) { app.ticker.stop(); const c = app.canvas; app.stage.removeChildren().forEach((o) => o.destroy({ children: true })); c?.remove?.(); app = null; /* never destroy a Pixi 8 renderer while others live (shared batch pool) */ }
++  if (app) { app.ticker.stop(); const c = app.canvas; app.stage.removeChildren().forEach((o) => o.destroy({ children: true })); releaseIntroGpu(app); c?.remove?.(); app = null; /* never destroy a Pixi 8 renderer while others live (shared batch pool): resize to 1x1 frees the framebuffer instead */ }
+   document.body.classList.remove('introOn'); (window as any).ELFHAUS_INTRO_DONE = true; doneRes();
+ }
+ // L2: a user skip is no longer a hard cut: the game snaps to its end state underneath and the frozen vestibule frame
+@@ -397,7 +398,7 @@
+   const L = $id('loader'); if (!L) return false;
+   try {
+     fitStage();
+-    const cv = document.createElement('canvas'); cv.id = 'introCv'; cv.setAttribute('aria-hidden', 'true'); L.before(cv);
++    const cv = document.createElement('canvas'); cv.id = 'introCv'; cv.setAttribute('aria-hidden', 'true'); L.before(cv); watchCanvas(cv, 'intro');
+     const a = new Application();
+     await a.init({ canvas: cv, width: ST.w, height: ST.h, resolution: Math.min(2, Math.max(0.5, ST.s * (window.devicePixelRatio || 1))), autoDensity: false,
+       backgroundAlpha: 0, antialias: true, preference: 'webgl', sharedTicker: false, hello: false, autoStart: false });
+diff -ruN a/frontend/apps/elfhaus/src/game/mergefx.ts b/frontend/apps/elfhaus/src/game/mergefx.ts
+--- a/frontend/apps/elfhaus/src/game/mergefx.ts	2026-11-05 23:36:42.000000000 +0000
++++ b/frontend/apps/elfhaus/src/game/mergefx.ts	2026-11-06 14:34:18.965857356 +0000
+@@ -24,7 +24,8 @@
+ import { grab } from './combine';
+ import { toStage } from './stage';
+ import { hasStack, stackOnce, stackLetters, stackWin, stackWinOff, stackPrepare, stackRelease, stackWarm, stackReact, stackReactSkip } from './stacks';
+-import { dbSnapshot } from './dbstacks';
++import { dbSnapshot, dbStats } from './dbstacks';
++import { setPhase } from './diag';
+ import { T } from './tempo';
+ 
+ let skipping = false, running = 0;
+@@ -147,6 +148,7 @@
+ export async function mergeIn(reels: number[], values: number[], product: number, apply: () => void) {
+ 	stackReactSkip(); // the lean snapshots idle art
+ 	begin();
++	setPhase('merge', dbStats());
+ 	const B = $('#board'), n = reels.length, big = n >= 4, lo = reels[0], step = n > 1 ? pos(lo + 1, 0).x - pos(lo, 0).x : S.cell, x0 = pos(lo, 0).x;
+ 	const made: HTMLElement[] = [];
+ 	let stage: ReturnType<typeof leanStage> | null = null;
+@@ -214,6 +216,7 @@
+ 		const ov = ovOf(lo), mx = ov?.querySelector<HTMLElement>('.mx'); if (mx) { mx.style.opacity = ''; setGem(mx, product, false); }
+ 		document.querySelectorAll('#flyLayer .fly').forEach((f) => f.remove());
+ 		end();
++		setPhase(S.inBonus ? 'bonus' : 'board', dbStats());
+ 	}
+ }
+ 
+diff -ruN a/frontend/apps/elfhaus/src/game/riglife.ts b/frontend/apps/elfhaus/src/game/riglife.ts
+--- a/frontend/apps/elfhaus/src/game/riglife.ts	1970-01-01 00:00:00.000000000 +0000
++++ b/frontend/apps/elfhaus/src/game/riglife.ts	2026-11-06 14:31:06.848695344 +0000
+@@ -0,0 +1,66 @@
++// Pure helpers for the board DragonBones lifecycle (dbstacks.ts). No Pixi imports: the node regression
++// test imports this file directly.
++//
++// buildArmatureDisplay() puts every armature on the DragonBones world clock, and dispose() only *buffers*
++// it. The buffer is flushed by DragonBones.advanceTime, which this game never calls (useSharedTicker is
++// false; Roxy and the stacks advance their own armatures). Without an explicit advanceTime(0) flush, every
++// stack / merge / bonus re-render keeps the previous armature (bones, slots, meshes) for the rest of the
++// session. That growth, plus the atlas textures that were never released, is what exhausts mobile Safari.
++
++export type ArmLike = { armature?: { dispose(): void } | null };
++
++/** Dispose every armature and flush the factory buffer. `flush` must be PixiFactory.advanceTime; the dt is 0 so Roxy (also on the clock) is not ticked. */
++export function releaseArmatures(arms: readonly ArmLike[], flush: (dt: number) => void) {
++	for (const d of arms) {
++		try { d.armature?.dispose(); } catch { /* one broken rig must not pin the others on the clock */ }
++	}
++	try { flush(0); } catch { /* caller records a flush failure; the round math is untouched */ }
++}
++
++/**
++ * Device pixels for a one-shot extract (merge lean snapshot, intro card still).
++ * The old merge snapshot capped only the height (`min(2, 1024 / H)`), so a wide group AABB rendered
++ * past the WebGL max texture size (iOS often 4096) and lost the context. Height stays on that 1024px
++ * budget; width is capped at 2048 as well. Never raises the resolution of a snapshot that was already small.
++ */
++export function snapshotPixels(w: number, h: number, capH = 1024, capW = 2048) {
++	const W = Math.max(1, w), H = Math.max(1, h);
++	const r = Math.min(2, capH / H, capW / W);
++	return { r, w: Math.max(1, Math.floor(W * r)), h: Math.max(1, Math.floor(H * r)) };
++}
++
++/** Intro / card stills were already capped at resolution 1 and 900px tall. Same width guard. */
++export function stillResolution(w: number, h: number) {
++	const W = Math.max(1, w), H = Math.max(1, h);
++	return Math.min(1, 900 / H, 2048 / W);
++}
++
++export type RigCache = {
++	begin(name: string): void;
++	/** Load finished. True = nobody is holding it and the caller should evict. */
++	end(name: string): boolean;
++	pin(name: string): void;
++	/** Last pin dropped and no load is in flight. True = evict. */
++	unpin(name: string): boolean;
++	pinned(name: string): number;
++	busy(name: string): boolean;
++};
++
++/** Refcount of rigs on screen plus in-flight loads. Evict only when both are clear, so a re-render that pins the replacement before the old one stops does not unload a texture it is about to reuse. */
++export function createRigCache(): RigCache {
++	const pins = new Map<string, number>();
++	const pending = new Set<string>();
++	return {
++		begin(name) { pending.add(name); },
++		end(name) { pending.delete(name); return !pins.has(name); },
++		pin(name) { pins.set(name, (pins.get(name) || 0) + 1); },
++		unpin(name) {
++			const n = (pins.get(name) || 1) - 1;
++			if (n > 0) { pins.set(name, n); return false; }
++			pins.delete(name);
++			return !pending.has(name);
++		},
++		pinned: (name) => pins.get(name) || 0,
++		busy: (name) => pins.has(name) || pending.has(name),
++	};
++}
+diff -ruN a/frontend/apps/elfhaus/src/game/scene/scene.ts b/frontend/apps/elfhaus/src/game/scene/scene.ts
+--- a/frontend/apps/elfhaus/src/game/scene/scene.ts	2026-11-05 23:36:42.000000000 +0000
++++ b/frontend/apps/elfhaus/src/game/scene/scene.ts	2026-11-06 14:34:26.917905470 +0000
+@@ -17,6 +17,7 @@
+ import { toStage } from '../stage';
+ import { P as PL, ROOMS, buildRoom, camTick, dAt, listenCam, loadFx, loadRoom, placeShadows, reduced, roomOn, tex, tickRoom, wallItem, type Key } from './room';
+ import { frameFire, frameGlint, placeDepth } from './depth';
++import { watchCanvas } from '../diag';
+ 
+ export let app: Application | null = null;
+ export let rig: RoxyAdapter | null = null;
+@@ -148,6 +149,7 @@
+ 		const a = new Application();
+ 		await a.init({ canvas: cv, width: ST.w, height: ST.h, resolution: res(), autoDensity: false, backgroundAlpha: 0, antialias: true,
+ 			preference: 'webgl', autoStart: true, sharedTicker: false, hello: false, powerPreference: 'high-performance' });
++		watchCanvas(cv, 'scene');
+ 		const [r] = await Promise.all([createRoxy(), loadFx(), loadRoom(ST.portrait ? 'port' : 'land')]);
+ 		rig = r; app = a;
+ 		roxyL.addChild(r.view, roxyMask); clipRoxy(null);
