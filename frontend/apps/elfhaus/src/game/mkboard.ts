@@ -1,27 +1,16 @@
-// Approved board + HUD (James 2026-10-28: "the new board and symbols", the PixiJS mockup /workspace/elfhaus-mockup).
-// Ported to the DOM: every rect comes from the mockup's own layout() (main.js), in its design units, mapped onto the stage
-// with the mockup's world fit (k = min(W / D.w, H / D.h), centred). Three layouts, chosen like the game's stage:
-//   land  (desktop / tablet landscape, D 1920 x 1080): board at (430,170) s1, BUY plate + autoplay / turbo left of it,
-//         full-width HUD bar at the bottom (BALANCE | - BET + | WIN | SPIN), logo over the frame top, Roxy right.
-//   port  (phones, D 1080 x DH): full-width board, [autoplay][turbo] .... [BUY BONUS] row, 2-row HUD bar + big SPIN.
-//   cmp   (old phone landscape, D 1000 x 562; unused since v3.17: phones in landscape get 'land', stage.ts PHL_MAX_H).
-// The frame (Winter Chalet: timber band, gold trim, pine panel with one tile per cell, cranberry sill, snow caps) is
-// canvas code drawn at device resolution inside #frame (drawFrame), plus the painted garland image.
-// Game-only pieces the mockup never had: the menu button (top-left corner, same square style), the armed-mode tag
-// (over SPIN), the free-spins bar (on the sill), and 48 px tap floors (controls grow when the mockup size is smaller).
+// Board, HUD and chrome placement. Positions come from the single layout pass (layout.ts)
+// in design units with k = 1 (no inner mockup fit, no snapGeo, no 48-screen-px floors).
+// Frame paint (drawFrame) still lives here: timber band, gold trim, pine panel, snow caps, garland.
 import { syncHostLayout } from './uihosts';
 import { ST } from './stage';
+import { getLayout, layoutPass, CELL, FT, FB, BW, BH, FW, FH, M, type Btn, type Field } from './layout';
 import { setLip, setFrameBack, relayoutBoard } from './board/stage';
 import ART_G from './art.generated.json';
+export { CELL, FT, FB, BW, BH, FW, FH, M };
 // Chrome floors border widths to whole device px, so a 2.9px stroke would draw at 2; round in screen space instead.
 const BUY_K = 0.78;
 const bwPx = (w: number) => { const d = ST.s * (window.devicePixelRatio || 1); return (Math.max(1, Math.round(w * d)) + 0.01) / d + 'px'; };
 
-export const CELL = 160, FT = 34, FB = 52, BW = 800, BH = 640, FW = BW + 2 * FT, FH = BH + FT + FB, M = 40;
-/** portrait board scale for a frame ~95% of the 1080 design width */
-const BS_W = 1026 / FW;
-type Btn = { x: number; y: number; s: number; ic: number };          // centre, size, icon scale (mockup design units)
-type Field = { x: number; y: number; ls: number; vs: number; w: number };
 export type MkGeo = {
 	mode: 'land' | 'port' | 'cmp'; k: number; ox: number; oy: number; D: { w: number; h: number }; loose: boolean;
 	bx: number; by: number; bs: number; bs0?: number; T: number; T0?: number; logo: { x: number; y: number; s: number };
@@ -32,227 +21,28 @@ export type MkGeo = {
 export let G: MkGeo | null = null;
 export function resetGeo() { G = null; }
 
-/** The mockup's layout() for the current stage (design units). */
+/** Chrome in stage design units from the single layout pass (k = 1, no second fit, no snapGeo). */
 export function mkGeo(): MkGeo {
-	const W = ST.w, H = ST.h;
-	// 48 screen px in design units for this layout's k (H2: tap targets never under 48 px)
-	const t48 = (k: number) => (Math.ceil(ST.tap / ST.s) + 2) / k;   // v21: ST.tap = 48, or 28 when compact (stage.ts)
-	const fit = (D: { w: number; h: number }) => { const k = Math.min(W / D.w, H / D.h); return { k, ox: (W - D.w * k) / 2, oy: (H - D.h * k) / 2 }; };
-	const cmp = { x: 800, y: 452, s: 0.64 };
-	if (ST.portrait) {
-		const DH = Math.max(1720, 1080 * H / W), D = { w: 1080, h: DH }, f = fit(D), tt = t48(f.k);
-		// v3.17 (James 02:26): the button row and the HUD bar shrink a little (touch targets stay >= 44 px) and the board
-		// moves DOWN into the freed space (same width / shape); T0 / bs0 keep the pre-v3.17 numbers (Roxy's base size, room)
-		const loose = DH >= 2100, hu = loose ? 0.92 : 0.86, HB = 344 * hu, hudY = DH - HB - 18, t44 = (Math.ceil(Math.min(44, ST.tap) / ST.s) + 2) / f.k;
-		const kk0 = loose ? 1 : 0.86, kk = loose ? 0.9 : 0.76, GAPB = loose ? 40 : 18, RH = 176 * kk, ab = Math.max(160 * kk, t44);
-		const rowY = hudY - GAPB - RH / 2, below = 2 * GAPB + RH;
-		const hudY0 = DH - 344 - 18, below0 = 2 * (loose ? 44 : 22) + 176 * kk0;
-		// bs0: the pre-v3.17 scale (top 690 reserved for the logo + Roxy; 0.92..1.28, so short phones got a ~74%-wide board).
-		// v3.17 (James, iPhone on studio.engine.io): the board scales UNIFORMLY (same shape, square cells) to ~95% of the
-		// width (frame 868 * BS_W = 1026 of 1080), its foot stays where it was (BUY row + HUD untouched), so it grows upward;
-		// capped only so the logo on the frame top still clears the menu button (TOP_MIN).
-		const bs0 = Math.max(0.92, Math.min(1.28, (hudY0 - below0 - 690) / (BH + FB)));
-		const menuB = (12 + Math.max(144 * f.k, Math.ceil(ST.tap / ST.s) + 2)) / f.k - f.oy / f.k;   // menu button bottom (design units)
-		const TOP_MIN = menuB + 12 + 64 + 412 * 0.4 * 0.62;   // logo top under the menu; v3.17: logo always clear of the frame top (y = T - 64)
-		let bs = Math.max(Math.min(bs0, BS_W), Math.min(BS_W, (hudY - below - TOP_MIN) / (BH + FB + FT)));
-		// tablet portrait: bs recomputed inside the tab block to leave a right column for spin
-		let by = (ST.tablet ? (DH - 300 - 24) : hudY) - (ST.tablet ? 20 : below) - (BH + FB) * bs, bx = 540 - BW * bs / 2, T = by - FT * bs;
-		const sb = (s: number) => Math.max(s, tt);
-		// v28c: phone = 2-row bar (Bal/Win top, Bet bottom) with spin in-bar; tablet portrait = land-style
-		// single-row meters + Bet, spin beside the board (thumb), turbo/auto under spin, buy left of board.
-		const BC = 540, tab = ST.tablet;
-		const hu2 = hu;
-		if (tab) {
-			// v28l: Roxy hidden; buy moves into the row under the board (buy, turbo, auto | spin); board fills width
-			const HBp = 330;
-			const hudYp = DH - HBp - 16;
-			const spSz = sb(240), abT = Math.max(132, t44);
-			const spinRow = spSz + 16;
-			const buyS = 0.92, buyW = 216 * buyS * 0.92, buyH = 240 * buyS * 0.92;
-			const TOPT = TOP_MIN + 110;   // v28m: room above the logo for Roxy's head+shoulders peek
-			const maxBsH = (hudYp - 18 - spinRow - TOPT) / (BH + FB + FT);
-			const maxBsW = (1080 - 40) / (BW + 2 * FT);
-			bs = Math.min(maxBsW, maxBsH);
-			const fw = (BW + 2 * FT) * bs;
-			bx = 540 - fw / 2 + FT * bs;
-			by = hudYp - 14 - spinRow - (BH + FB) * bs;
-			if (by - FT * bs < TOPT) by = TOPT + FT * bs;
-			T = by - FT * bs;
-			const BC2 = bx + BW * bs / 2;
-			const spX = Math.min(BC2 + fw / 2 - spSz / 2, 1080 - 24 - spSz / 2);
-			const spY = Math.min(by + (BH + FB) * bs + 8 + spSz / 2, hudYp - 10 - spSz / 2);
-			const autoX = spX - spSz / 2 - 22 - abT / 2;
-			const turboX = autoX - abT - 18;
-			const buyX = turboX - abT / 2 - 22 - buyW / 2;
-			const pairY = spY, buyY = Math.min(spY, hudYp - 10 - buyH / 2);
-			const mb = Math.max(148, t44), betHalf = 150, clear = betHalf + mb / 2 + 22;
-			const hudW = Math.min(1040, Math.max(fw + 40, 900)), hudX = BC2 - hudW / 2;
-			const balX = hudX + 36, winR = hudX + hudW - 36;
-			const zoneL = Math.max(200, (BC2 - clear) - balX), zoneR = Math.max(200, winR - (BC2 + clear));
-			return { mode: 'port', ...f, D, loose, bx, by, bs, bs0, T, T0: hudY0 - below0 - (BH + FB + FT) * bs0,
-				logo: { x: BC2, y: T - 56, s: 0.5 },
-				hud: { x: hudX, y: hudYp, w: hudW, h: HBp, r: 22 },
-				fBal: { x: balX, y: hudYp + 48, ls: 28, vs: 52, w: zoneL },
-				fBet: { x: BC2 - 84, y: hudYp + 48, ls: 28, vs: 52, w: 168 },
-				fWin: { x: BC2 + clear, y: hudYp + 48, ls: 28, vs: 52, w: zoneR },
-				minus: { x: BC2 - betHalf, y: hudYp + HBp / 2, s: mb, ic: 2.3 },
-				plus: { x: BC2 + betHalf, y: hudYp + HBp / 2, s: mb, ic: 2.3 },
-				spin: { x: spX, y: spY, s: spSz, ic: 2.5 },
-				auto: { x: autoX, y: pairY, s: abT, ic: 2.1 },
-				turbo: { x: turboX, y: pairY, s: abT, ic: 2.1 },
-				bonus: { v: 'v', x: buyX, y: buyY, s: buyS }, cmp };
-		}
-		// phone portrait
-		const HBp = HB + 110;   // taller plate so bet clears painted gold trim (hud_bar slice9 bottom)
-		const hudYp = hudY - (HBp - HB);
-		// v28g: button row centred in the board↔HUD gap so turbo/auto/buy never kiss the bar
-		const gapRow = Math.max(GAPB, 96);   // min clear air above the painted hud canvas
-		const belowP0 = 2 * gapRow + RH;
-		bs = Math.max(Math.min(bs0, BS_W), Math.min(BS_W, (hudYp - belowP0 - TOP_MIN) / (BH + FB + FT)));
-		by = hudYp - belowP0 - (BH + FB) * bs;
-		bx = 540 - BW * bs / 2;
-		T = by - FT * bs;
-		const boardFoot = by + (BH + FB) * bs;
-		const rowYp = (boardFoot + hudYp) / 2;   // dead-centre of the gap
-		const belowP = hudYp - boardFoot;
-		const bSz = Math.max(124 * hu2, t44);
-		const padB = Math.max(72 * hu2, HBp * (80 / 313) + 18);
-		const betY = hudYp + HBp - padB - bSz / 2 + 12;   // v28m: a little lower
-		const BX = BC - 70;   // v28m: bet group nudged left, away from spin
-		const topY = hudYp + 20 * hu2;
-		const zone = 360;
-		const spSz = sb(250 * hu2);
-		const abP = Math.max(156, t44);   // v28l: thumb-friendly row
-		return { mode: 'port', ...f, D, loose, bx, by, bs, bs0, T, T0: hudY0 - below0 - (BH + FB + FT) * bs0,
-			logo: { x: BC, y: T - 64, s: 0.4 },
-			hud: { x: 14, y: hudYp, w: 1052, h: HBp, r: 22 },
-			fBal: { x: BC - zone - 16, y: topY - 4, ls: 28 * hu2, vs: 66 * hu2, w: zone - 56 },   // v28l: ink ends clear of the Bet label
-			fWin: { x: BC + 16, y: topY - 4, ls: 28 * hu2, vs: 66 * hu2, w: Math.min(zone, (14 + 1052 - 36 - spSz) - 20 - (BC + 16)) },
-			fBet: { x: BX - 110, y: betY - bSz * 0.95, ls: 26 * hu2, vs: 60 * hu2, w: 220 },
-			minus: { x: BX - 170, y: betY, s: bSz, ic: 2.35 }, plus: { x: BX + 170, y: betY, s: bSz, ic: 2.35 },
-			spin: { x: 14 + 1052 - 36 - spSz / 2, y: hudYp + HBp / 2, s: spSz, ic: 2.6 },
-			auto: { x: 30 + abP / 2, y: rowYp, s: abP, ic: 2.3 },
-			turbo: { x: 30 + abP * 1.5 + 20, y: rowYp, s: abP, ic: 2.3 },
-			bonus: { v: 'p', x: 1066 - 290, y: rowYp, s: 0.95 }, cmp };
-	}
-	if (ST.phl)if (ST.phl) {
-		const D = { w: 1000, h: 562 }, f = fit(D), tt = t48(f.k), sb = (s: number) => Math.max(s, tt);
-		const bs = 0.56, bx = 52, by = 58;
-		const s0 = 0.64, bw = 216 * s0, bh = 240 * s0, ab = sb(64), gp = 12, top = 251 - (bh + gp + ab) / 2, pair = Math.max(bw, 2 * ab + 8);
-		return { mode: 'cmp', ...f, D, loose: false, bx, by, bs, T: by - FT * bs,
-			logo: { x: 52 + BW * bs / 2, y: 54, s: 0.17 }, hud: { x: 12, y: 458, w: 976, h: 96, r: 22 },
-			fBal: { x: 12 + 30, y: 458 + 24, ls: 14, vs: 26, w: 300 }, fBet: { x: 12 + 420, y: 458 + 24, ls: 14, vs: 26, w: 70 },
-			fWin: { x: 12 + 650, y: 458 + 24, ls: 14, vs: 26, w: 190 },
-			minus: { x: 12 + 370, y: 458 + 48, s: sb(76), ic: 1.37 }, plus: { x: 12 + 536, y: 458 + 48, s: sb(76), ic: 1.37 },
-			spin: { x: 12 + 912, y: 458 + 48, s: sb(90), ic: 0.98 },
-			auto: { x: 606 - pair / 2 + ab / 2, y: top + bh + gp + ab / 2, s: ab, ic: 0.98 * ab / 64 },
-			turbo: { x: 606 + pair / 2 - ab / 2, y: top + bh + gp + ab / 2, s: ab, ic: 0.98 * ab / 64 },
-			bonus: { v: 'v', x: 606, y: top + bh / 2, s: s0 }, cmp };
-	}
-	// Landscape / square / desktop share the approved right-stack chrome (buy, spin, auto, turbo
-	// beside the board, Roxy on the right, HUD under the board). The inner design aspect follows
-	// the fixed stage so fit() fills the design without a second letterbox.
-	const tabAR = ST.w / Math.max(1, ST.h);
-	const D = { w: 1920, h: Math.max(1080, Math.round(1920 / Math.min(1.78, Math.max(1.05, tabAR)))) };
-	const f = fit(D), tt = t48(f.k), sb = (s: number) => Math.max(s, tt);
-	const ab = sb(120);
-	const buyS = 0.85, buyW = 216 * buyS * 0.92, buyH = 240 * buyS * 0.92;
-	const ROXY_CLEAR = Math.round(D.w * 0.80);
-	const spSz = sb(200);
-	const btnCol = Math.max(spSz, buyW) + 16;
-	const hudH = 300;
-	const hudY = D.h - hudH - 16;
-	const topMin = 215;
-	const maxBsH = (hudY - 24 - topMin) / (BH + FB + FT);
-	const playL = 64, playR = ROXY_CLEAR - 8;
-	const maxBsW = (playR - playL - btnCol - 14) / (BW + 2 * FT);
-	const bs = Math.min(1.32, maxBsH, maxBsW);
-	const fw = (BW + 2 * FT) * bs;
-	const playW = fw + 14 + btnCol;
-	const playX0 = playL + Math.max(0, (playR - playL - playW) / 2);
-	const bx = playX0 + FT * bs;
-	let by = hudY - 22 - (BH + FB) * bs;
-	if (by - FT * bs < topMin) by = topMin + FT * bs;
-	const BC = bx + BW * bs / 2;
-	const spinX = playX0 + fw + 14 + btnCol / 2 - 8;
-	const buyX = spinX, buyY = by - FT * bs + buyH / 2;
-	const spinY = buyY + buyH / 2 + 16 + spSz / 2;
-	const autoX = spinX, turboX = spinX;
-	const autoY = spinY + spSz / 2 + 14 + ab / 2;
-	const turboY = autoY + ab + 12;
-	const hudW = Math.min(1400, 2 * (BC - 44), 2 * (ROXY_CLEAR - 16 - BC));
-	const hudX = BC - hudW / 2;
-	const mbT = sb(Math.round(hudH * 0.45)), betHalf = 156, clear = betHalf + mbT / 2 + 52;
-	const balX = hudX + 44, winR = hudX + hudW - 44;
-	const zoneL = Math.max(240, (BC - clear) - balX), zoneR = Math.max(240, winR - (BC + clear));
-	const tls = 42, tvs = 80;
-	return { mode: 'land', ...f, D, loose: false, bx, by, bs, T: by - FT * bs,
-		logo: { x: BC, y: by - FT * bs - 18, s: 0.44 },
-		hud: { x: hudX, y: hudY, w: hudW, h: hudH, r: 22 },
-		fBal: { x: balX, y: hudY + 50, ls: tls, vs: tvs, w: zoneL },
-		fBet: { x: BC - 96, y: hudY + 50, ls: tls, vs: tvs, w: 192 },
-		fWin: { x: BC + clear, y: hudY + 50, ls: tls, vs: tvs, w: zoneR },
-		minus: { x: BC - betHalf, y: hudY + hudH / 2 - 4, s: mbT, ic: 2.2 },
-		plus: { x: BC + betHalf, y: hudY + hudH / 2 - 4, s: mbT, ic: 2.2 },
-		spin: { x: spinX, y: spinY, s: spSz, ic: 2.05 },
-		auto: { x: autoX, y: autoY, s: ab, ic: 1.95 }, turbo: { x: turboX, y: turboY, s: ab, ic: 1.95 },
-		bonus: { v: 'v', x: buyX, y: buyY, s: buyS }, cmp };
+	let L = getLayout();
+	if (!L) L = layoutPass(ST.vw || ST.w, ST.vh || ST.h, typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1, { compact: ST.compact });
+	return {
+		mode: L.portrait ? 'port' : 'land',
+		k: 1, ox: 0, oy: 0,
+		D: { w: L.W, h: L.H },
+		loose: L.kind === 'phonePort',
+		bx: L.board.x, by: L.board.y, bs: L.board.bs, T: L.board.T,
+		logo: { x: L.logo.x, y: L.logo.y, s: L.logo.s },
+		hud: { ...L.hud },
+		fBal: { ...L.fBal }, fBet: { ...L.fBet }, fWin: { ...L.fWin },
+		minus: { ...L.minus }, plus: { ...L.plus },
+		spin: { ...L.spin }, auto: { ...L.auto }, turbo: { ...L.turbo },
+		bonus: { ...L.buy },
+		cmp: { x: 0, y: 0, s: 1 },
+	};
 }
 
-/** Snap the HUD bar, spin and buy to the window's safe edges after the uniform contain fit.
- *  Translates (never stretches): bottom-anchored chrome drops into the lower letterbox; a
- *  nearly full-width bar grows to the side safe edges when the stage letterboxes on the sides.
- *  Overflowing controls are pulled back so nothing clips the viewport. */
-function snapGeo(g: MkGeo): MkGeo {
-	const pad = 8;
-	const k = g.k || 1;
-	const toSt = (x: number, y: number) => ({ x: g.ox + x * k, y: g.oy + y * k });
-	const hudSt = toSt(g.hud.x, g.hud.y);
-	const hudBottomSt = hudSt.y + g.hud.h * k;
-	const screenSlack = (ST.oy + (ST.h - hudBottomSt) * ST.s) - pad;
-	const dySt = screenSlack / Math.max(1e-6, ST.s);
-	const dy = dySt / k;
-	const nearBottom = (g.hud.y + g.hud.h) * k + g.oy > ST.h * 0.7;
-	if (nearBottom && Math.abs(dy) > 0.5) {
-		const shift = (o: { y: number } | null | undefined) => { if (o) o.y += dy; };
-		const hudTop = g.hud.y;
-		const isLow = (y: number) => y >= hudTop - 40 || y > g.by + BH * g.bs * 0.6;
-		shift(g.hud);
-		if (isLow(g.spin.y)) shift(g.spin);
-		if (isLow(g.auto.y)) shift(g.auto);
-		if (isLow(g.turbo.y)) shift(g.turbo);
-		if (isLow(g.bonus.y)) shift(g.bonus);
-		if (isLow(g.minus.y)) shift(g.minus);
-		if (isLow(g.plus.y)) shift(g.plus);
-		if (isLow(g.fBal.y)) shift(g.fBal);
-		if (isLow(g.fBet.y)) shift(g.fBet);
-		if (isLow(g.fWin.y)) shift(g.fWin);
-	}
-	// Full-bleed HUD: reach the window's side safe edges when the design was already nearly full width.
-	if (g.hud.w * k > ST.w * 0.85) {
-		const leftSt = (pad - ST.ox) / Math.max(1e-6, ST.s);
-		const rightSt = (ST.vw - pad - ST.ox) / Math.max(1e-6, ST.s);
-		g.hud.x = (leftSt - g.ox) / k;
-		g.hud.w = (rightSt - leftSt) / k;
-	}
-	// Pull any bottom-right control back if it would clip the viewport after the contain fit.
-	const clampPt = (x: number, y: number, half: number) => {
-		const st = toSt(x, y);
-		const sx = ST.ox + st.x * ST.s, sy = ST.oy + st.y * ST.s, r = half * k * ST.s;
-		let nx = x, ny = y;
-		if (sx + r > ST.vw - pad) nx = ((ST.vw - pad - r - ST.ox) / ST.s - g.ox) / k;
-		if (sx - r < pad) nx = ((pad + r - ST.ox) / ST.s - g.ox) / k;
-		if (sy + r > ST.vh - pad) ny = ((ST.vh - pad - r - ST.oy) / ST.s - g.oy) / k;
-		if (sy - r < pad) ny = ((pad + r - ST.oy) / ST.s - g.oy) / k;
-		return { x: nx, y: ny };
-	};
-	const cSpin = clampPt(g.spin.x, g.spin.y, g.spin.s / 2);
-	g.spin.x = cSpin.x; g.spin.y = cSpin.y;
-	const buyHalf = 216 * g.bonus.s * 0.92 / 2;
-	const cBuy = clampPt(g.bonus.x, g.bonus.y, buyHalf);
-	g.bonus.x = cBuy.x; g.bonus.y = cBuy.y;
-	return g;
-}
+/** Board cell (stage px, whole px for the strip engine) for this layout. */
+export function mkCell() { G = mkGeo(); return Math.max(1, Math.floor(CELL * G.bs * G.k)); }
 
 // ---------------------------------------------------------------- DOM placement
 const $ = (s: string) => document.querySelector(s) as HTMLElement;
@@ -260,9 +50,6 @@ function css(el: HTMLElement | null, o: Record<string, string | number>) {
 	if (!el) return;
 	for (const [k, v] of Object.entries(o)) el.style.setProperty(k, typeof v === 'number' ? v.toFixed(2) + 'px' : v, 'important');
 }
-/** Board cell (stage px, whole px for the strip engine) for this layout. */
-export function mkCell() { G = snapGeo(mkGeo()); return Math.max(1, Math.floor(CELL * G.bs * G.k)); }
-
 /** Size the armed-mode pill to its full title (9-slice sprite follows the box). Abbreviates only when the
  *  full name would still collide with SPIN after the pill has used all of the available gap. */
 export function fitArmTag() {
@@ -285,7 +72,7 @@ export function fitArmTag() {
 
 /** Lay the board, logo, HUD bar, controls and BUY plate out (stage px). cell = the integer cell layoutRaw applied. */
 export function mkPlace(cell: number) {
-	const g = G || snapGeo(mkGeo()); G = g;
+	const g = G || mkGeo(); G = g;
 	const X = (x: number) => g.ox + x * g.k, Y = (y: number) => g.oy + y * g.k, L = (v: number) => v * g.k;
 	const r = document.documentElement.style;
 	// board: whole-px cells; the frame keeps the mockup proportions around them, centred where the mockup puts it
@@ -332,9 +119,12 @@ export function mkPlace(cell: number) {
 	// Pixi HUD paints the buy plate; do not insert a DOM glow into the layout shell.
 	void pr;
 	// menu (game-only): the same square button, top-left corner of the stage
-	const ms = Math.max(L(g.mode === 'port' ? 144 : g.mode === 'cmp' ? 64 : 88), Math.ceil(ST.tap / ST.s) + 2), m0 = g.mode === 'port' ? 12 : 16;
-	css($('#menuBtn'), { position: 'absolute', left: m0 - hx, top: m0 - hy, width: ms, height: ms, margin: '0', padding: '0', 'border-radius': (ms * 0.28) + 'px', 'border-width': bwPx(Math.max(2, ms / g.k / 40) * g.k), '--icS': String(ms * 0.0155) });
-	r.setProperty('--mkMenuR', (m0 + ms) + 'px'); r.setProperty('--mkMenuY', (m0 + ms / 2) + 'px');
+	const lay = getLayout();
+	const ms = lay ? lay.menu.s : L(g.mode === 'port' ? 144 : 88);
+	const m0x = lay ? lay.menu.x - ms / 2 : (g.mode === 'port' ? 12 : 16);
+	const m0y = lay ? lay.menu.y - ms / 2 : m0x;
+	css($('#menuBtn'), { position: 'absolute', left: m0x - hx, top: m0y - hy, width: ms, height: ms, margin: '0', padding: '0', 'border-radius': (ms * 0.28) + 'px', 'border-width': bwPx(Math.max(2, ms / 40)), '--icS': String(ms * 0.0155) });
+	r.setProperty('--mkMenuR', (m0x + ms) + 'px'); r.setProperty('--mkMenuY', (m0y + ms / 2) + 'px');
 	// armed-mode tag (v3.17, James 02:32): the ONLY armed indicator. A slim single-line pill (about 22 screen px tall on phones,
 	// 36 design px on desktop) with the mode name and a small x, right next to SPIN: inside the HUD bar, right-aligned to
 	// SPIN's left edge, on the WIN label's row (landscape/desktop) or on the bet row right of [+] (portrait). Its tap target is padded invisibly to 44 px
