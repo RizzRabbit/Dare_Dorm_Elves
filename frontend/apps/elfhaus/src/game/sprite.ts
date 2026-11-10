@@ -15,6 +15,7 @@
 // No ghosting: each frame pair is measured once per sheet (planOf); pairs that move or jump (flash cut, ignition) cut
 // instead of blending and are held shorter. See PLAN.
 import { spriteRate } from './tempo';
+import { isUiHost } from './uihosts';
 export type Atlas = { size: [number, number]; anims: Record<string, { fps: number; loop: boolean; frames: number[][]; canvas?: [number, number] }> };
 type Sheet = { img: CanvasImageSource; atlas: Atlas; src: string };
 export type PlayOpts = { cls?: string; style?: string; loop?: boolean; hold?: boolean; reverse?: boolean; fps?: number; delay?: number; prepend?: boolean; rate?: number; blend?: boolean; from?: number; onEnd?: () => void };
@@ -138,7 +139,7 @@ const ease = (x: number) => x * x * (3 - 2 * x); // smoothstep: soft in and out 
 function tick(t: number) {
 	raf = 0;
 	for (const a of live) {
-		if (!a.cv.isConnected && t - a.t0 > 50) { stop(a); continue; }
+		if (!a.cv.isConnected && !isUiHost(a.cv) && t - a.t0 > 50) { stop(a); continue; }
 		if (t < a.t0) continue;
 		if (a.plan) { // crossfade: i -> i+1 (wraps when looping; a one-shot's last frame just holds)
 			const P = a.plan, n = a.frames.length; let u = ((t - a.t0) / 1000) * a.fps;

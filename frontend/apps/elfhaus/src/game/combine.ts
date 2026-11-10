@@ -10,7 +10,7 @@ import { T } from './tempo';
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 function layer() {
 	let l = document.getElementById('flyLayer');
-	if (!l) { l = document.createElement('div'); l.id = 'flyLayer'; (document.getElementById('root') || document.body).appendChild(l); }
+	if (!l) { l = document.createElement('div'); l.id = 'flyLayer'; }
 	return l;
 }
 /** Hide a multiplier so the board mirror drops its glyph on the next tick (visibility, not only opacity). */

@@ -8,7 +8,7 @@ import { loadUiWidgets } from './widgets';
 import { buyVisible, confirmVisible, tapBuyCard } from './buy';
 import { introVisible } from './intro';
 import { initHud, layoutHud, syncHud, hudHit, hudRects } from './hud';
-import { initWins, winsVisible, relaxUiTier } from './wins';
+import { initWins, winsVisible, relaxUiTier, playCardFlip } from './wins';
 import { initPanels } from './menu';
 import { banner, toast, hideToast, bigWin } from '../ui';
 import { maxWinCelebration } from '../maxwin';
@@ -17,6 +17,7 @@ import { ninePanel, CARD } from '../ninepanel';
 
 export { setBuyHooks, paintBuyMenu, showBuyMenu, hideBuyMenu, showBuyConfirm, hideBuyConfirm, type BuyState, type BuyCardState, type ConfirmState, type BuyHooks } from './buy';
 export { showFeatureIntro, hideFeatureIntro, type IntroState } from './intro';
+export { playCardFlip } from './wins';
 export { layoutHud, syncHud, hudHit, hudRects } from './hud';
 export { uiKind, uiScale, designW, designH, isPortrait } from './stage';
 

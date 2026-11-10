@@ -4,8 +4,18 @@
 // querySelector / getElementById / $ paths. Layout boxes come from mkPlace
 // styles plus the in-document #hud / #stage / #app origins.
 import { ST } from './stage';
+import { hostCssSize, hostCssOffset, hostComputedStyle } from './hostcss';
 
 const TEMPLATE = `
+<div id="frame">
+	<div id="board">
+		<div id="strips"></div>
+		<div id="reelLines" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+		<div id="cells"></div>
+		<div id="overlays"></div>
+	</div>
+</div>
+<div id="flyLayer" aria-hidden="true"></div>
 <div id="ctrlTop">
 	<div class="side"><button id="turboBtn" class="ico toggle" aria-label="Turbo" title="Turbo"></button></div>
 	<button id="buyBtn" class="ico emblem plate" aria-label="Get bonus" title="Get bonus">
@@ -142,13 +152,20 @@ function parsePx(v: string): number {
 	return Number.isFinite(n) ? n : 0;
 }
 
+function parentBox(el: HTMLElement): { w: number; h: number } {
+	const p = el.parentElement;
+	if (!p || p === tree) return { w: 0, h: 0 };
+	return { w: measure(p, 'w'), h: measure(p, 'h') };
+}
+
 function measure(el: HTMLElement, dim: 'w' | 'h'): number {
 	const st = dim === 'w' ? el.style.width : el.style.height;
 	const n = parsePx(st);
 	if (n > 0) return n;
 	const inn = INTRINSIC.get(el);
 	if (inn) return dim === 'w' ? inn.w : inn.h;
-	return 0;
+	const pb = parentBox(el);
+	return hostCssSize(el, dim, pb.w, pb.h) || 0;
 }
 
 function parseTranslate(el: HTMLElement, w: number, h: number): [number, number] {
@@ -166,16 +183,34 @@ function offsetInTree(el: HTMLElement): { x: number; y: number; w: number; h: nu
 	while (n && n !== tree) {
 		const nw = measure(n, 'w'), nh = measure(n, 'h');
 		const [tx, ty] = parseTranslate(n, nw, nh);
-		x += parsePx(n.style.left) + tx;
-		y += parsePx(n.style.top) + ty;
+		const pb = n.parentElement && n.parentElement !== tree ? { w: measure(n.parentElement, 'w'), h: measure(n.parentElement, 'h') } : { w: 0, h: 0 };
+		x += (n.style.left ? parsePx(n.style.left) : hostCssOffset(n, 'x', pb.w, pb.h)) + tx;
+		y += (n.style.top ? parsePx(n.style.top) : hostCssOffset(n, 'y', pb.w, pb.h)) + ty;
 		n = n.parentElement;
 	}
 	return { x, y, w, h };
 }
 
+function computedTransform(el: HTMLElement): [number, number, number, number] {
+	try {
+		const xf = getComputedStyle(el).transform;
+		if (!xf || xf === 'none') return [0, 0, 1, 1];
+		if (xf.startsWith('matrix3d(')) {
+			const m = xf.slice(9, -1).split(',').map(Number);
+			return [m[12] || 0, m[13] || 0, m[0] || 1, m[5] || 1];
+		}
+		if (xf.startsWith('matrix(')) {
+			const m = xf.slice(7, -1).split(',').map(Number);
+			return [m[4] || 0, m[5] || 0, m[0] || 1, m[3] || 1];
+		}
+	} catch { /* detached */ }
+	return [0, 0, 1, 1];
+}
+
 export function hostRect(el: HTMLElement): DOMRect {
 	const origin = findOrigin(el);
 	const { x, y, w, h } = offsetInTree(el);
+	const [tx, ty, sx, sy] = computedTransform(el);
 	const s = ST.s || 1;
 	if (origin === 'hud' || origin === 'stage' || origin === 'app') {
 		const id = origin === 'hud' ? 'hud' : origin === 'stage' ? 'stage' : 'app';
@@ -183,10 +218,10 @@ export function hostRect(el: HTMLElement): DOMRect {
 		const raw = Document.prototype.getElementById.call(document, id) as HTMLElement | null;
 		if (raw) {
 			const b = HTMLElement.prototype.getBoundingClientRect.call(raw);
-			return new DOMRect(b.x + x * s, b.y + y * s, w * s, h * s);
+			return new DOMRect(b.x + (x + tx) * s, b.y + (y + ty) * s, w * sx * s, h * sy * s);
 		}
 	}
-	return new DOMRect(ST.ox + x * s, ST.oy + y * s, w * s, h * s);
+	return new DOMRect(ST.ox + (x + tx) * s, ST.oy + (y + ty) * s, w * sx * s, h * sy * s);
 }
 
 function hookBox(el: HTMLElement) {
@@ -194,11 +229,20 @@ function hookBox(el: HTMLElement) {
 	try {
 		Object.defineProperty(el, 'offsetWidth', { configurable: true, get() { return measure(this, 'w'); } });
 		Object.defineProperty(el, 'offsetHeight', { configurable: true, get() { return measure(this, 'h'); } });
-		Object.defineProperty(el, 'offsetLeft', { configurable: true, get() { return parsePx(this.style.left); } });
-		Object.defineProperty(el, 'offsetTop', { configurable: true, get() { return parsePx(this.style.top); } });
+		Object.defineProperty(el, 'offsetLeft', { configurable: true, get() {
+			if (this.style.left) return parsePx(this.style.left);
+			const pb = parentBox(this);
+			return hostCssOffset(this, 'x', pb.w, pb.h);
+		} });
+		Object.defineProperty(el, 'offsetTop', { configurable: true, get() {
+			if (this.style.top) return parsePx(this.style.top);
+			const pb = parentBox(this);
+			return hostCssOffset(this, 'y', pb.w, pb.h);
+		} });
 		Object.defineProperty(el, 'clientWidth', { configurable: true, get() { return measure(this, 'w'); } });
 		Object.defineProperty(el, 'clientHeight', { configurable: true, get() { return measure(this, 'h'); } });
 		Object.defineProperty(el, 'isConnected', { configurable: true, get() { return true; } });
+		Object.defineProperty(el, 'offsetParent', { configurable: true, get() { return this.parentElement; } });
 	} catch { /* some browsers may lock isConnected */ }
 	for (const c of el.children) hookBox(c as HTMLElement);
 }
@@ -244,6 +288,11 @@ export function installUiHosts() {
 	mark('banner', 'stage', [280, 48]);
 	mark('stepToast', 'stage', [260, 44]);
 	mark('replayBar', 'app', [320, 36]);
+	for (const id of ['frame', 'board', 'strips', 'cells', 'overlays', 'reelLines']) mark(id, 'stage');
+	mark('flyLayer', 'view');
+	new MutationObserver((ms) => {
+		for (const m of ms) for (const n of m.addedNodes) if (n instanceof HTMLElement) hookBox(n);
+	}).observe(tree, { childList: true, subtree: true });
 
 	if (!patched) {
 		patched = true;
@@ -259,6 +308,12 @@ export function installUiHosts() {
 		Document.prototype.querySelectorAll = function (sel: string) {
 			return mergeLists(rawQSA.call(this, sel), tree!.querySelectorAll(sel));
 		};
+		const rawCS = window.getComputedStyle.bind(window);
+		window.getComputedStyle = ((elt: Element, pseudo?: string | null) => {
+			const cs = rawCS(elt, pseudo);
+			if (elt instanceof HTMLElement && isUiHost(elt)) return hostComputedStyle(elt, cs);
+			return cs;
+		}) as typeof getComputedStyle;
 	}
 
 	const top = Document.prototype.getElementById.call(document, 'top') as HTMLElement | null;

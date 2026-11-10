@@ -3,13 +3,16 @@
 // bookEventHandlerMap.ts). This layer copies live boxes and text each frame and hides the
 // painted DOM chrome. Elf canvases and the max-win title sheet stay in the DOM (under the
 // typography, over the dim) so their sprite.ts / ElfRig motion is unchanged.
-import { Container, Sprite, Texture } from 'pixi.js';
+import { Assets, Container, Sprite, Texture } from 'pixi.js';
+import { gsap } from 'gsap';
 import { nine } from '../scene/atlas';
 import { animateUi, kickUi, onUiLayout, setUiTier, uiInteractive, uiScreen, viewH, viewW } from './stage';
 import { bmFit, setBm, typeRow, wordSpr, fitSpr } from './text';
 import { modalDimTex, nineUi } from './widgets';
 import { hudLayer } from './hud';
 import { ensureElfFx } from './winelves';
+import { ART, S, wait } from '../ui';
+import { ST } from '../stage';
 
 export const winsLayer = new Container();
 winsLayer.label = 'uiWins';
@@ -119,6 +122,8 @@ let lastOtAmt = '', lastOtHint = '';
 let fsRoot: Container, fsDim: Sprite | null = null, fsCard: Container, fsBig: Container | null = null, fsSub: Container | null = null;
 let lastFsBig = '', lastFsSub = '';
 let flipRoot: Container, flipDim: Sprite | null = null, flipCard: Sprite, flipName: Sprite | null = null;
+let flyRoot: Container;
+const flySpr = new Map<HTMLElement, Container>();
 let lastFlipFront = '', lastFlipBack = '', lastFlipName = '';
 let msgRoot: Container, msgDim: Sprite | null = null, msgCard: Container, msgTitleSpr: Sprite | null = null, msgBodySpr: Sprite | null = null, msgBtn: Container, msgBtnLab: Sprite | null = null;
 
@@ -212,6 +217,7 @@ function ensure() {
 	fsRoot.addChild(fsCard);
 
 	flipRoot = new Container(); flipRoot.label = 'uiCardFlip'; flipRoot.zIndex = 7; flipRoot.visible = false; flipRoot.eventMode = 'none';
+	flyRoot = new Container(); flyRoot.label = 'uiFly'; flyRoot.zIndex = 12; flyRoot.eventMode = 'none';
 	flipCard = new Sprite(Texture.EMPTY); flipCard.anchor.set(0.5); flipCard.eventMode = 'none';
 	flipRoot.addChild(flipCard);
 
@@ -236,7 +242,7 @@ function ensure() {
 	replayBtn.on('pointertap', (e) => { e.stopPropagation(); document.getElementById('replayPlay')?.click(); });
 	replayRoot.addChild(replayBg, replayBtn);
 
-	winsLayer.addChild(toastRoot, bannerRoot, fsRoot, outroRoot, flipRoot, bigRoot, maxRoot, msgRoot, resumeRoot, replayRoot);
+	winsLayer.addChild(toastRoot, bannerRoot, fsRoot, outroRoot, flipRoot, bigRoot, maxRoot, msgRoot, resumeRoot, replayRoot, flyRoot);
 	uiScreen.addChild(winsLayer);
 	built = true;
 	onUiLayout(() => { syncWins(); kickUi(); });
@@ -576,6 +582,7 @@ function syncCard(overlay: HTMLElement | null, root: Container, dim: Sprite | nu
 }
 
 function syncFlip() {
+	if (flipDrive) return;
 	const O = $('#cardFlip');
 	if (!shown(O)) { flipRoot.visible = false; if (flipDim) flipDim.visible = false; return; }
 	flipRoot.visible = true;
@@ -679,6 +686,48 @@ let replayLab: Sprite | null = null, replayPlayLab: Sprite | null = null;
 
 let lastTier = false;
 
+
+function syncFlyGems() {
+	if (!flyRoot) return false;
+	const layer = document.getElementById('flyLayer');
+	const live = new Set<HTMLElement>();
+	if (layer) for (const c of layer.querySelectorAll<HTMLElement>('.fly')) {
+		live.add(c);
+		let spr = flySpr.get(c);
+		const txt = (c.textContent || '').replace(/\s+/g, ' ').trim();
+		if (!spr) {
+			const r = c.getBoundingClientRect();
+			spr = typeRow(txt || 'x', Math.max(16, r.width || 48), Math.max(12, r.height || 24));
+			spr.eventMode = 'none';
+			flyRoot.addChild(spr);
+			flySpr.set(c, spr);
+		}
+		const r = c.getBoundingClientRect();
+		spr.visible = true;
+		spr.position.set(r.x + r.width / 2, r.y + r.height / 2);
+		spr.alpha = Math.max(0, Math.min(1, parseFloat(c.style.opacity || '') || opacityOf(c)));
+		try {
+			const xf = getComputedStyle(c).transform;
+			if (xf.startsWith('matrix(')) {
+				const m = xf.slice(7, -1).split(',').map(Number);
+				const sc = Math.hypot(m[0], m[1]) || 1;
+				spr.scale.set(sc);
+			} else if (xf.startsWith('matrix3d(')) {
+				const m = xf.slice(9, -1).split(',').map(Number);
+				const sc = Math.hypot(m[0], m[1]) || 1;
+				spr.scale.set(sc);
+			}
+		} catch { /* */ }
+	}
+	for (const [el, spr] of [...flySpr]) {
+		if (live.has(el)) continue;
+		if (spr.parent) spr.parent.removeChild(spr);
+		flySpr.delete(el);
+	}
+	flyRoot.visible = live.size > 0;
+	return live.size > 0;
+}
+
 function syncWins() {
 	if (!built) return false;
 	syncToast($('#stepToast'), toastRoot, toastBg, 'toast');
@@ -691,11 +740,12 @@ function syncWins() {
 	syncMsg();
 	syncResume();
 	syncReplay();
+	const flying = syncFlyGems();
 	const modal = winsVisible();
 	if (modal !== lastTier) { lastTier = modal; relaxUiTier(); }
 	const cover = idShown('bigwin') || idShown('maxwin') || idShown('outro') || idShown('fsMore') || idShown('cardFlip') || idShown('msg');
 	hudLayer.visible = !cover;
-	return modal || shown($('#banner')) || shown($('#stepToast'));
+	return modal || flying || shown($('#banner')) || shown($('#stepToast'));
 }
 
 
@@ -713,7 +763,8 @@ function syncResume() {
 	const tw = r.w - 40, th = 32;
 	resumeTitle = setBm(resumeCardC, resumeTitle, bmFit((title?.textContent || '').trim() || 'RESUME', 'font_cream', 22, tw, th));
 	if (resumeTitle) { resumeTitle.anchor.set(0.5, 0.5); resumeTitle.position.set(r.w / 2, 36); }
-	resumeLine = setBm(resumeCardC, resumeLine, bmFit((line?.textContent || '').trim(), 'font_ink', 15, tw, 48));
+	const linePx = Math.max(15, 10 / Math.max(0.2, parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--s') || '1') * parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tbm') || '1'))); // min ~10 screen px on landscape phones
+	resumeLine = setBm(resumeCardC, resumeLine, bmFit((line?.textContent || '').trim(), 'font_ink', linePx, tw, 48));
 	if (resumeLine) { resumeLine.anchor.set(0.5, 0); resumeLine.position.set(r.w / 2, 58); }
 	const bw = Math.min(160, (r.w - 48) / 2), bh = 44, by = r.h - 24 - bh;
 	placeIn(resumeBtnR, { x: r.x + 16, y: r.y + by, w: bw, h: bh });
@@ -760,3 +811,107 @@ export async function initWins() {
 }
 
 export const winsOpen = winsVisible;
+
+
+let flipDrive = false;
+const FLIP_BACK: Record<'triple_dare' | 'hidden', string> = {
+	triple_dare: 'assets/stacks/still/WM3_R2-4.webp',
+	hidden: 'assets/stacks/still/WM5_R1-5.webp',
+};
+const FLIP_TITLE: Record<'triple_dare' | 'hidden', string> = {
+	triple_dare: 't_bonus_doubleblack',
+	hidden: 't_bonus_powder',
+};
+
+async function loadTex(src: string) {
+	if (!src) return Texture.EMPTY;
+	try {
+		const t = await Assets.load(src);
+		return t instanceof Texture ? t : Texture.from(src);
+	} catch {
+		try { return Texture.from(src); } catch { return Texture.EMPTY; }
+	}
+}
+
+/** Pixi-only ski-pass flip. Same timings as the previous presentation; skip holds after the turn. */
+export async function playCardFlip(result: 'triple_dare' | 'hidden') {
+	ensure();
+	const O = document.getElementById('cardFlip') as HTMLElement;
+	O.dataset.tier = result;
+	O.classList.remove('hidden', 'out');
+	flipDrive = true;
+	setUiTier('modal');
+	uiInteractive(true);
+	flipRoot.visible = true;
+	flipRoot.alpha = 1;
+	flipRoot.eventMode = 'static';
+	flipRoot.cursor = 'pointer';
+	if (flipDim) { flipDim.visible = true; flipDim.alpha = 0.88; flipDim.eventMode = 'static'; flipDim.cursor = 'pointer'; }
+
+	const front = await loadTex(String(ART.S || ''));
+	const back = await loadTex(FLIP_BACK[result]);
+	flipCard.texture = front;
+	flipCard.visible = true;
+	if (flipName) flipName.visible = false;
+
+	const cell = Math.min(viewW, viewH) * 0.18;
+	const cw = cell * 2.4, ch = cw * (320 / 240);
+	const cx = viewW / 2, cy = viewH * 0.46;
+	const fitK = (tex: Texture) => Math.min(cw / Math.max(1, tex.width), ch / Math.max(1, tex.height));
+	let baseK = fitK(front);
+	const st = { y: cy + ch * 0.45, sx: baseK * 0.6, sy: baseK * 0.6, rot: 0, flip: 0, a: 0 };
+	const apply = () => {
+		const mid = st.flip;
+		const backOn = mid >= 0.5;
+		const tex = backOn ? back : front;
+		if (flipCard.texture !== tex) { flipCard.texture = tex; baseK = fitK(tex); }
+		const squashX = Math.max(0.05, Math.abs(Math.cos(mid * Math.PI)));
+		const bump = 1 + 0.12 * Math.sin(mid * Math.PI);
+		flipCard.position.set(cx, st.y);
+		flipCard.scale.set((backOn ? -1 : 1) * Math.abs(st.sx) * squashX * bump, st.sy * bump);
+		flipCard.rotation = st.rot * Math.PI / 180;
+		flipCard.alpha = st.a;
+		kickUi();
+	};
+	apply();
+
+	let skip = () => {};
+	const tapped = new Promise<void>((r) => { skip = r; });
+	O.onclick = () => skip();
+	const onPtr = () => skip();
+	flipRoot.on('pointertap', onPtr);
+
+	const k = S.turbo ? 0.45 : 1;
+	await gsap.to(st, { a: 1, y: cy - ch * 0.04, sx: baseK * 1.06, sy: baseK * 0.94, duration: 0.36 * k * 0.7, ease: 'power2.out', onUpdate: apply });
+	await gsap.to(st, { y: cy, sx: baseK, sy: baseK, duration: 0.36 * k * 0.3, ease: 'power2.inOut', onUpdate: apply });
+	await wait(S.turbo ? 80 : 260);
+	await gsap.to(st, { sx: baseK * 1.04, sy: baseK * 0.95, rot: -3, duration: 0.32 * k * 0.4, ease: 'sine.inOut', onUpdate: apply });
+	await gsap.to(st, { sx: baseK * 0.97, sy: baseK * 1.04, rot: 3, duration: 0.32 * k * 0.35, ease: 'sine.inOut', onUpdate: apply });
+	await gsap.to(st, { sx: baseK, sy: baseK, rot: 0, duration: 0.32 * k * 0.25, ease: 'sine.inOut', onUpdate: apply });
+	await gsap.to(st, { flip: 1, duration: 0.56 * k, ease: 'power2.inOut', onUpdate: apply });
+
+	const nrW = Math.min(620, viewW * 0.86), nrH = Math.max(48, viewH * 0.12);
+	if (flipName && flipName.parent) flipName.parent.removeChild(flipName);
+	flipName = fitWord(FLIP_TITLE[result], nrW, nrH);
+	if (flipName) {
+		flipName.position.set(cx, cy + ch * 0.62);
+		flipName.alpha = 0;
+		flipName.visible = true;
+		flipRoot.addChild(flipName);
+		gsap.fromTo(flipName, { alpha: 0 }, { alpha: 1, duration: 0.25 * k, ease: 'back.out(1.6)', onUpdate: () => kickUi() });
+	}
+
+	await Promise.race([wait(S.turbo ? 900 : 1700), tapped]);
+	O.onclick = null;
+	flipRoot.off('pointertap', onPtr);
+	O.classList.add('out');
+	await gsap.to(flipRoot, { alpha: 0, duration: 0.25, onUpdate: () => kickUi() });
+	if (flipDim) { flipDim.visible = false; flipDim.eventMode = 'none'; }
+	flipRoot.eventMode = 'none';
+	O.classList.add('hidden');
+	O.classList.remove('out');
+	flipDrive = false;
+	flipRoot.visible = false;
+	flipRoot.alpha = 1;
+	kickUi();
+}

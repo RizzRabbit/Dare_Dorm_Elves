@@ -1,11 +1,9 @@
 // Pixi rules / paytable / paylines. Wording is taken verbatim from buildRules()
 // HTML (including the social branches). Tables and the 20 line mini-grids are
 // redrawn in Pixi. The body lives in a masked scroll window (wheel + touch-drag).
-import { Container, Graphics, Rectangle, Sprite, Texture } from 'pixi.js';
+import { Container, Graphics, Rectangle, Sprite, Text, Texture } from 'pixi.js';
 import { LINES } from '../config';
-import { paintTextCanvas } from '../skin';
 import { kickUi } from './stage';
-import { bmFit } from './text';
 
 type Box = { x: number; y: number; w: number; h: number };
 
@@ -22,23 +20,44 @@ function blockText(el: HTMLElement) {
 	return s.replace(/[ \t]+\n/g, '\n').replace(/\n[ \t]+/g, '\n').replace(/[ \t]{2,}/g, ' ').trim();
 }
 
+// Lilita One is the typeface the painted bitmap fonts were baked from. Rules copy
+// includes glyphs the atlas never packed (×, (), ;, ©, dashes, quotes, …), so the
+// body is drawn with Pixi Text in that same font instead of dropping those chars.
+const RULES_FONT = 'Lilita One';
+const FILL: Record<string, number> = {
+	font_ink: 0x26140f,
+	font_gold: 0xf2b935,
+	font_cream: 0xfbf3e4,
+	font_cran: 0xa61c34,
+};
+
 function textSpr(text: string, font: string, px: number, wrapW: number, align: 'left' | 'center' = 'left') {
-	const painted = paintTextCanvas(text, font, px, wrapW, align, 1.28, 2);
-	if (!painted) {
-		const fallback = bmFit(text, font, px, wrapW, px * 2, align === 'center' ? 'center' : 'left');
-		return fallback;
-	}
-	const tex = Texture.from(painted.cv);
-	const s = new Sprite(tex);
-	s.eventMode = 'none';
-	s.width = painted.w;
-	s.height = painted.h;
-	return s;
+	const t = new Text({
+		text,
+		resolution: 2,
+		style: {
+			fontFamily: RULES_FONT,
+			fontSize: Math.max(10, Math.round(px)),
+			fontWeight: '400',
+			fill: FILL[font] ?? 0x26140f,
+			align,
+			wordWrap: true,
+			wordWrapWidth: Math.max(20, wrapW),
+			lineHeight: Math.round(px * 1.28),
+			padding: 2,
+		},
+	});
+	t.eventMode = 'none';
+	return t;
 }
 
-function drop(s: Sprite | Container | null) {
+function drop(s: Sprite | Container | Text | null) {
 	if (!s) return;
 	if (s.parent) s.parent.removeChild(s);
+	if (s instanceof Text) {
+		try { s.destroy(); } catch { /* */ }
+		return;
+	}
 	if (s instanceof Sprite && s.texture && s.texture !== Texture.EMPTY) {
 		try { s.destroy({ texture: true, textureSource: true }); } catch { try { s.destroy(); } catch { /* */ } }
 	} else {
@@ -219,6 +238,10 @@ export function makeRulesScroll(): RulesScroll {
 		html = src;
 		lastHtml = '';
 		layout(W, H);
+		const face = document.fonts;
+		if (face && !face.check(`18px "${RULES_FONT}"`)) {
+			void face.load(`18px "${RULES_FONT}"`).then(() => { lastHtml = ''; layout(W, H); }).catch(() => {});
+		}
 	};
 
 	root.on('pointerdown', (e) => { drag = true; lastY = e.global.y; root.cursor = 'grabbing'; e.stopPropagation(); });

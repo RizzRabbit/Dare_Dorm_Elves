@@ -11,7 +11,7 @@
 // (over SPIN), the free-spins bar (on the sill), and 48 px tap floors (controls grow when the mockup size is smaller).
 import { syncHostLayout } from './uihosts';
 import { ST } from './stage';
-import { setLip, setFrameBack } from './board/stage';
+import { setLip, setFrameBack, relayoutBoard } from './board/stage';
 import ART_G from './art.generated.json';
 // Chrome floors border widths to whole device px, so a 2.9px stroke would draw at 2; round in screen space instead.
 const BUY_K = 0.78;
@@ -271,6 +271,7 @@ export function mkPlace(cell: number) {
 	css($('#stage'), { position: 'absolute', left: fx, top: fy, width: fw, height: fh, display: 'block', padding: '0', margin: '0', 'min-height': '0' });
 	css($('#frame'), { position: 'absolute', left: 0, top: 0, width: fw, height: fh, padding: '0', margin: '0', border: '0', 'border-radius': (30 * u) + 'px' });
 	css($('#board'), { position: 'absolute', left: FT * u, top: FT * u, width: cell * 5, height: cell * 4, margin: '0' });
+	for (const id of ['strips', 'cells', 'overlays', 'reelLines']) css($('#' + id), { position: 'absolute', left: 0, top: 0, width: cell * 5, height: cell * 4, margin: '0', padding: '0' });
 	drawFrame(u);
 	// logo (anchor 0.5 / 0.62 of the 1200 x 412 stone logo)
 	const lw = L(1200 * g.logo.s), lh = L(412 * g.logo.s);
@@ -330,6 +331,7 @@ export function mkPlace(cell: number) {
 		'--tagPad': Math.max(0, (Math.ceil(Math.min(44, ST.tap) / ST.s) - hP) / 2) + 'px', '--tagMax': maxW + 'px' });
 	fitArmTag();
 	syncHostLayout();
+	relayoutBoard();
 	// free-spins bar on the frame's sill, banner over the top row, step toast at the board's foot
 	css($('#fsBar'), { position: 'absolute', left: '50%', top: (fh - FB * u / 2) + 'px', translate: '-50% -50%', margin: '0', 'z-index': '6' });
 	css($('#banner'), { position: 'absolute', left: '50%', top: (FT * u + cell * 0.12) + 'px', translate: '-50% 0', transform: 'none', margin: '0' });

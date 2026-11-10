@@ -188,14 +188,15 @@ export function symHTML(name: string, v?: number, reel?: number) {
 export function buildCells() {
 	const c = $('#cells'); c.innerHTML = '';
 	for (let r = 0; r < REELS; r++) for (let row = 0; row < ROWS; row++) {
-		const d = document.createElement('div'); d.className = 'cell'; d.id = `c${r}${row}`; c.appendChild(d);
+		const d = document.createElement('div'); d.className = 'cell'; d.id = `c${r}${row}`;
+			d.style.cssText = `position:absolute;left:${r * S.cell}px;top:${row * S.cell}px;width:${S.cell}px;height:${S.cell}px`; c.appendChild(d);
 	}
 }
 export const cellEl = (r: number, row: number) => document.getElementById(`c${r}${row}`) as HTMLElement;
 /** Render one cell (reel stops are animated by reels.ts; cls adds a one-shot CSS class). */
 export function renderCell(r: number, row: number, cls?: string | null, delayMs = 0) {
 	const d = cellEl(r, row), p = pos(r, row);
-	d.style.left = p.x + 'px'; d.style.top = p.y + 'px';
+	d.style.position = 'absolute'; d.style.left = p.x + 'px'; d.style.top = p.y + 'px'; d.style.width = S.cell + 'px'; d.style.height = S.cell + 'px';
 	d.innerHTML = symHTML(S.sym[r]?.[row] ?? 'L5', S.vals.get(k(r, row)), r);
 	d.classList.toggle('wild', S.sym[r]?.[row] === 'W');
 	d.style.visibility = S.full.has(r) ? 'hidden' : 'visible';
@@ -217,7 +218,7 @@ export function renderOverlays(anim: boolean | number = false) {
 	S.groups.forEach((g) => {
 		const n = g.reels.length, key = `WM${n}`;
 		const d = document.createElement('div'); d.className = 'ov merge';
-		d.style.left = pos(g.reels[0], 0).x + 'px'; d.style.width = n * S.cell + 'px';
+		d.style.position = 'absolute'; d.style.left = pos(g.reels[0], 0).x + 'px'; d.style.top = '0px'; d.style.width = n * S.cell + 'px'; d.style.height = (S.cell * 4) + 'px';
 		// The r8d still (n reels x 4 rows, same aspect as the merged area) fills the overlay edge to edge.
 		d.classList.add('art');
 		d.innerHTML = stillHTML(g.reels) + ovEdgeHTML() + `<i class="ovWinO"></i>` + frameHTML(g.reels) + gemHTML(g.product, 'stack', nudgeCSS(key)) + `<div class="ovrd">${DOTS}</div>`;
@@ -228,7 +229,7 @@ export function renderOverlays(anim: boolean | number = false) {
 	[...S.full].forEach(([r, v]) => {
 		if (inGroup.has(r)) return;
 		const d = document.createElement('div'); d.className = 'ov full';
-		d.style.left = pos(r, 0).x + 'px'; d.style.width = S.cell + 'px';
+		d.style.position = 'absolute'; d.style.left = pos(r, 0).x + 'px'; d.style.top = '0px'; d.style.width = S.cell + 'px'; d.style.height = (S.cell * 4) + 'px';
 		d.classList.add('art');
 		d.innerHTML = stillHTML([r]) + ovEdgeHTML() + `<i class="ovWinO"></i>` + frameHTML([r]) + gemHTML(v, 'stack', nudgeCSS('WF')) + `<div class="ovrd">${DOTS}</div>`;
 		d.dataset.reel = String(r);

@@ -1,251 +1,30 @@
-/* ==========================================================================================================
-   resub-fix (re-audit REAUDIT_resub.md). Loaded after elfhaus.css; everything here is an override.
-   --t48 / --t12 / --t14 = 48 / 12 / 14 SCREEN px expressed in stage design px (stage.ts), so the floors hold at
-   every window size under the one shared stage scale.
-   ========================================================================================================== */
-
-/* ---------- H2: touch targets >= 48 screen px at every size ---------- */
-body:not(.portrait):not(.phl){--hb:max(clamp(34px,calc(5.4*var(--vh)),56px),var(--t48));--sp:max(clamp(54px,calc(9*var(--vh)),96px),calc(var(--t48)*1.3))}
+/* Resub shell / loader tweaks. Dead HUD/board paint removed. */
 body.portrait{--hb:max(48px,var(--t48));--sp:max(64px,calc(var(--t48)*1.3))}
 #app #hud{width:clamp(620px,calc(var(--cell)*5 + 220px),1100px)}
-/* switches: the button grows to a 48 px hit box with a transparent border; the visible track is the padding box */
-.sw,#anteRow .sw,#turboRow .sw,#stFeat,#stBonus{--swE:max(0px,calc((var(--t48) - 26px) / 2));width:calc(46px + 2*var(--swE));height:calc(26px + 2*var(--swE));
-  border:var(--swE) solid transparent!important;background-clip:padding-box!important;box-shadow:inset 0 0 0 1.5px #8A6A3A!important;margin:calc(-1*var(--swE)) calc(-1*var(--swE)) calc(-1*var(--swE)) 0}
-.sw::before{display:none}
-.chip,.advBtn,.go,#msgOk,#replayPlay,#popMenu .pmRow,#bmBet .ico,#autoMenu input{min-height:var(--t48)}
-#bmBet .ico{min-width:var(--t48)}
-.advBtn{padding:4px 18px;font-size:max(12px,var(--t12))}
-.modal .mX{width:var(--t48);height:var(--t48);top:2px;right:2px}
-.modal.hasX{padding-right:calc(var(--t48) + 6px)}
-#armTag{min-height:var(--t48)}
 label.spSkip{min-height:var(--t48);padding:0 16px;font-size:max(13px,var(--t12));left:50%;right:auto;translate:-50% 0;cursor:pointer}
 label.spSkip input{width:max(18px,calc(var(--t12)*1.4));height:max(18px,calc(var(--t12)*1.4))}
-#intro .cont,#outro .cont{min-height:var(--t48);min-width:calc(var(--t48)*2.5)}
-/* readable HUD labels (>= 12 screen px) */
-#app #strip label{font-size:max(clamp(10px,calc(1.5*var(--vh)),13px),var(--t12))}
-#app #strip span{font-size:max(clamp(14px,calc(2.3*var(--vh)),20px),calc(var(--t14)*1.05))}
-#popMenu .pmRow{font-size:max(15px,var(--t14))}
-
-/* panels + pop menu in landscape: one zoom (--mz, stage.ts) so the 13-15 px panel text is >= 12 screen px */
-body:not(.portrait) .modal{zoom:var(--mz);max-height:calc(92*var(--vh)/var(--mz));max-width:calc(96*var(--vw)/var(--mz))}
-body:not(.portrait) .modal.bm{width:min(860px,calc(94*var(--vw)/var(--mz)))}
-body:not(.portrait) #popMenu{zoom:var(--mz)}
-/* inside a zoomed panel 48 screen px is --t48 / --mz */
-body:not(.portrait) .modal{--t48:calc(var(--tap,48px) / var(--s) / var(--mz));--t12:calc(12px / var(--s) / var(--mz));--t14:calc(14px / var(--s) / var(--mz))}
-body:not(.portrait) #popMenu{--t48:calc(var(--tap,48px) / var(--s) / var(--mz));--t14:calc(14px / var(--s) / var(--mz))}
-
-/* ---------- H1: phone landscape (body.phl, visible height <= 500): 600-design-px stage (stage.ts), board fills the
-   height, left rail = menu / BUY plate / readouts, right rail = turbo / bet + / SPIN / bet - / autoplay. ---------- */
-body.phl{--hb:max(80px,var(--t48));--sp:136px;--mt:0px}
 body.phl #app #stage{padding:0 calc(var(--railR) + 20*var(--vw)) 0 var(--railL)}
 body.phl #app #top{height:auto;padding-top:6px}
-body.phl #app #logo.art{height:62px}
 body.phl #app #hud{position:absolute;inset:0;isolation:isolate;width:auto;max-width:none;margin:0;padding:0;display:block;background:none;border:0;box-shadow:none;pointer-events:none;z-index:6}
 body.phl #app #hud::before,body.phl #app #hud::after{content:"";position:absolute;z-index:-1;top:8px;bottom:8px;border-radius:18px;width:auto;border:2px solid #ffc83d66;
   background:linear-gradient(180deg,#221a2bdd,#140e1add);box-shadow:inset 0 0 0 1px #000,0 8px 22px -8px #000c}
 body.phl #app #hud::before{left:8px;width:calc(var(--railL) - 16px);grid-row:auto;align-self:auto}
 body.phl #app #hud::after{right:8px;width:calc(var(--railR) - 16px)}
 body.phl #app #hud button{pointer-events:auto;position:absolute;margin:0;grid-area:auto!important}
-body.phl #app #menuBtn{left:calc((var(--railL) - var(--hb)) / 2);top:22px}
-body.phl #app #turboBtn{right:calc((var(--railR) - var(--hb)) / 2);top:22px}
-body.phl #app #betUp{right:calc((var(--railR) - var(--hb)) / 2);top:calc(50% - var(--sp) / 2 - var(--hb) - 14px)}
-body.phl #app #spinBtn{right:calc((var(--railR) - var(--sp)) / 2);top:calc(50% - var(--sp) / 2)}
-body.phl #app #betDown{right:calc((var(--railR) - var(--hb)) / 2);top:calc(50% + var(--sp) / 2 + 14px)}
-body.phl #app #autoBtn{right:calc((var(--railR) - var(--hb)) / 2);bottom:22px}
-body.phl #app #buyBtn.plate:not(.side){left:calc((var(--railL) - 180px) / 2);top:calc(50% - 100px);width:180px;height:200px;grid-area:auto}
-body.phl #app #strip .m{position:absolute;left:16px;width:calc(var(--railL) - 32px);display:flex;flex-direction:column;align-items:center;gap:0;line-height:1.1}
-body.phl #app #strip .m:nth-child(1){bottom:132px} body.phl #app #strip .m:nth-child(2){bottom:76px} body.phl #app #strip .m:nth-child(3){bottom:20px}
-body.phl #app #strip label{font-size:var(--t12)} body.phl #app #strip span{font-size:calc(var(--t14)*1.1)}
-body.phl #app #fsBar{position:absolute;left:auto;right:calc(var(--railR) + 8px);top:auto;bottom:10px;width:calc(20*var(--vw) - 10px);margin:0;
-  flex-wrap:wrap;justify-content:center;gap:0 10px;font-size:var(--t12);padding:4px 8px;z-index:6;translate:none!important}
-body.phl #app #stepToast{position:absolute;bottom:12px;left:50%;translate:-50% 0;margin:0;font-size:var(--t12)}
-body.phl #app #banner{font-size:var(--t14)}
-/* panels in phone landscape: zoom so text is >= 12 screen px; the rules are a full-screen sheet */
-body.phl .modal.bm{width:calc(92*var(--vw)/var(--mz))}
-body.phl .modal.rules{width:calc(96*var(--vw)/var(--mz));height:calc(96*var(--vh)/var(--mz));max-width:none}
-body.phl #maxwin .mwText{bottom:calc(3*var(--vh))}
+#app #hud .row{border-color:#5d4a2a!important}
+without a stacking context on #app they fell behind the room canvas at rest (desktop board with
 
-/* ---------- M11: one UI kit = black / gold / stone (BUY plate, intro cards, stone logo). Replaces the lavender-on-plum
-   panels and the pink accents (chips, switches, CONFIRM / START, close X, armed card, pop menu). No round pink UI. ---------- */
-:root{--k-gold:#ffc83d;--k-gold2:#e0ac3a;--k-goldHi:#ffe7a3;--k-line:#8a6a2c;--k-plate:linear-gradient(180deg,#2b2133 0%,#1f1727 55%,#151019 100%)}
-.modal,#popMenu,#popMenu .pmSlide,#stepToast,#banner,#fsBar,#intro .card,#outro .card,#fsMore .card{background:var(--k-plate)!important;border:2px solid var(--k-gold)!important;
-  box-shadow:inset 0 0 0 1.5px #120c16,inset 0 0 0 3px #ffe7a355,0 14px 30px -10px #000d!important;color:#F4EEE6}
-.modal{border-radius:16px}
-.modal h2,#rulesTitle,#buyTitle,#autoTitle,.rules h3,#msgTitle,#rcTitle{color:var(--k-gold)!important;text-shadow:0 1px 0 #000,0 0 10px #ffc83d33}
-.row,#app #hud .row,#buyCards .bcard,.chip,#bmBet .ico,.cfArt,.bArt{border-color:#5d4a2a!important}
-.row{background:#ffffff06}
-.chip{background:#17111c;color:#F4EEE6}
-.chip.on{border-color:var(--k-gold)!important;background:#2a1f0e!important;color:var(--k-goldHi);box-shadow:0 0 0 1px var(--k-gold)!important}
-#buyCards .bcard:hover{border-color:#b08a3a!important}
-#buyCards .bcard.armed{border-color:var(--k-gold)!important;background:#241a0d!important;box-shadow:0 0 0 1px var(--k-gold),0 0 14px #ffc83d44!important}
-.go,#msgOk,#intro .cont,#outro .cont,#replayPlay{background:linear-gradient(180deg,#ffe08a,#e0ac3a 55%,#b9861f)!important;color:#1a1322!important;border:2px solid #6b4d12!important;
-  border-radius:12px;font-weight:900;letter-spacing:2px;box-shadow:inset 0 1px 0 #fff6,0 6px 14px -6px #000c!important;text-shadow:none}
-.go:hover,#msgOk:hover{background:linear-gradient(180deg,#ffe9a8,#ebb847 55%,#c4912a)!important}
-.go:disabled{background:#3a3226!important;color:#9a8d78!important;border-color:#4a3e2a!important}
-.sw{background:#1a1320!important}
-.sw.on{background:linear-gradient(180deg,#ffd76a,#d9a02a)!important;box-shadow:inset 0 0 0 1.5px #6b4d12!important}
-.sw::after{border-radius:6px!important;background:#e9dfcf!important} .sw.on::after{background:#1a1322!important}
-.modal .mX svg{filter:drop-shadow(0 0 2px #ffc83d) drop-shadow(0 0 4px #ffc83d66)}
-.modal .mX .xb{fill:var(--k-goldHi);stroke:#1a1322}
-#popMenu .pmRow:focus-visible{outline-color:var(--k-gold)} #popMenu .pmItem.open .pmX{stroke:var(--k-gold)}
-#popMenu .pmRow:hover,#popMenu .pmRow:focus-visible,#popMenu .pmItem.open .pmRow{background:#ffc83d14}
-.rules td,.rules th{border-color:#ffc83d33!important}
-#fsTier{color:var(--k-gold)}
-#app #ctrlTop .ico.toggle.on,#app #autoBtn.on{border-color:var(--k-gold)!important}
-
-/* ---------- M5 armed tag placement per layout (base rule in elfhaus.css: black-gold plate above the spin button) ---------- */
-#armTag{font-size:max(var(--t12),calc(var(--sp)*.13))}
-body.phl #app #armTag{position:absolute;pointer-events:auto;grid-area:auto;translate:none;left:12px;width:calc(var(--railL) - 24px);
-  top:calc(22px + var(--hb) + 12px);justify-content:center;white-space:normal;text-align:center;font-size:var(--t12)}
-/* portrait: the empty cell right of bet+ on the spin row (no overlap with the board, so the layout never moves) */
-body.portrait #app #armTag{grid-area:2/5;align-self:center;justify-self:stretch;translate:none;margin:0 2px;padding:4px 4px;flex-wrap:wrap;
-  justify-content:center;white-space:normal;text-align:center;line-height:1.15;font-size:var(--t12);letter-spacing:.5px}
-
-/* ---------- H3 + H4: one stacking context for the board stack. The alcove recess (plum reel backing) and ledge sit at
-   negative z inside #app; without a stacking context on #app they fell behind the room canvas at rest (desktop board with
-   no backing, H4) but showed during the intro camera move (scale on #app makes one), which was the 2.0-2.6 s panel pop (H3). ---------- */
 #root #app{isolation:isolate}
 
-/* ---------- M9 error card: >= 16 px text, a 48 px+ full-width button ---------- */
-#msg .modal{min-width:min(420px,calc(92*var(--vw)));padding:22px 24px}
-#msg #msgTitle{font-size:calc(var(--t14)*22/14);letter-spacing:2px}
-#msg #msgBody{font-size:calc(var(--t14)*16/14);line-height:1.45;margin:12px 0 18px;color:#F4EEE6}
-#msg #msgOk{min-height:calc(var(--t48)*1.1);min-width:60%;font-size:calc(var(--t14)*17/14)}
-
-/* ---------- M6: the single-wild gem sits in the bottom-left corner (beside the legs), clear of the "WILD" lettering
-   across the hips; full-reel / merged stacks keep their top-left gem (hair / ceiling there) ---------- */
-.cell > .mx:not(.stack){top:auto;bottom:calc(3px - var(--mxdy,0)*var(--cell));transform-origin:14% 55%}
-
-/* ---- M1: win presentation. Non-winners dim to ~40 % (brightness, so stacked layers dim evenly), every winning symbol
-   pops once and then breathes; during the per-line cycle the other winners soften. `scale` (individual transform)
-   so it never fights the reel transforms. ---- */
-#root .cell.dim{opacity:.42}
-#root .cell.win{animation:wPop calc(.42s*var(--gt,1)) cubic-bezier(.3,1.6,.5,1) both,wBreathe calc(1.1s*var(--gt,1)) ease-in-out calc(.42s*var(--gt,1)) infinite}
-#root .cell.win.soft{opacity:.7;animation:none}
-#root .cell.win.pulse{opacity:1;animation:wPop calc(.36s*var(--gt,1)) cubic-bezier(.3,1.6,.5,1) both}
-@keyframes wPop{0%{scale:1}45%{scale:1.14}100%{scale:1.04}}
-@keyframes wBreathe{0%,100%{scale:1.04}50%{scale:1.08}}
-@media (prefers-reduced-motion:reduce){#root .cell.win,#root .cell.win.pulse{animation:none}}
-
-/* ---- L9: "TAP / CLICK TO CONTINUE" never under 13 screen px (the max-win card is position:fixed, unscaled; body.short
-   and body.tb used to take it to 11 px on phones). ---- */
-#maxwin .mwHint,body.short #maxwin .mwHint,body.tb #maxwin .mwHint{font-size:max(13px,min(16px,calc(1.4*var(--vw))))}
-#outro .otHint,body.tb #outro .otHint{font-size:13px;opacity:.72}
-
-/* ---- M3: merge flash (mergefx.ts bloomOver): radial core + light rays, inside the reel window ---- */
-.mfRays,.mfCore{position:absolute;display:block;pointer-events:none} .mfRays{inset:-30% -70%} .mfCore{inset:0}
-.mfRays{background:repeating-conic-gradient(from 0deg at 50% 55%,#FFF6DA00 0deg,#FFF6DAb0 5deg,#FFF6DA00 11deg,#FFF6DA00 22deg);
-  -webkit-mask:radial-gradient(closest-side at 50% 55%,#000 15%,transparent 100%);mask:radial-gradient(closest-side at 50% 55%,#000 15%,transparent 100%);mix-blend-mode:screen}
-.mfCore{background:radial-gradient(ellipse 78% 52% at 50% 55%,#FFFFFF 0%,#FFFFFFf2 26%,#FFF3D6a0 46%,#FFD2EA3a 72%,#FFC4E300 100%)}
-
-/* ---- M11: Mystery card = the approved Dare / Double / Triple art fanned face-down in shadow + a gold "?" seal ---- */
-.bMystFan{position:relative;display:block;width:100%;height:100%;background:radial-gradient(ellipse at 50% 60%,#3a2347,#140c19 75%)}
-.bMystFan>img{position:absolute;top:12%;width:46%!important;height:74%!important;left:27%;object-fit:cover!important;object-position:50% 12%!important;border-radius:5px;
-  border:1.5px solid #FFC83D99;box-shadow:0 4px 10px #0009;filter:brightness(.42) saturate(.55) contrast(1.05);transform-origin:50% 120%}
-.bMystQ{position:absolute;z-index:2;left:50%;top:50%;width:42%;translate:-50% -46%;display:block;filter:drop-shadow(0 2px 6px #000c)}
-.bMystQ svg{display:block;width:100%}
-.bMystQ circle{fill:#1a1020;stroke:#FFC83D;stroke-width:2.5}
-.bMystQ text{font-family:"Cinzel",serif;font-weight:800;font-size:24px;fill:#FFC83D}
-
-/* ---- M13: calm idle life on the board while it waits (never during a spin / win): high-pays breathe very slightly,
-   wilds and scatters glow softly, each reel offset in time so nothing pulses in unison. `scale` / opacity only. ---- */
-#board:not(.busyB) .cell:not(.win):not(.dim):not(.spinning) .sym.H.art>img,
-#board:not(.busyB) .cell:not(.win):not(.dim):not(.spinning) .sym.S.art>img{animation:idBreathe 3.6s ease-in-out infinite;transform-origin:50% 85%}
-#board:not(.busyB) .cell:not(.win):not(.dim):not(.spinning) .sym.W.art>.symGlow,
-#board:not(.busyB) .cell:not(.win):not(.dim):not(.spinning) .sym.S.art>.symGlow{animation:idGlow 3.2s ease-in-out infinite}
-#cells .cell:not(.win):nth-child(5n+2) .sym>img,#cells .cell:not(.win):nth-child(5n+2) .sym>.symGlow{animation-delay:-.7s}
-#cells .cell:not(.win):nth-child(5n+3) .sym>img,#cells .cell:not(.win):nth-child(5n+3) .sym>.symGlow{animation-delay:-1.4s}
-#cells .cell:not(.win):nth-child(5n+4) .sym>img,#cells .cell:not(.win):nth-child(5n+4) .sym>.symGlow{animation-delay:-2.1s}
-#cells .cell:not(.win):nth-child(5n) .sym>img,#cells .cell:not(.win):nth-child(5n) .sym>.symGlow{animation-delay:-2.8s}
-@keyframes idBreathe{0%,100%{scale:1}50%{scale:1.03}}
-@keyframes idGlow{0%,100%{opacity:0}50%{opacity:.5}}
-@media (prefers-reduced-motion:reduce){#board .sym>img,#board .sym>.symGlow{animation:none}}
-
-/* ---- M10: rules readability: body >= 15 screen px, tables / line list >= 14, paytable icons 44 px, a readable column,
-   gold section rules, a bold 48 px close. ---- */
-#menu .rules p,#menu .rules li{font-size:max(15px,calc(var(--t14)*1.1));line-height:1.6;max-width:72ch}
-#menu .rules table,#menu .rules td,#menu .rules th{font-size:max(14px,var(--t14))}
-#menu .rules td,#menu .rules th{padding:5px 10px}
-#menu .rules .lines{font-size:max(14px,var(--t14));line-height:1.8}
-#menu .rules .ri{width:44px;height:44px;margin-right:8px}
-#menu .rules h3{font-size:max(17px,calc(var(--t14)*1.25));margin:22px 0 8px;padding-top:12px;border-top:1px solid #ffc83d33}
-#menu .rules h3:first-of-type{border-top:0;padding-top:0}
-#menu .mX{width:var(--t48);height:var(--t48);min-width:48px;min-height:48px}
-#menu .mX svg{width:55%;height:55%;stroke-width:2.6}
-
-/* ---- L6: one-tap mute row in the pop-out menu ---- */
-#pmMute .mOn{opacity:0;transition:opacity .15s} #pmMute.on .mOn{opacity:1} #pmMute.on{color:var(--k-gold,#ffc83d)}
-
-/* ---- M1: big-win tier presentation: dark scrim (was a pale wash), big gold amount with a deep drop, gold x chip,
-   title gets a gold halo, code particles (bwparticles.ts) between the scrim and the type. ---- */
-#bigwin{background:radial-gradient(ellipse 70% 60% at 50% 45%,#22132bd9,#08050cf0 75%)}
-#bigwin .bwP{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
-#bigwin .bwTier{position:relative;z-index:2;filter:drop-shadow(0 0 22px #ffc83d55) drop-shadow(0 4px 0 #0008)}
-#bigwin .bwAmt,body.tb #bigwin .bwAmt,body.portrait #bigwin .bwAmt{font-family:"Cinzel",serif;font-weight:900;font-size:clamp(40px,min(7.5vw,11vh),104px);letter-spacing:.02em;
-  background:linear-gradient(180deg,#FFF8E0 0%,#FFE08A 30%,#FFC83D 55%,#C8871A 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
-  -webkit-text-stroke:0;text-shadow:none;filter:drop-shadow(0 4px 0 #3a2208) drop-shadow(0 0 20px #ffc83d66)}
-#bigwin .bwX{background:#120b16;border:1.5px solid #FFC83D;color:#FFC83D;font-size:max(15px,1.6vh);margin-top:12px}
-
-/* ---- L4: HUD labels >= 12 screen px everywhere (were 10 px at 390; phone landscape has its own rule above) ---- */
-body:not(.phl) #app #strip label{font-size:max(12px,var(--t12));letter-spacing:.6px}
-
-/* ---- M8: feature trigger card flip: dark scrim (no pale wash) and the caption in the same gold display type as the
-   big-win amount and panel titles ---- */
-#cardFlip{background:radial-gradient(ellipse 65% 60% at 50% 48%,#1d1126d9,#07040bf2 78%)}
-#cardFlip .cfName{background:linear-gradient(180deg,#FFF8E0 0%,#FFE08A 35%,#FFC83D 60%,#C8871A 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
-  text-shadow:none;filter:drop-shadow(0 3px 0 #3a2208) drop-shadow(0 0 16px #ffc83d55)}
-#intro.overlay,#outro.overlay{background:radial-gradient(ellipse 70% 62% at 50% 46%,#1a0f22b8,#07040be8 80%)}
-#intro .tierName,#outro .tierName{--tt-fill:#FFD45A;--tt-ink:#2a1606;--tt-neon:#FFC83D}
-#intro .spins{color:#F2E6C8;letter-spacing:2px}
-#intro .cont{min-height:var(--t48,48px);min-width:160px;font-size:max(15px,var(--t14));padding:12px 44px}
-
-/* ---- M12: high-pay busts no longer end on a hard horizontal cut: a soft fade over the bottom 16 % of the art (mask only,
-   the approved art is untouched); the recess backing (H4) now sits behind them. ---- */
-#cells .sym.H.art>img,#cells .sym.H.art>.symGlow{-webkit-mask:linear-gradient(#000 0,#000 80%,transparent 98%);mask:linear-gradient(#000 0,#000 80%,transparent 98%)}
-
-/* ---- L3: the "Don't show this again" row sits in its own strip below the cards (introPixi reserves it), 48px hit area,
-   gold check (no pink UI) ---- */
 #loader label.spSkip{min-height:max(48px,var(--t48,48px));bottom:max(8px,env(safe-area-inset-bottom));font-size:max(13px,var(--t12));gap:10px;white-space:nowrap}
 #loader label.spSkip input{accent-color:#FFC83D;width:max(20px,calc(var(--t12,12px)*1.6));height:max(20px,calc(var(--t12,12px)*1.6))}
-@media (orientation:landscape){#loader label.spSkip{left:auto;right:max(16px,env(safe-area-inset-right));translate:none}}
-
-/* ---- L5: the replay bar never sits on the ELFHAUS logo: top-left corner in landscape, under the board in portrait
-   (the bet / buy / auto row it replaces is hidden in a replay); one compact line ---- */
-body.replay #replayBar{white-space:nowrap;padding:6px 8px 6px 14px;gap:12px}
-body.replay:not(.portrait) #replayBar{left:16px;transform:none;top:calc(10px + env(safe-area-inset-top))}
-body.replay.portrait #replayBar{transform:translateY(-50%);right:10px;width:auto;max-width:none;justify-content:space-between}
-#replayBar .rpPre{font-style:normal}
-body.replay.portrait #replayBar .rpPre{display:none}
-body.replay.portrait #replayBar>span{overflow:hidden;text-overflow:ellipsis;min-width:0}
-body.replay.portrait #replayBar{gap:8px;padding:6px 6px 6px 12px}
+@media (orientation:landscape){
+#loader label.spSkip{left:auto;right:max(16px,env(safe-area-inset-right));translate:none}
+}
 body.replay.portrait #replayPlay{padding:0 14px!important;min-width:0}
-/* v3.17 big-win motion (original, tuned to an industry-standard pacing reference): the tier hits are WAAPI (ui.ts tierHit); the ghost is
-   the outgoing title crossfading out over the new one; .bwWarm paints each title sprite once before the count (no
-   decode / upload hitch at a tier); #bigwin.out = a short opacity-only dismiss. */
-#bigwin .bwGhost{z-index:2;margin:0 auto}
-#bigwin .bwWarm{position:absolute;left:0;top:0;width:min(60vw,860px);aspect-ratio:3.6;opacity:.01;z-index:0;pointer-events:none}
-#bigwin .bwWarm>div{position:absolute;inset:0;background:center/contain no-repeat}
-#bigwin{transition:opacity .22s ease-out} #bigwin.out{opacity:0}
-#bigwin .bwAmt{will-change:transform}
-
 /* v3.18 intro card carousel: swipes on the intro are ours (no browser pan / pull-to-refresh while the vestibule is up) */
 body.introOn #loader{touch-action:none;user-select:none;-webkit-user-select:none}
-
-/* v3.18b: TAP TO CONTINUE appears only once the TOTAL WIN has landed (subtle fade, same type/colour) */
-#outro .otHint{transition:opacity .35s ease}
-#outro:not(.landed) .otHint,body.tb #outro:not(.landed) .otHint{opacity:0}
-/* v3.18b: AUTO-PLAY BONUS row in the autoplay menu (same row + switch as the others) */
-#abRow{margin:10px 0 8px}
-
-/* ---- v21 (review #193/#195/#243): COMPACT = small desktop popouts (landscape <= 600 px tall, fine pointer) and every
-   replay (stage.ts). 28 px tap floor (--tap), text boost <= 1.6, no panel zoom. Touch phones outside a replay are never
-   compact, so the approved 390x844 / 844x390 phone looks are untouched. ---- */
-body.compact .modal,body.compact #popMenu{zoom:1}
-body.compact #menu .mX{min-width:28px;min-height:28px}
 body.compact #loader label.spSkip{min-height:var(--t48);font-size:calc(var(--t12) * .9)}
-body.compact #intro .cont{min-width:0}
-body.compact #sting .stBox{height:calc(62*var(--vmin))}   /* #sting lives in the scaled stage: stage vmin, not window vmin */
-/* replay bar: one short line, text >= ~10 screen px, the PLAY button on the 28 px floor */
-body.compact.replay #replayBar{font-size:max(13px,calc(10px / var(--s)));padding:calc(3px / var(--s)) calc(4px / var(--s)) calc(3px / var(--s)) calc(8px / var(--s));gap:calc(6px / var(--s));border-radius:calc(8px / var(--s))}
+body.compact #sting .stBox{height:calc(62*var(--vmin))}
+/* #sting lives in the scaled stage: stage vmin{font-size:max(13px,calc(10px / var(--s)));padding:calc(3px / var(--s)) calc(4px / var(--s)) calc(3px / var(--s)) calc(8px / var(--s));gap:calc(6px / var(--s));border-radius:calc(8px / var(--s))}
 body.compact.replay #replayPlay{min-height:var(--t48);font-size:inherit;padding:0 calc(10px / var(--s))!important;border-radius:calc(6px / var(--s))}
-body.compact.replay:not(.portrait) #replayBar .rpPre{display:none}

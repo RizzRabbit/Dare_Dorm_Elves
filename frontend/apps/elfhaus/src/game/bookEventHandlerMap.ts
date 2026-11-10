@@ -55,8 +55,10 @@ async function showScatters(ps: Pos[], ms: number) {
  * hold(800) = 1.6 s at board tempo 2 (turbo 0.8 s); a tap anywhere ends it early (game.ts pointerdown -> skipHolds). */
 async function fsMoreCard(added: number) {
 	const O = $('#fsMore'), card = O.querySelector<HTMLElement>('.card')!, big = O.querySelector<HTMLElement>('.fmBig')!;
-	titleType(big, added > 0 ? `+${added}` : `MAX ${MAX_FS}`); O.dataset.max = added > 0 ? '' : '1';
-	titleType(O.querySelector<HTMLElement>('.fmSub'), 'FREE SPINS'); ninePanel(card, CARD);   // the card's words in the title lettering (sprite glyphs)
+	if (big) big.textContent = added > 0 ? `+${added}` : `MAX ${MAX_FS}`;
+	const fmSub = O.querySelector<HTMLElement>('.fmSub'); if (fmSub) fmSub.textContent = 'FREE SPINS';
+	O.dataset.max = added > 0 ? '' : '1';
+	if (!uiPixiOn()) { titleType(big, added > 0 ? `+${added}` : `MAX ${MAX_FS}`); titleType(fmSub, 'FREE SPINS'); ninePanel(card, CARD); }
 	const calm = !matchMedia('(prefers-reduced-motion: reduce)').matches, f = S.turbo ? 0.5 : 1;
 	const from = { opacity: 0, transform: calm ? 'scale(.92)' : 'none' }, to = { opacity: 1, transform: 'none' };
 	O.classList.remove('hidden');
@@ -284,15 +286,20 @@ export const bookEventHandlerMap: Handlers = {
 		await showScatters(ev.scatters, 1100);
 		lockCarried(ev.carried);
 		const I = $('#intro');
-		(I.querySelector('.tierName') as HTMLElement).innerHTML = titleHTML(ev.tier, TL(ev.tier) + '!');
-		// the spin count is the card's hero line, in the title lettering (sprite glyphs; the text stays for screen readers)
-		titleType(I.querySelector<HTMLElement>('.spins'), `${ev.totalFs} FREE SPINS`); titleType(I.querySelector<HTMLElement>('.cont'), 'START');
-		ninePanel(I.querySelector<HTMLElement>('.card'), CARD); ninePanel(I.querySelector<HTMLElement>('.cont'), BTN);
-		// The tier's elves sit on the cream card as transparent cutouts (existing maxwin sprites).
-		// No tiled plate and no gold window frame behind them.
-		{ let wv = I.querySelector<HTMLElement>('.card .tArtWin');
-		  if (!wv) { wv = document.createElement('div'); wv.className = 'tArtWin'; I.querySelector('.card .spins')!.before(wv); }
-		  wv.innerHTML = elvesHTML(ev.tier === 'hidden' ? 'hidden' : ev.tier); }
+		const tierEl = I.querySelector('.tierName') as HTMLElement;
+		const spinsEl = I.querySelector('.spins') as HTMLElement;
+		const contEl = I.querySelector('.cont') as HTMLElement;
+		tierEl.textContent = TL(ev.tier) + '!';
+		spinsEl.textContent = `${ev.totalFs} FREE SPINS`;
+		contEl.textContent = 'START';
+		if (!uiPixiOn()) {
+			tierEl.innerHTML = titleHTML(ev.tier, TL(ev.tier) + '!');
+			titleType(spinsEl, `${ev.totalFs} FREE SPINS`); titleType(contEl, 'START');
+			ninePanel(I.querySelector<HTMLElement>('.card'), CARD); ninePanel(contEl, BTN);
+			{ let wv = I.querySelector<HTMLElement>('.card .tArtWin');
+			  if (!wv) { wv = document.createElement('div'); wv.className = 'tArtWin'; spinsEl.before(wv); }
+			  wv.innerHTML = elvesHTML(ev.tier === 'hidden' ? 'hidden' : ev.tier); }
+		}
 		I.dataset.tier = ev.tier; I.classList.remove('hidden');
 		music('bonus');   // no-op when the trigger already switched it
 		const fx = I.querySelector<HTMLElement>('.bwFx'); featOpen(fx); featPop(I.querySelector('.tierName'));
@@ -347,7 +354,9 @@ export const bookEventHandlerMap: Handlers = {
 		// outro: TOTAL WIN counts up over a burst + confetti; tap = jump to the amount, tap again = close
 		const O = $('#outro'), fx = O.querySelector<HTMLElement>('.bwFx'), amt = O.querySelector<HTMLElement>('.otAmt')!;
 		const total = Math.min(ev.amount / 100, MAX_WIN_X) * bet();
-		titleTypeMirror(amt); titleType(O.querySelector<HTMLElement>('.tierName'), 'TOTAL WIN'); titleType(O.querySelector<HTMLElement>('.otHint'), 'TAP TO CONTINUE'); ninePanel(O.querySelector<HTMLElement>('.card'), CARD);
+		const tn = O.querySelector<HTMLElement>('.tierName'); if (tn) tn.textContent = 'TOTAL WIN';
+		const hint = O.querySelector<HTMLElement>('.otHint'); if (hint) hint.textContent = 'TAP TO CONTINUE';
+		if (!uiPixiOn()) { titleTypeMirror(amt); titleType(tn, 'TOTAL WIN'); titleType(hint, 'TAP TO CONTINUE'); ninePanel(O.querySelector<HTMLElement>('.card'), CARD); }
 		setAmount(amt, 0); O.classList.remove('hidden'); featOpen(fx); musicSting('bigwin'); duck(true); const cu = loop('bigwin_countup_loop');   // no star glints on the total-win screen (round 6)
 		// v3.18b (James): the screen waits for a tap once landed, turbo on or off and in autoplay too (autoplay keeps its count and
 		// resumes right after the tap). Only autoplay with AUTO-PLAY BONUS on closes it by itself after the short hold.

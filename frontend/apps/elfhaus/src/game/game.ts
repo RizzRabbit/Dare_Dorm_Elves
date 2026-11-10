@@ -122,6 +122,8 @@ function setStrip() {
 	if (S.replay) $('label[for="balance"]').textContent = 'REPLAY';
 	$('#bet').textContent = money(bet() * (S.replay ? replayCost : modeCost(spinMode())));
 	$('#betLabel').textContent = t('betLabel');
+	const sr = Document.prototype.getElementById.call(document, 'srHud') as HTMLElement | null;
+	if (sr) sr.textContent = `${$('label[for="balance"]').textContent || 'BALANCE'} ${$('#balance').textContent}. ${$('#betLabel').textContent} ${$('#bet').textContent}. WIN ${$('#win').textContent}.`;
 	if (isOpen('#buyMenu')) paintBuy();
 	if (uiPixiOn()) layoutHud();
 }
@@ -147,6 +149,11 @@ function setBusy(b: boolean) {
 	['#buyBtn', '#betUp', '#betDown', '#armTag', '#bmUp', '#bmDown'].forEach((s) => (($(s) as HTMLButtonElement).disabled = b || !sessionReady || S.replay));
 	($('#autoBtn') as HTMLButtonElement).disabled = S.replay || !sessionReady; // v3.16 (#171); stays live mid-round so it can stop autoplay
 	($('#menuBtn') as HTMLButtonElement).disabled = b; if (b) closePop();
+	// #171: hide betting controls in a replay (Pixi HUD reads style.visibility; no CSS body.replay rule).
+	for (const id of ['#autoBtn', '#buyBtn', '#betUp', '#betDown', '#armTag']) {
+		const el = $(id) as HTMLElement;
+		el.style.visibility = S.replay ? 'hidden' : (id === '#autoBtn' && S.jur.disabledAutoplay) ? 'hidden' : '';
+	}
 	if (uiPixiOn()) layoutHud();
 }
 // ---------- autoplay (Stake-style panel) ----------

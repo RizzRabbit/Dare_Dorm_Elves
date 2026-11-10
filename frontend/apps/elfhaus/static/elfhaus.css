@@ -1,5 +1,4 @@
-/* Elfhaus UI — painted matte reel frame + sharp serif wordmark & minimal dark-glass controls.
-   NO glow, NO neon, NO gloss, NO bubbly shapes. Fonts bundled locally (OFL): Cinzel (display), Nunito (UI/numbers). */
+/* Elfhaus shell + boot CSS. Game chrome (board, HUD, overlays) is drawn in Pixi. */
 @font-face{font-family:"Cinzel";src:url(fonts/Cinzel-VF.woff2) format("woff2");font-weight:400 900;font-display:block}
 @font-face{font-family:"Nunito";src:url(fonts/Nunito-VF.woff2) format("woff2");font-weight:200 1000;font-display:block}
 :root{ --glass:rgba(20,18,26,.70); --glass2:rgba(20,18,26,.82); --hair:rgba(230,224,245,.22); --gold:#B9A2E0; --steel:#DCE2E8;
@@ -23,273 +22,33 @@ html,body{margin:0;height:100%;overflow:hidden;background:#B9B5C6;color:var(--in
 body.inBonus #bg:not(.fs){filter:saturate(1.1) hue-rotate(18deg) brightness(.92)}
 #app{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0)}
 .hidden{display:none!important}
-.meter span,.m span,.bcard .price,.bwAmt,#stepToast{font-variant-numeric:tabular-nums}
-/* count-ups only change textContent; a min-width box keeps the strip from reflowing while digits roll */
-#win{display:inline-block;min-width:7.5ch;contain:layout paint} .m.r #win{text-align:right}
-.bwAmt{min-width:8ch;display:inline-block}
-/* shared outline+bevel for serif display text (fill gradient clipped to text; outline via stacked hard drop-shadows) */
-
-/* ---------- generic buttons (modals) ---------- */
-button{font:inherit;font-family:"Nunito",sans-serif;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#fff;cursor:pointer;
-  background:#26222F;border:1px solid var(--hair);border-radius:6px;padding:8px 16px}
-button:hover{background:#35303F}
-button:disabled{opacity:.45;cursor:default}
-button.ghost{background:transparent}
-button.small{padding:3px 10px;font-size:12px}
-
 /* ---------- header / wordmark ---------- */
 #top{position:absolute;top:0;left:0;right:0;height:120px;pointer-events:none;z-index:5}
-#logo{position:absolute;left:34px;top:14px;width:230px;height:170px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:.86}
-#logo .crest{position:absolute;left:50%;top:50%;width:200px;height:200px;transform:translate(-50%,-50%);opacity:.95}
-#logo span{position:relative;font-family:"Cinzel";font-weight:900;letter-spacing:2px}
-#logo .l1{font-size:66px;background-image:linear-gradient(#FFFFFF,#E4E9EE 42%,#9AA4AF 52%,#D5DBE1 78%,#F2F5F7);
-  -webkit-background-clip:text;background-clip:text;color:transparent;
-  filter:drop-shadow(2px 0 0 #1E1A26) drop-shadow(-2px 0 0 #1E1A26) drop-shadow(0 2px 0 #1E1A26) drop-shadow(0 -2px 0 #1E1A26) drop-shadow(0 4px 0 #120F18) drop-shadow(0 8px 8px #0008)}
-#logo .l2{font-size:50px;margin-top:2px;background-image:linear-gradient(#EFE4FF,#C8AEEB 42%,#7E5BB0 54%,#B898E0 80%,#E4D6F8);
-  -webkit-background-clip:text;background-clip:text;color:transparent;
-  filter:drop-shadow(2px 0 0 #1E1A26) drop-shadow(-2px 0 0 #1E1A26) drop-shadow(0 2px 0 #1E1A26) drop-shadow(0 -2px 0 #1E1A26) drop-shadow(0 4px 0 #120F18) drop-shadow(0 8px 8px #0008)}
-
 /* ---------- reel frame: painted slate-grey frame around a cool-grey board ---------- */
 #stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;position:relative;min-height:0}
-#frame{position:relative;padding:14px;border-radius:22px 18px 24px 19px / 19px 24px 18px 22px;border:3px solid var(--ink);
-  box-shadow:0 6px 0 #2A243377, 0 18px 30px -8px #2A243388}
-/* the bezel is painted on a pseudo-element whose centre (the reel window) is masked out, so the room shows through
-   the translucent reel area; same paint and inner shadows as before. Static mask: no per-frame cost. */
-#frame::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;padding:inherit;pointer-events:none;
-  background:var(--paint),repeating-linear-gradient(92deg,#0000 0 22px,#2A243312 22px 24px,#0000 24px 61px),linear-gradient(#77728A,var(--slate) 45%,var(--slate2));
-  box-shadow:inset 0 3px 0 #ffffff40, inset 0 -5px 0 #2A243344, inset 0 0 22px #2A243355;
-  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
-#frame>#board{z-index:0}
-#board{position:relative;width:calc(var(--cell)*5 + var(--gap)*4);height:calc(var(--cell)*4 + var(--gap)*3);border-radius:10px 8px 11px 9px;overflow:hidden;
-  border:2px solid var(--ink);box-shadow:inset 0 4px 12px #2A24334d, inset 0 -3px 8px #2A24332e;
-  background:linear-gradient(#2A24334d,#2A243366)}
-/* translucent reel area (~25-36% dark plum) so the room shows through; no live backdrop blur (cost) */
-
-/* ---------- symbol tiles ---------- */
-.cell{position:absolute;width:var(--cell);height:var(--cell);transition:opacity .2s}
-/* gapless grid: every position is its own painted tile (respins independently) but tiles butt edge-to-edge,
-   sharing a thin painted seam (1px inset each side = 2px shared line). Square corners, no gutters, no glow. */
-.sym{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;overflow:hidden;font-family:"Cinzel";font-weight:800;
-  background:var(--paint),linear-gradient(#F5F4F8,var(--paper) 60%,var(--paper2));
-  box-shadow:inset 0 0 0 1px #2A24338c, inset 0 3px 0 #ffffff55, inset 0 -4px 0 #2A24331f, inset 0 0 14px #2A243324}
-.sym img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.sym::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:var(--grain);opacity:.35}
-.sym .id{font-family:"Nunito";font-weight:800;font-size:calc(var(--cell)*.09);opacity:.65;position:relative;z-index:2}
-.sym .nm{font-size:calc(var(--cell)*.17);position:relative;line-height:1.02;z-index:2}
-.sym .nm{-webkit-text-stroke:3px var(--cream);paint-order:stroke fill}
-.sym.H .nm{font-size:calc(var(--cell)*.22)}
-.sym.H2{background:var(--paint),linear-gradient(#D3DCE6,#B7C4D3 60%,#9AAABE)} .sym.H2 .nm{color:#3E5878}
-.sym.H3{background:var(--paint),linear-gradient(#E2D7EE,#CDBCE0 60%,#B39FCB)} .sym.H3 .nm{color:#6E4F98}
-.sym.H4{background:var(--paint),linear-gradient(#EED6E2,#DDB7CB 60%,#C796B0)} .sym.H4 .nm{color:#8E3F66}
-.sym img{z-index:0} .sym.W::after,.sym.H1::after,.sym.H2::after,.sym.H3::after,.sym.H4::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;box-shadow:inset 0 0 0 1px #2A24338c, inset 0 0 12px #2A243333}
-.sym.L .nm{font-size:calc(var(--cell)*.15)}
-.sym.L1 .nm{color:var(--rose)} .sym.L2 .nm{color:#B5566C} .sym.L3 .nm{color:var(--denim)} .sym.L4 .nm{color:#B23A2E} .sym.L5 .nm{color:#5C7F4C}
-.sym .plate{position:absolute;bottom:5px;left:50%;transform:translateX(-50%);z-index:2;font-family:"Cinzel";font-weight:800;background:var(--grain),linear-gradient(#E8E2F4,var(--plate));
-  color:var(--ink);font-size:calc(var(--cell)*.1);padding:0 8px;border:2px solid var(--ink);border-radius:3px;letter-spacing:1px}
-/* wild: same painted tile, NO glow. Subtle idle breathe only. */
-.sym.W img{transform-origin:50% 60%}
-.badge{position:absolute;right:3px;bottom:3px;z-index:3;min-width:calc(var(--cell)*.3);max-width:calc(var(--cell)*.42);padding:0 3px;text-align:center;font-family:"Nunito";font-weight:900;font-size:max(10px,calc(var(--cell)*.13));line-height:1.25;white-space:nowrap;
-  color:var(--cream);background:var(--grain),linear-gradient(#D45A74,var(--rose) 60%,var(--rose2));border:2px solid var(--ink);border-radius:4px;box-shadow:0 1px 0 #2A243377}
-.cell.locked .plate{display:none}
-.sym.W .plate{bottom:3px;left:4px;transform:none;font-size:max(8px,calc(var(--cell)*.09));padding:0 4px}
-.cell.win{z-index:2} .cell.win .sym{transform:scale(1.08);transition:transform .18s cubic-bezier(.3,1.5,.5,1)}
-.cell.dim{opacity:.62;transition:opacity .15s}
-.cell.out{opacity:0}
-.cell.drop .sym{animation:drop .32s cubic-bezier(.3,1.3,.5,1) both}
-.grow{animation:grow .5s ease-out}
-.plus{position:absolute;right:8px;top:-4px;z-index:5;font-family:"Cinzel";font-weight:800;color:var(--rose);font-size:calc(var(--cell)*.18);
-  -webkit-text-stroke:4px var(--cream);paint-order:stroke fill;animation:floatUp .8s ease-out forwards}
-@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
-@keyframes drop{from{transform:translateY(-110%);opacity:0}to{transform:none;opacity:1}}
-@keyframes grow{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
-@keyframes floatUp{from{transform:translateY(0);opacity:1}to{transform:translateY(-40px);opacity:0}}
-@keyframes settle{0%{transform:scaleY(.3);opacity:0}70%{transform:scaleY(1.02);opacity:1}100%{transform:none}}
-
-/* ---------- full-reel / merged wild overlays (no glow) ---------- */
-.ov{position:absolute;top:0;height:100%;z-index:2;overflow:hidden;transform-origin:50% 0;animation:settle .5s ease-out;background:var(--paper);
-  box-shadow:inset 2px 0 0 #2A243355, inset -2px 0 0 #2A243355}
-.ov .plate{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-family:"Cinzel";font-weight:800;background:var(--grain),linear-gradient(#E8E2F4,var(--plate));color:var(--ink);
-  font-size:calc(var(--cell)*.15);padding:1px 16px;border:2px solid var(--ink);border-radius:3px;letter-spacing:1px;white-space:nowrap}
-.ov .badge{left:50%;right:auto;top:auto;bottom:calc(var(--cell)*.3 + 16px);transform:translateX(-50%);font-size:calc(var(--cell)*.18);white-space:nowrap;padding:2px 14px}
-.ov .tag{position:absolute;top:8px;left:8px;z-index:2;background:#2A2433cc;color:var(--cream);padding:1px 6px;border-radius:4px;font-size:calc(var(--cell)*.075);font-weight:800}
-
-/* ---------- lines / toast / banner / fs bar: dark glass, thin border, serif ---------- */
-#lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:4}
-/* line-amount label near the end of the racing win line (small, no box) */
-.wlAmt{position:absolute;z-index:5;transform:translate(-50%,0);pointer-events:none;font:800 13px "Nunito";color:#FFF2F8;letter-spacing:.3px;
-  font-variant-numeric:tabular-nums;white-space:nowrap;text-shadow:0 0 6px #C42A78,0 1px 0 #2A2433;animation:wlIn .5s cubic-bezier(.2,.9,.3,1) forwards}
-@keyframes wlIn{from{opacity:0;transform:translate(-50%,-10%) scale(.7)}to{opacity:1;transform:translate(-50%,-85%) scale(1)}}
-body.portrait .wlAmt{font-size:11px}
-#stepToast,#banner,#fsBar,.modal,#intro .card{background:var(--glass2);border:1px solid var(--hair);color:#F2F0F7;box-shadow:0 10px 24px -8px #0009}
-#stepToast{position:relative;margin-top:8px;z-index:6;font-family:"Nunito";font-weight:900;color:#fff;min-height:38px;
-  font-size:22px;padding:3px 22px 4px;border-radius:8px;white-space:nowrap}
-#stepToast.hidden{display:block!important;visibility:hidden}
-#stepToast small{display:block;font-weight:700;font-size:.5em;color:#DCD8E6;text-align:center;letter-spacing:.5px}
-#banner{position:absolute;top:calc(50% - var(--cell)*2 - 62px);left:50%;transform:translateX(-50%);z-index:8;padding:6px 24px;border-radius:6px;
-  font-family:"Cinzel";font-weight:800;font-size:20px;letter-spacing:1.5px;white-space:nowrap}
-body:not(.portrait) #fsBar:not(.hidden) ~ #banner{top:calc(50% - var(--cell)*2 - 6px)}
-#fsBar{display:flex;gap:18px;align-items:center;margin-bottom:10px;border-radius:6px;padding:4px 22px;font-family:"Cinzel";font-weight:800;font-size:20px;letter-spacing:1px}
-#fsTier{color:var(--gold)} #fsCap{font-family:"Nunito";font-weight:800;font-size:13px;opacity:.65}
-
 /* ---------- controls: minimal dark bar ---------- */
 #hud{width:100%;max-width:820px;padding:0 16px 14px;position:relative}
 #hud svg{width:30px;height:30px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;display:block}
 #hud svg .fill{fill:#fff;stroke:none}
 #hud svg text{font:900 7.5px "Nunito";fill:#fff;stroke:none}
-.ico{padding:0;background:none;border:none;display:flex;align-items:center;justify-content:center;border-radius:50%}
-.ico:hover{background:none}
-#ctrlTop{display:flex;justify-content:space-between;align-items:flex-end;padding:0 8px;margin-bottom:8px}
-#ctrlTop .side{display:flex;gap:10px}
-#ctrlTop .ico{width:58px;height:58px;background:#1A1722e6;border:2px solid #E4E1EC}
-#ctrlTop .ico svg{width:28px;height:28px}
-#ctrlTop .ico.toggle.on{border-color:var(--gold)} #ctrlTop .ico.toggle.on svg{stroke:var(--gold)}
-#anteBtn{width:46px!important;height:46px!important;align-self:center} #anteBtn svg{width:22px!important;height:22px!important}
-#buyBtn.emblem{width:64px;height:64px;border-color:var(--gold)}
-#buyBtn.emblem svg{width:40px;height:40px}
-#buyBtn .g{stroke:var(--gold);stroke-width:2.4} #buyBtn .gf{fill:var(--gold);stroke:none}
-#bar{position:relative;height:66px;background:var(--glass);border:1px solid var(--hair);border-radius:10px;
-  display:grid;grid-template-columns:1fr 64px 112px 64px 1fr;align-items:center;padding:0 18px}
-#menuBtn{justify-self:start;width:52px;height:52px} #autoBtn{justify-self:end;width:52px;height:52px;position:relative}
-#betDown,#betUp{width:56px;height:56px;justify-self:center} #betDown svg,#betUp svg{width:34px;height:34px}
-#autoBtn .aStop{display:none} #autoBtn.on .aStop{display:inline} #autoBtn.on .aPlay{display:none} /* v20 */ #autoBtn.on svg{stroke:var(--gold)} #autoBtn.on svg .fill,#autoBtn.on svg text{fill:var(--gold)}
-#autoBtn[data-n]:not([data-n=""])::after{content:attr(data-n);position:absolute;right:-2px;top:2px;font:900 11px "Nunito";color:#1A1722;background:var(--gold);border-radius:8px;padding:0 4px}
-#spinBtn{justify-self:center;width:104px;height:104px;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;
-  background:#17141E;border:3px solid #46404F;box-shadow:0 0 0 2px #0008,0 8px 16px -6px #000a}
-#spinBtn:hover{background:#221E2B}
-#spinBtn svg{width:60px;height:60px;stroke-width:5.2}
-#spinBtn.busy svg{animation:spinIco 1s linear infinite}
-@keyframes spinIco{to{transform:rotate(360deg)}}
-#strip{margin-top:26px;display:grid;grid-template-columns:1fr 1fr 1fr;background:var(--glass);border:1px solid var(--hair);border-radius:8px;padding:8px 22px 9px;color:#fff}
-#strip label{display:block;font-size:13px;font-weight:700;letter-spacing:.8px;color:#E8E6EF}
-#strip span{font-size:21px;font-weight:900;letter-spacing:.3px}
-#strip .c{text-align:center} #strip .r{text-align:right}
-
-/* ---------- overlays / cards / modals ---------- */
-.overlay{position:fixed;inset:0;background:#110F1699;display:flex;align-items:center;justify-content:center;z-index:50}
-#intro .card{text-align:center;padding:30px 56px;border-radius:10px;max-width:calc(90*var(--vw));animation:settle .45s ease-out}
-.gold{background-image:linear-gradient(#FFFFFF,#DCD3F0 42%,#8E7BB5 54%,#CFC3EA 80%,#F2EEFA)}
-.tierName{font-family:"Cinzel";font-weight:900;font-size:62px;letter-spacing:2px;background-image:linear-gradient(#FFFFFF,#DCD3F0 42%,#8E7BB5 54%,#CFC3EA 80%,#F2EEFA);
-  -webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(2px 0 0 #1E1A26) drop-shadow(-2px 0 0 #1E1A26) drop-shadow(0 2px 0 #1E1A26) drop-shadow(0 -2px 0 #1E1A26) drop-shadow(0 4px 0 #120F18)}
-.spins{font-family:"Cinzel";font-weight:800;font-size:30px;margin:6px 0;color:#fff;letter-spacing:1px}
-.carried{font-size:15px;color:#DCD8E6;margin:8px 0}
-.note{font-size:14px;opacity:.7;margin-bottom:16px}
-.cont{padding:12px 28px;font-size:15px}
-.bw{position:relative;text-align:center;animation:settle .45s ease-out}
-/* big-win layers, back to front: .bwElves (Vi/Roxy/Coco group, from 1000x; bigwinElves.ts) < .bwFx (burst + confetti) < amount < title */
-#bigwin{cursor:pointer} .bwFx{position:absolute;inset:0;pointer-events:none;overflow:hidden}
-.bwTier{position:relative;z-index:3;opacity:0;transform:scale(.9);will-change:transform,opacity}
-.bwTier.on{opacity:1;transform:none;transition:opacity .12s,transform .25s cubic-bezier(.3,1.6,.5,1)}
-.bwTier.pop{animation:tierPop .42s ease-out}
-/* paced2: title scale-pop with overshoot + a glow burst behind it (code only) */
-@keyframes tierPop{0%{transform:scale(.55);opacity:0}45%{transform:scale(1.22);opacity:1}70%{transform:scale(.95)}85%{transform:scale(1.03)}100%{transform:none;opacity:1}}
-.bwGlow{position:absolute;left:50%;width:min(calc(78*var(--vw)),1000px);z-index:2;pointer-events:none;opacity:0;border-radius:50%;
-  background:radial-gradient(closest-side,color-mix(in srgb,var(--tt-neon,#FFD27A) 75%,#fff 25%),color-mix(in srgb,var(--tt-neon,#FFD27A) 45%,transparent) 45%,transparent 72%)}
-.bwGlow.burst{animation:tierGlow .7s ease-out}
-@keyframes tierGlow{0%{opacity:0;transform:translateX(-50%) scale(.4)}25%{opacity:.95;transform:translateX(-50%) scale(1.05)}100%{opacity:0;transform:translateX(-50%) scale(1.35)}}
-.bwAmt,.bwX{position:relative;z-index:2}
-
-.bwTier{font-family:"Cinzel";font-weight:900;font-size:96px;letter-spacing:3px;background-image:linear-gradient(#FFFFFF,#DCD3F0 42%,#8E7BB5 54%,#CFC3EA 80%,#F2EEFA);
-  -webkit-background-clip:text;background-clip:text;color:transparent;
-  filter:drop-shadow(3px 0 0 #1E1A26) drop-shadow(-3px 0 0 #1E1A26) drop-shadow(0 3px 0 #1E1A26) drop-shadow(0 -3px 0 #1E1A26) drop-shadow(0 6px 0 #120F18) drop-shadow(0 10px 12px #0009)}
-.bwAmt{font-family:"Nunito";font-weight:900;font-size:62px;color:#fff;
-  filter:drop-shadow(2px 0 0 #1E1A26) drop-shadow(-2px 0 0 #1E1A26) drop-shadow(0 2px 0 #1E1A26) drop-shadow(0 -2px 0 #1E1A26) drop-shadow(0 4px 0 #120F18)}
-.bwX{display:inline-block;margin-top:8px;font-size:16px;font-weight:800;letter-spacing:1px;background:var(--glass2);color:#fff;border:1px solid var(--hair);border-radius:5px;padding:3px 12px}
-.modal{border-radius:10px;padding:20px 26px;max-width:min(1100px,calc(94*var(--vw)));max-height:calc(90*var(--vh));overflow:hidden;position:relative;display:flex;flex-direction:column}
-.modal h2{margin:0 0 16px;font-family:"Cinzel";font-weight:900;font-size:30px;letter-spacing:2px;color:var(--gold)}
-.modal h2 small{font-family:"Nunito";font-weight:800;font-size:11px;letter-spacing:1px;color:#ECEAF3;border:1px solid var(--hair);padding:2px 8px;border-radius:4px;margin-left:10px;vertical-align:middle}
-#buyCards{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
-.bcard{background:#ffffff0d;border:1px solid var(--hair);border-radius:8px;padding:14px 12px;text-align:center;display:flex;flex-direction:column;gap:6px}
-.bcard h3{margin:0;font-family:"Cinzel";font-weight:800;color:#fff;font-size:17px;letter-spacing:1px}
-.bcard p{margin:0;font-size:13px;font-weight:600;opacity:.8;flex:1;line-height:1.35}
-.bcard .price{font-weight:900;font-size:24px;color:var(--gold)}
-.bcard .mult{font-size:12px;opacity:.6}
-.bcard button{padding:8px;background:var(--gold);color:#1A1722;border-color:transparent} .bcard button:hover{background:#CBB8EE}
-.rules{font-size:14px;font-weight:600;line-height:1.45;max-width:min(900px,calc(94*var(--vw)))} .rules table{border-collapse:collapse} .rules td,.rules th{border:1px solid #ffffff2a;padding:2px 8px}
-
 /* ---------- mobile portrait ---------- */
 body.portrait #top{width:100%;height:auto;position:relative;padding-top:6px;text-align:center}
-body.portrait #logo{position:relative;left:auto;top:auto;margin:0 auto;width:180px;height:104px}
-body.portrait #logo .crest{width:120px;height:120px}
-body.portrait #logo .l1{font-size:42px} body.portrait #logo .l2{font-size:32px}
-body.portrait #frame{padding:7px;border-width:2px}
-body.portrait #board{background:linear-gradient(#2A243366,#2A243375)} /* the portrait room is busier behind the board */
+/* the portrait room is busier behind the board */
 body.portrait #hud{padding:0 6px 8px}
-body.portrait #ctrlTop{padding:0 4px;margin-bottom:6px}
-body.portrait #ctrlTop .ico{width:48px;height:48px} body.portrait #ctrlTop .ico svg{width:24px;height:24px}
-body.portrait #anteBtn{width:40px!important;height:40px!important}
-body.portrait #buyBtn.emblem{width:54px;height:54px} body.portrait #buyBtn.emblem svg{width:34px;height:34px}
-body.portrait #bar{height:58px;grid-template-columns:1fr 50px 92px 50px 1fr;padding:0 10px}
-body.portrait #spinBtn{width:86px;height:86px} body.portrait #spinBtn svg{width:50px;height:50px}
-body.portrait #strip{padding:6px 12px 7px;margin-top:22px} body.portrait #strip label{font-size:11px} body.portrait #strip span{font-size:16px}
-body.portrait #fsBar{font-size:14px;gap:10px;padding:3px 14px}
-body.portrait #banner{font-size:13px;padding:4px 12px;white-space:normal;width:max-content;max-width:calc(94*var(--vw));text-align:center}
-body.portrait .tierName{font-size:38px} body.portrait .spins{font-size:22px} body.portrait #intro .card{padding:22px 20px}
-body.portrait .bwTier{font-size:min(52px,calc(7.8*var(--vw)));letter-spacing:1px;white-space:nowrap} body.portrait .bwAmt{font-size:38px} /* LEGENDARY WIN on one line */
-body.portrait #buyCards{grid-template-columns:1fr 1fr} body.portrait .bcard:last-child{grid-column:span 2}
-
-/* ---------- production additions ---------- */
-.ph{position:absolute;top:3px;right:3px;z-index:3;font:900 max(7px,calc(var(--cell)*.06)) "Nunito";letter-spacing:.5px;background:#2A2433bb;color:#F1F0F5;padding:0 3px;border-radius:3px;text-transform:uppercase}
-.sym.L img,.sym.H img{object-fit:cover}
-/* final art is cut to its round frame (cut_symbols.py): no painted square tile, grain or inset frame behind it */
-.sym.art{background:none;box-shadow:none} .sym.art::before,.sym.art::after{display:none}
-.cell.win .sym.art{border-radius:50%;background:none}
-#logo.art{width:260px;height:130px} #logo.art img{max-width:100%;max-height:100%;object-fit:contain}
-#frame.art{background-size:100% 100%}
-#intro .card.art{background-size:cover;background-position:center;min-width:min(560px,calc(90*var(--vw)))}
-.ico:disabled{opacity:.35}
-#strip span{white-space:nowrap}
-/* v3.16 (#171): no betting controls in a replay */
-body.replay #autoBtn,body.replay #buyBtn,body.replay #betUp,body.replay #betDown,body.replay #armTag{visibility:hidden;pointer-events:none}
-#replayBar{width:max-content;max-width:calc(100*var(--vw) - 16px);text-align:center;position:fixed;top:calc(8px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:40;display:flex;gap:10px;align-items:center;justify-content:center;padding:10px;background:var(--glass);border:1px solid var(--hair);border-radius:10px;color:#fff}
-.modal p{margin:6px 0}
-.bcard .rtp{font-size:12px;opacity:.75}
-.bcard.off{opacity:.5}
-#msg{z-index:70} #msg .modal{max-width:min(520px,calc(92*var(--vw)));text-align:center}
-#msg h2{color:var(--gold)} #intro .card{position:relative} .rules .ri{width:28px;height:28px;object-fit:cover;vertical-align:middle;margin-right:6px;border-radius:4px} .rules .lines{font-size:12px;line-height:1.7} .rules .ln{white-space:nowrap;margin-right:8px} .rules .disc{opacity:.8}
-.rules h3{font-family:"Cinzel";color:var(--gold);margin:14px 0 4px}
-.rules table{margin:6px 0;font-size:13px}
-.mysteryOdds{font-size:12px;opacity:.85}
-body.portrait #anteBtn{width:44px!important;height:44px!important}
-body.portrait #stepToast{font-size:17px;min-height:32px;margin-top:6px}
-body.portrait #buyCards{gap:8px} body.portrait .bcard{padding:8px} body.portrait .bcard p{font-size:11px} body.portrait .modal{padding:14px 12px}
-body.portrait .modal h2{font-size:22px;margin-bottom:10px}
-body.short #top{display:none;height:0} body.short #logo{display:none} body.short #ctrlTop{margin-bottom:2px} body.short #strip{margin-top:4px;padding:2px 10px} body.short #strip span{font-size:13px} body.short #strip label{font-size:9px}
-body.short #bar{height:44px} body.short #spinBtn{width:56px;height:56px} body.short #spinBtn svg{width:32px;height:32px} body.short #ctrlTop .ico{width:44px;height:44px}
-body.short #stepToast{font-size:13px;min-height:22px;margin-top:2px} body.short #hud{padding-bottom:4px}
+body.portrait .spins{font-size:22px}
+body.short #top{display:none;height:0}
+body.short #hud{padding-bottom:4px}
 body:not(.portrait).short #hud{max-width:none}
 
-/* ---------- final wild art: WF = 1 reel x 4 rows, WMn = n reels x 4 rows, drawn edge to edge ---------- */
-.ov.art{background:#2A2433}
-.ov .wart{position:absolute;inset:0}
-.ov .wart img{display:block;width:100%;height:100%;object-fit:cover;pointer-events:none}
-.ov.art::after{content:"";position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 0 1px #2A24338c, inset 2px 0 0 #2A243355, inset -2px 0 0 #2A243355}
-.ov .badge{max-width:none;transform:none;translate:-50% 0;bottom:6px;font-size:max(11px,calc(var(--cell)*.12));padding:0 8px;z-index:3}
-
-/* ---------- full-body Roxy (animated sprite, roxy.ts) between the room and the game UI ---------- */
-/* resub: the room layer (scene/scene.ts, Pixi): lodge + snow + rig Roxy on ONE canvas sized to the design stage */
 #scene{position:fixed;left:0;top:0;pointer-events:none;display:block}
-/* portrait: Roxy stands behind the game, so the reel plate (recess wall + board tint) is semi-transparent there */
-body.portrait.hasRoxy #alcoveRecess{opacity:.6} body.portrait.hasRoxy #board{background:transparent}
-body.alcove.portrait.hasRoxy #frame{background:rgba(18,12,24,.75)} /* one dim layer under the board: dims her behind the reels and on the back-wall strip up to the crown (no seam); strips/cells/lines draw above */
+strips/cells/lines draw above */
 
 /* ---- In-game title: ELFHAUS wordmark centered above the reel board ---- */
 #top{position:relative;top:auto;left:auto;right:auto;width:100%;height:auto;display:flex;justify-content:center;padding-top:6px;pointer-events:none;z-index:5}
-#logo.art,body.portrait #logo.art{position:relative;left:auto;right:auto;top:auto;margin:0 auto;width:auto;height:clamp(46px,calc(10.5*var(--vh)),118px);max-width:min(560px,calc(70*var(--vw)))}
-#logo.art img{display:block;height:100%;width:auto;max-width:100%;object-fit:contain}
-body.portrait #logo.art{height:clamp(40px,calc(8*var(--vh)),92px);max-width:calc(78*var(--vw))}
 
-/* ---- Loading screen (matte: greys/purples, no glow) ---- */
 #loader{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(8px,calc(2*var(--vh)),22px);
   background:#1C1922;overflow:hidden;opacity:1;transition:opacity .6s ease;user-select:none;-webkit-user-select:none;padding:calc(3*var(--vh)) calc(4*var(--vw)) calc(6*var(--vh));box-sizing:border-box}
 #loader.out{opacity:0;pointer-events:none}
-#lLogo{position:relative;display:block;width:min(calc(64*var(--vw)),820px);max-height:calc(46*var(--vh));object-fit:contain;pointer-events:none}
-#lLogo.txt{font:900 72px "Cinzel";color:#DCD3F0;text-align:center}
-#lCards{position:relative;width:100%;overflow:hidden;border-radius:8px;touch-action:pan-y;cursor:grab}
-#lCards:active{cursor:grabbing}
-#lTrack{display:flex;transition:transform .5s cubic-bezier(.3,.7,.3,1)}
-#lDots{display:flex;gap:8px}
-#lDots button{width:9px;height:9px;padding:0;border-radius:50%;border:1px solid #1E1A26;background:#5D5370;cursor:pointer}
-#lDots button.on{background:#CDBDEB}
 #lBar{width:min(420px,calc(70*var(--vw)));height:7px;border-radius:4px;background:#26212E;border:1px solid #4A4258;overflow:hidden}
 #lBar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#5E4C80,#A28FC8);transition:width .25s ease}
 #lGo{display:none;font-family:"Cinzel";font-weight:800;font-size:clamp(15px,calc(2.2*var(--vh)),20px);letter-spacing:2px;color:#1E1A26;padding:11px 34px;border-radius:6px;
@@ -297,546 +56,39 @@ body.portrait #logo.art{height:clamp(40px,calc(8*var(--vh)),92px);max-width:calc
 #lGo:hover{background:linear-gradient(#F6F2FC,#C9BBE3)}
 #loader.ready #lBar{display:none}
 #loader.ready #lGo{display:block}
-@keyframes lPulse{50%{transform:scale(1.04)}}
-/* portrait = the stage's portrait (body.portrait, stage.ts), never the window media query: one rule for every layer */
-body.portrait #lLogo{width:calc(94*var(--vw));max-height:calc(34*var(--vh))}
-/* short popout (landscape, under 520px tall): logo left, cards and controls right */
-@media (orientation:landscape) and (max-height:0px){ /* retired: fixed design stage */
-  #loader{flex-direction:row;gap:calc(3*var(--vw));padding:12px calc(4*var(--vw)) 28px}
-  #lLogo{width:calc(44*var(--vw));max-height:calc(78*var(--vh))}
-  #lGo{padding:8px 22px;font-size:14px}
-}
-
-/* ---- Rizzin Games rabbit as the bonus-button icon (white solid, like the other icons) ---- */
-/* user rabbit-in-chip emblem (square PNG, 128/256) */
-#buyBtn.emblem img{display:block;width:42px;height:42px;object-fit:contain;margin:0 auto;pointer-events:none}
-body.portrait #buyBtn.emblem img{width:36px;height:36px}
-body.short #buyBtn.emblem img{width:30px;height:30px}
-
-/* ---- centering / balance pass: one vertical axis, board centered between title and controls ---- */
-#stage{display:grid;grid-template-rows:minmax(0,1fr) auto minmax(0,1fr);grid-template-columns:100%;justify-items:center;align-items:center}
-#fsBar{grid-row:1;align-self:end}
-#frame{grid-row:2}
-#stepToast{grid-row:3;align-self:start}
-#hud{margin:0 auto}
-#bar{grid-template-columns:minmax(0,1fr) 64px 112px 64px minmax(0,1fr)}
-body.portrait #bar{grid-template-columns:minmax(0,1fr) 50px 92px 50px minmax(0,1fr)}
-#menuBtn,#autoBtn,#betDown,#betUp,#spinBtn{align-self:center}
-#strip .m,#strip .c,#strip .r{text-align:center}
-#stepToast,#banner,#fsBar{text-align:center;justify-content:center}
-#ctrlTop{align-items:center}
-/* short popout: the turbo/ante/bonus row floats at the edges beside the board instead of stacking above the bar */
-body.short #hud{position:relative;padding:0 10px 4px}
-body.short #ctrlTop{position:absolute;left:10px;right:10px;bottom:calc(100% + 6px);margin:0;padding:0}
-body.short #ctrlTop .ico{width:38px;height:38px} body.short #ctrlTop .ico svg{width:20px;height:20px}
-body.short #buyBtn.emblem{width:42px;height:42px}
-body.short #bar{height:40px;grid-template-columns:minmax(0,1fr) 40px 64px 40px minmax(0,1fr);padding:0 8px}
-body.short #menuBtn,body.short #autoBtn,body.short #betDown,body.short #betUp{width:36px;height:36px}
-body.short #betDown svg,body.short #betUp svg{width:24px;height:24px}
-body.short #spinBtn{width:50px;height:50px} body.short #spinBtn svg{width:28px;height:28px}
-body.short #strip{margin-top:3px;padding:2px 10px}
-
-/* ---- MAX WIN (50,000x cap only): elves clip + matte confetti + carved title, holds until a press ---- */
-#maxwin{position:fixed;inset:0;z-index:70;overflow:hidden;background:#1C1922;opacity:0;transition:opacity .45s ease;cursor:default}
-#maxwin.on{opacity:1} #maxwin.out{opacity:0}
-#maxwin .mwStage{position:absolute;inset:0}
-#maxwin .mwBg{position:absolute;inset:0;background:#1C1922 center/cover no-repeat}   /* round 6: pre-blurred Lounge plate (maxwin.ts), no CSS filter */
-#maxwin .mwShade{position:absolute;inset:0;background:linear-gradient(180deg,#1C192200 45%,#1C1922b0 78%,#1C1922e6)}
-#maxwin .mwText{position:absolute;left:0;right:0;bottom:calc(5*var(--vh));display:flex;flex-direction:column;align-items:center;text-align:center;pointer-events:none}
-.mwTier{font-family:"Cinzel";font-weight:900;font-size:clamp(44px,calc(9*var(--vw)),128px);line-height:1;letter-spacing:4px;
-  background-image:linear-gradient(#FFFFFF,#E6E0F2 40%,#9C8CC0 52%,#D3C8EC 78%,#F4F1FA);-webkit-background-clip:text;background-clip:text;color:transparent;
-  filter:drop-shadow(3px 0 0 #1E1A26) drop-shadow(-3px 0 0 #1E1A26) drop-shadow(0 3px 0 #1E1A26) drop-shadow(0 -3px 0 #1E1A26) drop-shadow(0 7px 0 #120F18) drop-shadow(0 12px 14px #000a);
-  transform:scale(.6);opacity:0;transition:transform .55s cubic-bezier(.2,1.4,.4,1),opacity .3s}
-#maxwin.on .mwTier{transform:scale(1);opacity:1}
-.mwX{font-family:"Cinzel";font-weight:900;font-size:clamp(34px,calc(6*var(--vw)),84px);line-height:1.05;letter-spacing:2px;color:#F2EEFA;font-variant-numeric:tabular-nums;
-  filter:drop-shadow(2px 0 0 #1E1A26) drop-shadow(-2px 0 0 #1E1A26) drop-shadow(0 2px 0 #1E1A26) drop-shadow(0 -2px 0 #1E1A26) drop-shadow(0 5px 0 #120F18)}
-#maxwin.landed .mwX{animation:mwThump .5s ease-out}
-@keyframes mwThump{0%{transform:scale(1)}35%{transform:scale(1.12)}100%{transform:scale(1)}}
-.mwAmt{margin-top:6px;font-family:"Nunito";font-weight:900;font-size:clamp(22px,calc(3.2*var(--vw)),44px);color:#fff;font-variant-numeric:tabular-nums;
-  background:#1C1922c8;border:1px solid #4A4258;border-radius:8px;padding:2px 18px;
-  filter:drop-shadow(0 4px 8px #0008)}
-.mwHint{margin-top:14px;font-family:"Nunito";font-weight:900;font-size:clamp(12px,calc(1.4*var(--vw)),16px);letter-spacing:2px;color:#DCD3F0;opacity:0;transition:opacity .4s}
-#maxwin.held .mwHint{opacity:1;animation:mwPulse 1.6s ease-in-out infinite}
-#maxwin.held{cursor:pointer}
-@keyframes mwPulse{50%{opacity:.55}}
-body.portrait #maxwin .mwShade{background:linear-gradient(180deg,#1C192200 52%,#1C1922c0 70%,#1C1922f0)}
-body.portrait #maxwin .mwText{bottom:calc(12*var(--vh))}
-body.short #maxwin .mwText{bottom:calc(3*var(--vh))} body.short .mwTier{font-size:40px} body.short .mwX{font-size:30px} body.short .mwAmt{font-size:18px} body.short .mwHint{margin-top:4px;font-size:11px}
-#maxwin .mwBg{z-index:0} #maxwin .mwShade{z-index:1} #maxwin .mwText{z-index:4}
-body.portrait #maxwin .mwText{bottom:calc(16*var(--vh))}
-
-
-/* ---- layout v2: one control panel centered under the board, in every orientation; viewport-relative sizes ----
-   #ctrlTop/.side/#bar/#strip dissolve (display:contents) so every control and the balance/bet/win readouts sit in one
-   symmetric 11-column grid: [menu turbo ante] · [− SPIN +] · [auto buy], readouts on a second row. The spin button is
-   the middle column, so it sits on the panel's (and the screen's) center line. #app-prefixed to outrank older rules. */
-body{--hb:clamp(34px,calc(5.4*var(--vh)),56px);--sp:clamp(54px,calc(9*var(--vh)),96px);--mt:clamp(26px,calc(4.2*var(--vh)),40px);--cg:clamp(6px,calc(1*var(--vw)),14px)}
-body.short:not(.portrait){--hb:32px;--sp:46px;--mt:22px}
-body.portrait{--hb:min(40px,calc(8.4*var(--vw)));--sp:min(66px,calc(14.5*var(--vw)));--mt:30px;--cg:min(5px,calc(1*var(--vw)))}
-body:not(.portrait) #top{padding-top:clamp(8px,calc(1.6*var(--vh)),16px);flex:0 0 auto}
-body:not(.portrait) #logo.art{height:clamp(40px,calc(8.6*var(--vh)),104px)}
-#app #stage{flex:1 1 auto}
-#app #hud{flex:0 0 auto;display:grid;align-items:center;justify-items:center;
-  grid-template-columns:var(--hb) var(--hb) var(--hb) minmax(0,1fr) var(--hb) var(--sp) var(--hb) minmax(0,1fr) var(--hb) var(--hb) var(--hb);
-  grid-template-rows:var(--sp) var(--mt);column-gap:var(--cg);row-gap:4px;
-  width:clamp(560px,calc(var(--cell)*5 + 160px),980px);max-width:calc(calc(100*var(--vw)) - 16px);margin:0 auto clamp(6px,calc(1.4*var(--vh)),14px);
-  padding:clamp(4px,calc(.8*var(--vh)),8px) clamp(10px,calc(1.4*var(--vw)),20px) 2px;background:var(--glass);border:1px solid var(--hair);border-radius:12px;box-shadow:0 10px 24px -10px #000a}
-body.portrait #app #hud{width:calc(calc(100*var(--vw)) - 12px);max-width:none;padding:6px 6px 2px;margin-bottom:max(8px,env(safe-area-inset-bottom))}
-#app #hud::before{content:"";grid-row:2;grid-column:1/-1;align-self:start;width:100%;border-top:1px solid var(--hair)}
-#app #ctrlTop,#app #ctrlTop .side,#app #bar,#app #strip{display:contents}
-#app #menuBtn{grid-area:1/1} #app #turboBtn{grid-area:1/2} #app #anteBtn{grid-area:1/3}
-#app #betDown{grid-area:1/5} #app #spinBtn{grid-area:1/6} #app #betUp{grid-area:1/7}
-#app #autoBtn{grid-area:1/9} #app #buyBtn{grid-area:1/10/2/12}
-/* one button language: round, matte, same size and stroke; toggles show state with a lavender ring */
-#app #menuBtn,#app #turboBtn,#app #anteBtn,#app #autoBtn,#app #betDown,#app #betUp{
-  width:var(--hb)!important;height:var(--hb)!important;justify-self:center;align-self:center;background:#1A1722cc;border:1.5px solid #6B6080;border-radius:50%}
-#app #hud .ico svg,#app #anteBtn svg{width:calc(var(--hb)*.5)!important;height:calc(var(--hb)*.5)!important}
-#app #ctrlTop .ico.toggle.on,#app #autoBtn.on{border-color:var(--gold)}
-#app #spinBtn{width:var(--sp);height:var(--sp);align-self:center;justify-self:center;border-width:3px}
-#app #spinBtn svg{width:calc(var(--sp)*.56);height:calc(var(--sp)*.56)}
-#app #buyBtn.emblem{width:calc(var(--sp)*.86);height:calc(var(--sp)*.86);background:#1A1722e6;border:2px solid var(--gold);justify-self:center}
-#app #buyBtn.emblem img{width:calc(var(--sp)*.6);height:calc(var(--sp)*.6)}
-/* readouts: label + value on one line, each centered under its control group */
-#app #strip .m{grid-row:2;display:flex;align-items:baseline;justify-content:center;gap:clamp(4px,calc(.8*var(--vw)),8px);white-space:nowrap;min-width:0;color:#fff;padding:0;margin:0}
-#app #strip .m:nth-child(1){grid-column:1/5} #app #strip .m:nth-child(2){grid-column:5/8} #app #strip .m:nth-child(3){grid-column:8/12}
-#app #strip label{display:inline;font-size:clamp(10px,calc(1.5*var(--vh)),13px);letter-spacing:.8px;color:#CFC9DA}
-#app #strip span{font-size:clamp(14px,calc(2.3*var(--vh)),20px)}
-body.portrait #app #strip .m{flex-direction:column;align-items:center;gap:0;line-height:1.05}
-body.portrait #app #strip label{font-size:10px} body.portrait #app #strip span{font-size:min(15px,calc(4*var(--vw)))}
-/* stage: tighter gaps above/below the board */
-#app #fsBar{margin-bottom:6px}
-body:not(.portrait) #app #fsBar{font-size:clamp(14px,calc(2.6*var(--vh)),20px);line-height:1.4;padding:4px clamp(12px,calc(1.6*var(--vw)),22px)}
-#app #stepToast{margin-top:6px;min-height:32px}
-/* portrait: the board sits low, a comfortable gap above the controls; Roxy's upper body fills the space above it */
-body.portrait #app #stage{grid-template-rows:minmax(0,1fr) auto auto}
 /* landscape phone: small title in the free space right of the board (roxy.ts / game.ts set --gutR) */
 body.short:not(.portrait) #top{display:flex;position:fixed;top:6px;right:0;left:auto;width:var(--gutR,200px);height:auto;padding:0;justify-content:center}
-body.short:not(.portrait) #logo.art{display:block;--lw:min(180px,calc(var(--gutR,200px) - 20px));width:var(--lw);height:calc(var(--lw) / 2.9);max-width:none}
-body.short:not(.portrait) #logo.art img{width:100%;height:100%}
-
-/* ---- multiplier lettering (ui.ts mxSVG): text only, faceted pink gem fill, light inner + dark plum outer outline.
-   Cap height = 18% of the cell (min 11px). Soft pink glow; glints + growth burst are sprite sheets. ---- */
-.mx{position:absolute;top:2px;right:2px;z-index:3;height:max(19.5px,calc(var(--cell)*.318));aspect-ratio:150/60;pointer-events:none;transform-origin:85% 45%}
-.mx>svg{display:block;width:100%;height:100%;overflow:visible}
-.mx svg svg{overflow:hidden}  /* per-glyph atlas windows (ui.ts mxGlyphs) must clip to their frame */
-.mx text{font-family:"Nunito",sans-serif;font-weight:900;letter-spacing:-1px;stroke-linejoin:round;paint-order:stroke fill}
-.mx .o{fill:#3A0F2C;stroke:#3A0F2C;stroke-width:9}
-.mx .i{fill:#FFE6F2;stroke:#FFE6F2;stroke-width:4.2}
-.mx .f{fill:url(#mxFacet)}
-.mx .h{fill:url(#mxShade)}
-/* soft pink glow behind the lettering (allowed on multipliers); glints and the growth burst are sprites (fx.ts) */
-.mx svg{filter:drop-shadow(0 0 calc(var(--cell)*.03) #F06AAE8c)}
-.mx .spr{position:absolute;pointer-events:none}
-.mx .fxGlint{width:auto;height:46%;aspect-ratio:1;translate:-50% -50%;z-index:2}
-.mx{isolation:isolate}
-.ov .mx{top:3px}
-/* merged-wild total: same lettering, smaller, bottom centre; a faint plum wash keeps it legible over busy art */
-.ov .mx.total{top:auto;right:auto;left:50%;bottom:5px;translate:-50% 0;height:max(17px,calc(var(--cell)*.22));transform-origin:50% 60%;
-  background:radial-gradient(closest-side,#2A243366,#2A243300);padding:0 4px}
-/* landscape: banners sit in the fsBar lane just above the board (never up in the title); during bonuses they overlap the board's top edge */
-body:not(.portrait) #app #banner{top:calc(50% - var(--cell)*2 - 6px);transform:translate(-50%,-100%);font-size:clamp(13px,calc(2.4*var(--vh)),20px);padding:4px clamp(12px,calc(1.6*var(--vw)),24px)}
-body:not(.portrait) #app #fsBar:not(.hidden) ~ #banner{top:calc(50% - var(--cell)*2 + 8px);transform:translateX(-50%)}
-/* free-spin bar: landscape tucks into the bezel top; landscape phone puts it in the right gutter, level with the board bottom */
-body:not(.portrait):not(.short) #app #fsBar{margin-bottom:-10px;position:relative;z-index:4}
-body.short:not(.portrait) #app #fsBar{position:fixed;right:6px;left:auto;top:auto;bottom:calc(100% - var(--frB,300px));width:calc(var(--gutR,200px) - 12px);
-  flex-wrap:wrap;justify-content:center;gap:2px 10px;font-size:12px;padding:3px 8px;margin:0;z-index:6}
-
-/* ---- sprite canvases (sprite.ts / fx.ts) ---- */
-canvas.spr{display:block;pointer-events:none}
-canvas.fxFill{position:absolute;inset:0;width:100%;height:100%}
-/* LOCKED: deep-plum pill with lavender caps, dark outline, sprite padlock; the locked cell gets a thin lavender/pink
-   inner frame with a soft glow. Sits bottom-left (the WILD plate is hidden while locked); multiplier is top-right. */
-.lock{position:absolute;left:4px;bottom:4px;z-index:3;display:none;align-items:center;gap:2px;font-family:"Nunito";font-weight:900;
-  font-size:max(8.5px,calc(var(--cell)*.085));line-height:1;letter-spacing:.7px;color:#EDE6FA;
-  background:linear-gradient(#4A2458,#2E1638);padding:2px 6px 2px 3px;border:1.5px solid #120A16;border-radius:99px;
-  box-shadow:inset 0 0 0 1px #C9B3EC66,0 0 6px #F06AAE55}
-.lock .lkI{position:relative;display:inline-block;width:1.35em;height:1.35em;flex:none}
-.cell.locked .lock{display:inline-flex}
-.cell.locked::after{content:"";position:absolute;inset:1px;z-index:2;pointer-events:none;border:2px solid #D7B8EE;
-  box-shadow:inset 0 0 0 1px #F48FC0,inset 0 0 8px #F06AAE66,0 0 0 1px #1A1420}
-
-
-/* ---- reel spin (reels.ts): per reel a column of 6 recycled slots scrolled with translate3d (GPU layer, no layout
-   per frame) plus the seamless blur strip, faded in only near full speed. Spinning cells hide; locked cells stay on top. */
-#strips{position:absolute;inset:0;z-index:0;pointer-events:none}
-#cells{position:absolute;inset:0;z-index:1}
-.strip{position:absolute;top:0;width:var(--cell);height:calc(var(--cell)*4);overflow:hidden;visibility:hidden;contain:strict}
-.slot{position:absolute;left:0;top:0;width:var(--cell);height:var(--cell);will-change:transform}
-.cell.spinning{visibility:hidden !important}
-
-/* ---- respins remaining (respin.ts): 3 dots inside each LOCKED strip and at the foot of every stack; only while respinning.
-   Lit = respins still to come. A thin divider keeps the LOCKED word reading first. ---- */
-.rd{display:none;align-items:center;gap:max(2px,calc(var(--cell)*.022));flex:none}
-body.respinning .rd{display:inline-flex}
-.lock .rd{margin-left:max(3px,calc(var(--cell)*.03));padding-left:max(3px,calc(var(--cell)*.03));border-left:1px solid #C9B3EC55;height:1em}
-.rd i{position:relative;display:block;width:max(4px,calc(var(--cell)*.05));height:max(4px,calc(var(--cell)*.05));border-radius:50%;
-  background:#FF8CC4;box-shadow:0 0 0 1px #3A0F2C,0 0 4px #F06AAEcc}
-body[data-rl="2"] .rd i:nth-child(n+3),body[data-rl="1"] .rd i:nth-child(n+2),body[data-rl="0"] .rd i{background:#3A2A44;box-shadow:0 0 0 1px #C9B3EC66}
-.rd i canvas.fxFill{inset:-60%;width:220%;height:220%}
-.rd i canvas.rcFlash{position:absolute;left:50%;top:50%;width:420%;height:420%;translate:-50% -50%;z-index:2}
-.ovrd{position:absolute;left:50%;bottom:6px;translate:-50% 0;z-index:3;display:none;padding:3px 6px;border-radius:99px;
-  background:linear-gradient(#4A2458,#2E1638);border:1.5px solid #120A16;box-shadow:inset 0 0 0 1px #C9B3EC66}
-body.respinning .ovrd{display:flex}
-/* stacks show ONE combined multiplier, slightly larger than on a single wild */
-.ov .mx.stack{height:max(24px,calc(var(--cell)*.4))}
-#flyLayer{position:fixed;inset:0;pointer-events:none;z-index:30}
-#flyLayer .mx{position:fixed}
-
-/* ---- layout v3: Ante moved into the bonus menu. Symmetric 9-column panel: [menu turbo] · [− SPIN +] · [auto bonus];
-   the outer columns are the bonus emblem's width on both sides, so the spin button stays on the centre line. ---- */
-body{--bw:calc(var(--sp)*.86)}
 #app #hud{grid-template-columns:var(--bw) var(--hb) minmax(0,1fr) var(--hb) var(--sp) var(--hb) minmax(0,1fr) var(--hb) var(--bw)}
-#app #menuBtn{grid-area:1/1} #app #turboBtn{grid-area:1/2}
-#app #betDown{grid-area:1/4} #app #spinBtn{grid-area:1/5} #app #betUp{grid-area:1/6}
-#app #autoBtn{grid-area:1/8} #app #buyBtn{grid-area:1/9}
-#app #strip .m:nth-child(1){grid-column:1/4} #app #strip .m:nth-child(2){grid-column:4/7} #app #strip .m:nth-child(3){grid-column:7/10}
-#app #spinBtn{position:relative}
-/* armed mode (re-audit M5): no ring on the round spin button; a square-cornered black-gold plate (full mode name + ×)
-   sits above it with clearance */
-#app #spinBtn.armed{border-color:#46404F}
-#armTag{grid-area:1/5;align-self:start;justify-self:center;z-index:3;translate:0 calc(-100% - 6px);display:inline-flex;align-items:center;gap:6px;
-  padding:2px 8px 2px 10px;font-size:max(9px,calc(var(--sp)*.13));line-height:1.2;letter-spacing:1px;font-weight:900;white-space:nowrap;border-radius:5px;
-  background:linear-gradient(180deg,#30253a,#241b2d 55%,#1a1322);border:1.5px solid #ffc83d;color:#ffc83d;box-shadow:inset 0 0 0 1px #120c16,0 4px 10px -4px #000c}
-#armTag.hidden{display:none}
-#armTag svg{flex:none;width:.9em;height:.9em;stroke:#ffc83d;stroke-width:2;fill:none}
-/* autoplay: spins left as a small number under the spin icon */
-/* v20 (James 19:31 CDT): autoplay countdown +6 screen px over the old size, same style */
-#autoN{position:absolute;left:50%;bottom:9%;translate:-50% 0;font-size:calc(max(10px,calc(var(--sp)*.15)) + 6px / var(--s,1));font-weight:900;letter-spacing:.5px;color:#FFE6F2;
-  font-variant-numeric:tabular-nums;pointer-events:none}
-#app #spinBtn.auto svg{opacity:.55}
-
-/* ---- modal chrome shared by the bonus and autoplay panels: matte, compact, glow only on the active choice ---- */
-.mHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.mHead h2{margin:0!important}
-.row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 12px;border:1px solid var(--hair);border-radius:8px;background:#ffffff08}
-.row .lbl{font-weight:800;letter-spacing:1px;font-size:14px;color:#ECE8F4}
-.row .lbl small{font-weight:800;color:#CFC9DA;opacity:.8;margin-left:6px}
-.sw{position:relative;width:46px;height:26px;padding:0;border-radius:99px;background:#2A2236;border:1.5px solid #6B6080;flex:none}
-.sw i{position:absolute;top:2px;left:2px;width:19px;height:19px;border-radius:50%;background:#C9C2D8;transition:left .15s ease}
-.sw.on{background:#C42A78;border-color:#F06AAE;box-shadow:0 0 8px #F06AAE66} .sw.on i{left:22px;background:#FFE6F2}
-.modal.bm{width:min(860px,calc(94*var(--vw)))} .modal.am{width:min(460px,calc(94*var(--vw)))}
-#anteRow.on{border-color:#F06AAE88}
-#buyCards{grid-template-columns:repeat(5,1fr);gap:10px;margin:12px 0}
-#buyCards.hidden{display:none}
-#buyCards .bcard{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 8px 10px;border-radius:10px;
-  background:#1A1722;border:1.5px solid #4A4058;text-align:center;transition:border-color .15s,box-shadow .15s}
-#buyCards .bcard:hover{border-color:#8A7CA0}
-#buyCards .bcard:focus-visible{outline:2px solid #C9B3EC;outline-offset:2px}
-#buyCards .bcard.armed{border-color:#F06AAE;box-shadow:0 0 0 1px #F06AAE,0 0 16px #F06AAE77;background:#26162C}
-#buyCards .bcard.off{opacity:.4;cursor:default}
-.bArt{display:block;width:100%;aspect-ratio:1;border-radius:7px;overflow:hidden;background:#2A2433}
-.bArt img{width:100%;height:100%;object-fit:cover;display:block}
-.bArt.tall img{object-position:50% 30%}
-.bName{font-family:"Cinzel";font-weight:800;font-size:13px;letter-spacing:.8px;color:#fff;margin-top:4px;line-height:1.15;min-height:2.3em;display:flex;align-items:center}
-.bPrice{font-weight:900;font-size:18px;color:#FFE6F2;font-variant-numeric:tabular-nums}
-.bX{font-size:11px;font-weight:800;color:#CFC9DA;opacity:.75}
-#bmBet{justify-content:center;gap:18px}
-#bmBet .ico{width:38px;height:38px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;background:#1A1722;border:1.5px solid #6B6080}
-#bmBet .ico svg{width:18px;height:18px;stroke:#E8E2F4;stroke-width:2.4;fill:none}
-#bmBet .v{display:flex;flex-direction:column;align-items:center;min-width:110px} #bmBet small{font-size:10px;letter-spacing:1px;color:#CFC9DA}
-#bmBet b{font-size:20px;font-variant-numeric:tabular-nums}
-body.portrait #buyCards{grid-template-columns:repeat(6,1fr);gap:7px}
-body.portrait #buyCards .bcard,body.portrait #buyCards .bcard:last-child{grid-column:span 2} body.portrait #buyCards .bcard:nth-child(4){grid-column:2/4}
-body.portrait .bName{font-size:11px} body.portrait .bPrice{font-size:15px}
-body.portrait #buyCards .bcard{padding:6px 5px 8px}
-body.short:not(.portrait) .modal.bm{padding:10px 16px} body.short:not(.portrait) .bArt{aspect-ratio:1.5}
-body.short:not(.portrait) #buyCards{margin:8px 0}
-/* autoplay panel */
-#autoCounts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
-.chip{padding:10px 0;border-radius:8px;background:#1A1722;border:1.5px solid #4A4058;font-size:16px;font-variant-numeric:tabular-nums}
-.chip.on{border-color:#F06AAE;background:#26162C;box-shadow:0 0 0 1px #F06AAE,0 0 12px #F06AAE66}
-.advBtn{display:flex;align-items:center;gap:6px;margin:0 auto 8px;background:transparent;border:none;font-size:12px;color:#CFC9DA;padding:4px 8px}
-.advBtn svg{width:12px;height:12px;stroke:#CFC9DA;stroke-width:1.8;fill:none;transition:rotate .15s} .advBtn.open svg{rotate:180deg}
-#adv{display:flex;flex-direction:column;gap:6px;margin-bottom:8px} #adv.hidden{display:none}
-#adv .lbl{font-size:13px;letter-spacing:.3px;text-transform:none}
-#adv input{width:120px;padding:7px 10px;border-radius:6px;border:1.5px solid #4A4058;background:#14121A;color:#fff;font:inherit;font-weight:800;text-align:right;font-variant-numeric:tabular-nums}
-#adv input:focus{outline:none;border-color:#C9B3EC} #adv input.bad{border-color:#E44792}
-.err{min-height:1.2em;margin:2px 0 6px!important;font-size:12px;color:#FF8CC4;text-align:center}
-.go{display:block;width:100%;padding:12px;border-radius:10px;background:#C42A78;border:1.5px solid #F06AAE;font-size:16px;letter-spacing:2px}
-.go:hover{background:#D23585} .go:disabled{background:#3A2A44;border-color:#4A4058}
-/* ---- info: payline mini-grids (game.ts buildRules, from LINES) ---- */
-.plGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px;margin:8px 0}
-.pl{margin:0;display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:7px;background:#ffffff08;border:1px solid var(--hair)}
-.pl figcaption{flex:none;min-width:1.6em;text-align:right;font-weight:900;font-size:13px;color:#CFC9DA;font-variant-numeric:tabular-nums}
-.pl svg{display:block;width:100%;max-width:90px;height:auto}
-.pl rect{fill:#2A2433;stroke:#4A4058;stroke-width:.6}
-.pl rect.on{fill:#C42A78;stroke:#F48FC0}
-.pl polyline{fill:none;stroke:#FFE6F2;stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round;opacity:.9;filter:drop-shadow(0 0 1.5px #F06AAE)}
-body.portrait .plGrid{grid-template-columns:repeat(3,1fr);gap:6px} body.portrait .pl{padding:5px 6px;gap:4px} body.portrait .pl figcaption{font-size:11px}
-
-/* ---- wild: bright round frame (static ring painted once; no animated filter or shadow) + fx_wild sprites ---- */
-.cell.wild::before{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;border-radius:50%;
-  background:radial-gradient(closest-side,transparent 80%,#F06AB033 84%,#E0409Acc 88.5%,#FFE6F2 91%,#F48FC0 93%,#C42A7899 95.5%,#C42A7833 98%,transparent 100%)}
-.cell.locked::after{inset:4%;border-radius:50%;border-width:2px}
-.cell.wLand .sym{animation:wPop .28s cubic-bezier(.3,1.6,.5,1)}
-@keyframes wPop{0%{transform:scale(.9)}100%{transform:none}}
-/* spinfix (calm landing, normal pace only; turbo keeps wPop + the sprites): a wild settles in with one soft ease (no
-   elastic pop) and the landing ring flare / burst sprites (wfxRing, wfxBurst) and the scatter land sheet do not show */
-body:not(.turbo) #cells .cell.wLand .sym{animation:wSettle .42s cubic-bezier(.3,.6,.4,1)}
-@keyframes wSettle{0%{transform:scale(.97)}100%{transform:none}}
+body.portrait .bName{font-size:11px}
+body.portrait .bPrice{font-size:15px}
+body.short:not(.portrait) .bArt{aspect-ratio:1.5}
+#adv.hidden{display:none}
+body.portrait .plGrid{grid-template-columns:repeat(3,1fr);gap:6px}
+body.portrait .pl{padding:5px 6px;gap:4px}
+body.portrait .pl figcaption{font-size:11px}
 body:not(.turbo) canvas.wfxRing{display:none}
-canvas.wfx{position:absolute;pointer-events:none;z-index:3}
-canvas.wfxRing{inset:-12%;width:124%;height:124%}
-canvas.wfxIn{inset:0;width:100%;height:100%;z-index:1}
-canvas.wfxTop{z-index:4}
-.wfxCol{position:absolute;top:0;height:100%;z-index:3;pointer-events:none}
-.wfxCol canvas.wfx{inset:0;width:100%;height:100%}
-.wfxCol.seam{width:calc(var(--cell)*.6)!important;transform:translateX(-50%)}
-.ov.full.art::before{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;
-  box-shadow:inset 0 0 0 2px #FFE6F2,inset 0 0 0 4px #E0409A,inset 0 0 10px 4px #C42A7866}
-
-/* ---- feature moments (fx_feat): burst behind the title, matte confetti, title pop; free-spin outro ---- */
-.ffConf{position:absolute;left:0;top:0;width:100%;height:100%;opacity:.85}
-.ffBurst{position:absolute;left:50%;top:42%;width:min(calc(80*var(--vw)),560px);aspect-ratio:1;transform:translate(-50%,-50%)}
 body.portrait .ffBurst{top:46%}
-#intro,#outro{cursor:pointer}
-#intro .card,#outro .card{position:relative;z-index:1}
-#outro .card{text-align:center;padding:26px 56px;border-radius:10px;max-width:calc(90*var(--vw));animation:settle .45s ease-out}
-.otAmt{font-family:"Cinzel";font-weight:900;font-size:46px;color:#fff;font-variant-numeric:tabular-nums;min-width:8ch;display:inline-block;margin-top:4px}
 body.portrait .otAmt{font-size:34px}
-.otHint{font-size:12px;opacity:.6;margin-top:10px;letter-spacing:1px}
 
-/* ---- UI sprites (fx_btn): press ring, armed halo, tap ring, loading pulse; glow baked in the sheet ---- */
 #hud button{position:relative}
-.uiFx{position:absolute;left:50%;top:50%;pointer-events:none;transform:translate(-50%,-50%)}
-.uiRing,.uiHalo{width:150%;aspect-ratio:1;z-index:-1} .uiRing{z-index:2}
-.uiTap{width:150%;aspect-ratio:1;z-index:2}
- #lGo{z-index:1}
+#lGo{z-index:1}
 #lGo{position:relative}
-canvas.uiFill{position:absolute;inset:0;width:100%;height:100%}
-#spinBtn.pressed{animation:btnPress .22s cubic-bezier(.3,1.6,.5,1)}
-#hud button:active:not(#spinBtn){transform:scale(.94)}
-@keyframes btnPress{0%{transform:scale(.9)}100%{transform:none}}
-#app #spinBtn.armed{box-shadow:0 0 0 2px #0008,0 8px 16px -6px #000a}
-
-/* MAX WIN sprite layout. Group frame 1467x796 (round 6): Coco | Jade | Delilah | Roxy | Vi, full figures cropped at the thigh. */
-#maxwin .mwCrowd{position:absolute;inset:0;z-index:3;pointer-events:none;overflow:hidden}
-#maxwin .mwGroup{position:absolute;left:50%;bottom:calc(-1*var(--vh));height:calc(62*var(--vh));aspect-ratio:1614/694;transform:translate(-50%,0)}
-body.portrait #maxwin .mwGroup{height:auto;width:calc(132*var(--vw));bottom:0}
-#maxwin .mwSpr{position:absolute;inset:0;width:100%;height:100%;image-rendering:auto}
-/* round 4: per-elf puppet layers (elfrig.ts), each animated by transform/opacity only; exit = fade + slide down */
-.mwGroup .elf,.bwGroup .elf{position:absolute;will-change:transform,opacity;backface-visibility:hidden}
-.elf .elfCv{position:absolute;inset:0;width:100%;height:100%}
-.elf .elfOv{position:absolute;pointer-events:none;will-change:transform,opacity}
-#maxwin .mwCrowd{transition:transform .5s cubic-bezier(.5,0,.75,0),opacity .45s cubic-bezier(.4,0,1,1)}
-#maxwin.out .mwCrowd{transform:translateY(16%);opacity:0}
-#maxwin.out{transition:opacity .5s cubic-bezier(.45,0,.55,1) .06s}   /* exit: the row starts sliding, then the screen eases out */
-#maxwin .mwTier.spr{transform:scale(.5);opacity:0;transition:none}
-#maxwin.on .mwTier.spr.pop{transform:scale(1);opacity:1;transition:transform .5s cubic-bezier(.34,1.56,.64,1),opacity .2s ease-out}
-/* title + count-up sit in the clear centre band above the elves */
-#maxwin .mwText{top:calc(6*var(--vh));bottom:auto;z-index:4}
-#maxwin .mwTier.spr{position:relative;width:min(calc(48*var(--vw)),720px);aspect-ratio:560/160;font-size:0;color:transparent}
-body.portrait #maxwin .mwText{top:calc(24*var(--vh));bottom:auto}
-body.portrait #maxwin .mwTier.spr{width:calc(80*var(--vw))}
-/* soft plate so the amount stays readable where it meets the row of heads */
-#maxwin .mwText::before{content:'';position:absolute;inset:-4% -12%;z-index:-1;background:radial-gradient(closest-side,rgba(20,12,24,.5),rgba(20,12,24,0))}
-
-/* Big-win POV group layer (append to static/elfhaus.css). Sits under #bigwin .bw (title + amount). */
-#bigwin .bwElves { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
-#bigwin .bw { position: relative; z-index: 2; }
-#bigwin .bwFx { z-index: 1; }
-#bigwin .bwGroup {                       /* frame 1028x694 (chalet): Vi | Roxy | Coco, cropped at the thigh */
-	position: absolute; left: 50%; bottom: calc(-1*var(--vh)); height: calc(74*var(--vh)); aspect-ratio: 1028 / 694;
-	transform: translate(-50%, 0);           /* round 4: the elves rise in individually (elfrig.ts) */
-}
-#bigwin .bwGroup.in { transform: translate(-50%, 0); opacity: 1; }
-/* v3.19 LEGENDARY WIN: the four younger elves on the max-win cast sheets, re-grouped frame 1321x694 (bigwinElves.ts L_GROUP) */
-#bigwin .bwGroup.bwLegend { aspect-ratio: 1321 / 694; }
-body.portrait #bigwin .bwGroup { height: auto; width: calc(100*var(--vw)); bottom: calc(-7*var(--vh)); }   /* smaller + sunk: covers less of the board */
-/* landscape: smaller + sunk group, and the title block lifted clear of the heads while the group is up */
-body:not(.portrait) #bigwin .bwGroup { height: calc(56*var(--vh)); bottom: calc(-8*var(--vh)); }
-body:not(.portrait) #bigwin .bw { top: 0; transition: top .35s ease-out; }
-body:not(.portrait) #bigwin.chars .bw { top: calc(-17*var(--vh)); }
-/* keep the amount legible over the group: soft dark plate behind the text block */
-#bigwin .bw::before { content: ''; position: absolute; inset: -6% -14%; z-index: -1;
-	background: radial-gradient(closest-side, rgba(20, 12, 24, .55), rgba(20, 12, 24, 0)); }
-
-/* ---- one shared scale (stage.ts): the whole game is laid out on a design stage and scaled as one ---- */
-html{background:#2A2533}
 #root{position:fixed;left:0;top:0;width:var(--dw,100vw);height:var(--dh,100vh);overflow:hidden;transform-origin:0 0;
   transform:translate(var(--ox,0),var(--oy,0)) scale(var(--s,1));contain:layout size}
-/* Ski Pass flip (cardflip.ts): sprite card centred over the board, outcome name pops under it */
-#cardFlip{cursor:pointer;transition:opacity .25s} #cardFlip.out{opacity:0}
-#cardFlip .cfStage{position:relative;display:flex;flex-direction:column;align-items:center;gap:calc(var(--cell)*.12)}
-#cardFlip .cfCard{position:relative;width:calc(var(--cell)*2.4);aspect-ratio:240/320}
-#cardFlip .cfName{font-family:"Cinzel";font-weight:900;font-size:calc(var(--cell)*.42);color:#FFF6FA;letter-spacing:.04em;opacity:0;text-shadow:0 2px 0 #3A0A26,0 0 14px #E255A0aa}
-#cardFlip .cfName.pop{animation:cfPop .45s cubic-bezier(.3,1.6,.5,1) forwards}
-@keyframes cfPop{0%{opacity:0;transform:scale(.6)}100%{opacity:1;transform:scale(1)}}
-/* anticipation (reels.ts .strip.ant): baked pink/magenta edge glow over the slow-spinning reel; opacity-only pulse */
-.strip .antGlow{position:absolute;inset:0;opacity:0;pointer-events:none;z-index:2;transition:opacity .25s;
- background:linear-gradient(90deg,#E255A0b0,#E255A000 22%,#E255A000 78%,#E255A0b0),linear-gradient(#FFF6FA90,#FFF6FA00 18%,#FFF6FA00 82%,#FFF6FA90)}
-.strip.ant .antGlow{opacity:1;animation:antPulse .4s ease-out infinite}
-@keyframes antPulse{0%{opacity:1}100%{opacity:.5}}   /* one flare per 150 BPM beat */
-/* tease: the board's other landed cells dim a touch (landed scatters stay lit) */
-#cells .cell{transition:filter .3s}
-body.teasing #cells .cell:not(.spinning):not(:has(.sym.S)){filter:brightness(.72) saturate(.85)}
-/* win lit state (fx.ts litOn): glow BEHIND the symbol; temporary baked radial gradient, swap per symbol via .lit[data-s] */
-.cell .lit{position:absolute;inset:-16%;z-index:0;pointer-events:none;border-radius:50%;opacity:0;transform:scale(.7);
-  background:radial-gradient(closest-side,#FFF6FAee 0,#F9B6D9cc 38%,#E255A066 62%,#C42A7800 100%);transition:opacity .2s,transform .25s cubic-bezier(.3,1.5,.5,1)}
-.cell.win .lit{opacity:1;transform:scale(1);animation:litPulse .9s ease-in-out .25s infinite alternate}
-@keyframes litPulse{from{opacity:1}to{opacity:.6}}
-.cell .sym{z-index:1}
-/* per-cell respin mini-strips (reels.ts spinMini): mask shape via --cellMask (round porthole now; e.g. 12% for frameless cutouts) */
-#board{--cellMask:0}
-.mini{position:absolute;width:var(--cell);height:var(--cell);overflow:hidden;border-radius:var(--cellMask);contain:strict}
-.mini i{position:absolute;left:0;top:0;width:100%;height:calc(var(--cell)*12);background-repeat:repeat-y;background-size:100% calc(var(--cell)*6);will-change:transform;animation:miniRun .32s linear infinite}
-/* v20b: every spin is per-cell; an anticipation reel's cells run at half speed under the reel glow */
-.mini.slow i{animation-duration:.64s}
-.strip.ant{z-index:5}
-@keyframes miniRun{from{transform:translate3d(0,calc(var(--cell)*-6),0)}to{transform:translate3d(0,0,0)}}
-/* impact bursts (fx.ts burst): centred on the host, above the symbol */
-canvas.bfx{position:absolute;left:50%;top:50%;z-index:4;pointer-events:none}
-.wfxCol.burstCol canvas.bfx{top:50%}
-/* floating win amount: 9-slice plate (36 px slices) + one glint pass; rises over the line's middle winning cell */
-.wlAmt{padding:0 18px;height:calc(var(--cell)*.42);min-width:calc(var(--cell)*.95);display:flex;align-items:center;justify-content:center;box-sizing:border-box;
-  border-image:url(ui/winplate_9s.webp) 36 fill / calc(var(--cell)*.2) stretch;text-shadow:none;font:900 calc(var(--cell)*.2) "Nunito";color:#FFF4FA;-webkit-text-stroke:2px #2A1830;paint-order:stroke fill}
-body.portrait .wlAmt{font-size:calc(var(--cell)*.2)}
-.wlAmt b{position:relative;z-index:1;font:inherit}
-.sym .olWin{position:absolute;inset:0;width:100%;height:100%;opacity:0;transition:opacity .2s;pointer-events:none}
-.cell.win .sym .olWin{opacity:1}
-/* ---- intro (intro.ts): studio sting, then the feature splash on the loader ---- */
-#loader{padding:0;display:block;background:#120C18}
-#loader .spBg{position:absolute;inset:0;background-size:cover;background-position:center}
-#loader .spStage{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(var(--sps,1));transform-origin:50% 50%}
-#loader .spEl{position:absolute;translate:-50% -50%;margin:0}
-#loader .spTitle,#loader .spPanel{opacity:0}
-#loader.in .spTitle{animation:spTitle .4s ease-out forwards}
-#loader.in .spPanel{animation:spPanel .35s cubic-bezier(.2,.9,.3,1) var(--d) forwards}
-#loader.quick .spPanel,#loader.quick #lGo{display:none}
-@keyframes spTitle{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:none}}
-@keyframes spPanel{from{opacity:0;transform:translateY(30px) scale(.96)}to{opacity:1;transform:none}}
-#loader .spBarWrap{height:14px;display:flex;justify-content:center;align-items:center}
-#loader #lBar{width:100%;height:12px;border-radius:7px;background:#26122Ecc;border:2px solid #E77FB8;box-sizing:border-box}
-#loader #lBar i{background:linear-gradient(90deg,#B04A90,#F7A8D2)}
-#loader #lGo{display:none;padding:0;border:0;background:none;cursor:pointer;animation:tapPulse 1.1s ease-in-out infinite alternate}
-#loader #lGo img{display:block;width:100%;pointer-events:none}
-#loader.ready.in #lGo{display:block} #loader.ready .spBarWrap{display:none}
-@keyframes tapPulse{from{opacity:.6;transform:scale(.97)}to{opacity:1;transform:scale(1.03)}}
-.spSkip{position:absolute;left:0;right:0;bottom:max(10px,env(safe-area-inset-bottom));display:flex;justify-content:center;align-items:center;gap:6px;font:700 13px "Nunito";color:#D9C6E6;opacity:0;transition:opacity .3s}
-#loader.in .spSkip{opacity:.85}
-.spSkip input{accent-color:#E255A0;width:15px;height:15px;margin:0}
-#sting{position:absolute;inset:0;z-index:5;background:radial-gradient(circle at 50% 50%,rgba(60,30,80,.6),#120C18 70%),#120C18;display:flex;align-items:center;justify-content:center;cursor:pointer}
-#sting .stBox{position:relative;height:62vmin;aspect-ratio:640/636;opacity:0}
-#sting .stLogo,#sting .stGlint{position:absolute;inset:0;width:100%;height:100%}
-#sting .stGlint canvas{position:absolute;inset:0;width:100%;height:100%}
-#sting .stGlow{position:absolute;left:50%;top:50%;width:135%;translate:-50% -50%;opacity:0;pointer-events:none}
-/* frameless symbol set (MANIFEST 2026-10-25): clean cutouts, contain-fit, darker reel panel so the room doesn't show through */
-.sym.art{overflow:visible} .sym.art img{object-fit:contain}
-.cell.win .sym.art{border-radius:0}
-#board,body.portrait #board{background:rgba(42,36,51,.6)}
-/* ---- stack / merge choreography (mergefx.ts); glows are static gradients, only opacity/transform animate ---- */
-#board.mAnt #cells .cell{opacity:.5}
-.ov .ovGlow{position:absolute;inset:0;z-index:4;pointer-events:none;opacity:0;
-  background:radial-gradient(ellipse 70% 55% at 50% 50%,#FF5FAE00 40%,#FF5FAE55 75%,#FF5FAE99 100%)}
-.mRing{position:absolute;top:50%;z-index:6;pointer-events:none;width:calc(var(--cell)*1.1);height:calc(var(--cell)*1.1);border-radius:50%;opacity:0;
-  background:radial-gradient(closest-side,#FF5FAE00 58%,#FF8CCBee 72%,#FFE3F2 78%,#E255A099 86%,#E255A000 100%)}
-.mRing.big{width:calc(var(--cell)*1.4);height:calc(var(--cell)*1.4)}
-.ov .mLets{position:absolute;left:0;right:0;bottom:16%;height:0;z-index:4;pointer-events:none}
-.ov .mLets b{position:absolute;top:0;transform:translate(-50%,0);font:900 calc(var(--cell)*.42) "Nunito";letter-spacing:.02em;color:#FFF4FA;
-  -webkit-text-stroke:4px #2A1830;paint-order:stroke fill;text-shadow:0 0 10px #FF5FAEcc,0 0 22px #E255A088}
-.ov .ovWinO{position:absolute;inset:2px;z-index:4;pointer-events:none;opacity:0;transition:opacity .2s;border-radius:8px;
-  border:3px solid #FFD2EA;box-shadow:inset 0 0 0 2px #FF5FAE,inset 0 0 18px #FF5FAEaa,0 0 0 2px #E255A0}
-.ov.win .ovWinO{opacity:1}
-/* win: 3D tilt toward the camera (6-8°) eased with the 1.08 pop, and a separate soft shadow that shifts with it */
-.cell.win .sym{transform:perspective(calc(var(--cell)*5)) scale(1.08) rotateX(var(--tX,6deg)) rotateY(var(--tY,0deg));transition:transform .26s cubic-bezier(.3,1.5,.5,1)}
-.cell .symSh{position:absolute;left:12%;right:12%;bottom:4%;height:22%;z-index:0;pointer-events:none;border-radius:50%;opacity:0;
-  background:radial-gradient(closest-side,#1A0F20aa,#1A0F2000);transform:none;transition:opacity .22s,transform .26s cubic-bezier(.3,1.5,.5,1)}
-.cell.win .symSh{opacity:.75;transform:translate(var(--shX,0%),calc(var(--cell)*.06)) scale(1.12,1.2)}
-/* ---- legible text floor (stage.ts --tb): only on small landscape screens (phone landscape) where the single stage
-   scale shrinks text below legibility. --tb boosts HUD / win / banner text, --tbs (<=1.5) the in-cell badges,
-   --tbm (<=1.6) zooms modals. Desktop and portrait never get body.tb, so they are unchanged. ---- */
-body.tb #app #strip label{font-size:calc(13px*var(--tb))}
-body.tb #app #strip span{font-size:calc(20px*var(--tb))}
-body.tb #app #strip .m{gap:calc(6px*var(--tb))}
 body.tb .lock{font-size:calc(var(--cell)*.085*var(--tbs))}
-body.tb .wlAmt{font-size:calc(13px*var(--tb))}
-body.tb #app #stepToast{font-size:calc(22px*var(--tb));min-height:calc(32px*var(--tb))}
-body.tb:not(.portrait) #app #banner{font-size:calc(20px*var(--tb))}
-body.tb:not(.portrait) #app #fsBar{font-size:calc(20px*var(--tb))} body.tb #fsCap{font-size:calc(13px*var(--tb))}
-body.tb #autoBtn[data-n]:not([data-n=""])::after{font-size:calc(11px*var(--tb))}
-body.tb #armTag{font-size:calc(var(--sp)*.13*var(--tbs))} body.tb #autoN{font-size:calc(var(--sp)*.15*var(--tbs) + 6px / var(--s,1))}
-body.tb .spins{font-size:calc(30px*var(--tbs))} body.tb .cont{font-size:calc(15px*var(--tb));padding:calc(12px*var(--tbs)) calc(28px*var(--tbs))}
-body.tb .carried{font-size:calc(15px*var(--tb))} body.tb .otHint{font-size:calc(12px*var(--tb))}
-body.tb .bwX{font-size:calc(16px*var(--tb))} body.tb .bwAmt{font-size:calc(62px*var(--tbs))}
-body.tb .mwHint{font-size:calc(16px*var(--tb))} body.tb .mwAmt{font-size:calc(44px*var(--tbs))}
-body.tb .modal{zoom:var(--tbm);max-height:calc(90*var(--vh)/var(--tbm));max-width:calc(94*var(--vw)/var(--tbm))}
-body.tb .modal.bm{width:min(860px,calc(94*var(--vw)/var(--tbm)))}
-
-/* stack / merge sheets (stacks.ts): each canvas covers the overlay; the placeholder it replaces hides only while it is there */
-.ov canvas.stk{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
-.ov canvas.stk_letters{z-index:4} .ov canvas.stk_win{z-index:2}
-.ov canvas.stk_react{z-index:1} .ov:has(>canvas.stk_win)>canvas.stk_react{opacity:0}   /* face reaction: above the held body, under letters / win */
-.ov:has(>canvas.stk_body)>.wart,.ov:has(>canvas.stk_win)>.wart{visibility:hidden}
-/* merge hit: the singles' poses (snapshots) scale up into the merged group pose, clipped to the merged reels (.ov overflow) */
-.ov>canvas.stk_body,.ov>.wart{transform-origin:50% 55%}
-.ov:has(>canvas.stk_letters) .mLets{display:none}
-.ov .mLets.mStill{inset:0;height:auto} .ov .mLets.mStill img{display:block;width:100%;height:100%;pointer-events:none} .ov .mLets.mStill i.stkLets{position:absolute;display:block;pointer-events:none;background-repeat:no-repeat} /* r8d letters still (ui.ts stillHTML) until letters_ignite decodes */
-.ov:has(>canvas.stk_win) .mLets{display:none}
-.ov:has(>canvas.stk_win)>canvas.stk_body{opacity:0}
-
-/* ---- wild multipliers: ONE pink gem in each wild's top-left corner (cell, full reel, merged group = product).
-   --mxdx / --mxdy (ui.MX_NUDGE, cells) move it off a face if an art set needs it. A soft dark halo behind the
-   lettering keeps it readable on busy art (static; only transform / opacity animate). ---- */
-.mx{right:auto;left:calc(2px + var(--mxdx,0)*var(--cell));top:calc(2px + var(--mxdy,0)*var(--cell));transform-origin:14% 45%}
-.ov .mx{top:calc(3px + var(--mxdy,0)*var(--cell))}
-.mx::before{content:"";position:absolute;left:-10%;top:-28%;width:62%;height:156%;z-index:-2;pointer-events:none;
-  background:radial-gradient(closest-side,#2A0F24a6 30%,#2A0F2400)}
-.ov .mx.rGem{z-index:6}
-/* bonus-buy cards: Black Diamond / Double Black crops are top-weighted like EGW (heads + faces looking back, upper body, WILD tattoo); EGW (WF, 1 x 4 cells) shows her head too */
-.bcard[data-m="double_dare"] .bArt img{object-position:50% 16%} .bcard[data-m="triple_dare"] .bArt img{object-position:50% 6%}
-.bArt.tall img{object-position:50% 14%}
-
-/* ===== board frame B2 "Lounge Alcove" (src/game/alcove.ts; art: board_frame/r2). Self-contained block: keep it at the
-   end of the file and gated on body.alcove (set once the alcove art is present), so other patches to this file apply
-   around it. Layers sit in #app's stacking context: ambient < recess < ledge < #board (z 0) < crown/twinkle < #fsBar/#top.
-   Animation: opacity only. ===== */
-#alcove{display:contents}
-#alcoveAmbient,#alcoveRecess,#alcoveLedge,#alcoveCrown{position:absolute;left:0;top:0;pointer-events:none;display:none;contain:layout paint}
-body.alcove #alcoveAmbient,body.alcove #alcoveRecess,body.alcove #alcoveLedge,body.alcove #alcoveCrown{display:block}
-#alcoveAmbient{z-index:-3;contain:none;
-  background:radial-gradient(closest-side,#0c041059,#0c041000) 50% 50%/46% 40% no-repeat,
-    radial-gradient(closest-side,#0c041066,#0c041000) 30% 64%/14% 4% no-repeat,radial-gradient(closest-side,#0c041066,#0c041000) 70% 64%/14% 4% no-repeat,
-    radial-gradient(closest-side,#ff96cd33,#ff96cd00)}
-#alcoveRecess{z-index:-2}
-/* the 9-slice export is the unlit master; the B2 previews light it with the room (2x room_light, ~x.49 + plum tint), so
-   match them with a static filter (fitted to B2_landscape.jpg; not animated) */
-#alcoveLedge{z-index:-1;box-sizing:border-box;border-style:solid;border-color:transparent;border-image-slice:100 130 69 130 fill;border-image-repeat:stretch;
-  filter:brightness(.34) saturate(1.35)}
-#alcoveCrown{z-index:1}
-/* v3.7 (gate F2) portrait: the frame's bottom rail (alcove.ts #alcoveRail) and the board inset - a 6 px transparent border
-   around the exact 5 x 4 grid, so no cell / wild frame meets the clip edge (was 4 px cut) and the rail never covers a cell */
-#alcoveRail{position:absolute;left:0;top:0;pointer-events:none;display:none;z-index:1;background-size:100% 100%;background-repeat:no-repeat}
+body.tb #fsCap{font-size:calc(13px*var(--tb))}
+body.tb #autoN{font-size:calc(var(--sp)*.15*var(--tbs) + 6px / var(--s,1))}
+body.tb .spins{font-size:calc(30px*var(--tbs))}
+body.tb .carried{font-size:calc(15px*var(--tb))}
+body.tb .otHint{font-size:calc(12px*var(--tb))}
+body.tb .bwX{font-size:calc(16px*var(--tb))}
+body.tb .mwHint{font-size:calc(16px*var(--tb))}
+body.tb .mwAmt{font-size:calc(44px*var(--tbs))}
 body.alcove.portrait #alcoveRail{display:block}
-body.alcove.portrait #board{border-width:6px;width:calc(var(--cell)*5 + var(--gap)*4 + 12px);height:calc(var(--cell)*4 + var(--gap)*3 + 12px)}
-#alcoveRecess>i,#alcoveCrown>i{position:absolute;inset:0;background-size:100% 100%;background-repeat:no-repeat}
-#alcove .avFs{opacity:0;transition:opacity .45s ease-out}
-#alcove .fs>.avFs{opacity:1}
-#alcove .tw{opacity:.25;animation:tw 3.2s ease-in-out infinite;will-change:opacity}
-#alcove .tw1{animation-delay:-1.07s} #alcove .tw2{animation-delay:-2.13s}
-@keyframes tw{0%,100%{opacity:.25}50%{opacity:.7}}
-@media (prefers-reduced-motion:reduce){#alcove .tw{animation:none;opacity:.45}}
-/* the alcove replaces the old bezel, board backfill and HUD plate; their layout boxes (padding, border widths) stay */
-body.alcove #frame,body.alcove.portrait #frame,body.alcove #frame.art{background:none;border-color:transparent;border-image:none;box-shadow:none}
-body.alcove #frame::before{display:none}
-body.alcove #board,body.alcove.portrait #board{background:transparent;border-color:transparent;box-shadow:none}
 body.alcove #app #hud,body.alcove.portrait #app #hud{background:none;border-color:transparent;box-shadow:none}
 body.alcove #app #hud::before{border-top-color:transparent}
-/* the free-spins bar hangs on the crown like a sign: above the crown layer in both orientations (landscape already z 4) */
-body.alcove.portrait #app #fsBar{position:relative;z-index:4}
-/* v3.12 (James 2026-10-26 "more glow ... on the frame and a very subtle pink glow along the reel lines").
-   Tuning knobs (one place):
-     --frameGlowOp      frame halo opacity at its peak (0 = off)
-     --frameGlowLo      breathe low point as a fraction of the peak (1 = no visible breathe)
-     --frameGlowAnim    fgBreathe | none   (breathe on / off; prefers-reduced-motion forces it off)
-     --frameGlowPeriod  one full breath (>= 4 s; calm pace)
-     --reelLineOp       reel divider opacity (0 = off)
-     --reelLineW        divider core width
-     --reelLineCol      divider colour (pink; the single wilds own gold #FFC83D)
-   Frame halo: one pre-rendered webp per orientation (scripts/gen-frame-glow.py), opacity only. z 0 + first in #app, so it
-   paints over the room (#bg is a positioned sibling in #root, which hides the alcove's negative-z layers) but under
-   #board (z 0, later) and the crown (z 1); its inside is cleared over the board opening.
-   Reel lines: four static 1px-ish gradients + a static soft blur box behind the symbols, nothing animates. */
-:root{--frameGlowOp:.8;--frameGlowLo:.6;--frameGlowAnim:fgBreathe;--frameGlowPeriod:7s;
+opacity only. z 0 + first in #app,so it
+   paints over the room (#bg is a positioned sibling in #root{--frameGlowOp:.8;--frameGlowLo:.6;--frameGlowAnim:fgBreathe;--frameGlowPeriod:7s;
   --reelLineOp:.3;--reelLineW:2px;--reelLineCol:#FF8FD2}
 #alcoveGlow{position:absolute;left:0;top:0;pointer-events:none;display:none;z-index:0;background-size:100% 100%;background-repeat:no-repeat;
   opacity:var(--frameGlowOp);animation:var(--frameGlowAnim) var(--frameGlowPeriod) ease-in-out infinite;will-change:opacity}
@@ -857,7 +109,7 @@ body.alcove #alcoveGlow{display:block}
 .ov>.wFrame>b{position:absolute;display:block;border-radius:inherit}
 /* v2 (thicker + brighter): two glow layers inside the overlay (.ov clips, so nothing reaches the board edge / alcove).
    wfG  wide soft halo in the ACC tone, inward to max(18px, cell*.2), breathes .82-1 (opacity only, 3.6 s cycle)
-   wfH  tight hot glow in the bright RIM tone hugging the line, inward to max(9px, cell*.08), static */
+
 .ov>.wFrame>.wfG{inset:0;--w:max(18px,calc(var(--cell)*.2));background:var(--wfG);opacity:.82;will-change:opacity;
   -webkit-mask:linear-gradient(90deg,#000 0,#000 6px,#0007 calc(var(--w)*.5),#0000 var(--w),#0000 calc(100% - var(--w)),#0007 calc(100% - var(--w)*.5),#000 calc(100% - 6px),#000 100%),
                linear-gradient(180deg,#000 0,#000 6px,#0007 calc(var(--w)*.5),#0000 var(--w),#0000 calc(100% - var(--w)),#0007 calc(100% - var(--w)*.5),#000 calc(100% - 6px),#000 100%);
@@ -895,7 +147,7 @@ body{--at:2} body.turbo{--at:1}
 .sym .olWin,.ov .ovWinO{transition-duration:calc(.2s*var(--at))}
 /* ===== end board tempo ===== */
 /* ===== aifix: no four-point sparkles (fx.ts / wildfx.ts / featfx.ts / intro.ts). Winning symbols: the baked sym_<S>
-   strips (star twinkles) are not played, so the static art + its lit outline layer bob slowly instead (transform only). ===== */
+
 .cell.win .sym.art>img{animation:aiSymBob calc(1.3s*var(--at,2)) ease-in-out infinite alternate;transform-origin:50% 80%;will-change:transform}
 @keyframes aiSymBob{from{transform:translateY(0) scale(1)}to{transform:translateY(-2.5%) scale(1.025)}}
 @media (prefers-reduced-motion:reduce){.cell.win .sym.art>img{animation:none}}
@@ -903,165 +155,16 @@ body{--at:2} body.turbo{--at:1}
 /* ===== aifix: calm wild landing (audit 18). No neon ring round single wilds; the art's own elf-colour sticker border
    is the read, the landing is the transform squash (.wLand). The bold frames on stacked / merged wilds stay as approved. ===== */
 .cell.wild::before{content:none;display:none}
-.cell.wLand .sym{animation:wPop calc(.28s*var(--at,2)) cubic-bezier(.3,1.4,.5,1)}
-/* ===== end aifix wild landing ===== */
-/* ===== aifix: old round-frame (circle symbol) leftovers removed (audit 18). The frameless cutouts carry no disc, so no
-   ring, disc or round clip is drawn round a cell any more: the round win glow disc (.lit), the round clip on winning art,
-   the round LOCKED ring (the LOCKED tag stays), the merge pulse ring (.mRing, mergefx) and the single-wild neon ring. */
-.cell .lit{display:none}
-.cell.win .sym.art{border-radius:0}
-.cell.locked::after{content:none;display:none}
-.mRing{display:none}
-.cell.wild::before{content:none;display:none}
-canvas.wfxRing{display:none}
-/* ===== aifix: win glow = the symbol's own outline (<KEY>_glow sprite, same size/registration, behind the art; no disc).
-   Fade in, then a slow calm opacity pulse with a hair of scale, fade out when .win clears. Opacity/transform only, no
-   animated filters; every duration scales with the board tempo (--at: 2 normal, 1 turbo), so turbo halves it and a
-   skip (which clears .win) just fades it out. */
-.sym .symGlow{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:0;transform-origin:50% 80%;transition:opacity calc(.3s*var(--at)) ease-out}
-.sym .symGlow img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;transform-origin:50% 55%}
-.sym.art>img:not(.olWin){z-index:1}
-.cell.win .sym .symGlow{opacity:1;transition-duration:calc(.35s*var(--at))}
-.cell.win .sym .symGlow img{animation:aiGlowPulse calc(1.1s*var(--at)) ease-in-out calc(.35s*var(--at)) infinite alternate}
-.cell.win .sym.art>.symGlow{animation:aiSymBob calc(1.3s*var(--at)) ease-in-out infinite alternate}
-@keyframes aiGlowPulse{from{opacity:1;transform:none}to{opacity:.55;transform:scale(1.015)}}
-@media (prefers-reduced-motion:reduce){.cell.win .sym .symGlow img,.cell.win .sym.art>.symGlow{animation:none}}
-/* v3.7 (owner: wilds must stand out): every landed wild cell (singles + sticky/locked) always shows its own neon outline
-   glow (W_R<n>_glow, behind the art) and breathes slowly (opacity .9 <-> .55, ~2.8 s cycle, x --at); one gentle brighten
-   on land (.wLand, ~400 ms ease-out) then the breathe. Opacity/transform only. Never on the spin tape (.slot, blur) or a
-   spinning cell (hidden); full-reel / merged wilds hide their cells (own frames). A win keeps the stronger pulse above. */
-.cell.wild:not(.win) .sym.W .symGlow{opacity:1}
-.cell.wild:not(.win) .sym.W .symGlow img{animation:wGlowBreathe calc(.7s*var(--at)) ease-in-out infinite alternate}
-.cell.wild.wLand:not(.win) .sym.W .symGlow img{animation:wGlowLand calc(.2s*var(--at)) ease-out both,wGlowBreathe calc(.7s*var(--at)) ease-in-out calc(.2s*var(--at)) infinite alternate}
-@keyframes wGlowBreathe{from{opacity:.9}to{opacity:.55}}
-@keyframes wGlowLand{from{opacity:.35;transform:scale(.98)}45%{opacity:1;transform:scale(1.03)}to{opacity:.9;transform:none}}
-@media (prefers-reduced-motion:reduce){.cell.wild:not(.win) .sym.W .symGlow img,.cell.wild.wLand:not(.win) .sym.W .symGlow img{animation:none;opacity:.8}}
-/* ===== aifix: splash (audit 3): blurred, darkened Lounge plate (splash_bg_*.webp) + 3 plain feature cards with real
-   in-game art (intro.ts CARDS). Plum ink frame, one line of copy; the cards only fade/rise in (transform/opacity). */
-#loader .spCard{box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:18px;padding:30px 30px 34px;border-radius:18px;
-  background:linear-gradient(#24162ee6,#170e1ee6);border:2px solid #4A2D58;box-shadow:0 18px 40px #0a050e80;color:#F3ECF6;text-align:center}
-#loader .spCard .spArt{width:300px;height:300px;display:flex;align-items:center;justify-content:center}
-#loader .spCard .spArt img{max-width:100%;max-height:100%;object-fit:contain;display:block}
-#loader .spCard h3{margin:0;font:800 42px/1.05 "Cinzel";letter-spacing:.04em;color:#FBEAF4}
-#loader .spCard p{margin:8px 0 0;font:700 25px/1.3 "Nunito";color:#CDBFD6}
-#loader[data-o="port"] .spCard{flex-direction:row;text-align:left;gap:30px;padding:24px 34px}
-#loader[data-o="port"] .spCard .spArt{width:300px;height:300px;flex:none}
-#loader[data-o="port"] .spCard h3{font-size:46px} #loader[data-o="port"] .spCard p{font-size:28px}
-#loader.in .spPanel{animation-duration:.6s}
-/* the painted TAP TO START plate carries four-point star sparkles (audit 1): a plain lettered button instead, calm pulse */
-#loader #lGo img{display:none}
-#loader #lGo::after{content:"TAP TO START";display:block;box-sizing:border-box;padding:22px 0 20px;border:2px solid #4A2D58;border-radius:14px;
-  background:linear-gradient(#2a1934f0,#1a0f21f0);font:800 34px/1 "Cinzel";letter-spacing:.08em;color:#FBEAF4;text-align:center}
-#loader #lGo{animation:tapPulse 2.2s ease-in-out infinite alternate}
-@keyframes tapPulse{from{opacity:.75;transform:scale(.985)}to{opacity:1;transform:scale(1.015)}}
-/* ===== aifix: buy cards (audit 5): real art, framed to the figures (heads always in), Mystery = ink "?" card; ANTE label
-   legible (the 3x cost was a 9px grey footnote) */
-.bArt{background:linear-gradient(#2a1a33,#1c1224)}
-.bArt img{object-fit:cover;object-position:50% 50%}
-.bcard[data-m="double_dare"] .bArt img,.bcard[data-m="triple_dare"] .bArt img{object-position:50% 6%}
-.bcard[data-m="egw"] .bArt img{object-fit:contain;object-position:50% 30%;transform:scale(1.08)}
-#anteRow .lbl{font-size:15px;letter-spacing:1.5px}
-#anteRow .lbl small{font-size:14px;opacity:1;color:#F3C6DE;margin-left:8px;letter-spacing:.5px}
-.bcard[data-m="dare"] .bArt img{object-fit:contain;transform:scale(1.3);transform-origin:50% 40%}
-/* ===== aifix: no lavender flash on load (audit 21): page, placeholder #bg and loader all start on deep plum */
-html,body{background:#120C18}
-#bg:not(.art){background:#120C18}
-/* ===== aifix: one icon language (audit HUD icons + polish): every HUD / menu glyph is stroke-only, one rendered weight
-   (non-scaling 2.25px, round caps), one cream ink; no filled heads, no letters. Every frame (round buttons, bonus cards,
-   rows, modals) shares one 1.5px plum ink line. */
-#hud svg :is(path,rect,circle,polyline),#bmBet svg path,#armTag svg path{vector-effect:non-scaling-stroke;stroke-width:2.25px}
-#hud svg{stroke:#F6ECF3} #hud svg .fill{fill:none;stroke:inherit}
-#app #spinBtn svg{stroke-width:2.25px}
-#autoBtn.on svg{stroke:var(--gold)}
-#app #hud .ico:not(.emblem),#app #anteBtn,#bmBet .ico,#buyCards .bcard,.row,.modal{border-width:1.5px;border-color:#6E4A7E}
-#buyCards .bcard:hover{border-color:#9A6FAE}
-#buyCards .bcard.armed{border-color:#F06AAE}
-#app #hud .ico.toggle.on,#app #hud #autoBtn.on{border-color:var(--gold)}
-/* (aifix #roxySh contact shadow retired: the rig draws its own contact + cast shadow) */
 
-/* ---------- aifix 12/13: FS intro/outro card + win-title type system ----------
-   One title face (Cinzel 900) for every win/feature title: cream fill, plum ink line, one static neon halo per tier
-   (the neon is kept on purpose). No animated filters: the old stacked drop-shadow filters are replaced by a text stroke.
-   Sprite hook: ui.ts titleHook sets data-tier + .spr + --title-img when title_<tier>win art exists (brand-v3 titles). */
-:root{--tt-ink:#3A2347;--tt-fill:#FFF4FA;--tt-neon:#FF5FB0}
-.tierName,.bwTier{font-family:"Cinzel",serif;font-weight:900;line-height:1.05;text-transform:uppercase;
-  background:none;-webkit-background-clip:border-box;background-clip:border-box;color:var(--tt-fill);filter:none;
-  -webkit-text-stroke:.09em var(--tt-ink);paint-order:stroke fill;
-  text-shadow:0 .04em 0 var(--tt-ink),0 0 .28em color-mix(in srgb,var(--tt-neon) 70%,transparent)}
-.bwTier[data-tier="big"]{--tt-neon:#FF5FB0}
-.bwTier[data-tier="mega"],.bwTier[data-tier="super"]{--tt-neon:#C07BFF}
-.bwTier[data-tier="epic"]{--tt-neon:#7FD8FF}
-.bwTier[data-tier="legendary"]{--tt-neon:#FFD27A;--tt-fill:#FFF8E6}
-#maxwin .mwTier{--tt-neon:#FF5FB0} /* max: style owned by motion.patch; var exposed for parity only */
-.bwTier.spr{font-size:0;color:transparent;-webkit-text-stroke:0;text-shadow:none;width:min(calc(60*var(--vw)),860px);aspect-ratio:3.6;
-  margin:0 auto;background:var(--title-img) center/contain no-repeat}
-body.portrait .bwTier.spr{width:calc(86*var(--vw))}
-.bwTier.on{transition-duration:calc(.12s*var(--at)/2),calc(.25s*var(--at)/2)}
-.bwTier.pop{animation-duration:calc(.42s*var(--at)/2)} .bwGlow.burst{animation-duration:calc(.7s*var(--at)/2)}
-.bwAmt{filter:none;-webkit-text-stroke:.07em var(--tt-ink);paint-order:stroke fill;text-shadow:0 .05em 0 var(--tt-ink)}
-
-/* FS intro / outro: one calm plum card, same frame as the splash cards; no confetti (featfx off) */
-#intro .card,#outro .card{background:linear-gradient(#24162EF2,#170E1FF2);border:1.5px solid #6E4A7E;border-radius:16px;
-  box-shadow:0 18px 40px -12px #000C;padding:28px 60px 26px;color:#F6ECF3;animation-name:aiCardIn;animation-timing-function:cubic-bezier(.2,.8,.3,1)}
-@keyframes aiCardIn{0%{opacity:0;transform:translateY(14px) scale(.97)}100%{opacity:1;transform:none}}
-#intro .tierName,#outro .tierName{font-size:56px;letter-spacing:2px}
-#intro .spins{font-family:"Nunito",sans-serif;font-weight:800;font-size:22px;letter-spacing:3px;color:#E9D6EE;margin:8px 0 18px}
-#intro .cont{background:#FF5FB0;color:#2A1433;border:0;border-radius:999px;padding:11px 40px;font-weight:900;letter-spacing:2px;font-size:15px}
-#outro .otAmt{font-family:"Nunito",sans-serif;font-size:44px;color:#fff;margin-top:6px}
-#outro .otHint{letter-spacing:2px;opacity:.5}
-body.portrait #intro .tierName,body.portrait #outro .tierName{font-size:34px}
-body.portrait #intro .card,body.portrait #outro .card{padding:22px 24px}
-body.portrait #outro .otAmt{font-size:32px}
-@media (prefers-reduced-motion:reduce){#intro .card,#outro .card{animation:none}}
-
-/* ---------- aifix 13 (audit 24): settings panel (no audio in the game, so no sound toggle) ---------- */
-.sw{position:relative;width:46px;height:26px;padding:0;border-radius:999px;background:#2A1B33;border:1.5px solid #6E4A7E;cursor:pointer;flex:none}
-.sw::after{content:"";position:absolute;top:3px;left:3px;width:17px;height:17px;border-radius:50%;background:#F6ECF3;transition:transform calc(.12s*var(--at))}
-.sw.on{background:#FF5FB0;border-color:#FF5FB0} .sw.on::after{transform:translateX(20px);background:#2A1433}
-/* v3.13: the Calm motion switch is gone (James); the OS prefers-reduced-motion setting still stops the idle loops
-   (win pulse, wild glow, alcove twinkle, intro / outro, frame glow breathe: their @media rules above) and the loader pulse */
-@media (prefers-reduced-motion:reduce){#loader #lGo{animation:none}}
-
-/* ---------- aifix polish: static paper grain (~2.5%) over background + HUD; no animation ---------- */
-body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:45;background:url(ui/grain.webp) 0 0/256px 256px repeat;
-  opacity:.025;mix-blend-mode:overlay}
-
-/* ---------- aifix polish: glow budget (one glow source per screen state) ----------
-   idle: no UI glows (the room lights are the light), except the wild cells' own outline glow (v3.7, always on). win: the symbol outline glow (.symGlow) only; everything else
-   that used to glow (win line, line amounts, wild chips, respin dots, locked cells, full-reel frames, merge letters)
-   becomes a flat plum ink line. big/max win + feature titles: the title neon only (kept). */
-.pl polyline{filter:none}
-.wlAmt{text-shadow:0 1px 0 #2A1433,0 0 0 #0000;-webkit-text-stroke:3px #2A1433;paint-order:stroke fill}
-.rd i{box-shadow:0 0 0 1px #3A0F2C}
-#app #spinBtn.armed{box-shadow:0 0 0 2px #0008,0 8px 16px -6px #000a}
-.cell.locked::after{box-shadow:0 0 0 1px #1A1420}
-.ov.full.art::before{box-shadow:inset 0 0 0 2px #6E4A7E}
-.ov .ovWinO{box-shadow:inset 0 0 0 2px #FF5FAE,0 0 0 2px #2A1433}
-.ov .mLets b{text-shadow:none}
-.sw.on{box-shadow:none}
-#buyCards .bcard.armed{box-shadow:0 0 0 1px #F06AAE}
-.chip.on{box-shadow:0 0 0 1px #F06AAE}
-.lock{box-shadow:inset 0 0 0 1px #C9B3EC66}
-.ov .ovGlow{display:none} /* radial pink ellipse = old circle highlight; the outline glow replaces it */
 /* ===== house-rule pass (final): every animated property is transform or opacity ===== */
-#lBar i{width:100%;transform:scaleX(0);transform-origin:0 50%;transition:transform .25s ease} /* loader.ts sets scaleX */
-.sw i{display:none} /* the knob is .sw::after (translateX); the old <i> knob left a second dot on Ante / Stop on feature */
-#buyCards .bcard{transition:none}
-body:not(.portrait) #bigwin .bw{top:0;transition:translate calc(.35s*var(--at,1)) ease-out}
-body:not(.portrait) #bigwin.chars .bw{top:0;translate:0 calc(-17*var(--vh))}
-/* ---- WebKit / Stake iframe robustness (live v3 on iPhone Safari): every layer of the game lives inside #root, which
-   carries the one stage transform (stage.ts). Layers used position:fixed; under a transformed ancestor that is
-   supposed to behave like absolute, but iOS WebKit can pin fixed layers to the viewport instead (background /
-   Roxy / overlays drawn unscaled and out of step with the scaled UI layer). They are absolute now, so the background,
-   Roxy, board, HUD and overlays always share #root's single transform and can never come apart. ---- */
-#root #bg,#root #bgFade,#root #scene,#root #app,#root .overlay,#root #replayBar,#root #maxwin,#root #loader,
-#root #flyLayer,#root #flyLayer .mx,body.short:not(.portrait) #root #top,body.short:not(.portrait) #root #app #fsBar{position:absolute}
+#lBar i{width:100%;transform:scaleX(0);transform-origin:0 50%;transition:transform .25s ease}
+
+#root #bg,#root #bgFade,#root #scene,#root #app,#root #loader,body.short:not(.portrait) #root #top{position:absolute}
 /* v3.9: the whole settings row is the tap target (settings.ts forwards a row tap to its switch); the switch's own hit area
-   also fills the row's padding. Nothing moves: no size, padding or position changes. */
 
 /* ===== v3.13 (James 2026-10-26): panels (panels.ts) =====
    Corner X: a small stylized neon blade X (two tapered strokes, plum stone outline, soft pink neon), no button plate,
-   no ring; the 44x44 hit box is invisible. Calm fades: backdrop opacity, card opacity + a small rise (transform). */
+
 .modal.hasX{padding-right:26px}
 .modal .mX{position:absolute;top:4px;right:4px;z-index:3;width:44px;height:44px;padding:0;margin:0;border:0;border-radius:0;background:none;
   display:flex;align-items:center;justify-content:center;opacity:.86;transition:opacity .3s ease;-webkit-tap-highlight-color:transparent}
@@ -1099,167 +202,22 @@ body.portrait .modal .mX{top:2px;right:2px}
 .rcBtns{display:flex;gap:12px;justify-content:center;margin-bottom:4px}
 #menu,#buyMenu,#autoMenu,#bmConfirm,#msg,#resumeCard{touch-action:none;overscroll-behavior:contain}
 /* bonus menu: Turbo row under Ante; the switches' hit areas fill their row padding (like the settings rows) */
-#turboRow,#anteRow{margin-top:8px} /* v3.15b: #bmBet now sits above Ante */
-#anteRow .sw::before,#turboRow .sw::before{content:"";position:absolute;inset:-9px -14px}
-#turboRow .lbl{font-size:15px;letter-spacing:1.5px}
-#turboRow .lbl small{font-size:13px;opacity:.75;margin-left:8px;letter-spacing:.5px;text-transform:none}
-/* bonus confirm card: above the bonus menu; tap outside (its backdrop) = back to the menu */
-#bmConfirm{z-index:60;background:#0B0A0F99}
-.modal.cf{width:min(420px,calc(92*var(--vw)));text-align:center;padding:18px 22px 14px}
-.cfArt{width:min(180px,46%);aspect-ratio:1;margin:0 auto 10px;border-radius:9px;overflow:hidden;background:#2A2433;border:1.5px solid #6E4A7E}
-.cfArt img{width:100%;height:100%;object-fit:cover;display:block}
-.cfArt[data-m="double_dare"] img,.cfArt[data-m="triple_dare"] img{object-position:50% 6%}
-.cfArt[data-m="egw"] img{object-fit:contain;object-position:50% 30%;transform:scale(1.08)}
-.cfArt[data-m="dare"] img{object-fit:contain;transform:scale(1.3);transform-origin:50% 40%}
-.modal.cf h2{margin:0 0 6px;font-size:26px;letter-spacing:1.5px}
-#cfDesc{font-size:14px;font-weight:600;line-height:1.4;color:#ECE6F2;margin:0 0 10px}
-.cfAmt{margin:4px 0 2px;color:#FFE6F2;font-variant-numeric:tabular-nums}
-.cfAmt b{font-size:24px;font-weight:900} .cfAmt span{font-size:12px;letter-spacing:1px;opacity:.85}
-.cfAmt small{display:block;font-size:12px;font-weight:800;color:#CFC9DA;opacity:.8;margin-top:2px}
-#cfNote{font-size:12px;opacity:.7;margin:6px 0 12px}
-#cfYes{margin:0 auto}
-.cfHint{font-size:11px;letter-spacing:.8px;opacity:.5;margin:max(24px,calc(26px / var(--s,1))) 0 0!important;text-transform:uppercase}
-/* v3.13e (FSD B1): about 26 screen px of dead space between CONFIRM and the hint at every stage scale (modal zoom under body.tb) */
-body.tb .cfHint{margin-top:calc(26px / (var(--s,1) * var(--tbm,1)))!important}
-body.portrait .modal.cf h2{font-size:22px}
+#turboRow,#anteRow{margin-top:8px}
 body.short:not(.portrait) .cfArt,body.tb .cfArt{width:min(120px,34%)}
-
-/* ---------- v3.14 (James): retrigger card "+X FREE SPINS" ----------
-   Same plum card family as the FS intro, smaller and lighter: light dim, no button, no burst, no rings.
-   Motion is WAAPI in bookEventHandlerMap.ts fsMoreCard (opacity + scale .92 -> 1 only). */
-#fsMore{background:#110F1640;cursor:pointer}
-#fsMore .card{text-align:center;background:linear-gradient(#24162EEB,#170E1FEB);border:1.5px solid #6E4A7E;border-radius:14px;
-  box-shadow:0 14px 30px -12px #000B;padding:18px 56px 22px;color:#F6ECF3;max-width:calc(80*var(--vw));will-change:transform,opacity}
-#fsMore .fmBig{font-family:"Cinzel",serif;font-weight:900;line-height:1.05;font-size:84px;letter-spacing:2px;
-  color:var(--tt-fill);-webkit-text-stroke:.09em var(--tt-ink);paint-order:stroke fill;
-  text-shadow:0 .04em 0 var(--tt-ink),0 0 .28em color-mix(in srgb,var(--tt-neon) 70%,transparent)}
-#fsMore[data-max="1"] .fmBig{font-size:60px}
-#fsMore .fmSub{font-family:"Nunito",sans-serif;font-weight:800;font-size:24px;letter-spacing:3px;color:#E9D6EE;margin-top:6px}
-body.portrait #fsMore .fmBig{font-size:52px} body.portrait #fsMore[data-max="1"] .fmBig{font-size:36px}
-body.portrait #fsMore .fmSub{font-size:16px} body.portrait #fsMore .card{padding:12px 30px 14px}
-/* landscape phones (body.tb: stage scale < .66): the same text boost as the intro/outro values */
-body.tb:not(.portrait) #fsMore .card{zoom:var(--tbs)}
-
-/* ---------- v3.15 (James): compact menu pop-out above the HUD menu button (settings.ts) ----------
-   Dark rounded card in the plum/neon frame; rows Info / Music / Sound; Music + Sound slide one slider out to the right
-   with a pointer arrow. Motion: opacity + transform only (open .35s, slider .3s). No round knobs (pill thumb). */
-#popMenu{position:absolute;z-index:45;min-width:150px;padding:6px;border-radius:12px;background:linear-gradient(#24162EF5,#170E1FF5);
-  border:1.5px solid #6E4A7E;box-shadow:0 14px 30px -10px #000C;opacity:0;visibility:hidden;pointer-events:none;
-  transform:translateY(10px) scale(.97);transform-origin:0 100%;transition:opacity .35s ease-out,transform .35s cubic-bezier(.2,.8,.3,1),visibility 0s .35s}
-#popMenu.open{opacity:1;visibility:visible;pointer-events:auto;transform:none;transition:opacity .35s ease-out,transform .35s cubic-bezier(.2,.8,.3,1),visibility 0s}
-#popMenu .pmItem{position:relative}
-#popMenu .pmRow{display:flex;align-items:center;gap:12px;width:100%;padding:9px 14px 9px 10px;border:0;border-radius:8px;background:none;
-  font-family:"Nunito",sans-serif;font-weight:800;font-size:15px;letter-spacing:1.5px;color:#F6ECF3;text-align:left}
-#popMenu .pmRow:hover,#popMenu .pmRow:focus-visible,#popMenu .pmItem.open .pmRow{background:#FFFFFF12}
-#popMenu .pmRow:focus-visible{outline:1.5px solid #FF5FB0;outline-offset:-1.5px}
-#popMenu .pmRow svg{width:22px;height:22px;flex:none;fill:none;stroke:#E9D6EE;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-#popMenu .pmX{display:none} #popMenu .pmItem.open .pmI{display:none} #popMenu .pmItem.open .pmX{display:block;stroke:#FF5FB0}
-#popMenu .pmSlide{position:absolute;left:calc(100% + 14px);top:50%;display:flex;align-items:center;height:40px;padding:0 16px;border-radius:10px;
-  background:linear-gradient(#24162EF5,#170E1FF5);border:1.5px solid #6E4A7E;box-shadow:0 10px 24px -10px #000C;
-  opacity:0;visibility:hidden;pointer-events:none;transform:translate(-8px,-50%);transition:opacity .3s ease-out,transform .3s cubic-bezier(.2,.8,.3,1),visibility 0s .3s}
-#popMenu .pmSlide::before{content:"";position:absolute;left:-7px;top:50%;width:11px;height:11px;margin-top:-6px;background:#1E1227;
-  border-left:1.5px solid #6E4A7E;border-bottom:1.5px solid #6E4A7E;transform:rotate(45deg)}
-#popMenu .pmItem.open .pmSlide{opacity:1;visibility:visible;pointer-events:auto;transform:translate(0,-50%);transition:opacity .3s ease-out,transform .3s cubic-bezier(.2,.8,.3,1),visibility 0s}
-#popMenu input[type=range]{-webkit-appearance:none;appearance:none;width:150px;height:28px;margin:0;background:none;cursor:pointer;--v:100%}
-#popMenu input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:linear-gradient(90deg,#FF5FB0 var(--v),#3A2747 var(--v))}
-#popMenu input[type=range]::-moz-range-track{height:6px;border-radius:3px;background:linear-gradient(90deg,#FF5FB0 var(--v),#3A2747 var(--v))}
-#popMenu input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:22px;margin-top:-8px;border-radius:4px;background:#FFF4FA;border:1.5px solid #3A2347}
-#popMenu input[type=range]::-moz-range-thumb{width:12px;height:22px;border-radius:4px;background:#FFF4FA;border:1.5px solid #3A2347}
-#popMenu input[type=range]:focus-visible{outline:1.5px solid #FF5FB0;outline-offset:4px;border-radius:4px}
-body.portrait #popMenu input[type=range]{width:128px}
-body.tb #popMenu{zoom:calc(var(--tbm)*1.25)} /* landscape phones: rows ~10px text, matched to the HUD labels */
-@media (prefers-reduced-motion:reduce){#popMenu,#popMenu.open,#popMenu .pmSlide,#popMenu .pmItem.open .pmSlide{transform:none}#popMenu .pmSlide{transform:translateY(-50%)!important}}
-
-/* v3.16e (#194): HUD readouts never run into each other. Under the landscape text boost (body.tb) the readout columns
-   are a fixed ~337 / 235 / 337 design px, so label and value get a design-px cap that fits "BALANCE 123,456.78 GC" and
-   "PLAY 1,000.00 GC" in them; in a short landscape iframe (<=300px tall) label and value stack, as in portrait. The label
-   keeps its size; a longer value is clipped with an ellipsis as a last resort. Desktop and portrait are unchanged. */
-#app #strip label{flex:none}
-#app #strip span{overflow:hidden;text-overflow:ellipsis} #app #strip span:not(#win){min-width:0} #app #strip #win{min-width:min(7.5ch,100%)}
-body.tb:not(.portrait) #app #strip span{font-size:min(calc(20px*var(--tb)),28px)}
-/* v3.16f (#194): a small inner margin so neighbouring readouts never touch; values wider than the box shrink to fit (stripfit.ts) */
-body.tb:not(.portrait) #app #strip .m{padding:0 calc(4px*var(--tb));justify-self:stretch;width:100%;box-sizing:border-box}
-body.tb:not(.portrait) #app #strip label{font-size:min(calc(13px*var(--tb)),21px)}
-@media (orientation:landscape) and (max-height:300px){
-  body.tb:not(.portrait) #app #strip .m{flex-direction:column;align-items:center;gap:0;line-height:1.05;max-width:100%}
-  body.tb:not(.portrait) #app #strip span{font-size:min(calc(20px*var(--tb)),36px);max-width:100%}
-  body.tb:not(.portrait) #app #strip label{font-size:min(calc(13px*var(--tb)),27px)}
-  /* v3.16g (#194): the stacked readouts are taller than the strip row, so a slightly smaller spin button and a small
-     downward offset keep the spin ring off the PLAY label (static: no animation) */
-  body.tb:not(.portrait) #app #spinBtn{width:72px;height:72px} body.tb:not(.portrait) #app #spinBtn svg{width:40px;height:40px}
-  body.tb:not(.portrait) #app #strip .m{position:relative;top:3px}
-}
-/* v3.16e (#194): resume card line at least ~10 screen px on landscape phones / small iframes */
-body.tb #rcLine{font-size:max(14px,calc(10px / (var(--s,1) * var(--tbm,1))))}
-/* ===== anim-v4 gameplay tempo (src/game/tempo.ts GAME_TEMPO): --gt = 1 normal and turbo. Reviewer feedback
-   ("Poor animations x3"): win feedback and reel landings were stretched 2x by --at and read as sluggish. Win
-   highlights, the line amount label, dim / un-dim and the wild landing pop run at studio pace again; idle /
-   ambient loops (wild breathe, stacks, merges, feature cards) keep --at. Transform / opacity only. ===== */
-body{--gt:1}
-.wlAmt{animation-duration:calc(.42s*var(--gt))}
-.cell{transition-duration:calc(.16s*var(--gt))}
-.cell.dim{transition-duration:calc(.14s*var(--gt))}
-.cell.win .sym{transition-duration:calc(.18s*var(--gt))}
-.cell .symSh{transition-duration:calc(.18s*var(--gt)),calc(.2s*var(--gt))}
-.sym .olWin,.ov .ovWinO{transition-duration:calc(.15s*var(--gt))}
-.sym .symGlow{transition-duration:calc(.2s*var(--gt))}
-.cell.win .sym .symGlow{transition-duration:calc(.16s*var(--gt))}
-/* the win pulse: a quick punch-in, then a steady ~0.9 s beat (was 2.6 s per bob at --at 2) */
-.cell.win .sym.art>img,.cell.win .sym.art>.symGlow{animation:v4WinPunch calc(.32s*var(--gt)) cubic-bezier(.3,1.5,.5,1) both,aiSymBob calc(.45s*var(--gt)) ease-in-out calc(.32s*var(--gt)) infinite alternate}
-.cell.win .sym .symGlow img{animation:aiGlowPulse calc(.45s*var(--gt)) ease-in-out calc(.16s*var(--gt)) infinite alternate}
-@keyframes v4WinPunch{0%{transform:scale(1)}45%{transform:scale(1.12)}100%{transform:scale(1)}}
-.cell.wLand .sym{animation:wPop calc(.22s*var(--gt)) cubic-bezier(.3,1.6,.5,1)}
-@media (prefers-reduced-motion:reduce){.cell.win .sym.art>img,.cell.win .sym.art>.symGlow,.cell.win .sym .symGlow img{animation:none}}
-body:not(.turbo) #cells .cell.wLand .sym{animation:wPop .24s cubic-bezier(.3,1.6,.5,1)} /* was the calm .42s wSettle */
-/* ===== end anim-v4 gameplay tempo ===== */
-
-/* ===== resub (approved PixiJS mockup): BUY BONUS = gold/black stone plate with the rabbit icon on a dark disc, label from
-   t('buyTitle') (social: GET BONUS). Calm ambient only: a slow breathe (3.2 s) and a soft shine sweep every 4.5 s.
-   Landscape: tall plate in the gutter left of the board (game.ts placeBuy sets --buyL/--buyT/--pk). Portrait / narrow
-   gutters: a rounded-rectangle plate in the HUD's bonus column spanning both rows (>= 48 px wide, ~90 px tall). ===== */
-#app #buyBtn.emblem.plate{position:relative;overflow:hidden;border-radius:14px;border:3px solid #ffc83d;color:#ffc83d;
-  background:linear-gradient(180deg,#30253a 0%,#241b2d 55%,#1a1322 100%);
-  box-shadow:inset 0 0 0 1.5px #1a0f24,inset 0 0 0 3px rgba(255,234,176,.55),inset 0 2px 0 3px rgba(255,255,255,.07),0 0 10px rgba(255,79,195,.28),0 6px 16px -6px #000c;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:4px 2px;
-  animation:buyBreathe 3.2s ease-in-out infinite}
-#app #buyBtn.plate .disc{display:flex;align-items:center;justify-content:center;border-radius:50%;background:#1a0f24;flex:0 0 auto;
-  width:calc(var(--sp)*.62);height:calc(var(--sp)*.62)}
-#app #buyBtn.plate .disc img,#app #buyBtn.plate .disc svg{width:100%!important;height:100%!important;margin:0}
-#app #buyBtn.plate .lbl{font:800 9px/1.02 Montserrat,system-ui,sans-serif;letter-spacing:.06em;color:#ffc83d;text-align:center;white-space:normal;
-  text-shadow:0 1px 0 #000;max-width:100%}
-#app #buyBtn.plate::after{content:"";position:absolute;inset:-20%;pointer-events:none;
-  background:linear-gradient(105deg,transparent 40%,rgba(255,236,190,.22) 50%,transparent 60%);transform:translateX(-120%);animation:buyShine 4.5s ease-in-out infinite}
-@keyframes buyBreathe{0%,100%{transform:scale(1)}50%{transform:scale(1.025)}}
-@keyframes buyShine{0%,70%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
-#app #buyBtn.plate:disabled{animation:none}
-#app #buyBtn.plate:disabled::after{animation:none;opacity:0}
-/* in the HUD (portrait + narrow landscape): span both HUD rows so the label fits */
-#app #buyBtn.plate:not(.side){grid-row:1/3;align-self:center;width:var(--bw);height:calc(var(--sp) + var(--mt) - 2px)}
-#app #strip .m:nth-child(3){grid-column:7/9}
-/* landscape gutter plate (216 x 240 at --pk 1.05 in the mockup's units) */
-#app #buyBtn.plate.side{position:absolute;grid-area:auto;left:var(--buyL);top:var(--buyT);width:calc(227px*var(--pk));height:calc(252px*var(--pk));
-  margin:0;border-width:calc(5px*var(--pk));border-radius:calc(30px*var(--pk));gap:calc(10px*var(--pk));padding:calc(14px*var(--pk))}
-#app #buyBtn.plate.side .disc{width:calc(132px*var(--pk));height:calc(132px*var(--pk))}
-#app #buyBtn.plate.side .lbl{font-size:calc(30px*var(--pk));letter-spacing:.05em;line-height:1.05}
-@media (prefers-reduced-motion:reduce){#app #buyBtn.plate,#app #buyBtn.plate::after{animation:none}}
-
-/* ===== resub (approved mockup, mobile): portrait HUD = 3 rows, every control >= 48 CSS px on a 390-wide phone.
-   row 1: [menu][turbo][autoplay] ........ [ BUY BONUS plate ];  row 2: [-] [SPIN] [+] on the centre line;  row 3: readouts ===== */
-body.portrait{--hb:48px;--sp:64px;--mt:30px}
 body.portrait #app #hud{grid-template-columns:repeat(5,minmax(0,1fr));grid-template-rows:48px var(--sp) var(--mt);row-gap:6px}
-body.portrait #app #menuBtn{grid-area:1/1} body.portrait #app #turboBtn{grid-area:1/2} body.portrait #app #autoBtn{grid-area:1/3}
-body.portrait #app #betDown{grid-area:2/2} body.portrait #app #spinBtn{grid-area:2/3} body.portrait #app #betUp{grid-area:2/4}
-body.portrait #armTag{grid-area:2/3}
 body.portrait #app #hud::before{grid-row:3}
-body.portrait #app #strip .m{grid-row:3}
-body.portrait #app #strip .m:nth-child(1){grid-column:1/3} body.portrait #app #strip .m:nth-child(2){grid-column:3/4} body.portrait #app #strip .m:nth-child(3){grid-column:4/6}
-body.portrait #app #buyBtn.plate:not(.side){grid-area:1/4/2/6;width:100%;height:48px;flex-direction:row;gap:8px;padding:0 10px;border-radius:14px;justify-self:stretch}
-body.portrait #app #buyBtn.plate:not(.side) .disc{width:40px;height:40px}
-body.portrait #app #buyBtn.plate:not(.side) .lbl{font-size:13px;white-space:nowrap}
 
-/* ===== resub: Pixi vestibule intro (introPixi.ts). #introCv sits just under #loader; the loader keeps the tap / Enter /
-   "Don't show this again" hooks but loses its DOM splash art, stays dark through the studio sting, then turns see-through. ===== */
 #introCv{position:absolute;left:0;top:0;z-index:199;pointer-events:none;display:block}
 #loader.px .spBg,#loader.px .spStage{display:none}
 #loader.px.pxOn.in{background:transparent}
 #loader.px .spSkip{z-index:2;color:#eee3f2;text-shadow:0 1px 3px #000}
+@keyframes lPulse{50%{transform:scale(1.04)}}
+
+/* studio sting */
+#sting{position:absolute;inset:0;z-index:5;background:radial-gradient(circle at 50% 50%,rgba(60,30,80,.6),#120C18 70%),#120C18;display:flex;align-items:center;justify-content:center;cursor:pointer}
+#sting .stBox{position:relative;height:62vmin;aspect-ratio:640/636;opacity:0}
+#sting .stLogo,#sting .stGlint{position:absolute;inset:0;width:100%;height:100%}
+#sting .stGlint canvas{position:absolute;inset:0;width:100%;height:100%}
+#sting .stGlow{position:absolute;left:50%;top:50%;width:135%;translate:-50% -50%;opacity:0;pointer-events:none}
+
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}

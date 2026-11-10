@@ -48,13 +48,17 @@ export function boardStage() {
 		const a = new Application();
 		try { await a.init({ backgroundAlpha: 0, antialias: true, preference: 'webgl', autoDensity: false, hello: false, sharedTicker: false, autoStart: false, width: 8, height: 8 }); }
 		catch (e) { console.warn('board stage', e); return null; }
-		const cv = a.canvas as HTMLCanvasElement; cv.id = 'boardStage'; cv.setAttribute('aria-hidden', 'true'); fr.appendChild(cv); watchCanvas(cv, 'board');
+		const cv = a.canvas as HTMLCanvasElement; cv.id = 'boardStage'; cv.setAttribute('aria-hidden', 'true');
+		const stage = Document.prototype.getElementById.call(document, 'stage') as HTMLElement | null;
+		(stage || document.body).appendChild(cv); watchCanvas(cv, 'board');
 		a.stage.sortableChildren = true; fxRoot = new Container(); fxRoot.label = 'boardFx'; fxRoot.sortableChildren = true; a.stage.addChild(fxRoot);
 		for (const n of Object.keys(BL) as BLayer[]) { const c = new Container(); c.label = n; c.zIndex = BL[n]; c.sortableChildren = true; layer[n] = c; fxRoot.addChild(c); }
 		app = a; place();
 		// resize + the frame's own ResizeObserver both fire on one resize: coalesced into one place() per frame
 		let q = 0; const later = () => { if (!q) q = requestAnimationFrame(() => { q = 0; place(); }); };
-		addEventListener('resize', later); new ResizeObserver(later).observe(fr);
+		addEventListener('resize', later);
+		if (stage) new ResizeObserver(later).observe(stage);
+		else new ResizeObserver(later).observe(fr);
 		a.ticker.add(() => { let live = false; for (const t of tickers) { if (t()) live = true; else tickers.delete(t); } a.render(); dirty = false; if (!live && !tickers.size) a.ticker.stop(); });
 		return a;
 	})());
@@ -68,7 +72,7 @@ export function kick() { if (!app) return; dirty = true; app.ticker.start(); }
 /** The centre of an element in frame-local layout px (walks offsetParents: exact at any stage scale / DPR). */
 export function centreOf(el: HTMLElement) {
 	let x = el.offsetWidth / 2, y = el.offsetHeight / 2;
-	for (let e: HTMLElement | null = el; e && e !== fr; e = e.offsetParent as HTMLElement | null) { x += e.offsetLeft; y += e.offsetTop; }
+	for (let e: HTMLElement | null = el; e && e !== fr; e = e.parentElement) { x += e.offsetLeft; y += e.offsetTop; }
 	return { x, y, w: el.offsetWidth, h: el.offsetHeight };
 }
 /** The stage's render resolution (device px per layout px). */
@@ -94,3 +98,6 @@ export function setLip(cv: HTMLCanvasElement, x: number, y: number, w: number, h
 		lip.position.set(x, y); lip.width = w; lip.height = h; kick();
 	});
 }
+
+/** Re-place the board canvas after mkPlace sizes #frame / #stage. */
+export function relayoutBoard() { place(); }

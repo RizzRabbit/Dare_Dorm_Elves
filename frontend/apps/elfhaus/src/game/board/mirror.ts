@@ -21,6 +21,9 @@ import DEPTH_JSON from '../chalet/symdepth.json';
 import { boardStage, layer, kick, animate, onLayout } from './stage';
 import { dbDisplay } from '../dbstacks';
 import { canvasRev } from '../sprite';
+import { isUiHost } from '../uihosts';
+import { hostProps } from '../hostcss';
+const hostLive = (el: Element | null | undefined) => !!el && (el.isConnected || isUiHost(el));
 import { mxFont } from '../ui';
 
 type Fr = { frame: { x: number; y: number; w: number; h: number } };
@@ -31,7 +34,17 @@ void DFR;
 // ---------- textures ----------
 type Src = { tex: Texture | null; img?: HTMLImageElement; p?: Promise<void> };
 const srcs = new Map<string, Src>();
+function normUrl(url: string): string {
+	if (!url) return url;
+	try {
+		const u = new URL(url, typeof location !== 'undefined' ? location.href : 'http://localhost/');
+		const path = u.pathname.replace(/^\//, '');
+		if (path.endsWith('sheets/symbols.webp') || path.endsWith('sheets/symdepth.webp')) return path.includes('symdepth') ? 'sheets/symdepth.webp' : 'sheets/symbols.webp';
+		return u.pathname.startsWith('/') ? path : url;
+	} catch { return url; }
+}
 function source(url: string): Texture | null {
+	url = normUrl(url);
 	let s = srcs.get(url);
 	if (!s) {
 		s = { tex: null }; srcs.set(url, s);
@@ -132,13 +145,49 @@ function flags(el: HTMLElement) {
 	return (cl && SKIP.test(cl) ? F_SKIP : 0) | (/\bsymGlow\b/.test(cl) || (el.tagName === 'IMG' && /\bstk_glow\b/.test(cl)) ? F_GLOW : 0)
 		| (/\bmx\b/.test(cl) ? F_MX : 0) | (/\bt(Rec|Bd|Fr)\b/.test(cl) ? F_NINE : 0) | (/\bstk_db\b/.test(cl) ? F_DB : 0);
 }
+function hostCs(el: HTMLElement): CSSStyleDeclaration {
+	// Detached hosts report display:none from the browser's getComputedStyle;
+	// use the resolved host stylesheet (and safe defaults) instead.
+	if (!isUiHost(el)) return getComputedStyle(el);
+	const p = hostProps(el);
+	const get = (k: string, d = '') => p[k] || d;
+	const bag = {
+		paddingTop: get('padding-top', '0px'),
+		transformOrigin: get('transform-origin', '50% 50%'),
+		translate: get('translate', 'none'),
+		rotate: get('rotate', 'none'),
+		scale: get('scale', 'none'),
+		transform: get('transform', 'none'),
+		opacity: get('opacity', '1'),
+		visibility: get('visibility', 'visible'),
+		display: get('display', 'block'),
+		zIndex: get('z-index', 'auto'),
+		filter: get('filter', 'none'),
+		mixBlendMode: get('mix-blend-mode', 'normal'),
+		clipPath: get('clip-path', 'none'),
+		overflow: get('overflow', 'visible'),
+		backgroundImage: (get('background-image', 'none').includes('url(') ? get('background-image') : get('background-image', 'none')),
+		backgroundSize: get('background-size', 'auto'),
+		backgroundPosition: get('background-position', '0% 0%'),
+		borderImageWidth: get('border-image-width', '0'),
+		borderTopWidth: get('border-top-width', '0'),
+		objectFit: get('object-fit', 'fill'),
+		getPropertyValue(name: string) { return p[name] || ''; },
+	};
+	if (bag.backgroundImage.includes('url(') && !bag.backgroundImage.includes('http') && !bag.backgroundImage.includes('data:')) {
+		bag.backgroundImage = bag.backgroundImage.replace(/url\((['"]?)([^'")]+)\1\)/, (_m, q, u) => {
+			try { return `url("${new URL(u, location.href).href}")`; } catch { return _m; }
+		});
+	}
+	return bag as unknown as CSSStyleDeclaration;
+}
 function style(el: HTMLElement, force: boolean): St {
 	let s = cache.get(el);
 	if (s && !force) return s;
-	const cs = getComputedStyle(el), g = geo.get(el), w = g ? g.w : el.offsetWidth, h = g ? g.h : el.offsetHeight;
+	const cs = hostCs(el), g = geo.get(el), w = g ? g.w : el.offsetWidth, h = g ? g.h : el.offsetHeight;
 	s = {
 		f: flags(el), pd: num(cs.paddingTop), o: cs.transformOrigin, tr: cs.translate, ro: cs.rotate, sc: cs.scale, tf: cs.transform, w, h,
-		m: localMatrix(cs, w, h), op: num(cs.opacity), vis: cs.visibility !== 'hidden', disp: cs.display !== 'none', z: cs.zIndex === 'auto' ? 0 : parseInt(cs.zIndex) || 0,
+		m: localMatrix(cs, w, h), op: (cs.opacity === '' || cs.opacity == null ? 1 : num(cs.opacity)), vis: cs.visibility !== 'hidden', disp: cs.display !== 'none', z: cs.zIndex === 'auto' ? 0 : parseInt(cs.zIndex) || 0,
 		br: brightness(cs.filter), blend: cs.mixBlendMode, clip: clipOf(cs, w, h), ov: cs.overflow === 'hidden' || cs.overflow === 'clip',
 		bg: cs.backgroundImage, bs: cs.backgroundSize, bp: cs.backgroundPosition, bw: num(cs.borderImageWidth) > 4 ? num(cs.borderImageWidth) : num(cs.borderTopWidth), fit: cs.objectFit,
 	};
@@ -284,7 +333,7 @@ function restyle(el: HTMLElement) {
 /** Re-measure one subtree in place (its own offset from its parent, then every descendant) and restyle it. */
 function remeasure(el: HTMLElement) {
 	const p = el.parentElement, pg = p && geo.get(p);
-	if (!p || !pg || !el.isConnected) { geoDirty = true; return; }
+	if (!p || !pg || !hostLive(el)) { geoDirty = true; return; }
 	const op = el.offsetParent as HTMLElement | null;
 	const x = op === p ? el.offsetLeft + p.clientLeft : el.offsetLeft - (p.offsetParent === op ? p.offsetLeft : 0);
 	const y = op === p ? el.offsetTop + p.clientTop : el.offsetTop - (p.offsetParent === op ? p.offsetTop : 0);
@@ -432,7 +481,7 @@ let roots: HTMLElement[] = [], board: HTMLElement | null = null, frame: HTMLElem
 // frame timing probe (window.__mirrorMs: the mirror's own cost per frame, last 600 frames)
 const msLog: number[] = []; if (import.meta.env.DEV) (globalThis as any).__mirrorMs = msLog;
 function tick() {
-	if (!board || !board.isConnected) return true;
+	if (!board || !hostLive(board)) return true;
 	const t0 = performance.now();
 	frameNo++; order = 0;
 	if (geoDirty) { rebuild(); changed = true; }
@@ -445,12 +494,12 @@ function tick() {
 	}
 	if (styleQ.size || inlineQ.size) changed = true;
 	// a class change restyles the element's subtree (descendant selectors) and re-sorts its siblings (z-index)
-	for (const el of styleQ) { if (!el.isConnected) continue; restyle(el); const p = el.parentElement, pg = p && geo.get(p);
+	for (const el of styleQ) { if (!hostLive(el)) continue; restyle(el); const p = el.parentElement, pg = p && geo.get(p);
 		if (p && pg) pg.kids = ([...p.children] as HTMLElement[]).map((k, i) => [cache.get(k)?.z ?? 0, i, k] as const).sort((x, y) => x[0] - y[0] || x[1] - y[1]).map((v) => v[2]); }
 	styleQ.clear();
 	for (const el of inlineQ) inlineUpdate(el);
 	inlineQ.clear();
-	for (const el of visQ) if (el.isConnected) restyle(el);
+	for (const el of visQ) if (hostLive(el)) restyle(el);
 	visQ.clear();
 	for (const el of styleQ) style(el, true);
 	styleQ.clear();
@@ -460,7 +509,7 @@ function tick() {
 		const t = (a.effect as KeyframeEffect | null)?.target as Element | null; if (!t) continue;
 		const l = running.get(t); if (l) l.push(a); else running.set(t, [a]);
 	}
-	for (const el of was) if (!running.has(el) && (el as HTMLElement).isConnected) style(el as HTMLElement, true);
+	for (const el of was) if (!running.has(el) && hostLive(el)) style(el as HTMLElement, true);
 	// nothing moved, nothing changed: the stage keeps last frame's displays (idle costs one getAnimations call)
 	if (!changed && !running.size && !extraMoving()) { if (import.meta.env.DEV) { msLog.push(performance.now() - t0); if (msLog.length > 600) msLog.shift(); } return true; }
 	changed = false;
@@ -470,7 +519,7 @@ function tick() {
 	for (const r of roots) walk(r, M, base, true);
 	// the frame's fire light and glint, over the frame back (they were DOM over #mkFrame)
 	const fb: Ctx = { M: [1, 0, 0, 1, 0, 0], op: 1, br: 1, host: layer.frameBack, glow: false };
-	for (const e of extras) { if (!e.isConnected) { geoDirty = true; continue; } for (const a of e.getAnimations({ subtree: true })) { const t = (a.effect as KeyframeEffect | null)?.target as Element | null; if (t) { const l = running.get(t); if (l) l.push(a); else running.set(t, [a]); } } walk(e, fb.M, fb, false); }
+	for (const e of extras) { if (!hostLive(e)) { geoDirty = true; continue; } for (const a of e.getAnimations({ subtree: true })) { const t = (a.effect as KeyframeEffect | null)?.target as Element | null; if (t) { const l = running.get(t); if (l) l.push(a); else running.set(t, [a]); } } walk(e, fb.M, fb, false); }
 	for (const x of live) if (x.d.destroyed) live.delete(x); else if (x.used !== frameNo) { if (x.d.visible) x.d.visible = false; if (!x.d.parent || x.used < frameNo - 120) releaseOut(x); }
 	for (const k of liveClips) if (k.used !== frameNo) { k.c.visible = false; if (k.used < frameNo - 120) { k.c.removeFromParent(); liveClips.delete(k); } } else k.c.visible = true;
 	if (import.meta.env.DEV) { msLog.push(performance.now() - t0); if (msLog.length > 600) msLog.shift(); }
