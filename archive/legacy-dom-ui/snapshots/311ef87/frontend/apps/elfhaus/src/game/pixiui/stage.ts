@@ -1,3 +1,10 @@
+/*
+ * ARCHIVED snapshot.
+ * Source commit: 311ef87 (tag pre-layout-rebuild is 311ef87).
+ * Original path: frontend/apps/elfhaus/src/game/pixiui/stage.ts
+ * See archive/legacy-dom-ui/README.md. Not imported by the game.
+ * Replaced by: One Pixi root, one transform from layout.ts. No second contain scale on document.body.
+ */
 // Full-viewport Pixi overlay for game UI (buy menu, confirm, feature intro, later HUD / panels).
 // One Application, never destroyed (Pixi 8 shared batch pool). Fixed design resolution per layout,
 // scaled uniformly (contain) into the viewport.

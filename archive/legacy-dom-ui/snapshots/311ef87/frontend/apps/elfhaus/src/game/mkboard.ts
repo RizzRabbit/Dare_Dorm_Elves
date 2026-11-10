@@ -1,3 +1,10 @@
+/*
+ * ARCHIVED snapshot.
+ * Source commit: 311ef87 (tag pre-layout-rebuild is 311ef87).
+ * Original path: frontend/apps/elfhaus/src/game/mkboard.ts
+ * See archive/legacy-dom-ui/README.md. Not imported by the game.
+ * Replaced by: layout.ts design tables (no inner 1080/1920 fit, no snapGeo, no t48 floors).
+ */
 // Approved board + HUD (James 2026-10-28: "the new board and symbols", the PixiJS mockup /workspace/elfhaus-mockup).
 // Ported to the DOM: every rect comes from the mockup's own layout() (main.js), in its design units, mapped onto the stage
 // with the mockup's world fit (k = min(W / D.w, H / D.h), centred). Three layouts, chosen like the game's stage:

@@ -1,3 +1,10 @@
+/*
+ * ARCHIVED snapshot.
+ * Source commit: 311ef87 (tag pre-layout-rebuild is 311ef87).
+ * Original path: frontend/apps/elfhaus/src/game/uihosts.ts
+ * See archive/legacy-dom-ui/README.md. Not imported by the game.
+ * Replaced by: Plain TS HUD / board / overlay state. Geometry from layout.ts. #uiHostTree is retired once that state exists.
+ */
 // TypeScript UI host tree for chrome that used to live as Game.svelte markup.
 // The nodes are never attached to the document (so they never paint); game.ts
 // still reads/writes classes, text, values and listeners through the usual

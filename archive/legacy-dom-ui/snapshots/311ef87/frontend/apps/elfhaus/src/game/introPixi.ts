@@ -1,3 +1,10 @@
+/*
+ * ARCHIVED snapshot.
+ * Source commit: 311ef87 (tag pre-layout-rebuild is 311ef87).
+ * Original path: frontend/apps/elfhaus/src/game/introPixi.ts
+ * See archive/legacy-dom-ui/README.md. Not imported by the game.
+ * Replaced by: Same module, without the CSS applyCam camera. Layout comes from layout.ts. Skip checkbox is Pixi.
+ */
 // @ts-nocheck  (door / camera geometry kept from the approved intro mockup; the look is the Winter Chalet set)
 // Elfhaus intro: the guest arrives at the chalet's front door on a snowy night. Timber log wall, cranberry double doors
 // with wreaths, lanterns either side, a snowy porch, snow falling, the hand-lettered ELFHAUS logo, cream info cards

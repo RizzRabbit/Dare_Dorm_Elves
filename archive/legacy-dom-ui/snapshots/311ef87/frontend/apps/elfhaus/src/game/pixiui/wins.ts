@@ -1,3 +1,10 @@
+/*
+ * ARCHIVED snapshot.
+ * Source commit: 311ef87 (tag pre-layout-rebuild is 311ef87).
+ * Original path: frontend/apps/elfhaus/src/game/pixiui/wins.ts
+ * See archive/legacy-dom-ui/README.md. Not imported by the game.
+ * Replaced by: Pixi win banners / overlays fed by TS state.
+ */
 // Win banners, feature totals, toasts, popups and count-up typography on the Pixi UI stage.
 // Timing, skip, audio and count math stay in the existing DOM functions (ui.ts, maxwin.ts,
 // bookEventHandlerMap.ts). This layer copies live boxes and text each frame and hides the

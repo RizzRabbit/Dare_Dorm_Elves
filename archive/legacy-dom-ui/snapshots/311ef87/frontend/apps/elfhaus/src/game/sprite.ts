@@ -1,3 +1,10 @@
+/*
+ * ARCHIVED snapshot.
+ * Source commit: 311ef87 (tag pre-layout-rebuild is 311ef87).
+ * Original path: frontend/apps/elfhaus/src/game/sprite.ts
+ * See archive/legacy-dom-ui/README.md. Not imported by the game.
+ * Replaced by: Sheet playback into Pixi textures / the board stage. blendPlan is unused.
+ */
 // SpriteAnim: tiny shared frame-based sprite player (no Pixi in this DOM renderer).
 // A sheet = one image + JSON atlas {anims: {name: {fps, loop, frames: [[x,y,w,h], ...]}}, size:[W,H]}.
 // play() draws an animation into a pooled <canvas> placed inside a host element (so it can sit behind or in

@@ -75,6 +75,9 @@ These are imported and required for a working game today. Pixi is already the vi
 
 ## 2. Snapshot index
 
+Each snapshot file starts with an archive banner (source commit, original path, and what replaced it). JSON snapshots have a sibling `.note` file instead, so the JSON stays valid.
+
+
 ```
 snapshots/311ef87/frontend/apps/elfhaus/
   src/app.html

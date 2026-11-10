@@ -1,3 +1,10 @@
+/*
+ * ARCHIVED snapshot.
+ * Source commit: 311ef87 (tag pre-layout-rebuild is 311ef87).
+ * Original path: frontend/apps/elfhaus/src/game/uilayout.ts
+ * See archive/legacy-dom-ui/README.md. Not imported by the game.
+ * Replaced by: layout.ts tables and widget state. No host CSS length resolver.
+ */
 // Plain TypeScript layout and style state for the off-document UI host tree (HUD, menus, toasts,
 // banners, overlays). Replaces the old hostcss.ts CSS resolver: a host's style is the board rule
 // table (board/hostlayout.ts) under its own inline style, and its box comes from mkPlace /

@@ -1,3 +1,10 @@
+/*
+ * ARCHIVED snapshot.
+ * Source commit: 311ef87 (tag pre-layout-rebuild is 311ef87).
+ * Original path: frontend/apps/elfhaus/src/game/board/hostlayout.ts
+ * See archive/legacy-dom-ui/README.md. Not imported by the game.
+ * Replaced by: TS board-cell state (rect, dim, glow, filter) applied on Pixi sprites.
+ */
 // Plain TypeScript layout and paint state for the off-document board host tree.
 // Board, cells, symbols, rigs, overlays and multiplier badges no longer need
 // a CSS resolver; other UI hosts read uilayout.ts (inline style + stand-in boxes).

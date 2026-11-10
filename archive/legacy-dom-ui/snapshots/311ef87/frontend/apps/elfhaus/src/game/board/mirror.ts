@@ -1,3 +1,10 @@
+/*
+ * ARCHIVED snapshot.
+ * Source commit: 311ef87 (tag pre-layout-rebuild is 311ef87).
+ * Original path: frontend/apps/elfhaus/src/game/board/mirror.ts
+ * See archive/legacy-dom-ui/README.md. Not imported by the game.
+ * Replaced by: Pixi board reads TS board state directly; tint/glow reset after each spin.
+ */
 // fix8 (James 2026-11-04 "do it the right way"): every board symbol is drawn by the ONE board Pixi stage. The DOM under
 // #board (#strips spinners, #cells, #overlays) stays only as an invisible state + motion model: the classes other files
 // read (win / dim / spinning / puffed / wild ...), the layout, and the pose-store motion (board/motion.ts). Its paint

@@ -1,3 +1,10 @@
+/*
+ * ARCHIVED snapshot.
+ * Source commit: 311ef87 (tag pre-layout-rebuild is 311ef87).
+ * Original path: frontend/apps/elfhaus/static/elfhaus.css
+ * See archive/legacy-dom-ui/README.md. Not imported by the game.
+ * Replaced by: Canvas-host CSS only (page background, fullscreen canvas, html/body). Splash, HUD grid, and typography-layout rules are retired.
+ */
 /* Elfhaus shell + boot CSS. Game chrome (board, HUD, overlays) is drawn in Pixi. */
 @font-face{font-family:"Cinzel";src:url(fonts/Cinzel-VF.woff2) format("woff2");font-weight:400 900;font-display:block}
 @font-face{font-family:"Nunito";src:url(fonts/Nunito-VF.woff2) format("woff2");font-weight:200 1000;font-display:block}

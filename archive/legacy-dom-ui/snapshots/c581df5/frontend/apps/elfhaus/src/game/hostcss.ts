@@ -1,3 +1,10 @@
+/*
+ * ARCHIVED snapshot.
+ * Source commit: c581df5 (tag pre-layout-rebuild is 311ef87).
+ * Original path: frontend/apps/elfhaus/src/game/hostcss.ts
+ * See archive/legacy-dom-ui/README.md. Not imported by the game.
+ * Replaced by: Already removed from src/ in d34b951. Replaced first by uilayout.ts / hostlayout.ts, then by layout.ts + TS state.
+ */
 // CSS resolver for leftover off-document UI hosts (HUD, menus, and any
 // board node hostlayout.ts does not cover). Board cells, symbol art,
 // rig parts and overlays use the TypeScript layout tables. Packed symbol

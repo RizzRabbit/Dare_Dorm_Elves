@@ -1,3 +1,10 @@
+/*
+ * ARCHIVED snapshot.
+ * Source commit: 311ef87 (tag pre-layout-rebuild is 311ef87).
+ * Original path: frontend/apps/elfhaus/src/game/stage.ts
+ * See archive/legacy-dom-ui/README.md. Not imported by the game.
+ * Replaced by: Thin façade over layout.ts (one pass, one uniform scale, including wide 16:9).
+ */
 // One shared scale for the whole game. A few design layouts are chosen by aspect
 // ratio (not exact window size). Each is authored at a fixed design resolution;
 // the whole stage (board, HUD, logo, Roxy, panels) is then fitted to the window

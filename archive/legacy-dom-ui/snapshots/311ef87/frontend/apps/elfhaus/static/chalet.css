@@ -1,3 +1,10 @@
+/*
+ * ARCHIVED snapshot.
+ * Source commit: 311ef87 (tag pre-layout-rebuild is 311ef87).
+ * Original path: frontend/apps/elfhaus/static/chalet.css
+ * See archive/legacy-dom-ui/README.md. Not imported by the game.
+ * Replaced by: Fonts and page background may stay in the live sheet; #lGo / .spCard / .spSkip paint is retired.
+ */
 /* Chalet fonts and boot styles. Game chrome is drawn in Pixi. */
 @font-face{font-family:"Lilita One";src:url(fonts/LilitaOne.woff2) format("woff2");font-weight:400;font-display:block}
 :root{--c-ink:#26140f;--c-cream:#fbf3e4;--c-paper:#f1e2c6;--c-cran:#a61c34;--c-cran2:#7d1226;--c-gold:#f2b935;--c-gold2:#c98a1c;--c-goldhi:#ffe08a;

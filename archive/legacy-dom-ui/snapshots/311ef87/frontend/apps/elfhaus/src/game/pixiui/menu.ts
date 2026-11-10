@@ -1,3 +1,10 @@
+/*
+ * ARCHIVED snapshot.
+ * Source commit: 311ef87 (tag pre-layout-rebuild is 311ef87).
+ * Original path: frontend/apps/elfhaus/src/game/pixiui/menu.ts
+ * See archive/legacy-dom-ui/README.md. Not imported by the game.
+ * Replaced by: Pixi menus fed by TS overlay state.
+ */
 import { poseOf } from '../board/motion';
 // Pixi settings pop-out, settings panel, game-info chrome, and autoplay panel.
 // DOM stays the state / timing / input / a11y model. Rules body HTML is unchanged

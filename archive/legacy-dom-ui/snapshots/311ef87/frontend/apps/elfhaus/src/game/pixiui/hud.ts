@@ -1,3 +1,10 @@
+/*
+ * ARCHIVED snapshot.
+ * Source commit: 311ef87 (tag pre-layout-rebuild is 311ef87).
+ * Original path: frontend/apps/elfhaus/src/game/pixiui/hud.ts
+ * See archive/legacy-dom-ui/README.md. Not imported by the game.
+ * Replaced by: Pixi HUD fed by TS state, not getComputedStyle on a hidden host tree.
+ */
 // Pixi HUD / bet bar: a 1:1 port of the approved DOM layout (painted hud_bar, gold +/- and spin).
 // Positions are taken from the live mkPlace() boxes (viewport CSS px) so each layout stays pixel-true.
 // The DOM nodes stay as the state model (game.ts writes text / disabled / classes); their paint is hidden.

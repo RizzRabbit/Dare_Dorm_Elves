@@ -1,3 +1,10 @@
+/*
+ * ARCHIVED snapshot.
+ * Source commit: 311ef87 (tag pre-layout-rebuild is 311ef87).
+ * Original path: frontend/apps/elfhaus/src/game/intro.ts
+ * See archive/legacy-dom-ui/README.md. Not imported by the game.
+ * Replaced by: initSplash/sting/skipSplash stay in the live module once the DOM splash builder is deleted; skip is a Pixi control.
+ */
 // Intro: Rizzin Games studio sting (2.3 s, tap skips), then the feature splash (title + 3 feature cards + TAP TO START)
 // over the loading screen while assets finish loading. Art: /workspace/elfhaus-polish (INTEGRATION.md §4-5).
 // "Don't show this again" (localStorage) skips the splash for returning players: after the sting the game opens as

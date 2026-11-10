@@ -1,3 +1,10 @@
+/*
+ * ARCHIVED snapshot.
+ * Source commit: 311ef87 (tag pre-layout-rebuild is 311ef87).
+ * Original path: frontend/apps/elfhaus/static/resub-fix.css
+ * See archive/legacy-dom-ui/README.md. Not imported by the game.
+ * Replaced by: Same: strip or delete once splash / HUD / skip CSS is gone.
+ */
 /* Resub shell / loader tweaks. Dead HUD/board paint removed. */
 body.portrait{--hb:max(48px,var(--t48));--sp:max(64px,calc(var(--t48)*1.3))}
 #app #hud{width:clamp(620px,calc(var(--cell)*5 + 220px),1100px)}

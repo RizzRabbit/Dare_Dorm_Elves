@@ -1,3 +1,10 @@
+/*
+ * ARCHIVED snapshot.
+ * Source commit: 311ef87 (tag pre-layout-rebuild is 311ef87).
+ * Original path: frontend/apps/elfhaus/src/game/fx.ts
+ * See archive/legacy-dom-ui/README.md. Not imported by the game.
+ * Replaced by: Pixi-native FX; frameCSS lock-icon path is retired with the sprite-DOM path.
+ */
 // UI effects played through SpriteAnim (sheet "fx", scripts/sprites/gen_fx_ui.py -> assets/final/fx/fx_ui.*).
 import { loadSheet, play, stop, frameCSS, hasSheet, type Atlas } from './sprite';
 // Every generated atlas (scripts/sprites/*) is bundled; its sheet image comes from the art manifest under the same key.

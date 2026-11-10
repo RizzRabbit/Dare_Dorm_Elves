@@ -1,3 +1,10 @@
+<!--
+  ARCHIVED snapshot.
+  Source commit: 311ef87 (tag pre-layout-rebuild is 311ef87).
+  Original path: frontend/apps/elfhaus/src/components/Game.svelte
+  See archive/legacy-dom-ui/README.md. Not imported by the game.
+  Replaced by: Pixi intro + Pixi skip checkbox; #srHud stays. DOM splash and sting <img> markup are retired.
+-->
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { initGame } from '../game/game';
