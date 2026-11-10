@@ -23,7 +23,7 @@ import { wfExpand } from './wildfx';
 import { grab, hideGem, clearCoveredGems } from './combine';
 import { toStage } from './stage';
 import { hasStack, stackOnce, stackLetters, stackWin, stackWinOff, stackPrepare, stackRelease, stackWarm, stackReact, stackReactSkip } from './stacks';
-import { dbDisplay, dbKnown, dbNudge, dbPlay, dbSnapshot, dbStats } from './dbstacks';
+import { dbKnown, dbNudge, dbPlay, dbStats } from './dbstacks';
 import { canvasRev, hasSheet, play } from './sprite';
 import { boardShake, boardWin } from './boardfx';
 import { trailBetween } from './wintrail';
@@ -331,44 +331,6 @@ function hideMergeGlows(olds: HTMLElement[]) {
 /** One stage over the merging overlays (same look as an overlay, but one piece: no inner borders / gaps), holding a
  *  snapshot of each overlay's body (its stack canvas, or a copy of its placeholder image) and, separately, its letters.
  *  The overlays themselves are hidden under it; mergeIn's apply() re-renders them at the cut. */
-function leanStage(olds: HTMLElement[]) {
-	const host = olds[0].parentElement!, x0 = Math.min(...olds.map((o) => o.offsetLeft)), x1 = Math.max(...olds.map((o) => o.offsetLeft + o.offsetWidth));
-	const el = document.createElement('div'); el.className = 'ov art mStage';
-	el.style.cssText = `left:${x0}px;width:${x1 - x0}px;top:${olds[0].offsetTop}px;height:${olds[0].offsetHeight}px;animation:none;z-index:3`;
-	const parts = olds.map((o) => {
-		const p = document.createElement('div');
-		p.style.cssText = `position:absolute;top:0;height:100%;left:${o.offsetLeft - x0}px;width:${o.offsetWidth}px;transform-origin:50% 100%;will-change:transform`;
-		const snap = (sel: string) => {
-			// stk_db is a 1x1 placeholder for the rig. Copying it (or stretching it) is a garbage pixel, not the elf.
-			const cvs = [...o.querySelectorAll<HTMLCanvasElement>(sel)].filter((x) => !x.classList.contains('stk_db') && x.width > 1 && x.height > 1);
-			if (!cvs.length) return null;
-			const c = document.createElement('canvas'); c.width = cvs[0].width; c.height = cvs[0].height; const g = c.getContext('2d')!;
-			g.clearRect(0, 0, c.width, c.height);
-			cvs.forEach((x) => { try { g.drawImage(x, 0, 0, c.width, c.height); } catch { /* empty canvas */ } });
-			c.style.cssText = 'position:absolute;inset:0;width:100%;height:100%'; p.appendChild(c); return c;
-		};
-		// fix8: a DragonBones rig lives in the board stage (its canvas is a 1x1 placeholder): snapshot it from the stage,
-		// fitted like the rig is (overlay height, centred)
-		const dbc = o.querySelector(':scope>canvas.stk_db') ? dbSnapshot(o) : null;
-		if (dbc) { dbc.style.cssText = 'position:absolute;top:0;left:50%;height:100%;width:auto;translate:-50% 0'; p.appendChild(dbc); }
-		else if (!snap(':scope>canvas.stk_body')) { const w = o.querySelector(':scope>.wart'); if (w) p.appendChild(w.cloneNode(true)); }
-		// the outline glow is a static silhouette (img.stk_glow), not a child of the rig. Leave it off the snapshot.
-		o.querySelectorAll<HTMLElement>(':scope > img.stk_glow, :scope .symGlow, :scope .ovGlow').forEach((g) => g.remove());
-		const lets = [snap(':scope>canvas.stk_letters'), o.querySelector<HTMLElement>(':scope>.mLets')?.cloneNode(true) as HTMLElement | undefined].filter((x): x is HTMLElement => !!x);
-		lets.forEach((l) => { if (!l.parentElement) p.appendChild(l); });
-		const rs = (o.dataset.reels ?? o.dataset.reel ?? '0').split(',').map(Number);
-		return { el: p, lets, rc: (rs[0] + rs[rs.length - 1]) / 2 };
-	});
-	parts.slice().sort((a, b) => Math.abs(b.rc - (parts[0].rc + parts[parts.length - 1].rc) / 2) - Math.abs(a.rc - (parts[0].rc + parts[parts.length - 1].rc) / 2)).forEach((pt) => el.appendChild(pt.el)); // centre on top
-	// Hide the live overlays before the stage is inserted, in the same turn, so a paint cannot show a leftover
-	// sheet canvas or the static still between the rig stopping and the snapshot appearing.
-	olds.forEach((o) => { o.style.visibility = 'hidden'; });
-	host.appendChild(el);
-	// Cloned <img> cut-outs decode asynchronously. The overlays stay hidden; the stage simply has no pixels there
-	// until the clone decodes, which is blank rather than a previous merge's frame.
-	return { el, parts, olds };
-}
-/** No merge_join sheet: the placeholder group art scales up from about a single's size (bottom anchored) with an elastic settle. */
 function growFromSingles(ov: HTMLElement, n: number) {
 	const body = ov.querySelector<HTMLElement>(':scope>canvas.stk_body') || ov.querySelector<HTMLElement>(':scope>.wart'); if (!body) return;
 	const s0 = n >= 5 ? 0.62 : n >= 3 ? 0.72 : 0.8;

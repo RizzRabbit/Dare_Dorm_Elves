@@ -26,8 +26,6 @@ console.log('\n=== merge flash: source guards ===');
 	ok(sp.includes('export const canvasRev'), 'canvas revisions are visible to the board');
 	ok(mi.includes('source.update()') && mi.includes('canvasRev'), 'the board reuploads a canvas when its pixels change');
 	ok(mi.includes('t.destroy(true)') && mi.includes('releaseOut(x)'), 'dropping a snapshot still destroys its GPU texture');
-	ok(mf.includes("!x.classList.contains('stk_db')"), 'a rig placeholder is never copied as the snapshot');
-	ok(mf.includes("o.style.visibility = 'hidden'") && mf.indexOf("o.style.visibility = 'hidden'") < mf.indexOf('host.appendChild(el)'), 'live overlays hide before the snapshot stage is shown');
 	ok(mf.includes("dbPlay(o, 'win'") && mf.indexOf('stackRelease(olds)') > mf.indexOf('await beat(MERGE_BEAT)'), 'live rigs stay up through the lean and release at the hit');
 	ok(db.includes('removeFromParent()'), 'a rig snapshot is taken off the board stage');
 	ok(db.includes('resolution: r') || db.includes('snapshotPixels'), 'snapshot cap stays');

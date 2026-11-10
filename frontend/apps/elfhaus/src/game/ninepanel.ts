@@ -37,4 +37,3 @@ export function ninePanel(el: HTMLElement | null, spec: NineSpec) {
 // the bonus cards' parts (sprites baked at 2x)
 export const CARD: NineSpec = { src: 'assets/ui/modal_card9.webp', scale: 2, slice: [60, 60, 84, 60], outset: [0, 0, 12, 0] };
 export const BTN: NineSpec = { src: 'assets/ui/modal_btn9.webp', scale: 2, slice: [60, 60, 60, 60] };
-export const WINDOW: NineSpec = { src: 'assets/ui/modal_window9.webp', scale: 2, slice: [48, 48, 48, 48] };
