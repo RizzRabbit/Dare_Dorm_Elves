@@ -235,7 +235,6 @@ function apply() {
 	const lgo = document.getElementById('lGo'); skin(lgo, go); word(lgo);                                                   // 74
 	const lb = document.getElementById('lBar'); skin(lb, () => ({ pkg: 'ui', frame: 'bar_track', k: 2 }));                 // 18 / 69 (DOM loader)
 	skin(lb?.querySelector('i') as HTMLElement, () => ({ pkg: 'ui', frame: 'bar_fill', k: 2 }));
-	skin(document.querySelector<HTMLElement>('#loader .spBg'), () => ({ pkg: 'fx', frame: 'logo_back', fit: 'cover' }));  // 67
 	skin(document.querySelector<HTMLElement>('#sting .stBox'), () => ({ pkg: 'fx', frame: 'logo_glow', fit: 'contain', size: 1.4 }));   // 68
 }
 /** pieces built later (buy cards, rules headers, lock chips, respin pill, mystery badge, card faces, line-win ticket) */

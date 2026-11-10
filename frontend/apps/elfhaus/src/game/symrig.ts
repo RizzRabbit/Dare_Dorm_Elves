@@ -62,7 +62,7 @@ export function rigGlowHTML(key: string, n = 1) {
 export function rigHTML(key: string, still = false) {
 	const r = RIG[key]; if (!r) return '';
 	const [W, H] = r.src, org = `transform-origin:${pc(r.pivot[0], W)} ${pc(r.pivot[1], H)}`;
-	const pt = (p: Part) => `<i class="rp f_${p.f} m_${p.cls}"></i>`, parts = r.parts.map(pt).join('');
+	const pt = (p: Part) => `<i class="rp f_${p.f} m_${p.cls}"${p.hide ? ' style="scale:1 0"' : ''}></i>`, parts = r.parts.map(pt).join('');
 	if (still) return key.startsWith('W_') ? `<i class="rig still k_${key}"><i class="rgBody"><i class="rp f_${key}"></i>${depthHTML(key)}${parts}</i></i>`
 		: `<i class="rig still k_${key}"><i class="rgBody">${depthHTML(key)}<i class="rp f_${key}"></i>${parts}</i></i>`;
 	const sparks = r.spark.map(([x, y, s], i) => `<i class="rp f__spark rgSp" style="left:${pc(x - 48 * s, W)};top:${pc(y - 48 * s, H)};width:${pc(96 * s, W)};height:${pc(96 * s, H)};--d:${i * 0.09}s"></i>`).join('');

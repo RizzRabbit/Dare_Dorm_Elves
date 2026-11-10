@@ -1,6 +1,6 @@
 // Loading screen: full ELFHAUS logo, feature-card carousel, progress bar, then CLICK/TAP TO CONTINUE (the press is
 // the user gesture later sound needs). Progress counts every tracked promise: art images, Roxy sheets, RGS auth.
-import { $, ART } from './ui';
+import { ART } from './ui';
 import { initSplash, stingDone, noIntro, preOut } from './intro';
 import { FX_SHEET_COUNT } from './fx';
 import { musicEnterGame } from './audio';
@@ -26,8 +26,6 @@ export function frac() {
 }
 function progress() {
 	const p = frac();
-	const bar = document.querySelector('#lBar i') as HTMLElement | null;
-	if (bar) bar.style.transform = `scaleX(${p.toFixed(3)})`;
 	document.getElementById('preL')?.style.setProperty('--p', p.toFixed(3));   // the inline first-paint bar (app.html)
 }
 /** Count a promise toward the progress bar (failures still count as done; callers handle their own errors). */
@@ -52,8 +50,7 @@ let px: Promise<boolean> = Promise.resolve(false);
 export function initLoader() {
 	const L = document.getElementById('loader'); if (!L) return;
 	initSplash(); progress();
-	// resub: the approved Pixi vestibule intro replaces the DOM splash art (the loader stays as the tap / key / checkbox
-	// layer, dark until the studio sting is done, then see-through). No WebGL -> the DOM splash shows as before.
+	// The Pixi vestibule is the intro. No WebGL: skip it and go to the board after the sting.
 	L.classList.add('px');
 	px = initIntro(frac).then((ok) => { if (!ok) L.classList.remove('px', 'pxOn'); return ok; });
 }
@@ -70,10 +67,9 @@ export async function loaderReady() {
 	L.classList.add('ready');
 	// returning players who ticked "Don't show this again" go straight in once loading is done
 	if (!noIntro()) await new Promise<void>((res) => {
-		const btn = $('#lGo'); btn.focus({ preventScroll: true });
-		const go_ = (e?: Event) => { if ((e?.target as Element)?.closest?.('.spSkip')) return; if (e && introEatClick(e)) return; /* v3.18: swipes / taps on the card carousel never enter */ removeEventListener('keydown', key, true); L.removeEventListener('click', go_); res(); };
+		const go_ = (e?: Event) => { if (e && introEatClick(e)) return; removeEventListener('keydown', key, true); L.removeEventListener('click', go_); res(); };
 		const key = (e: KeyboardEvent) => { if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); e.stopPropagation(); go_(); } };
-		L.addEventListener('click', go_); // tap anywhere on the splash
+		L.addEventListener('click', go_);
 		addEventListener('keydown', key, { capture: true });
 	});
 	hideLoader();

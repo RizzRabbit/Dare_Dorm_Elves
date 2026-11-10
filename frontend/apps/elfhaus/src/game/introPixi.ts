@@ -8,7 +8,9 @@
 // "Don't show this again" layer). The game is driven with CSS individual transforms (scale / translate / opacity) and Roxy
 // through the rig adapter. No WebGL -> initIntro() resolves false and the DOM splash shows instead.
 import { Application, BlurFilter, Container, Graphics, PerspectiveMesh, Sprite, Text, Texture } from 'pixi.js';
-import { ST, fitStage } from './stage';
+import { ST, fitStage, capResolution } from './stage';
+import { getLayout } from './layout';
+import { skipSplash, setSkipSplash } from './intro';
 import { ease, clamp, seg, lerp } from './scene/util';
 import { loadTex } from './scene/load';
 import { loadAtlas, spr, nine, tile, mirrored, atlasTex } from './scene/atlas';
@@ -51,42 +53,30 @@ const hex = (c) => '#' + c.toString(16).padStart(6, '0');
 
 // door leaves, lanterns, wall, floor, light: painted frames of the intro / fx / ui atlases (scene/atlas.ts)
 // ---------------- geometry ----------------
-function geo(W, H) {   // W, H: stage px (ST.w / ST.h); the card + skip-strip budgets below are SCREEN px (stage px * ST.s)
-  const port = W / H < 0.9, S = ST.s || 1;
-  W *= S; H *= S;   // work in screen px; ks = design -> screen, k = design -> stage
-  // intro cards (v3.17): sized in SCREEN px so they stay readable on phones (the old design-px cards shrank to ~80 px wide
-  // under the doors at portrait); the door scene gives up the room they need instead
-  // v3.18: the feature cards are a swipe carousel centred on screen over the doorway (active card centred, the two
-  // neighbours peeking in at the edges); the scene no longer gives up room for them. Card sizes are SCREEN px.
-  const DOTS = 22, m = 10;
-  if (!port) {
-    const ks = Math.min(W / 1920, H / 1080), k = ks / S, DW = W / ks, DH = H / ks, cx = DW / 2;
-    const FL = DH / 2 + 400, dw = 520, dh = 580, top = FL - dh;
-    // TAP TO START keeps a >= 46 screen-px plate on small landscape phones; v21 compact popouts: scales with the screen, no px floor
-    const lbh = ST.compact ? 100 : Math.max(100, 46 / ks);
-    const logo = { y: top - 64 - 122, w: 560 }, btn = { y: FL + 64, w: 470 * lbh / 100, h: lbh };
-    const ar = tex.title ? tex.title.height / tex.title.width : 0.56;
-    const yA = (logo.y + logo.w * ar * 0.42) * ks + m, yB = (btn.y - btn.h / 2) * ks - m - DOTS;   // between logo and button (screen px)
-    const ch = ST.compact ? Math.max(0, Math.min(340, yB - yA)) : Math.max(150, Math.min(400, yB - yA)), cw = Math.min(W * 0.6, 760, ch * 2.1);   // uifix: larger, readable on desktop
-    return { port, k, ks, Ws: W, Hs: H, DW, DH, cx, FL, dw, dh, top, lint: 64, logo, bar: { y: FL + 64, w: 560, h: 40 }, btn, sc: { dx: 400, y: top + 150, s: 0.6 }, F: 1500,
-      pc: { cw, ch, cy: (yA + yB) / 2, row: true, off: ST.compact && (H < 260 || ch < 60) } }; }   // v21: no carousel in a window under 260 px tall
-  // portrait: the scene keeps its full width scale and sits centred above the skip strip; the carousel overlays the doors
-  const dw = 540, dh = 780, lint = 64, ar = tex.title ? tex.title.height / tex.title.width : 0.56, logoW = 800;
-  const above = dh + lint + 210 + logoW * ar / 2 + 14, btnY = 130, skip = 62, budget = H - skip - 10;
-  let bh = 132, ks = Math.min(W / 1080, budget / (above + btnY + bh / 2 + 14));
-  for (let i = 0; i < 3; i++) { bh = Math.max(132, 46 / ks); ks = Math.min(W / 1080, budget / (above + btnY + bh / 2 + 14)); }
-  const below = btnY + bh / 2 + 14, k = ks / S, DW = W / ks, DH = H / ks, cx = DW / 2;
-  const sceneH = ks * (above + below), sy = Math.max(4, (budget - sceneH) / 2);
-  const FL = sy / ks + above, top = FL - dh;
-  const logo = { y: top - 64 - 210, w: logoW }, btn = { y: FL + btnY, w: 620 * bh / 132, h: bh };
-  const yA = (logo.y + logo.w * ar * 0.42) * ks + m, yB = (btn.y - btn.h / 2) * ks - m - DOTS;
-  const cw = Math.min(W * 0.74, 360), ch = Math.max(200, Math.min(cw * 1.3, yB - yA));
-  return { port, k, ks, Ws: W, Hs: H, DW, DH, cx, FL, dw, dh, top, lint, logo, bar: { y: FL + btnY, w: 640, h: 46 }, btn, sc: { dx: 400, y: top + 210, s: 0.72 }, F: 1700,
-    pc: { cw, ch, cy: (yA + yB) / 2, row: false } };
+function geo(W, H) {   // W, H: design px from the one layout pass (canvas lives under #root's contain transform)
+  const lay = getLayout();
+  const port = lay ? lay.portrait : W / H < 0.9;
+  const I = lay?.intro;
+  const cx = W / 2;
+  const doors = I?.doors ?? (port
+    ? { x: cx - 270, y: H * 0.62 - 780, w: 540, h: 780 }
+    : { x: cx - 260, y: H / 2 - 180, w: 520, h: 580 });
+  const cards = I?.cards ?? { x: cx - (port ? 180 : 300), y: doors.y + doors.h * 0.22, w: port ? 360 : 600, h: port ? 400 : 300 };
+  const tap = I?.tap ?? { x: cx - (port ? 310 : 235), y: doors.y + doors.h + (port ? 64 : 14), w: port ? 620 : 470, h: port ? 132 : 100 };
+  const dw = doors.w, dh = doors.h, top = doors.y, FL = doors.y + doors.h;
+  const unit = dw / (port ? 540 : 520);
+  const logo = { y: top - (port ? 274 : 186) * unit, w: (port ? 800 : 560) * unit };
+  const sc = { dx: 400 * unit, y: top + (port ? 210 : 150) * unit, s: port ? 0.72 : 0.6 };
+  return {
+    port, k: 1, ks: 1, Ws: W, Hs: H, DW: W, DH: H, cx, FL, dw, dh, top, lint: 64,
+    logo, bar: { y: tap.y + tap.h / 2, w: tap.w * 1.15, h: Math.max(32, tap.h * 0.38) },
+    btn: { y: tap.y + tap.h / 2, w: tap.w, h: tap.h }, sc, F: port ? 1700 : 1500,
+    pc: { cw: cards.w, ch: cards.h, cy: cards.y + cards.h / 2, row: !port, off: !!(lay?.compact && (H < 260 || cards.h < 60)) },
+  };
 }
 
 // ---------------- build ----------------
-let snowC, flakes = [], cardsC, cardEls = [], wallC, leafL, leafR, glowL, spill, holeG, sconces = [], logoS, logoBack, barC, barFill, barGlow, btnC, btnGlow, doorLight;
+let snowC, flakes = [], cardsC, cardEls = [], wallC, leafL, leafR, glowL, spill, holeG, sconces = [], logoS, logoBack, barC, barFill, barGlow, btnC, btnGlow, doorLight, skipC, skipMark, skipOn = false;
 function build() {
   root.removeChildren().forEach(o => o.destroy({ children: true })); sconces = [];
   const W = ST.w, H = ST.h; G = geo(W, H); const { cx, FL, dw, dh, top, lint, DW, DH } = G;
@@ -156,6 +146,7 @@ function build() {
   const lab = spr('titles', 'w_tap_to_start'); const lk = Math.min((tw * 0.8) / lab.texture.width, (th * 0.56) / lab.texture.height); lab.scale.set(lk); lab.y = 1;
   btnC.addChild(btnGlow, bp, lab);
   buildCards();
+  buildSkip();
   setDoors(0, 0);
 }
 // ---------------- feature card carousel (v3.18) ----------------
@@ -243,10 +234,35 @@ function placeCards(inK, outT) {   // inK: global clock for the calm fade-in; ou
     d.position.set(G.cx + (i - 1) * gap, y); d.scale.set(14 / ks / Math.max(1, d.texture.width)); });
 }
 // pointer: the transparent #loader sits over the canvas, so listen on the document and map client -> screen px
-function toScreen(e) { const r = app?.canvas?.getBoundingClientRect?.(); if (!r || !r.width) return null; return { x: (e.clientX - r.left) / r.width * G.Ws, y: (e.clientY - r.top) / r.height * G.Hs }; }
+function toScreen(e) { const r = app?.canvas?.getBoundingClientRect?.(); if (!r || !r.width) return null; const W = G?.DW || ST.w, H = G?.DH || ST.h; return { x: (e.clientX - r.left) / r.width * W, y: (e.clientY - r.top) / r.height * H }; }
+function skipRect() {
+  const L = getLayout();
+  if (L?.intro?.skip) return L.intro.skip;
+  return G.port ? { x: (G.cx || ST.w / 2) - 200, y: (G.DH || ST.h) - 72, w: 400, h: 56 } : { x: (G.DW || ST.w) - 280, y: (G.DH || ST.h) - 64, w: 260, h: 48 };
+}
+function hitSkip(q) {
+  if (!q || !skipC || skipC.alpha < 0.5) return false;
+  const r = skipRect();
+  return q.x >= r.x && q.x <= r.x + r.w && q.y >= r.y && q.y <= r.y + r.h;
+}
+function paintSkip() { skipOn = skipSplash(); if (skipMark) skipMark.visible = !!skipOn; }
+function toggleSkip() { skipOn = !skipOn; setSkipSplash(skipOn); paintSkip(); }
+function buildSkip() {
+  const r = skipRect();
+  skipC = new Container(); skipC.position.set(r.x, r.y); skipC.alpha = 0;
+  const box = new Graphics();
+  const by = Math.max(0, (r.h - 22) / 2);
+  box.roundRect(0, by, 22, 22, 4).fill({ color: 0x26140f, alpha: 0.55 }).stroke({ width: 2, color: 0xfbf3e4 });
+  skipMark = new Graphics();
+  skipMark.moveTo(5, by + 11).lineTo(9, by + 16).lineTo(17, by + 5).stroke({ width: 3, color: 0xf2b935, cap: 'round', join: 'round' });
+  const lab = paintTx("Don't show this again", 'font_ink', Math.max(13, r.h * 0.34), r.w - 36, 'left')
+    || new Text({ text: "Don't show this again", style: { fontFamily: FONT, fontSize: Math.max(13, r.h * 0.34), fill: 0xfbf3e4 } });
+  if (lab.anchor) lab.anchor.set(0, 0.5); lab.position.set(32, r.h / 2);
+  skipC.addChild(box, skipMark, lab); root.addChild(skipC); paintSkip();
+}
 const carLive = () => !!app && !G?.pc?.off && (state === 'loading' || state === 'tap') && !fading;
 function inBand(q) { const { ch: h, cy } = G.pc; return q && Math.abs(q.y - cy) <= h / 2 + 8; }
-function carDown(e) { if (!carLive() || (e.button ?? 0) !== 0 || e.target?.closest?.('.spSkip')) return; const q = toScreen(e); if (!inBand(q)) return;
+function carDown(e) { if (!carLive() || (e.button ?? 0) !== 0) return; const q = toScreen(e); if (hitSkip(q)) return; if (!inBand(q)) return;
   CAR.t0 = -1; CAR.drag = { on: true, id: e.pointerId, x0: q.x, x: q.x, p0: CAR.pos, moved: false, hist: [[performance.now(), q.x]] }; }
 function carMove(e) { const D = CAR.drag; if (!D?.on || e.pointerId !== D.id) return; const q = toScreen(e); if (!q) return;
   D.x = q.x; if (Math.abs(q.x - D.x0) > 8) D.moved = true;
@@ -262,8 +278,10 @@ function carUp(e) { const D = CAR.drag; if (!D?.on || e.pointerId !== D.id) retu
 function carCancel() { if (CAR.drag?.on) { CAR.drag.on = false; carGo(Math.round(CAR.pos)); } }
 /** loader.ts: true when this click belonged to the carousel (a drag, or a tap on the cards); it must not enter the game. */
 export function introEatClick(e?: Event) { if (!app || state === 'done' || state === 'off') return false;
+  const q = e && 'clientX' in e ? toScreen(e) : null;
+  if (hitSkip(q)) { toggleSkip(); return true; }
   if (performance.now() < CAR.eatUntil) { CAR.eatUntil = 0; return true; }
-  const q = e && 'clientX' in e ? toScreen(e) : null; return !!(q && (e as any).detail !== 0 && inBand(q)); }
+  return !!(q && (e as any).detail !== 0 && inBand(q)); }
 function setDoors(aL, aR) {   // 0 = closed, 1 = ~80 deg open, swinging INTO the chalet (away from the guest)
   G.aL = aL;
   const { cx, dw, dh, top, FL, F } = G, w = dw / 2, XL = cx - dw / 2, XR = cx + dw / 2, HZ = top + dh * 0.33, VX = cx;
@@ -283,8 +301,8 @@ const $id = (id) => document.getElementById(id);
 // #alcove is display:contents, so its pieces move one by one
 const BOARD = ['stage', 'alcoveAmbient', 'alcoveGlow', 'alcoveRecess', 'alcoveLedge', 'alcoveRail', 'alcoveCrown'];
 const camEls = () => ['bg', 'scene', 'app'].map($id).filter(Boolean);
-const unCam = (x, y, c) => ({ x: PV.x + (x - PV.x) / c, y: PV.y + (y - PV.y) / c });         // intro px -> scene px
-function applyCam(c) { cam = c; for (const e of camEls()) { e.style.transformOrigin = `${PV.x}px ${PV.y}px`; e.style.scale = c === 1 ? '' : String(c); } }
+const unCam = (x, y, c) => ({ x: PV.x + (x - PV.x) / Math.max(c, 1e-6), y: PV.y + (y - PV.y) / Math.max(c, 1e-6) });
+function applyCam(c) { cam = 1; /* CSS camera removed: the intro uses the shared layout transform; door-push is Pixi-only on ov. */ }
 function setEl(id, dy, a) { const e = $id(id); if (!e) return; e.style.translate = dy ? `0 ${dy.toFixed(1)}px` : ''; e.style.opacity = a >= 1 ? '' : a.toFixed(3); }
 // Pixi HUD / logo / spin / buy live on #uiStage (a body-level canvas, not under #app). The vestibule camera
 // scales only #bg / #scene / #app, so without this those controls sit at full size over the 0.72 cam
@@ -329,9 +347,10 @@ function setGame(tt) {   // all game objects driven from the intro clock (transf
   if (tt < T.drop[0]) {   // Roxy standing in the doorway as the doors swing open on their own (wink held in the gap), steps out as the camera pushes
     if (faceOff) { faceOff = false; sceneHold(true, true); rig.doorway(true); }
     rig.face('wink', tt > T.wink[0] + 0.12 && tt < T.wink[1] - 0.1 ? 1 : 0);
-    const hScreen = G.dh * 0.8 * G.k, s = hScreen / (rig.height * cam);
-    const fx = (G.cx - G.dw * 0.12) * G.k, fy = (G.FL - 8) * G.k, p = unCam(fx, fy, cam);
-    v.position.set(p.x - rig.offsetX * s + 60 * s * seg(tt, ...T.roxyOut, ease.inCubic), p.y); v.scale.set(s); v.alpha = 1 - seg(tt, ...T.roxyOut);
+    const hScreen = G.dh * 0.8 * G.k * ST.s, s = hScreen / (rig.height || 1);
+    const fx = (G.cx - G.dw * 0.12) * G.k, fy = (G.FL - 8) * G.k;
+    const sx = ST.ox + fx * ST.s, sy = ST.oy + fy * ST.s;
+    v.position.set(sx - rig.offsetX * s + 60 * s * seg(tt, ...T.roxyOut, ease.inCubic), sy); v.scale.set(s); v.alpha = 1 - seg(tt, ...T.roxyOut);
   } else if (tt < T.face[1]) {   // dropped in with the board on her rest pose, wide-eyed; the face eases back at T.face
     if (!faceOff) { faceOff = true; rig.doorway(false); rig.face('wink', 0); sceneHold(true, false); }
     rig.face('surprised', tt < T.face[0] ? 1 : 0);
@@ -343,7 +362,7 @@ function release() { if (roxyFree || !rig) return; roxyFree = true; rig.face('su
 function finish() {   // end state (also the skip)
   if (state === 'done') return; state = 'done';
   applyCam(1); for (const id of [...BOARD, 'top', 'hud']) setEl(id, 0, 1); setUiChrome(0, 1);
-  release(); for (const e of camEls()) e.style.transformOrigin = '';
+  release();
   if (app) { app.ticker.stop(); const c = app.canvas; app.stage.removeChildren().forEach((o) => o.destroy({ children: true })); releaseIntroGpu(app); c?.remove?.(); app = null; /* never destroy a Pixi 8 renderer while others live (shared batch pool): resize to 1x1 frees the framebuffer instead */ }
   document.body.classList.remove('introOn'); (window as any).ELFHAUS_INTRO_DONE = true; doneRes();
 }
@@ -372,6 +391,7 @@ function update(dt) {
   for (const q of flakes) { const f = q.f; f.y += dt * 60 * q.z; f.x += dt * (14 * Math.sin(t * 0.7 + q.ph) + 6) * q.z;
     if (f.y > G.DH + 10) { f.y = -10; f.x = Math.random() * G.DW; } if (f.x > G.DW + 10) f.x = -10; }
   carStep(); if (state !== 'trans') placeCards(t, 0);
+  if (skipC) skipC.alpha = (state === 'loading' || state === 'tap') ? 1 : 0;
   if (state === 'tap') { tt += dt; barC.alpha = 1 - seg(tt, 0, 0.18); const k = seg(tt, 0.08, 0.4);
     btnC.alpha = seg(tt, 0.08, 0.2); const pulse = 0.5 + 0.5 * Math.sin((tt - 0.4) * Math.PI * 2 / 1.6);
     btnC.scale.set(k < 1 ? lerp(0.85, 1, ease.outBack(k, 2.2)) : 1 + 0.025 * pulse); btnGlow.alpha = 1;
@@ -397,7 +417,7 @@ function update(dt) {
 }
 
 // ---------------- public API (loader.ts) ----------------
-function size() { if (!app) return; const r = Math.min(2, Math.max(0.5, ST.s * (window.devicePixelRatio || 1)));
+function size() { if (!app) return; const r = capResolution();
   app.renderer.resize(ST.w, ST.h, r); const c = app.canvas; c.style.width = ST.w + 'px'; c.style.height = ST.h + 'px'; }
 function onResize() { if (!app || state === 'done') return; fitStage(); size(); build();
   if (state === 'trans') { skip(); return; } if (primed) prime(); update(0); }
@@ -409,7 +429,7 @@ export async function initIntro(progress: () => number): Promise<boolean> {
     fitStage();
     const cv = document.createElement('canvas'); cv.id = 'introCv'; cv.setAttribute('aria-hidden', 'true'); L.before(cv); watchCanvas(cv, 'intro');
     const a = new Application();
-    await a.init({ canvas: cv, width: ST.w, height: ST.h, resolution: Math.min(2, Math.max(0.5, ST.s * (window.devicePixelRatio || 1))), autoDensity: false,
+    await a.init({ canvas: cv, width: ST.w, height: ST.h, resolution: capResolution(), autoDensity: false,
       backgroundAlpha: 0, antialias: true, preference: 'webgl', sharedTicker: false, hello: false, autoStart: false });
     app = a; size();
     await symArtReady;   // S / W_R2 are rebuilt from the symbols sheet (symrig.ts)
@@ -432,8 +452,9 @@ export async function initIntro(progress: () => number): Promise<boolean> {
     addEventListener('pointerup', carUp, { capture: true }); addEventListener('pointercancel', carCancel, { capture: true });
     document.body.classList.add('introOn'); L.classList.add('pxOn');
     L.style.background = 'transparent';
-    for (const sel of ['.spBg', '.spStage']) { const e = L.querySelector(sel); if (e instanceof HTMLElement) e.style.display = 'none'; }
     (window as any).__intro = { get state() { return state; }, get t() { return tt; }, T, skip, get card() { return carIndex(); }, get carPos() { return CAR.pos; },
+      get skipOn() { return skipSplash(); }, toggleSkip,
+      get skipBox() { const r = skipRect(); const b = app?.canvas?.getBoundingClientRect?.(); if (!b || !G) return null; return { x: b.left + (r.x + r.w / 2) / G.Ws * b.width, y: b.top + (r.y + r.h / 2) / G.Hs * b.height }; },
       get btnY() { const r = app?.canvas?.getBoundingClientRect?.(); return r ? r.top + G.btn.y * G.ks / G.Hs * r.height : 0; }, get cardY() { const r = app?.canvas?.getBoundingClientRect?.(); return r ? r.top + G.pc.cy / G.Hs * r.height : 0; },
       // test hook: freeze the transition at intro time x (seconds after the tap) for frame-exact shots
       seek(x) { if (!app || state !== 'trans') return; app.ticker.stop(); tt = x; update(0); app.render(); } };
@@ -463,6 +484,6 @@ export function introSkip() { if (!app || state === 'off') { killed = true; retu
 /** Run a layout pass with the intro's camera / drop styles lifted (DOM rects stay true), then re-apply the current pose. */
 export function introLayout(fn: () => void) {
   if (!primed || state === 'done' || state === 'off') { fn(); return; }
-  const c = cam; for (const e of camEls()) e.style.scale = ''; for (const id of [...BOARD, 'top', 'hud']) setEl(id, 0, 1); setUiChrome(0, 1);
+  const c = cam; for (const id of [...BOARD, 'top', 'hud']) setEl(id, 0, 1); setUiChrome(0, 1);
   try { fn(); } finally { cam = c; setGame(state === 'trans' ? tt : 0); }
 }

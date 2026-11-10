@@ -20,8 +20,13 @@ for (const [w, h] of [[390, 844], [1280, 720]]) {
 	i = await I(); ok(i.s === 'tap' && i.c === (c0 + 2) % 3, `${w}x${h} tap centre card -> nothing, intro stays`);
 	await p.keyboard.press('ArrowLeft'); await p.waitForTimeout(600);
 	i = await I(); ok(i.s === 'tap' && i.c === (c0 + 1) % 3, `${w}x${h} ArrowLeft -> previous card`);
-	await p.click('label.spSkip'); await p.waitForTimeout(400); await p.click('label.spSkip'); await p.waitForTimeout(400);
-	i = await I(); ok(i.s === 'tap' && !(await p.isChecked('#spSkip')), `${w}x${h} checkbox toggles, intro stays`);
+	const skip0 = await p.evaluate(() => !!window.__intro.skipOn);
+	const box = await p.evaluate(() => window.__intro.skipBox);
+	ok(box && box.x > 0 && box.y > 0, `${w}x${h} Pixi skip checkbox is on screen (${JSON.stringify(box)})`);
+	if (box) { await p.mouse.click(box.x, box.y); await p.waitForTimeout(400); await p.mouse.click(box.x, box.y); await p.waitForTimeout(400); }
+	i = await I();
+	const skip1 = await p.evaluate(() => !!window.__intro.skipOn);
+	ok(i.s === 'tap' && skip1 === skip0, `${w}x${h} skip checkbox toggles and returns, intro stays`);
 	await p.mouse.click(w / 2, i.by); await p.waitForTimeout(500);
 	i = await I(); ok(i.s === 'trans' || i.s === 'done', `${w}x${h} TAP TO PARTY enters (${i.s})`);
 	await ctx.close();

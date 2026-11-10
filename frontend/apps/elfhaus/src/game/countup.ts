@@ -5,6 +5,7 @@
 // eases, the decimals churn fast until the landing (churnValue); the big-win banner is skipped one checkpoint at a
 // time (countTiers().next(), winstage.ts).
 import { moneyWin as money, moneyDigits } from './format'; // v3.16i: count-ups are wins only: exact amounts
+import { setHudField } from './uistate';
 
 type Run = { raf: number; to: number; done: () => void; settle: () => void };
 const runs = new Map<HTMLElement, Run>();
@@ -29,6 +30,7 @@ function put(el: HTMLElement, txt: string) {
 	const n = el.firstChild;
 	if (n && n.nodeType === 3 && !n.nextSibling) { if ((n as Text).data !== txt) (n as Text).data = txt; }
 	else el.textContent = txt;
+	if (el.id === 'balance' || el.id === 'bet' || el.id === 'win') setHudField(el.id, txt);
 }
 
 /** Duration for a win of `x` times the bet: ~0.4 s for small wins up to ~2.6 s for very big ones. */

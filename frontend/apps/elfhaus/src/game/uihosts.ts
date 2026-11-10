@@ -274,9 +274,8 @@ export function installUiHosts() {
 	if (tree) return tree;
 	tree = document.createElement('div');
 	tree.id = 'uiHostTree';
-	tree.setAttribute('aria-hidden', 'true');
-	tree.setAttribute('inert', '');
-	tree.style.cssText = 'position:fixed;left:-10000px;top:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;clip-path:inset(50%);z-index:-1';
+	// In-memory only: never attached to the document, never hidden with CSS.
+	// Values also live on uistate.ts; these nodes exist for the symbol/board engine until that is Pixi-native.
 	tree.innerHTML = TEMPLATE;
 	hookBox(tree);
 	byId.clear();
@@ -316,17 +315,6 @@ export function installUiHosts() {
 		}) as typeof getComputedStyle;
 	}
 
-	const top = Document.prototype.getElementById.call(document, 'top') as HTMLElement | null;
-	if (top) {
-		top.style.setProperty('opacity', '0', 'important');
-		top.style.setProperty('pointer-events', 'none', 'important');
-		top.setAttribute('aria-hidden', 'true');
-	}
-	const hud = Document.prototype.getElementById.call(document, 'hud') as HTMLElement | null;
-	if (hud) {
-		hud.setAttribute('aria-hidden', 'true');
-		hud.style.setProperty('pointer-events', 'none', 'important');
-	}
 	return tree;
 }
 

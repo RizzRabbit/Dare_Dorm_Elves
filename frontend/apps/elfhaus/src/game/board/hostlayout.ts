@@ -12,6 +12,8 @@ export type HostStyle = {
 	zIndex: string;
 	filter: string;
 	translate: string;
+	scale: string;
+	rotate: string;
 	transform: string;
 	transformOrigin: string;
 	backgroundImage: string;
@@ -131,6 +133,8 @@ const BASE_STYLE: HostStyle = {
 	zIndex: 'auto',
 	filter: 'none',
 	translate: 'none',
+	scale: 'none',
+	rotate: 'none',
 	transform: 'none',
 	transformOrigin: '50% 50%',
 	backgroundImage: 'none',
@@ -186,6 +190,8 @@ export function layoutStyle(el: HTMLElement): HostStyle | null {
 	if (cell?.classList.contains('spinning')) s.visibility = 'hidden';
 	if (cell?.classList.contains('out')) s.opacity = '0';
 	if (cell?.classList.contains('dim')) s.filter = 'brightness(0.48) saturate(0.7)';
+	else if (cell) s.filter = s.filter && s.filter !== 'none' ? s.filter : 'none';
+	if (cl.contains('m_lid')) s.scale = (el.style.scale && el.style.scale !== 'none') ? el.style.scale : '1 0';
 	if (cell?.classList.contains('puffed') && (cl.contains('sym') || cl.contains('symGlow') || cl.contains('symSh'))) s.opacity = '0';
 
 	const ov = el.closest('.ov') as HTMLElement | null;
@@ -254,6 +260,7 @@ export function boardRuleProps(el: HTMLElement): Record<string, string> {
 	if (cl.contains('cell') && cl.contains('spinning')) p.visibility = 'hidden';
 	if (cl.contains('cell') && cl.contains('out')) p.opacity = '0';
 	if (cl.contains('cell') && cl.contains('dim')) { p.opacity = '1'; p.filter = 'brightness(0.48) saturate(0.7)'; }
+	if (cl.contains('m_lid')) { p.scale = p.scale && p.scale !== 'none' ? p.scale : '1 0'; }
 	if ((cl.contains('sym') || cl.contains('symGlow') || cl.contains('symSh')) && el.closest('.cell.puffed')) p.opacity = '0';
 	if (cl.contains('sym') && pc?.contains('cell')) { const t = wildTranslate(el); if (t !== 'none') p.translate = t; }
 	const ov = el.closest('.ov') as HTMLElement | null;

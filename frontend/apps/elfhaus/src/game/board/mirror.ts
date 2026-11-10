@@ -163,6 +163,8 @@ function hostCs(el: HTMLElement): CSSStyleDeclaration {
 		'z-index': lay.zIndex,
 		filter: lay.filter,
 		translate: lay.translate,
+		scale: lay.scale,
+		rotate: lay.rotate,
 		transform: lay.transform,
 		'transform-origin': lay.transformOrigin,
 		'background-image': lay.backgroundImage,
@@ -213,7 +215,10 @@ function style(el: HTMLElement, force: boolean): St {
 	};
 	const fr = frameOf(el);
 	if (fr) { s.bg = fr.bg; s.bs = fr.bs; s.bp = fr.bp; s.disp = true; }
-	s.br *= dimBright(el);
+	// dimBright is the only dim source (the filter string also encodes it; do not multiply twice).
+	// A leftover brightness(0) or NaN would tint the colour sprite black and leave the teal glow standing.
+	const dim = dimBright(el);
+	s.br = dim < 1 ? dim : (Number.isFinite(s.br) && s.br > 0 ? s.br : 1);
 	cache.set(el, s); return s;
 }
 
@@ -294,7 +299,7 @@ function sprite(el: Element, t: Texture, c: Ctx, x: number, y: number, w: number
 	if (sp.parent !== host) host.addChild(sp);
 	const fw = t.frame.width, fh = t.frame.height, kx = w / fw, ky = h / fh, gk = c.glow ? (tex as any)._ks || 1 : 1;
 	place(sp, c.M, x - pad * kx, y - pad * ky, kx / gk, ky / gk);
-	sp.alpha = c.op; sp.tint = c.glow ? 0xffffff : tint(c.br); sp.blendMode = c.glow ? 'add' : BLEND[s.blend] ?? 'normal';
+	sp.alpha = c.op; sp.tint = c.glow ? 0xffffff : tint(Number.isFinite(c.br) && c.br > 0 ? c.br : 1); sp.blendMode = c.glow ? 'add' : BLEND[s.blend] ?? 'normal';
 	sp.zIndex = order++; sp.visible = true;
 }
 const texKey = (t: Texture) => `${t.source.uid}|${t.frame.x}|${t.frame.y}|${t.frame.width}|${t.frame.height}`;
@@ -305,7 +310,7 @@ function nine(el: HTMLElement, s: St, w: number, h: number, c: Ctx) {
 	const ns = o.d as NineSliceSprite; if (ns.texture !== t) ns.texture = t;
 	if (ns.parent !== c.host) c.host.addChild(ns);
 	const k = s.bw / 52; ns.width = w / k; ns.height = h / k;
-	place(ns, c.M, 0, 0, k, k); ns.alpha = c.op; ns.tint = tint(c.br); ns.zIndex = order++; ns.visible = true;
+	place(ns, c.M, 0, 0, k, k); ns.alpha = c.op; ns.tint = tint(Number.isFinite(c.br) && c.br > 0 ? c.br : 1); ns.zIndex = order++; ns.visible = true;
 }
 const cvTex = new WeakMap<HTMLCanvasElement, Texture>();
 function badge(el: HTMLElement, c: Ctx, w: number, h: number) {
@@ -410,7 +415,7 @@ function walk(el: HTMLElement, parent: Af, pc: Ctx, isRoot: boolean) {
 		const o = base.o.split(' '), fx = g.w ? lenOf(o[0] || '50%', g.w) / g.w : 0.5, fy = g.h ? lenOf(o[1] || '50%', g.h) / g.h : 0.5;
 		s.m = applyPoseMatrix(s.m, pose, g.w, g.h, fx, fy);
 		s.op *= pose.op;
-		s.br *= pose.br;
+		s.br *= Number.isFinite(pose.br) ? pose.br : 1;
 	}
 	const slot = slotPose(el);
 	if (slot) {
@@ -421,7 +426,8 @@ function walk(el: HTMLElement, parent: Af, pc: Ctx, isRoot: boolean) {
 	if (!s.disp) return;
 	const w = g.w, h = g.h;
 	const M = compose(parent, g.x, g.y, s.m);
-	const c: Ctx = { M, op: pc.op * (isRoot ? 1 : s.op), br: pc.br * s.br, host: pc.host, glow: pc.glow || !!(base.f & F_GLOW) };
+	const winning = !!(el.closest && el.closest('.win'));
+	const c: Ctx = { M, op: pc.op * (isRoot ? 1 : s.op), br: pc.br * s.br, host: pc.host, glow: winning && (pc.glow || !!(base.f & F_GLOW)) };
 	if (c.op <= 0.003) return;
 	if (s.ov || s.clip) {
 		const k = clipFor(el); if (k.c.parent !== pc.host) pc.host.addChild(k.c);
@@ -535,7 +541,7 @@ function onMutations(recs: MutationRecord[]) {
 }
 // classes that change a box's size or presence (spinner in / out, merge, hidden): re-measure on those
 const BODY_GEO = /^(portrait|landscape|phone|tablet|desktop|mk|skin|phl|pixiBoard|replay)$/;
-const CLASS_GEO = /\b(spinning|merge|full|hidden|gone|cspin|mStage|big|landed)\b/;
+const CLASS_GEO = /\b(spinning|merge|full|hidden|gone|cspin|mStage|big|landed|dim|win)\b/;
 /** Start mirroring #board's state model into the board stage (idempotent). */
 export async function startMirror() {
 	if (started) return; started = true;

@@ -5,69 +5,19 @@
 import { Application, Assets, Container, Sprite, type Texture } from 'pixi.js';
 import { gsap } from 'gsap';
 import { cssEase } from './board/motion';
-import { LOADER_CARDS } from './loader';
-import LAYOUT from '../assets/intro/splash_layout.json';
-import { ART } from './ui';
-import { symArtReady } from './symrig';
-import { fitStage, isReplayUrl } from './stage';
+import { isReplayUrl } from './stage';
 const U = import.meta.glob('../assets/intro/*.webp', { eager: true, import: 'default', query: '?url' }) as Record<string, string>;
 const url = (f: string) => U['../assets/intro/' + f] || '';
 
-// art: an ART key, or (egw, v3.6) the approved stacks r8d still of the merged pair instead of the old static WM2 scene
-const CARDS: Record<'modes' | 'sticky' | 'egw', { art: string; title: string; line: string }> = {
-	modes: { art: 'S', title: '4 Bonus Modes', line: 'Bunny Slope, Black Diamond, Double Black or Secret Santa.' },
-	sticky: { art: 'W_R2', title: 'Sticky Wilds', line: 'Wilds lock in place and grow every respin.' },
-	egw: { art: 'assets/stacks/still/WM2_R1-2.webp', title: 'Wild Winter Spins', line: 'Full wild reels side by side multiply.' },
-};
 
 const KEY = 'elfhaus.skipSplash';
 export const skipSplash = () => { try { return localStorage.getItem(KEY) === '1'; } catch { return false; } };
+export const setSkipSplash = (on: boolean) => { try { on ? localStorage.setItem(KEY, '1') : localStorage.removeItem(KEY); } catch {} };
 /** v21 (review #193): no door intro in a replay (straight to the board + replay bar); else the player's own choice. */
 export const noIntro = () => isReplayUrl() || skipSplash();
 
 let stingRes: () => void = () => {}; const sting = new Promise<void>((r) => (stingRes = r));
 export const stingDone = () => sting;
-
-type Lay = { size: number[]; bg: string; title: { img: string; cx: number; cy: number; w: number }; panels: { img: string; cx: number; cy: number; w: number; delayMs: number }[]; tap: { img: string; cx: number; cy: number; w: number } };
-const L = LAYOUT as unknown as Record<'land' | 'port', Lay>;
-const place = (el: HTMLElement, o: { cx: number; cy: number; w: number }) => { el.style.left = o.cx + 'px'; el.style.top = o.cy + 'px'; el.style.width = o.w + 'px'; };
-
-function layout() {
-	const R = document.getElementById('loader'); if (!R) return;
-	// The loader lives inside #root, which stage.ts already scales to the window (one shared scale). So the splash is
-	// laid out against the STAGE (design px), not the window: using innerWidth/innerHeight here scaled it twice (tiny
-	// splash on every window that is not 390-wide portrait or 1920x1080) and could pick the other orientation than the
-	// game (window 1.0-1.1 tall). fitStage() is idempotent and makes ST current even before the game's first layout().
-	const S = fitStage(), o: 'land' | 'port' = S.portrait ? 'port' : 'land', d = L[o];
-	R.dataset.o = o;
-	const st = R.querySelector<HTMLElement>('.spStage')!;
-	st.style.width = d.size[0] + 'px'; st.style.height = d.size[1] + 'px';
-	// portrait: keep a strip free under the splash for the "Don't show this again" row (.spSkip, bottom of the loader);
-	// on short phones (Stake in iPhone Safari, ~390x550-660 visible) TAP TO START sat on top of it and a tap ticked the box
-	const keep = o === 'port' ? 2 * 30 : 0;
-	st.style.setProperty('--sps', String(Math.min(S.w / d.size[0], (S.h - keep) / d.size[1])));
-	R.querySelector<HTMLElement>('.spBg')!.style.backgroundImage = `url(${(o === 'port' && ART.background_portrait) || ART.background || url(d.bg)})`;   // chalet room
-	const t = R.querySelector<HTMLImageElement>('.spTitle')!, ts = ART.logo || url(d.title.img); if (t.getAttribute('src') !== ts) t.src = ts; place(t, d.title);
-	// aifix (audit 3): the painted panels (garbled AI lettering, fake mini-boards) are replaced by plain HTML cards: the
-	// real in-game art + a short title + one line, in the layout's slots (3 across in landscape, stacked in portrait).
-	let ps = [...R.querySelectorAll<HTMLElement>('.spPanel')];
-	if (ps.length !== d.panels.length) {
-		ps.forEach((p) => p.remove());
-		ps = d.panels.map(() => { const p = document.createElement('div'); p.className = 'spEl spPanel spCard'; st.insertBefore(p, st.querySelector('.spBarWrap')); return p; });
-	}
-	ps.forEach((p, i) => { const q = d.panels[i];
-		const key = /modes/.test(q.img) ? 'modes' : /sticky/.test(q.img) ? 'sticky' : 'egw', c = CARDS[key];
-		if (p.dataset.k !== key) { const src = c.art.includes('/') ? c.art : ART[c.art];
-			// symbol art is baked from the sheet just after start: lay out again once it is there
-			if (src) p.dataset.k = key; else void symArtReady.then(() => window.dispatchEvent(new Event('resize')));
-			p.setAttribute('aria-label', LOADER_CARDS[key === 'modes' ? 0 : key === 'sticky' ? 1 : 2]);
-			p.innerHTML = `<div class="spArt">${src ? `<img src="${src}" alt="" draggable="false">` : ''}</div><div class="spTxt"><h3></h3><p></p></div>`;
-			p.querySelector('h3')!.textContent = c.title; p.querySelector('p')!.textContent = c.line; }
-		place(p, q); p.style.setProperty('--d', q.delayMs + 'ms'); });
-	// chalet: TAP TO START is a lettered CSS plate (chalet.css #lGo), no image
-	place(R.querySelector<HTMLElement>('#lGo')!, d.tap);
-	place(R.querySelector<HTMLElement>('.spBarWrap')!, { ...d.tap, w: d.tap.w * 0.9 });
-}
 
 // L1: the inline first-paint loader (#preL in app.html): hidden while the sting logo is up, back between the sting and
 // the foyer, removed once the splash / game shows (CSS also hides it on #loader.pxOn / .ready / .out)
@@ -132,12 +82,6 @@ function runSting() {
 export function initSplash() {
 	const R = document.getElementById('loader'); if (!R) return;
 	R.classList.toggle('quick', noIntro());
-	const cb = R.querySelector<HTMLInputElement>('#spSkip')!;
-	cb.checked = skipSplash();
-	cb.onchange = () => { try { cb.checked ? localStorage.setItem(KEY, '1') : localStorage.removeItem(KEY); } catch {} };
-	layout(); addEventListener('resize', layout);
-	// iOS: the visible box changes without a window resize (bars) and reports late after a rotation
-	visualViewport?.addEventListener('resize', layout); addEventListener('orientationchange', () => { setTimeout(layout, 120); setTimeout(layout, 500); });
-	sting.then(() => { R.classList.add('in'); removeEventListener('resize', layout); addEventListener('resize', layout); });
+	sting.then(() => { R.classList.add('in'); });
 	runSting();
 }

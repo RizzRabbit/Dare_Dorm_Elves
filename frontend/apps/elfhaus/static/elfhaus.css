@@ -1,201 +1,21 @@
-/* Elfhaus shell + boot CSS. Game chrome (board, HUD, overlays) is drawn in Pixi. */
+/* Canvas host + fonts + the intentional screen-reader live region. Game chrome is Pixi. */
 @font-face{font-family:"Cinzel";src:url(fonts/Cinzel-VF.woff2) format("woff2");font-weight:400 900;font-display:block}
 @font-face{font-family:"Nunito";src:url(fonts/Nunito-VF.woff2) format("woff2");font-weight:200 1000;font-display:block}
-:root{ --glass:rgba(20,18,26,.70); --glass2:rgba(20,18,26,.82); --hair:rgba(230,224,245,.22); --gold:#B9A2E0; --steel:#DCE2E8;
-  --ink:#2A2433; --ink2:#4A4258; --cream:#F1F0F5; --paper:#E6E3EE; --paper2:#CFCBDB;
-  --slate:#5E5A6B; --slate2:#3D3948; --pink:#D3BFEA; --rose:#C8435F; --rose2:#9C2F48; --denim:#4E6A8C; --denim2:#36506E;
-  --plate:#D9D2EC; --sage:#A9A4BC; --lilac:#B8A2CF; --peach:#C8A9D9;
-  --cell:150px; --gap:0px;
-  --r:14px 11px 15px 12px / 12px 15px 11px 14px;  /* hand-cut, slightly uneven corners */
-  --grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .17 0 0 0 0 .15 0 0 0 0 .21 0 0 0 .4 -.15'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  --mottle:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.012 .03' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .15 0 0 0 0 .13 0 0 0 0 .2 0 0 0 .28 -.1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23m)'/%3E%3C/svg%3E");
-  --paint:var(--grain),var(--mottle);
-  --edge:inset 0 2px 0 #ffffff55, inset 0 -3px 0 #2A24332e, inset 0 0 12px #2A243326;  /* painted top-light + darkened rim */
-  --drop:0 3px 0 #2A243366, 0 8px 14px -4px #2A243355;
-}
 *{box-sizing:border-box}
-html,body{margin:0;height:100%;overflow:hidden;background:#3a2e3c;color:var(--ink);font-family:"Nunito",system-ui,sans-serif;font-weight:700;touch-action:manipulation;user-select:none}
-/* PLACEHOLDER background (painted grey-violet wash) until assets/final/background_* lands */
-#bg{position:fixed;inset:0;z-index:0;background:var(--paint),radial-gradient(ellipse at 50% 35%,#B7B1C8,#8C8599 55%,#5A5468);background-size:cover;background-position:center}
-#bg.art{background-repeat:no-repeat}
-#bgFade{position:fixed;inset:0;background-repeat:no-repeat;pointer-events:none;opacity:0;will-change:opacity}
-body.inBonus #bg:not(.fs){filter:saturate(1.1) hue-rotate(18deg) brightness(.92)}
-#app{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0)}
-.hidden{display:none!important}
-/* ---------- header / wordmark ---------- */
-#top{position:absolute;top:0;left:0;right:0;height:120px;pointer-events:none;z-index:5}
-/* ---------- reel frame: painted slate-grey frame around a cool-grey board ---------- */
-#stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;position:relative;min-height:0}
-/* ---------- controls: minimal dark bar ---------- */
-#hud{width:100%;max-width:820px;padding:0 16px 14px;position:relative}
-#hud svg{width:30px;height:30px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;display:block}
-#hud svg .fill{fill:#fff;stroke:none}
-#hud svg text{font:900 7.5px "Nunito";fill:#fff;stroke:none}
-/* ---------- mobile portrait ---------- */
-body.portrait #top{width:100%;height:auto;position:relative;padding-top:6px;text-align:center}
-/* the portrait room is busier behind the board */
-body.portrait #hud{padding:0 6px 8px}
-body.portrait .spins{font-size:22px}
-body.short #top{display:none;height:0}
-body.short #hud{padding-bottom:4px}
-body:not(.portrait).short #hud{max-width:none}
-
+html,body{margin:0;height:100%;overflow:hidden;background:#120C18;color:#2A2433;font-family:"Nunito",system-ui,sans-serif;font-weight:700;touch-action:manipulation;user-select:none}
+#bg{position:fixed;inset:0;z-index:0;background-size:cover;background-position:center;background-repeat:no-repeat}
 #scene{position:fixed;inset:0;z-index:0;width:100%;height:100%;pointer-events:none;display:block}
-/* ---- In-game title: ELFHAUS wordmark centered above the reel board ---- */
-#top{position:relative;top:auto;left:auto;right:auto;width:100%;height:auto;display:flex;justify-content:center;padding-top:6px;pointer-events:none;z-index:5}
-
-#loader{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(8px,calc(2*var(--vh)),22px);
-  background:#1C1922;overflow:hidden;opacity:1;user-select:none;-webkit-user-select:none;padding:calc(3*var(--vh)) calc(4*var(--vw)) calc(6*var(--vh));box-sizing:border-box}
-#loader.out{opacity:0;pointer-events:none}
-#lBar{width:min(420px,calc(70*var(--vw)));height:7px;border-radius:4px;background:#26212E;border:1px solid #4A4258;overflow:hidden}
-#lBar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#5E4C80,#A28FC8)}
-#lGo{display:none;font-family:"Cinzel";font-weight:800;font-size:clamp(15px,calc(2.2*var(--vh)),20px);letter-spacing:2px;color:#1E1A26;padding:11px 34px;border-radius:6px;
-  border:1px solid #1E1A26;background:linear-gradient(#EEE8F8,#BBAAD8);cursor:pointer}
-#lGo:hover{background:linear-gradient(#F6F2FC,#C9BBE3)}
-#loader.ready #lBar{display:none}
-#loader.ready #lGo{display:block}
-/* landscape phone: small title in the free space right of the board (roxy.ts / game.ts set --gutR) */
-body.short:not(.portrait) #top{display:flex;position:fixed;top:6px;right:0;left:auto;width:var(--gutR,200px);height:auto;padding:0;justify-content:center}
-#app #hud{grid-template-columns:var(--bw) var(--hb) minmax(0,1fr) var(--hb) var(--sp) var(--hb) minmax(0,1fr) var(--hb) var(--bw)}
-body.portrait .bName{font-size:11px}
-body.portrait .bPrice{font-size:15px}
-body.short:not(.portrait) .bArt{aspect-ratio:1.5}
-#adv.hidden{display:none}
-body.portrait .plGrid{grid-template-columns:repeat(3,1fr);gap:6px}
-body.portrait .pl{padding:5px 6px;gap:4px}
-body.portrait .pl figcaption{font-size:11px}
-body:not(.turbo) canvas.wfxRing{display:none}
-body.portrait .ffBurst{top:46%}
-body.portrait .otAmt{font-size:34px}
-
-#hud button{position:relative}
-#lGo{z-index:1}
-#lGo{position:relative}
-#root{position:fixed;left:0;top:0;z-index:1;width:var(--dw,100vw);height:var(--dh,100vh);overflow:hidden;background:transparent;transform-origin:0 0;
-  transform:translate(var(--ox,0),var(--oy,0)) scale(var(--s,1));contain:layout size}
-body.tb .lock{font-size:calc(var(--cell)*.085*var(--tbs))}
-body.tb #fsCap{font-size:calc(13px*var(--tb))}
-body.tb #autoN{font-size:calc(var(--sp)*.15*var(--tbs) + 6px / var(--s,1))}
-body.tb .spins{font-size:calc(30px*var(--tbs))}
-body.tb .carried{font-size:calc(15px*var(--tb))}
-body.tb .otHint{font-size:calc(12px*var(--tb))}
-body.tb .bwX{font-size:calc(16px*var(--tb))}
-body.tb .mwHint{font-size:calc(16px*var(--tb))}
-body.tb .mwAmt{font-size:calc(44px*var(--tbs))}
-body.alcove.portrait #alcoveRail{display:block}
-body.alcove #app #hud,body.alcove.portrait #app #hud{background:none;border-color:transparent;box-shadow:none}
-body.alcove #app #hud::before{border-top-color:transparent}
-:root{--frameGlowOp:.8;--frameGlowLo:.6;--reelLineOp:.3;--reelLineW:2px;--reelLineCol:#FF8FD2}
-#alcoveGlow{position:absolute;left:0;top:0;pointer-events:none;display:none;z-index:0;background-size:100% 100%;background-repeat:no-repeat;
-  opacity:var(--frameGlowOp)}
-body.alcove #alcoveGlow{display:block}
-#reelLines{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:var(--reelLineOp)}
-#reelLines>i{position:absolute;top:0;bottom:0;left:calc(var(--k)*(var(--cell) + var(--gap)) - var(--gap)/2);width:calc(var(--reelLineW)*7);transform:translateX(-50%);
-  background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--reelLineCol) 35%,transparent) 30%,var(--reelLineCol) calc(50% - var(--reelLineW)/2),var(--reelLineCol) calc(50% + var(--reelLineW)/2),color-mix(in srgb,var(--reelLineCol) 35%,transparent) 70%,transparent);
-  -webkit-mask:linear-gradient(transparent,#000 9%,#000 91%,transparent);mask:linear-gradient(transparent,#000 9%,#000 91%,transparent)}
-#reelLines>i:nth-child(1){--k:1} #reelLines>i:nth-child(2){--k:2} #reelLines>i:nth-child(3){--k:3} #reelLines>i:nth-child(4){--k:4}
-/* ===== end board frame B2 ===== */
-
-/* ===== wild frame (wildframe.ts): full-reel stacked + merged wilds ===== */
-/* One frame per overlay, inside the overlay box (= the covered cells), so it never reaches the neighbouring reels or the
-   alcove. --wfL (bright rim line) / --wfG (glow) are per-elf colours or a per-reel gradient. Transform / opacity only. */
-.ov>.wFrame{position:absolute;inset:0;z-index:5;pointer-events:none;border-radius:9px;transform-origin:50% 50%;will-change:transform,opacity}
-.ov>.wFrame>b{position:absolute;display:block;border-radius:inherit}
-/* v2 (thicker + brighter): two glow layers inside the overlay (.ov clips, so nothing reaches the board edge / alcove).
-   wfG  wide soft halo in the ACC tone, inward to max(18px, cell*.2), breathes .82-1 (opacity only, 3.6 s cycle)
-
-.ov>.wFrame>.wfG{inset:0;--w:max(18px,calc(var(--cell)*.2));background:var(--wfG);opacity:.82;will-change:opacity;
-  -webkit-mask:linear-gradient(90deg,#000 0,#000 6px,#0007 calc(var(--w)*.5),#0000 var(--w),#0000 calc(100% - var(--w)),#0007 calc(100% - var(--w)*.5),#000 calc(100% - 6px),#000 100%),
-               linear-gradient(180deg,#000 0,#000 6px,#0007 calc(var(--w)*.5),#0000 var(--w),#0000 calc(100% - var(--w)),#0007 calc(100% - var(--w)*.5),#000 calc(100% - 6px),#000 100%);
-          mask:linear-gradient(90deg,#000 0,#000 6px,#0007 calc(var(--w)*.5),#0000 var(--w),#0000 calc(100% - var(--w)),#0007 calc(100% - var(--w)*.5),#000 calc(100% - 6px),#000 100%),
-               linear-gradient(180deg,#000 0,#000 6px,#0007 calc(var(--w)*.5),#0000 var(--w),#0000 calc(100% - var(--w)),#0007 calc(100% - var(--w)*.5),#000 calc(100% - 6px),#000 100%);
-  }
-.ov>.wFrame>.wfH{inset:0;--h:max(9px,calc(var(--cell)*.08));background:var(--wfL);opacity:.9;
-  -webkit-mask:linear-gradient(90deg,#000 0,#000 4px,#0000 var(--h),#0000 calc(100% - var(--h)),#000 calc(100% - 4px),#000 100%),
-               linear-gradient(180deg,#000 0,#000 4px,#0000 var(--h),#0000 calc(100% - var(--h)),#000 calc(100% - 4px),#000 100%);
-          mask:linear-gradient(90deg,#000 0,#000 4px,#0000 var(--h),#0000 calc(100% - var(--h)),#000 calc(100% - 4px),#000 100%),
-               linear-gradient(180deg,#000 0,#000 4px,#0000 var(--h),#0000 calc(100% - var(--h)),#000 calc(100% - 4px),#000 100%)}
-/* crisp 5 px line (a gradient ring: padding-box minus content-box) */
-.ov>.wFrame>.wfL{inset:2px;padding:5px;border-radius:7px;background:var(--wfL);
-  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
-          mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
-/* the corner gem and the respin dots stay on top of the frame */
-.ov>.mx,.ov>.ovrd{z-index:6}
-/* ===== end wild frame ===== */
-/* ===== board tempo (src/game/tempo.ts): --at = ANIM_TEMPO (2) on <body>, 1 in turbo (body.turbo). The board's CSS
-   motion keeps its old values above and is stretched here. Not stretched: the reel-stop pops (wPop, .cell.drop) and the
-   anticipation pulse (antPulse), the wild frame's 3.6 s breath, HUD / loader / big-win / max-win screens. ===== */
-body{--at:2} body.turbo{--at:1}
-/* ===== end board tempo ===== */
-/* ===== aifix: no four-point sparkles (fx.ts / wildfx.ts / featfx.ts / intro.ts). Winning symbols: the baked sym_<S>
-
-/* ===== end aifix sparkles ===== */
-/* ===== aifix: calm wild landing (audit 18). No neon ring round single wilds; the art's own elf-colour sticker border
-   is the read, the landing is the transform squash (.wLand). The bold frames on stacked / merged wilds stay as approved. ===== */
-.cell.wild::before{content:none;display:none}
-
-/* ===== house-rule pass (final): every animated property is transform or opacity ===== */
-#lBar i{width:100%;transform:scaleX(0);transform-origin:0 50%}
-
-#root #app,#root #loader,body.short:not(.portrait) #root #top{position:absolute}
-/* v3.9: the whole settings row is the tap target (settings.ts forwards a row tap to its switch). */
-
-/* ===== v3.13 (James 2026-10-26): panels (panels.ts) =====
-   Corner X: a small stylized neon blade X (two tapered strokes, plum stone outline, soft pink neon), no button plate,
-
-.modal.hasX{padding-right:26px}
-.modal .mX{position:absolute;top:4px;right:4px;z-index:3;width:44px;height:44px;padding:0;margin:0;border:0;border-radius:0;background:none;
-  display:flex;align-items:center;justify-content:center;opacity:.86;-webkit-tap-highlight-color:transparent}
-.modal .mX:hover{background:none;opacity:1}
-.modal .mX:focus-visible{outline:1.5px solid #FF8FD2;outline-offset:-6px}
-.modal .mX svg{width:22px;height:22px;overflow:visible;filter:drop-shadow(0 0 2px #FF5FB0) drop-shadow(0 0 5px #FF5FB099)}
-.modal .mX .xb{fill:#FFE3F1;stroke:#2A1433;stroke-width:1.4px;paint-order:stroke fill;stroke-linejoin:round;vector-effect:non-scaling-stroke}
-.modal .mX:active svg{transform:scale(.9)}
-/* the stage is scaled down on small screens: grow the invisible hit area so it stays at least 44 screen px */
-.modal{--xHit:max(44px, calc(46px / var(--s, 1)))}
-body.tb .modal{--xHit:max(44px, calc(46px / (var(--s, 1) * var(--tbm, 1))))}
-.modal .mX::before{content:'';position:absolute;left:50%;top:50%;width:var(--xHit);height:var(--xHit);transform:translate(-50%,-50%)}
-body.portrait .modal .mX{top:2px;right:2px}
-.hasX .mHead{padding-right:30px}
-.mView{position:relative;flex:1 1 auto;min-height:0;overflow:hidden;touch-action:none;overscroll-behavior:contain;cursor:grab}
-.mView.dragging{cursor:grabbing} .mView.dragging *{pointer-events:none}
-.mView:not(.scrolls){cursor:auto}
-.mTrack{will-change:transform;transform:translate3d(0,0,0)}
-/* soft edge where content continues (static mask, swapped by state, not animated) */
-.mView.scrolls:not(.atTop){-webkit-mask-image:linear-gradient(transparent,#000 18px);mask-image:linear-gradient(transparent,#000 18px)}
-.mView.scrolls:not(.atEnd){-webkit-mask-image:linear-gradient(#000 calc(100% - 22px),transparent);mask-image:linear-gradient(#000 calc(100% - 22px),transparent)}
-.mView.scrolls:not(.atTop):not(.atEnd){-webkit-mask-image:linear-gradient(transparent,#000 18px,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(transparent,#000 18px,#000 calc(100% - 22px),transparent)}
-/* v3.16c: unfinished-round card, same look as the bonus confirm card */
-#resumeCard{z-index:65;background:#0B0A0F99}
-#rcLine{font-size:14px;font-weight:600;line-height:1.4;color:#ECE6F2;margin:0 0 14px}
-.rcBtns{display:flex;gap:12px;justify-content:center;margin-bottom:4px}
-#menu,#buyMenu,#autoMenu,#bmConfirm,#msg,#resumeCard{touch-action:none;overscroll-behavior:contain}
-/* bonus menu: Turbo row under Ante; the switches' hit areas fill their row padding (like the settings rows) */
-#turboRow,#anteRow{margin-top:8px}
-body.short:not(.portrait) .cfArt,body.tb .cfArt{width:min(120px,34%)}
-body.portrait #app #hud{grid-template-columns:repeat(5,minmax(0,1fr));grid-template-rows:48px var(--sp) var(--mt);row-gap:6px}
-body.portrait #app #hud::before{grid-row:3}
-
+#root{position:fixed;left:0;top:0;z-index:1;width:var(--dw,100vw);height:var(--dh,100vh);overflow:hidden;background:transparent;transform-origin:0 0;transform:translate(var(--ox,0),var(--oy,0)) scale(var(--s,1));contain:layout size}
+#root #app,#root #loader{position:absolute;inset:0}
+#app{display:block}
 #introCv{position:absolute;left:0;top:0;z-index:199;pointer-events:none;display:block}
-#loader.px .spBg,#loader.px .spStage,body.introOn #loader .spBg,body.introOn #loader .spStage{display:none!important}
-#loader.pxOn,body.introOn #loader{background:transparent!important}
-#loader.px .spSkip,body.introOn #loader .spSkip{position:absolute;display:flex;align-items:center;z-index:2;color:#eee3f2;text-shadow:0 1px 3px #000}
-
-/* studio sting */
+#loader{position:absolute;inset:0;z-index:200;background:transparent;overflow:hidden}
+#loader.out,body[data-ready="1"] #loader,body[data-ready="1"] #loader.out{opacity:0;pointer-events:none;visibility:hidden}
 #sting{position:absolute;inset:0;z-index:5;background:radial-gradient(circle at 50% 50%,rgba(60,30,80,.6),#120C18 70%),#120C18;display:flex;align-items:center;justify-content:center;cursor:pointer}
-#sting .stBox{position:relative;height:62vmin;aspect-ratio:640/636;opacity:0}
-#sting .stLogo,#sting .stGlint{position:absolute;inset:0;width:100%;height:100%}
-#sting .stGlint canvas{position:absolute;inset:0;width:100%;height:100%}
-#sting .stGlow{position:absolute;left:50%;top:50%;width:135%;translate:-50% -50%;opacity:0;pointer-events:none}
-
-.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-
-
-/* Pixi paints the game; in-document shells and the off-document host tree must never show as DOM text or unstyled chrome. */
+#sting canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hidden{display:none!important}
 #top{opacity:0!important;pointer-events:none!important}
 #hud{pointer-events:none!important}
-#uiHostTree{position:fixed!important;left:-10000px!important;top:0!important;width:1px!important;height:1px!important;overflow:hidden!important;opacity:0!important;pointer-events:none!important;clip-path:inset(50%)!important;z-index:-1!important}
-#srHud,.sr-only{position:fixed!important;left:-10000px!important;top:0!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;clip-path:inset(50%)!important;border:0!important;white-space:nowrap;opacity:0!important;color:transparent!important;font-size:1px!important;pointer-events:none!important;z-index:-1!important}
-/* The vestibule camera scales #bg down to 0.72, which would otherwise expose the page's mauve letterbox. */
-body.introOn{background:#120C18}
-body[data-ready="1"] #loader,body[data-ready="1"] #loader.out{opacity:0!important;pointer-events:none!important;visibility:hidden!important}
+.sr-only,#srHud{position:fixed!important;left:-10000px!important;top:0!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;clip-path:inset(50%)!important;border:0!important;white-space:nowrap;opacity:0!important;color:transparent!important;font-size:1px!important;pointer-events:none!important;z-index:-1!important}
+body.introOn{background:#120C18;touch-action:none;user-select:none;-webkit-user-select:none}
+body.inBonus #bg:not(.fs){filter:brightness(.66) saturate(.92) contrast(1.06)}
