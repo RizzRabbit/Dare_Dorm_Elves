@@ -760,3 +760,40 @@ html body.pixiWins #bigwin .bwGlow,
 html body.pixiWins #bigwin .bwGhost,
 html body.pixiWins #bigwin .bwWarm{filter:opacity(0)!important}
 html body.pixiWins #maxwin .mwText{filter:opacity(0)!important}
+
+/* Pixi panels (chunk 4): pop menu, settings, autoplay and game-info chrome are drawn
+   on #uiStage. DOM shells stay for state, a11y, keyboard and the live rules scroll
+   window (unchanged text, panels.ts Scroller for touch + wheel). */
+html body.pixiPanels #popMenu{filter:opacity(0)!important;pointer-events:none!important}
+html body.pixiPanels #settings,
+html body.pixiPanels #autoMenu{background:transparent!important;pointer-events:none!important}
+html body.pixiPanels #settings .modal{filter:opacity(0)!important}
+/* autoplay: don't filter the modal (that would also hide lifted descendants
+   while they are measured). Hide painted chrome; leave the inputs typable. */
+html body.pixiPanels #autoMenu .modal{background:none!important;box-shadow:none!important;border:0!important}
+html body.pixiPanels #autoMenu .mX,
+html body.pixiPanels #autoMenu .mHead,
+html body.pixiPanels #autoCounts,
+html body.pixiPanels #abRow,
+html body.pixiPanels #advBtn,
+html body.pixiPanels #autoErr,
+html body.pixiPanels #autoStart,
+html body.pixiPanels #stFeat,
+html body.pixiPanels #autoMenu .skC,
+html body.pixiPanels #autoMenu .bmC,
+html body.pixiPanels #adv .lbl{visibility:hidden!important;pointer-events:none!important}
+html body.pixiPanels #menu{background:transparent!important;pointer-events:none!important}
+html body.pixiPanels #menu .modal{background:none!important;box-shadow:none!important;border:0!important}
+html body.pixiPanels #menu .modal>canvas.skC,
+html body.pixiPanels #menu .mX{visibility:hidden!important;pointer-events:none!important}
+html body.pixiPanels .pixiLiftView,
+html body.pixiPanels #menu .mView.pixiLiftView{
+	position:fixed!important;z-index:86!important;pointer-events:auto!important;
+	background:transparent!important;overflow:hidden!important;margin:0!important
+}
+html body.pixiPanels input.pixiLift{
+	position:fixed!important;z-index:86!important;margin:0!important;
+	background:transparent!important;border-color:transparent!important;box-shadow:none!important;
+	color:var(--c-ink)!important;font-family:var(--ui)!important;pointer-events:auto!important;
+	filter:none!important;opacity:1!important
+}

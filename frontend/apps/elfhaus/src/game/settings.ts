@@ -58,7 +58,7 @@ export function initSettings(openInfo: () => void) {
 		r.oninput = () => { setAudioVol(k, Number(r.value) / 100); paint(k); };
 	}
 	// a tap outside closes it (the menu button toggles it itself)
-	document.addEventListener('pointerdown', (e) => { const t = e.target as Element; if (popOpen() && !t.closest?.('#popMenu,#menuBtn')) closePop(); }, true);
+	document.addEventListener('pointerdown', (e) => { const t = e.target as Element; if (popOpen() && !t.closest?.('#popMenu,#menuBtn,#uiStage')) closePop(); }, true);
 	addEventListener('keydown', (e) => {
 		if (!popOpen()) return;
 		if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closePop(true); }

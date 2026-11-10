@@ -100,3 +100,65 @@ export function startBtn(w: number, h: number, onTap: () => void) {
 	c.on('pointertap', (e) => { e.stopPropagation(); onTap(); });
 	return c;
 }
+
+/** Painted volume slider: track + fill + thumb, 5% steps. Layout in CSS px. */
+export type UiSlider = Container & { set: (v: number) => void; layout: (w: number, h: number) => void; value: () => number };
+
+export function makeSlider(onChange: (v: number) => void): UiSlider {
+	const c = new Container();
+	c.eventMode = 'static';
+	c.cursor = 'pointer';
+	let W = 120, H = 18, val = 0, drag = false, lastPaint = '';
+	const trackC = new Container();
+	trackC.eventMode = 'none';
+	const fillC = new Container();
+	fillC.eventMode = 'none';
+	const thumb = spr('ui', 'slider_thumb');
+	thumb.anchor.set(0.5);
+	thumb.eventMode = 'none';
+	c.addChild(trackC, fillC, thumb);
+
+	const paint = () => {
+		const key = `${Math.round(W)}x${Math.round(H)}:${Math.round(val * 20)}`;
+		const th = Math.max(12, H * 1.35);
+		const k = th / Math.max(1, thumb.texture.height);
+		thumb.scale.set(k);
+		const x = Math.min(W, Math.max(0, val * W));
+		thumb.position.set(x, H / 2);
+		if (lastPaint === key && trackC.children.length) return;
+		lastPaint = key;
+		trackC.removeChildren();
+		fillC.removeChildren();
+		trackC.addChild(nineUi('slider_track', Math.max(8, W), Math.max(8, H), 2));
+		const fw = Math.max(H * 0.5, W * Math.max(0.02, val));
+		fillC.addChild(nineUi('slider_fill', Math.min(W, fw), Math.max(8, H), 2));
+	};
+
+	const at = (gx: number) => {
+		const p = c.toLocal({ x: gx, y: 0 });
+		const v = Math.round(Math.min(1, Math.max(0, p.x / Math.max(1, W))) * 20) / 20;
+		if (v === val) return;
+		val = v;
+		paint();
+		onChange(v);
+		kickUi();
+	};
+
+	c.on('pointerdown', (e) => { drag = true; at(e.global.x); e.stopPropagation(); });
+	c.on('pointermove', (e) => { if (drag) { at(e.global.x); e.stopPropagation(); } });
+	const end = (e: { stopPropagation: () => void }) => { if (drag) { drag = false; e.stopPropagation(); } };
+	c.on('pointerup', end);
+	c.on('pointerupoutside', end);
+	c.on('pointercancel', end);
+
+	const set = (v: number) => { val = Math.min(1, Math.max(0, v)); paint(); };
+	const layout = (w: number, h: number) => {
+		W = Math.max(8, w);
+		H = Math.max(8, h);
+		c.hitArea = new Rectangle(0, -10, W, H + 20);
+		paint();
+	};
+	layout(W, H);
+	return Object.assign(c, { set, layout, value: () => val });
+}
+

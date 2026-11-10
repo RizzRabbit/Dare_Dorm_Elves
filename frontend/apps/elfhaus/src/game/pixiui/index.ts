@@ -1,4 +1,4 @@
-// Public API for the Pixi game-UI overlay (buy menu, confirm, intro, HUD, win banners).
+// Public API for the Pixi game-UI overlay (buy menu, confirm, intro, HUD, win banners, panels).
 import { Container } from 'pixi.js';
 import { loadAtlas } from '../scene/atlas';
 import { initUiStage, uiApp, uiInteractive, uiKind, uiScale, designW, designH, viewW, viewH, kickUi } from './stage';
@@ -9,6 +9,7 @@ import { buyVisible, confirmVisible, tapBuyCard } from './buy';
 import { introVisible } from './intro';
 import { initHud, layoutHud, syncHud, hudHit, hudRects } from './hud';
 import { initWins, winsVisible, relaxUiTier } from './wins';
+import { initPanels } from './menu';
 import { banner, toast, hideToast, bigWin } from '../ui';
 import { maxWinCelebration } from '../maxwin';
 import { titleType, titleTypeMirror } from '../titletype';
@@ -36,6 +37,7 @@ export async function initUiPixi(): Promise<boolean> {
 	document.body.classList.add('pixiUi');
 	await initHud();
 	await initWins();
+	await initPanels();
 	kickUi();
 	installBounds();
 	return true;

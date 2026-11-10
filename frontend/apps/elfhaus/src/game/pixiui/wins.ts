@@ -115,10 +115,12 @@ export function winsVisible() {
 
 /** Raise or lower the UI canvas without stealing taps meant for the DOM overlay hosts. */
 export function relaxUiTier() {
-	const modal = MODAL_IDS.some(idShown);
+	const pop = document.getElementById('popMenu')?.classList.contains('open');
+	const panel = ['settings', 'menu', 'autoMenu'].some(idShown);
+	const modal = MODAL_IDS.some(idShown) || !!pop || panel;
 	if (modal) {
 		setUiTier('modal');
-		const hits = idShown('buyMenu') || idShown('bmConfirm') || idShown('intro');
+		const hits = idShown('buyMenu') || idShown('bmConfirm') || idShown('intro') || idShown('settings') || idShown('menu') || idShown('autoMenu') || !!pop;
 		uiInteractive(hits);
 	} else {
 		uiInteractive(false);
@@ -222,17 +224,22 @@ function syncToast(el: HTMLElement | null, root: Container, bg: Container, which
 	}
 	const r = rect(el);
 	if (!r) { root.visible = false; return; }
-	placeIn(root, r);
-	root.alpha = opacityOf(el);
-	resetBg(bg, 'toast', r.w, r.h, 2);
-	const padX = Math.max(10, r.h * 0.28), padY = Math.max(4, r.h * 0.18);
 	const small = el.querySelector('small');
 	const main = (el.childNodes.length && small)
 		? Array.from(el.childNodes).filter((n) => n !== small).map((n) => n.textContent || '').join('').trim()
 		: (el.textContent || '').trim();
 	const sub = small?.textContent?.trim() || '';
-	const mainH = sub ? r.h * 0.62 : r.h - padY * 2;
-	const mainBox = { x: padX, y: padY, w: r.w - padX * 2, h: Math.max(8, mainH) };
+	const padX = Math.max(10, r.h * 0.28), padY = Math.max(4, r.h * 0.18);
+	let boxW = r.w, boxH = r.h;
+	if (which === 'toast' && sub) {
+		const need = padY + 18 + 4 + 14 + padY;
+		if (boxH < need) boxH = need;
+	}
+	placeIn(root, { ...r, w: boxW, h: boxH });
+	root.alpha = opacityOf(el);
+	resetBg(bg, 'toast', boxW, boxH, 2);
+	const mainH = sub ? Math.max(16, (boxH - padY * 2 - 4) * 0.58) : boxH - padY * 2;
+	const mainBox = { x: padX, y: padY, w: boxW - padX * 2, h: Math.max(8, mainH) };
 	if (which === 'banner') {
 		if (bannerTxt?.label !== 'bm:' + main) bannerTxt = setBm(root, bannerTxt, bmFit(main, 'font_ink', Math.min(28, mainBox.h), mainBox.w, mainBox.h));
 		if (bannerTxt) {
@@ -243,14 +250,14 @@ function syncToast(el: HTMLElement | null, root: Container, bg: Container, which
 		if (toastTxt?.label !== 'bm:' + main) toastTxt = setBm(root, toastTxt, bmFit(main, 'font_ink', Math.min(28, mainBox.h), mainBox.w, mainBox.h));
 		if (toastTxt) {
 			toastTxt.anchor.set(0.5, 0.5);
-			toastTxt.position.set(r.w / 2, sub ? padY + mainBox.h / 2 : r.h / 2);
+			toastTxt.position.set(boxW / 2, sub ? padY + mainBox.h / 2 : boxH / 2);
 		}
 		if (sub) {
-			const subBoxH = r.h - mainBox.h - padY * 2;
-			if (toastSub?.label !== 'bm:' + sub) toastSub = setBm(root, toastSub, bmFit(sub, 'font_ink', Math.min(14, subBoxH), mainBox.w, Math.max(8, subBoxH)));
+			const subBoxH = Math.max(12, boxH - mainBox.h - padY * 2);
+			if (toastSub?.label !== 'bm:' + sub) toastSub = setBm(root, toastSub, bmFit(sub, 'font_ink', Math.min(14, subBoxH), mainBox.w, subBoxH));
 			if (toastSub) {
 				toastSub.anchor.set(0.5, 0.5);
-				toastSub.position.set(r.w / 2, padY + mainBox.h + subBoxH / 2);
+				toastSub.position.set(boxW / 2, padY + mainBox.h + subBoxH / 2);
 			}
 		} else if (toastSub) {
 			toastSub = setBm(root, toastSub, null);
