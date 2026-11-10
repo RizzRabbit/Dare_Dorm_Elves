@@ -23,6 +23,7 @@ cpSync(SRC, OUT, {
 	recursive: true,
 	filter: (p) => {
 		const rel = relative(SRC, p).replaceAll('\\', '/');
+		if (/(?:^|\/)README(?:\.|$)/i.test(rel) || /\.md$/i.test(rel)) { dropped.push(rel); return false; }
 		if (!UNUSED.some((r) => r.test(rel))) return true;
 		if (code.includes(basename(rel).replace(/\.\w+$/, ''))) fail(`${rel} is listed as unused but the bundle references it`);
 		dropped.push(rel); return false;

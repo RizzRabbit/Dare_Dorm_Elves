@@ -1,9 +1,5 @@
 {
  "packages": {
-  "board": {
-   "pages": 1,
-   "frames": 19
-  },
   "font_cran": {
    "pages": 1,
    "frames": 74
@@ -19,10 +15,6 @@
   "font_ink": {
    "pages": 1,
    "frames": 74
-  },
-  "font_title": {
-   "pages": 1,
-   "frames": 32
   },
   "fx": {
    "pages": 2,
@@ -43,10 +35,6 @@
   "ui": {
    "pages": 1,
    "frames": 87
-  },
-  "symparts": {
-   "pages": 1,
-   "frames": 6
   }
  }
 }
