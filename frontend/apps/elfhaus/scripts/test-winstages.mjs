@@ -23,7 +23,7 @@ const tick = () => { now += 1000 / HZ; const c = q; q = []; c.forEach((f) => f(n
 const run = (ms) => { const end = now + ms; while (now < end) tick(); };
 
 const W = await load('winstage.ts');
-const C = await load('countup.ts', (s) => s.replace(/import \{ moneyWin as money, moneyDigits \} from '\.\/format';[^\n]*/, () => `const money = (v, d = 2) => '$' + Number(v).toFixed(d); const moneyDigits = () => 2;`));
+const C = await load('countup.ts', (s) => s.replace(/import \{ moneyWin as money, moneyDigits \} from '\.\/format';[^\n]*/, () => `const money = (v, d = 2) => '$' + Number(v).toFixed(d); const moneyDigits = () => 2;`).replace(/import \{ setHudField \} from '\.\/uistate';[^\n]*/, () => `const setHudField = () => {};`));
 
 // v3.19: the banner stages come from the math's standard win levels (synced into modes.generated.json)
 const GEN = JSON.parse(readFileSync(new URL('../src/game/modes.generated.json', import.meta.url), 'utf8'));
