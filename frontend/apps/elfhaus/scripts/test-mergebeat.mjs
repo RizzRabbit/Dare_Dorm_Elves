@@ -112,6 +112,11 @@ export function trailBetween() { globalThis.__trails++; }
 export function crumb(k) { globalThis.__crumbs.push(k); }
 export function scrub(s) { return String(s || ''); }
 export function setPhase(p) { globalThis.__phase = p; }
+export function playMotion(el, kfs, opts = {}) {
+  const anim = el.animate(kfs, opts);
+  return { finished: anim.finished.catch(() => {}), cancel() { anim.cancel(); }, finish() { try { anim.finish(); } catch {} }, get playState() { return anim.playState; } };
+}
+export function cancelMotion(el) { el?.getAnimations?.().forEach((a) => a.cancel()); }
 `);
 	await writeFile(entry, `
 import { mergeIn, skipMerge } from ${JSON.stringify(join(app, 'src/game/mergefx.ts'))};

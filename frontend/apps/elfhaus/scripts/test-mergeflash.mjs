@@ -97,6 +97,7 @@ main();
 `);
 	await esbuild.build({
 		entryPoints: [entry], bundle: true, format: 'iife', outfile: bundle, absWorkingDir: dir, logLevel: 'silent',
+		loader: { '.webp': 'empty', '.png': 'empty', '.jpg': 'empty' },
 		alias: { 'pixi.js': require.resolve('pixi.js') },
 		plugins: [{ name: 'tempo', setup(b) { b.onResolve({ filter: /\/tempo$/ }, () => ({ path: stub })); } }],
 	});

@@ -8,7 +8,6 @@ import { ST } from './stage';
 import { setAlcoveFs, warmAlcove } from './alcove';
 import { sceneBonus } from './scene/scene';
 
-const FADE_MS = 450;
 const ready = new Map<string, Promise<void>>();
 /** Fetch + decode an image once (resolves even on error so the swap never hangs). */
 export const preload = (url: string) => {
@@ -38,17 +37,13 @@ export function setBg(bonus: boolean, fade = true) {
 		hold = document.getElementById('bgFade');
 		if (!hold) { hold = document.createElement('div'); hold.id = 'bgFade'; bg.after(hold); }
 		const cs = getComputedStyle(bg);
-		hold.getAnimations().forEach((a) => a.cancel());
 		Object.assign(hold.style, { backgroundImage: cs.backgroundImage, backgroundSize: cs.backgroundSize, backgroundPosition: cs.backgroundPosition, filter: cs.filter, opacity: '1' });
 	}
 	const apply = () => {
 		if (my !== seq) return; // a newer swap won
 		bg.classList.add('art'); bg.style.backgroundImage = `url(${url})`; bg.classList.toggle('fs', fs);
-		if (hold) {
-			const h = hold;
-			requestAnimationFrame(() => h.animate([{ opacity: 1 }, { opacity: 0 }], { duration: FADE_MS, easing: 'ease-out', fill: 'forwards' })
-				.finished.then(() => { if (my === seq) { h.style.backgroundImage = 'none'; h.style.opacity = '0'; } }).catch(() => {}));
-		}
+		// the room is the Pixi scene (scene/room.ts eases its own plate); this DOM plate only shows without WebGL, so it swaps
+		if (hold) { hold.style.backgroundImage = 'none'; hold.style.opacity = '0'; }
 	};
 	if (first) apply(); else void preload(url).then(apply);
 }

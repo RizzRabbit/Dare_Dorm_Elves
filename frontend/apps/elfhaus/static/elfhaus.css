@@ -47,12 +47,12 @@ strips/cells/lines draw above */
 #top{position:relative;top:auto;left:auto;right:auto;width:100%;height:auto;display:flex;justify-content:center;padding-top:6px;pointer-events:none;z-index:5}
 
 #loader{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(8px,calc(2*var(--vh)),22px);
-  background:#1C1922;overflow:hidden;opacity:1;transition:opacity .6s ease;user-select:none;-webkit-user-select:none;padding:calc(3*var(--vh)) calc(4*var(--vw)) calc(6*var(--vh));box-sizing:border-box}
+  background:#1C1922;overflow:hidden;opacity:1;user-select:none;-webkit-user-select:none;padding:calc(3*var(--vh)) calc(4*var(--vw)) calc(6*var(--vh));box-sizing:border-box}
 #loader.out{opacity:0;pointer-events:none}
 #lBar{width:min(420px,calc(70*var(--vw)));height:7px;border-radius:4px;background:#26212E;border:1px solid #4A4258;overflow:hidden}
-#lBar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#5E4C80,#A28FC8);transition:width .25s ease}
+#lBar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#5E4C80,#A28FC8)}
 #lGo{display:none;font-family:"Cinzel";font-weight:800;font-size:clamp(15px,calc(2.2*var(--vh)),20px);letter-spacing:2px;color:#1E1A26;padding:11px 34px;border-radius:6px;
-  border:1px solid #1E1A26;background:linear-gradient(#EEE8F8,#BBAAD8);cursor:pointer;animation:lPulse 1.8s ease-in-out infinite}
+  border:1px solid #1E1A26;background:linear-gradient(#EEE8F8,#BBAAD8);cursor:pointer}
 #lGo:hover{background:linear-gradient(#F6F2FC,#C9BBE3)}
 #loader.ready #lBar{display:none}
 #loader.ready #lGo{display:block}
@@ -88,13 +88,11 @@ body.alcove.portrait #alcoveRail{display:block}
 body.alcove #app #hud,body.alcove.portrait #app #hud{background:none;border-color:transparent;box-shadow:none}
 body.alcove #app #hud::before{border-top-color:transparent}
 opacity only. z 0 + first in #app,so it
-   paints over the room (#bg is a positioned sibling in #root{--frameGlowOp:.8;--frameGlowLo:.6;--frameGlowAnim:fgBreathe;--frameGlowPeriod:7s;
+   paints over the room (#bg is a positioned sibling in #root{--frameGlowOp:.8;--frameGlowLo:.6;
   --reelLineOp:.3;--reelLineW:2px;--reelLineCol:#FF8FD2}
 #alcoveGlow{position:absolute;left:0;top:0;pointer-events:none;display:none;z-index:0;background-size:100% 100%;background-repeat:no-repeat;
-  opacity:var(--frameGlowOp);animation:var(--frameGlowAnim) var(--frameGlowPeriod) ease-in-out infinite;will-change:opacity}
+  opacity:var(--frameGlowOp)}
 body.alcove #alcoveGlow{display:block}
-@keyframes fgBreathe{0%,100%{opacity:var(--frameGlowOp)}50%{opacity:calc(var(--frameGlowOp)*var(--frameGlowLo))}}
-@media (prefers-reduced-motion:reduce){#alcoveGlow{animation:none}}
 #reelLines{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:var(--reelLineOp)}
 #reelLines>i{position:absolute;top:0;bottom:0;left:calc(var(--k)*(var(--cell) + var(--gap)) - var(--gap)/2);width:calc(var(--reelLineW)*7);transform:translateX(-50%);
   background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--reelLineCol) 35%,transparent) 30%,var(--reelLineCol) calc(50% - var(--reelLineW)/2),var(--reelLineCol) calc(50% + var(--reelLineW)/2),color-mix(in srgb,var(--reelLineCol) 35%,transparent) 70%,transparent);
@@ -132,18 +130,6 @@ body.alcove #alcoveGlow{display:block}
    motion keeps its old values above and is stretched here. Not stretched: the reel-stop pops (wPop, .cell.drop) and the
    anticipation pulse (antPulse), the wild frame's 3.6 s breath, HUD / loader / big-win / max-win screens. ===== */
 body{--at:2} body.turbo{--at:1}
-.grow{animation-duration:calc(.5s*var(--at))}
-.plus{animation-duration:calc(.8s*var(--at))}
-.ov{animation-duration:calc(.5s*var(--at))}
-.wlAmt{animation-duration:calc(.5s*var(--at))}
-.cell.win .lit{animation-duration:calc(.9s*var(--at));animation-delay:calc(.25s*var(--at))}
-#intro .card,#outro .card{animation-duration:calc(.45s*var(--at))}
-.cell{transition-duration:calc(.2s*var(--at))}
-.cell.dim{transition-duration:calc(.15s*var(--at))}
-.cell.win .sym{transition-duration:calc(.26s*var(--at))}
-.cell .lit{transition-duration:calc(.2s*var(--at)),calc(.25s*var(--at))}
-.cell .symSh{transition-duration:calc(.22s*var(--at)),calc(.26s*var(--at))}
-.sym .olWin,.ov .ovWinO{transition-duration:calc(.2s*var(--at))}
 /* ===== end board tempo ===== */
 /* ===== aifix: no four-point sparkles (fx.ts / wildfx.ts / featfx.ts / intro.ts). Winning symbols: the baked sym_<S>
 
@@ -153,7 +139,7 @@ body{--at:2} body.turbo{--at:1}
 .cell.wild::before{content:none;display:none}
 
 /* ===== house-rule pass (final): every animated property is transform or opacity ===== */
-#lBar i{width:100%;transform:scaleX(0);transform-origin:0 50%;transition:transform .25s ease}
+#lBar i{width:100%;transform:scaleX(0);transform-origin:0 50%}
 
 #root #bg,#root #bgFade,#root #scene,#root #app,#root #loader,body.short:not(.portrait) #root #top{position:absolute}
 /* v3.9: the whole settings row is the tap target (settings.ts forwards a row tap to its switch); the switch's own hit area
@@ -198,7 +184,6 @@ body.portrait #app #hud::before{grid-row:3}
 #loader.px .spBg,#loader.px .spStage{display:none}
 #loader.px.pxOn.in{background:transparent}
 #loader.px .spSkip{z-index:2;color:#eee3f2;text-shadow:0 1px 3px #000}
-@keyframes lPulse{50%{transform:scale(1.04)}}
 
 /* studio sting */
 #sting{position:absolute;inset:0;z-index:5;background:radial-gradient(circle at 50% 50%,rgba(60,30,80,.6),#120C18 70%),#120C18;display:flex;align-items:center;justify-content:center;cursor:pointer}
@@ -208,4 +193,3 @@ body.portrait #app #hud::before{grid-row:3}
 #sting .stGlow{position:absolute;left:50%;top:50%;width:135%;translate:-50% -50%;opacity:0;pointer-events:none}
 
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-#loader.px{transition:none}

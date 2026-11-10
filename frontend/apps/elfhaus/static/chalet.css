@@ -5,8 +5,7 @@
   --tt-ink:#26140f;--tt-fill:#fbf3e4;--tt-neon:transparent}
 html,body{background:#2a1810!important}
 html body #bg.art{background-position:center}
-html body.inBonus #bg:not(.fs){filter:brightness(.66) saturate(.92) contrast(1.06)!important;transition:filter .9s ease}
-html body #bg{transition:filter .9s ease}
+html body.inBonus #bg:not(.fs){filter:brightness(.66) saturate(.92) contrast(1.06)!important}
 html body #loader #lGo{background:var(--c-cran)!important;color:var(--c-cream)!important;font-family:'Lilita One',sans-serif!important;font-weight:400!important;
   border:4px solid var(--c-ink)!important;border-radius:16px!important;letter-spacing:.06em!important;box-shadow:inset 0 5px 0 #c7344c,0 5px 0 var(--c-ink)!important;text-shadow:0 2px 0 var(--c-ink)!important}
 html body #loader .spCard h3{color:var(--c-cran)!important;font-family:'Lilita One',sans-serif!important;font-weight:400!important;text-shadow:none!important}
